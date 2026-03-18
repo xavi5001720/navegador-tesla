@@ -37,6 +37,8 @@ export default function Home() {
   const { route, loadingRoute, routeError, findAndTraceRoute, clearRoute } = useRoute();
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const [alertVolume, setAlertVolume] = useState(0.5);
 
   // Open sidebar by default only on desktop
   useEffect(() => {
@@ -60,7 +62,7 @@ export default function Home() {
     });
   }, [allRadars, route]);
 
-  const { nearestRadar, distance, isAlertActive } = useAlerts(userPos, radars);
+  const { nearestRadar, distance, isAlertActive } = useAlerts(userPos, radars, isSoundEnabled, alertVolume);
   const { aircrafts, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts } = usePegasus(userPos);
   const speed = useSpeed();
 
@@ -116,6 +118,10 @@ export default function Home() {
         loadingAircrafts={loadingAircrafts}
         hasLocation={hasLocation}
         onSearch={handleSearchSubmit}
+        isSoundEnabled={isSoundEnabled}
+        setIsSoundEnabled={setIsSoundEnabled}
+        alertVolume={alertVolume}
+        setAlertVolume={setAlertVolume}
       />
 
       {/* Sección del Mapa (Fondo) */}

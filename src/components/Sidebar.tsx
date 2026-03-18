@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Navigation, AlertTriangle, ShieldAlert, X, Menu } from 'lucide-react';
+import { Navigation, AlertTriangle, ShieldAlert, X, Volume2, VolumeX } from 'lucide-react';
 import SearchPanel from './SearchPanel';
 
 interface SidebarProps {
@@ -18,6 +18,10 @@ interface SidebarProps {
   loadingAircrafts: boolean;
   hasLocation: boolean;
   onSearch: (query: string) => void;
+  isSoundEnabled: boolean;
+  setIsSoundEnabled: (enabled: boolean) => void;
+  alertVolume: number;
+  setAlertVolume: (volume: number) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -33,7 +37,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   isRateLimited,
   loadingAircrafts,
   hasLocation,
-  onSearch
+  onSearch,
+  isSoundEnabled,
+  setIsSoundEnabled,
+  alertVolume,
+  setAlertVolume
 }) => {
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 md:bg-black/40 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -57,6 +65,38 @@ const Sidebar: React.FC<SidebarProps> = ({
           {routeError}
         </div>
       )}
+
+      {/* Configuración de Alertas */}
+      <div className="mt-6 p-4 rounded-2xl bg-white/5 border border-white/10">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            {isSoundEnabled ? <Volume2 className="h-4 w-4 text-blue-400" /> : <VolumeX className="h-4 w-4 text-gray-500" />}
+            <span className="text-xs font-bold uppercase tracking-wider text-gray-300">Alertas de Sonido</span>
+          </div>
+          <button 
+            onClick={() => setIsSoundEnabled(!isSoundEnabled)}
+            className={`w-10 h-5 rounded-full transition-colors relative ${isSoundEnabled ? 'bg-blue-600' : 'bg-gray-700'}`}
+          >
+            <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform ${isSoundEnabled ? 'translate-x-5' : ''}`} />
+          </button>
+        </div>
+        
+        <div className="flex flex-col gap-2">
+          <div className="flex justify-between text-[10px] text-gray-500 font-bold uppercase">
+            <span>Volumen</span>
+            <span>{Math.round(alertVolume * 100)}%</span>
+          </div>
+          <input 
+            type="range" 
+            min="0" 
+            max="1" 
+            step="0.01" 
+            value={alertVolume} 
+            onChange={(e) => setAlertVolume(parseFloat(e.target.value))}
+            className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+          />
+        </div>
+      </div>
 
       {/* Información de Ruta Activa */}
       {route && (

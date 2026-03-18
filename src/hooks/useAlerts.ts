@@ -17,7 +17,12 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   return R * c;
 }
 
-export function useAlerts(userPos: [number, number] | null, radars: Radar[]) {
+export function useAlerts(
+  userPos: [number, number] | null, 
+  radars: Radar[], 
+  isSoundEnabled: boolean = true, 
+  alertVolume: number = 0.5
+) {
   const [nearestRadar, setNearestRadar] = useState<Radar | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [isAlertActive, setIsAlertActive] = useState(false);
@@ -42,22 +47,34 @@ export function useAlerts(userPos: [number, number] | null, radars: Radar[]) {
     // Activamos alerta si está a menos de 500 metros
     if (minDistance < 500) {
       if (!isAlertActive) {
-         // Aquí podríamos lanzar un sonido
-         playAlertSound();
+         // Lanzar sonido si está activado
+         if (isSoundEnabled) {
+            playAlertSound(alertVolume);
+         }
       }
       setIsAlertActive(true);
     } else {
       setIsAlertActive(false);
     }
 
-  }, [userPos, radars]);
+  }, [userPos, radars, isSoundEnabled, alertVolume]);
 
-  const playAlertSound = () => {
-    // Solo si el navegador lo permite (interacción previa necesaria)
+  const playAlertSound = (volume: number) => {
     if (typeof window !== 'undefined') {
-      const utterance = new SpeechSynthesisUtterance('Atención, radar próximo');
-      utterance.lang = 'es-ES';
-      window.speechSynthesis.speak(utterance);
+      try {
+        // Voz opcional (puedes comentarla si solo quieres el pitido)
+        const utterance = new SpeechSynthesisUtterance('Atención, radar próximo');
+        utterance.lang = 'es-ES';
+        utterance.volume = volume;
+        window.speechSynthesis.speak(utterance);
+
+        // Sonido de Alarma (Beep)
+        const audio = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+        audio.volume = volume;
+        audio.play().catch(e => console.warn("Audio play blocked by browser:", e));
+      } catch (err) {
+        console.error("Error playing alert sound:", err);
+      }
     }
   };
 
