@@ -30,6 +30,7 @@ export default function Home() {
   const { 
     userPos, 
     setUserPos, 
+    heading,
     hasLocation, 
     requestGPS 
   } = useGeolocation();
@@ -128,6 +129,7 @@ export default function Home() {
       <section className="relative flex-1 bg-gray-900 overflow-hidden">
         <DynamicMap 
           userPos={userPos}
+          heading={heading}
           routeCoordinates={route?.coordinates} 
           radars={radars}
           aircrafts={aircrafts}

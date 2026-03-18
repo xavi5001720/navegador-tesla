@@ -17,17 +17,6 @@ const defaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = defaultIcon;
 
-const createCarIcon = () => {
-  const iconHtml = renderToStaticMarkup(
-    <div className="relative flex items-center justify-center h-12 w-12 transform -translate-x-1/2 -translate-y-1/2">
-      <div className="absolute inset-0 rounded-full border-2 border-blue-500/50 animate-ping"></div>
-      <div className="h-5 w-5 rounded-full bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,1)] border-2 border-white flex items-center justify-center">
-         <div className="h-1.5 w-1.5 bg-white rounded-full"></div>
-      </div>
-    </div>
-  );
-  return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [48, 48], iconAnchor: [24, 24] });
-};
 
 const endMarkerIcon = L.divIcon({
    html: renderToStaticMarkup(
@@ -86,49 +75,86 @@ function RouteFitter({ routeCoordinates }: { routeCoordinates?: [number, number]
    return null;
 }
 
-function LocationTracker({ position, isTracking, hasRoute }: { position: L.LatLngExpression, isTracking: boolean, hasRoute: boolean }) {
-  const map = useMap();
-  useEffect(() => {
-    // Si NO hay ruta trazada, centramos el tracking normal con zoom 15.
-    // Si HAY ruta trazada, no forzamos el zoom a 15 para permitir ver la ruta entera (RouteFitter lo maneja)
-    if (isTracking && !hasRoute) {
-      map.setView(position, 15, { animate: true, duration: 1 });
-    }
-  }, [position, isTracking, map, hasRoute]);
-  return null;
-}
 
 interface MapUIProps {
    userPos: [number, number];
+   heading: number;
    routeCoordinates?: [number, number][];
    radars: Radar[];
    aircrafts?: Aircraft[];
 }
 
-export default function MapUI({ userPos, routeCoordinates, radars = [], aircrafts = [] }: MapUIProps) {
+const createCarIcon = () => {
+  const iconHtml = renderToStaticMarkup(
+    <div className="relative flex items-center justify-center h-16 w-16 transform -translate-x-1/2 -translate-y-1/2">
+      <svg viewBox="0 0 100 100" className="w-12 h-12 drop-shadow-2xl">
+        {/* Cuerpo del Tesla (vista superior) */}
+        <path d="M50 10 C35 10, 25 25, 25 50 C25 75, 35 90, 50 90 C65 90, 75 75, 75 50 C75 25, 65 10, 50 10 Z" fill="#3b82f6" />
+        <path d="M50 15 C40 15, 30 25, 30 45 L70 45 C70 25, 60 15, 50 15 Z" fill="#1d4ed8" /> {/* Techo/Cristal frontal */}
+        <path d="M50 85 C40 85, 35 75, 35 65 L65 65 C65 75, 60 85, 50 85 Z" fill="#1d4ed8" /> {/* Cristal trasero */}
+        <rect x="22" y="30" width="6" height="15" rx="2" fill="#1e293b" /> {/* Rueda DI */}
+        <rect x="72" y="30" width="6" height="15" rx="2" fill="#1e293b" /> {/* Rueda DD */}
+        <rect x="22" y="60" width="6" height="15" rx="2" fill="#1e293b" /> {/* Rueda TI */}
+        <rect x="72" y="60" width="6" height="15" rx="2" fill="#1e293b" /> {/* Rueda TD */}
+        <circle cx="35" cy="20" r="3" fill="white" opacity="0.8" /> {/* Faro I */}
+        <circle cx="65" cy="20" r="3" fill="white" opacity="0.8" /> {/* Faro D */}
+      </svg>
+    </div>
+  );
+  return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [64, 64], iconAnchor: [32, 32] });
+};
+
+function MapRotator({ heading, isFollowing }: { heading: number, isFollowing: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    const container = map.getContainer();
+    if (isFollowing) {
+      container.style.transition = 'transform 0.5s ease-out';
+      container.style.transform = `rotate(${-heading}deg)`;
+    } else {
+      container.style.transform = 'none';
+    }
+  }, [map, heading, isFollowing]);
+  return null;
+}
+
+function LocationTracker({ position, isTracking, hasRoute }: { position: L.LatLngExpression, isTracking: boolean, hasRoute: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    if (isTracking) {
+      // Auto-Zoom: Si estamos en movimiento (tracking activo), nos acercamos más (zoom 17-18)
+      const targetZoom = hasRoute ? 17 : 16;
+      map.setView(position, targetZoom, { animate: true, duration: 1 });
+    }
+  }, [position, isTracking, map, hasRoute]);
+  return null;
+}
+
+export default function MapUI({ userPos, heading, routeCoordinates, radars = [], aircrafts = [] }: MapUIProps) {
   const [isFollowing, setIsFollowing] = useState(true);
-
-  const carIcon = useRef(createCarIcon());
-
-  // No longer watching geolocation here, userPos is passed as a prop
-  // The onPositionUpdate prop is also removed as userPos is the source of truth
+  const carIconRef = useRef(createCarIcon());
 
   return (
     <div className="relative h-full w-full bg-gray-900 overflow-hidden">
-      {/* Removed hasLocation state and its related UI */}
+      <style jsx global>{`
+        .leaflet-container {
+           background: #030712 !important;
+        }
+        /* Rotar inversamente los popups y marcadores informativos para que no salgan volcados */
+        .custom-radar-icon, .custom-aircraft-icon, .custom-end-icon, .tesla-popup, .leaflet-popup {
+           transform: rotate(${isFollowing ? heading : 0}deg) !important;
+           transition: transform 0.5s ease-out;
+        }
+      `}</style>
 
       <button 
-        onClick={() => {
-           setIsFollowing(true);
-           // If there's no route, re-center the map to the user's position
-           // The map's center prop will handle the actual re-centering via LocationTracker
-        }}
+        onClick={() => setIsFollowing(true)}
         className={`absolute bottom-32 right-8 z-[400] flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-lg border transition-all shadow-lg
-          ${isFollowing && !routeCoordinates 
+          ${isFollowing 
             ? 'bg-blue-600/90 border-blue-500 text-white shadow-blue-500/30' 
             : 'bg-white/10 border-white/20 text-gray-300 hover:bg-white/20'}`}
       >
-        <Navigation className={`h-5 w-5 ${isFollowing && !routeCoordinates ? 'animate-pulse' : ''}`} />
+        <Navigation className={`h-5 w-5 ${isFollowing ? 'animate-pulse' : ''}`} />
       </button>
 
       <MapContainer 
@@ -138,32 +164,22 @@ export default function MapUI({ userPos, routeCoordinates, radars = [], aircraft
         zoomControl={false}
       >
         <MapEvents onDragStart={() => setIsFollowing(false)} />
+        <MapRotator heading={heading} isFollowing={isFollowing} />
         <TileLayer attribution={MAP_ATTRIBUTION} url={DARK_MAP_TILES} />
         
-        {/* Fitbounds si hay array de ruta */}
         <RouteFitter routeCoordinates={routeCoordinates} />
-        
-        {/* Tracking del usuario si le da a centrar o si está recien cargado SIN ruta activa */}
         <LocationTracker position={userPos} isTracking={isFollowing} hasRoute={!!routeCoordinates} />
         
-        {/* Trazado de Ruta */}
         {routeCoordinates && routeCoordinates.length > 0 && (
            <>
-             {/* Línea gruesa neón con sombra para efecto premium */}
              <Polyline 
                 positions={routeCoordinates} 
                 pathOptions={{ color: '#3b82f6', weight: 6, opacity: 0.8, lineCap: 'round', lineJoin: 'round' }}
              />
-             <Polyline 
-                positions={routeCoordinates} 
-                pathOptions={{ color: '#60a5fa', weight: 2, opacity: 1, lineCap: 'round', lineJoin: 'round' }}
-             />
-             {/* Destino final marcado en rojo */}
              <Marker position={routeCoordinates[routeCoordinates.length - 1]} icon={endMarkerIcon} />
            </>
         )}
 
-        {/* Marcadores de Radares */}
         {radars.map((radar) => (
           <Marker 
             key={radar.id} 
@@ -179,7 +195,6 @@ export default function MapUI({ userPos, routeCoordinates, radars = [], aircraft
           </Marker>
         ))}
 
-        {/* Marcadores de Aviones (Pegasus) */}
         {aircrafts.map((aircraft) => (
           <Marker
             key={aircraft.icao24}
@@ -187,26 +202,18 @@ export default function MapUI({ userPos, routeCoordinates, radars = [], aircraft
             icon={aircraftIcon(aircraft.isSuspect)}
           >
             <Popup className="tesla-popup">
-              <div className="p-2">
+              <div className="p-2 text-gray-900">
                 <p className={`font-bold text-lg ${aircraft.isSuspect ? 'text-blue-500' : 'text-gray-400'} mb-1`}>
                   {aircraft.isSuspect ? 'PEGASUS / VIGILANCIA' : 'VUELO CIVIL'}
                 </p>
-                <p className="text-xs opacity-70 mb-1">{aircraft.callsign || 'N/A'} ({aircraft.origin_country})</p>
                 <p className="text-sm">Altitud: <b>{Math.round(aircraft.altitude || 0)}m</b></p>
-                <p className="text-sm">Velocidad: <b>{Math.round((aircraft.velocity || 0) * 3.6)} km/h</b></p>
               </div>
             </Popup>
           </Marker>
         ))}
 
-        {/* Vehículo actual */}
-        <Marker position={userPos} icon={carIcon.current}>
-          <Popup className="premium-popup">
-            <div className="text-center font-sans p-1">
-              <span className="block font-bold text-gray-900 pb-1 border-b">Tesla</span>
-            </div>
-          </Popup>
-        </Marker>
+        {/* Vehículo actual - Siempre apuntando ARRIBA en modo track-up */}
+        <Marker position={userPos} icon={carIconRef.current} />
       </MapContainer>
     </div>
   );
