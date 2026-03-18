@@ -13,6 +13,11 @@ export default function SearchPanel({ onSearch, isLoading = false }: SearchPanel
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
 
+  const onSearchRef = useRef(onSearch);
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
+
   useEffect(() => {
     if (typeof window !== 'undefined' && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -25,10 +30,25 @@ export default function SearchPanel({ onSearch, isLoading = false }: SearchPanel
       recognition.onstart = () => setIsListening(true);
 
       recognition.onresult = (event: any) => {
-        const transcript = Array.from(event.results)
-          .map((result: any) => result[0].transcript)
-          .join('');
-        setQuery(transcript);
+        let finalTranscript = '';
+        let currentTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            currentTranscript += event.results[i][0].transcript;
+          }
+        }
+
+        const fullTranscript = finalTranscript || currentTranscript;
+        setQuery(fullTranscript);
+
+        // Si es final, disparamos búsqueda automática
+        if (finalTranscript) {
+          onSearchRef.current(finalTranscript);
+          recognition.stop();
+        }
       };
 
       recognition.onerror = (event: any) => {
@@ -37,16 +57,16 @@ export default function SearchPanel({ onSearch, isLoading = false }: SearchPanel
       };
 
       recognition.onend = () => {
-         setIsListening(false);
-         // Al terminar de escuchar, si hay texto, lanzamos búsqueda automática
-         if (query.trim()) {
-            onSearch(query);
-         }
+        setIsListening(false);
       };
 
       recognitionRef.current = recognition;
     }
-  }, [query, onSearch]);
+
+    return () => {
+      recognitionRef.current?.stop();
+    };
+  }, []);
 
   const toggleListen = () => {
     if (isListening) {
