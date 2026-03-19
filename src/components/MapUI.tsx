@@ -8,6 +8,7 @@ import { Navigation, Camera, Plane } from 'lucide-react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Radar } from '@/hooks/useRadars';
 import { Aircraft } from '@/hooks/usePegasus';
+import { findClosestPointOnPolyline } from '@/utils/geo';
 
 const defaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -86,18 +87,27 @@ interface MapUIProps {
 
 const createCarIcon = () => {
   const iconHtml = renderToStaticMarkup(
-    <div className="relative flex items-center justify-center h-16 w-16 transform -translate-x-1/2 -translate-y-1/2">
-      <svg viewBox="0 0 100 100" className="w-12 h-12 drop-shadow-2xl">
-        {/* Cuerpo del Tesla (vista superior) */}
-        <path d="M50 10 C35 10, 25 25, 25 50 C25 75, 35 90, 50 90 C65 90, 75 75, 75 50 C75 25, 65 10, 50 10 Z" fill="#3b82f6" />
-        <path d="M50 15 C40 15, 30 25, 30 45 L70 45 C70 25, 60 15, 50 15 Z" fill="#1d4ed8" /> {/* Techo/Cristal frontal */}
-        <path d="M50 85 C40 85, 35 75, 35 65 L65 65 C65 75, 60 85, 50 85 Z" fill="#1d4ed8" /> {/* Cristal trasero */}
-        <rect x="22" y="30" width="6" height="15" rx="2" fill="#1e293b" /> {/* Rueda DI */}
-        <rect x="72" y="30" width="6" height="15" rx="2" fill="#1e293b" /> {/* Rueda DD */}
-        <rect x="22" y="60" width="6" height="15" rx="2" fill="#1e293b" /> {/* Rueda TI */}
-        <rect x="72" y="60" width="6" height="15" rx="2" fill="#1e293b" /> {/* Rueda TD */}
-        <circle cx="35" cy="20" r="3" fill="white" opacity="0.8" /> {/* Faro I */}
-        <circle cx="65" cy="20" r="3" fill="white" opacity="0.8" /> {/* Faro D */}
+    <div className="relative flex items-center justify-center h-16 w-16 group">
+      {/* Sombra/Halo de dirección */}
+      <div className="absolute inset-0 bg-blue-500/10 rounded-full blur-xl scale-150"></div>
+      
+      <svg viewBox="0 0 100 100" className="w-14 h-14 drop-shadow-[0_8px_8px_rgba(0,0,0,0.6)] transform -rotate-90">
+        {/* Cuerpo del Tesla (Vista Superior) */}
+        <path d="M25 50 C25 35, 35 20, 50 20 C65 20, 75 35, 75 50 C75 65, 65 80, 50 80 C35 80, 25 65, 25 50 Z" fill="#3b82f6" />
+        
+        {/* Cabina / Techo de cristal */}
+        <path d="M40 50 C40 40, 45 32, 53 32 C61 32, 66 40, 66 50 C66 60, 61 68, 53 68 C45 68, 40 60, 40 50 Z" fill="#1e293b" />
+        
+        {/* Morro / Capó */}
+        <path d="M70 42 L82 50 L70 58 Z" fill="#1d4ed8" />
+        
+        {/* Luces Delanteras (Faros) */}
+        <circle cx="75" cy="38" r="3" fill="white" fillOpacity="0.9" />
+        <circle cx="75" cy="62" r="3" fill="white" fillOpacity="0.9" />
+        
+        {/* Luces Traseras (Freno) */}
+        <rect x="26" y="38" width="4" height="6" rx="1" fill="#ef4444" />
+        <rect x="26" y="56" width="4" height="6" rx="1" fill="#ef4444" />
       </svg>
     </div>
   );
@@ -140,10 +150,10 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
         .leaflet-container {
            background: #030712 !important;
         }
-        /* Rotar inversamente los popups y marcadores informativos para que no salgan volcados */
-        .custom-radar-icon, .custom-aircraft-icon, .custom-end-icon, .tesla-popup, .leaflet-popup {
-           transform: rotate(${isFollowing ? heading : 0}deg) !important;
-           transition: transform 0.5s ease-out;
+        /* El coche debe rotar para apuntar en la dirección de heading */
+        .custom-car-icon {
+           transform: rotate(${heading}deg) !important;
+           transition: transform 0.3s ease-out;
         }
       `}</style>
 
@@ -168,6 +178,8 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
         <TileLayer attribution={MAP_ATTRIBUTION} url={DARK_MAP_TILES} />
         
         <RouteFitter routeCoordinates={routeCoordinates} />
+        
+        {/* Usamos userPos directamente para el tracker de vista, pero visualmente el coche puede ir snappeado */}
         <LocationTracker position={userPos} isTracking={isFollowing} hasRoute={!!routeCoordinates} />
         
         {routeCoordinates && routeCoordinates.length > 0 && (
@@ -212,8 +224,16 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
           </Marker>
         ))}
 
-        {/* Vehículo actual - Siempre apuntando ARRIBA en modo track-up */}
-        <Marker position={userPos} icon={carIconRef.current} />
+        {/* Vehículo actual - Snappeado a ruta si estamos cerca */}
+        <Marker 
+          position={isFollowing && routeCoordinates && routeCoordinates.length > 0 
+            ? findClosestPointOnPolyline(userPos, routeCoordinates).distance < 25 
+              ? findClosestPointOnPolyline(userPos, routeCoordinates).point 
+              : userPos 
+            : userPos
+          } 
+          icon={carIconRef.current} 
+        />
       </MapContainer>
     </div>
   );

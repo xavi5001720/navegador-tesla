@@ -43,3 +43,35 @@ export function distanceToPolyline(p: [number, number], polyline: [number, numbe
   }
   return minD;
 }
+
+export function findClosestPointOnPolyline(p: [number, number], polyline: [number, number][]) {
+  let minD = Infinity;
+  let closestPoint: [number, number] = p;
+  
+  for (let i = 0; i < polyline.length - 1; i++) {
+    const v = polyline[i];
+    const w = polyline[i+1];
+    
+    // Proyección del punto sobre el segmento [v, w]
+    const l2 = Math.pow(v[0] - w[0], 2) + Math.pow(v[1] - w[1], 2);
+    if (l2 === 0) {
+      const d = getDistance(p, v);
+      if (d < minD) {
+        minD = d;
+        closestPoint = v;
+      }
+      continue;
+    }
+    
+    let t = ((p[0] - v[0]) * (w[0] - v[0]) + (p[1] - v[1]) * (w[1] - v[1])) / l2;
+    t = Math.max(0, Math.min(1, t));
+    const projection: [number, number] = [v[0] + t * (w[0] - v[0]), v[1] + t * (w[1] - v[1])];
+    
+    const d = getDistance(p, projection);
+    if (d < minD) {
+      minD = d;
+      closestPoint = projection;
+    }
+  }
+  return { point: closestPoint, distance: minD };
+}

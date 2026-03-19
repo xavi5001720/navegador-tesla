@@ -13,6 +13,7 @@ interface SidebarProps {
   clearRoute: () => void;
   loadingRadars: boolean;
   radars: any[];
+  remainingRadars?: number;
   isAnyPegasusNearby: boolean;
   isRateLimited: boolean;
   loadingAircrafts: boolean;
@@ -33,6 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   clearRoute,
   loadingRadars,
   radars,
+  remainingRadars = 0,
   isAnyPegasusNearby,
   isRateLimited,
   loadingAircrafts,
@@ -131,6 +133,14 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Radares</span>
                   <span className="text-2xl font-black">{loadingRadars ? '...' : radars.length}</span>
+                </div>
+              </div>
+              {remainingRadars < radars.length && !loadingRadars && (
+                <div className="flex flex-col items-end">
+                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Restantes</span>
+                  <span className="text-xl font-bold text-blue-400">{remainingRadars}</span>
+                </div>
+              )}
                 </div>
               </div>
            </div>

@@ -63,9 +63,9 @@ export default function Home() {
     });
   }, [allRadars, route]);
 
-  const { nearestRadar, distance, isAlertActive } = useAlerts(userPos, radars, isSoundEnabled, alertVolume);
-  const { aircrafts, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts } = usePegasus(userPos);
   const speed = useSpeed();
+  const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, alertVolume, speed);
+  const { aircrafts, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts } = usePegasus(userPos);
 
   const handleSearchSubmit = async (query: string) => {
     const origin: [number, number] = userPos || [40.4168, -3.7038];
@@ -77,7 +77,12 @@ export default function Home() {
       
       {/* Alerta de Radar */}
       {isAlertActive && nearestRadar && distance !== null && (
-        <AlertOverlay radar={nearestRadar} distance={distance} />
+        <AlertOverlay 
+          radar={nearestRadar} 
+          distance={distance} 
+          alertType={alertType}
+          currentSpeed={speed}
+        />
       )}
 
       {/* Botón de Toggle Sidebar (Mobile) */}
@@ -114,6 +119,7 @@ export default function Home() {
         clearRoute={clearRoute}
         loadingRadars={loadingRadars}
         radars={radars}
+        remainingRadars={remainingRadars}
         isAnyPegasusNearby={isAnyPegasusNearby}
         isRateLimited={isRateLimited}
         loadingAircrafts={loadingAircrafts}
