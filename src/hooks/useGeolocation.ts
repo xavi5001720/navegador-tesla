@@ -28,7 +28,9 @@ export function useGeolocation() {
       const dist = Math.sqrt(Math.pow(newPos[0] - prev[0], 2) + Math.pow(newPos[1] - prev[1], 2));
       if (dist > 0.00001) {
         const newHeading = calculateHeading(prev, newPos);
-        setHeading(newHeading);
+        if (!isNaN(newHeading)) {
+          setHeading(newHeading);
+        }
       }
       return newPos;
     });

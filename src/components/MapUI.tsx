@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -85,9 +85,9 @@ interface MapUIProps {
    aircrafts?: Aircraft[];
 }
 
-const createCarIcon = () => {
+const createCarIcon = (heading: number) => {
   const iconHtml = renderToStaticMarkup(
-    <div className="relative flex items-center justify-center h-16 w-16 group">
+    <div className="relative flex items-center justify-center h-16 w-16 group" style={{ transform: `rotate(${heading}deg)` }}>
       {/* Sombra/Halo de dirección */}
       <div className="absolute inset-0 bg-blue-500/10 rounded-full blur-xl scale-150"></div>
       
@@ -142,18 +142,12 @@ function LocationTracker({ position, isTracking, hasRoute }: { position: L.LatLn
 
 export default function MapUI({ userPos, heading, routeCoordinates, radars = [], aircrafts = [] }: MapUIProps) {
   const [isFollowing, setIsFollowing] = useState(true);
-  const carIconRef = useRef(createCarIcon());
 
   return (
     <div className="relative h-full w-full bg-gray-900 overflow-hidden">
       <style jsx global>{`
         .leaflet-container {
            background: #030712 !important;
-        }
-        /* El coche debe rotar para apuntar en la dirección de heading */
-        .custom-car-icon {
-           transform: rotate(${heading}deg) !important;
-           transition: transform 0.3s ease-out;
         }
       `}</style>
 
@@ -224,15 +218,15 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
           </Marker>
         ))}
 
-        {/* Vehículo actual - Snappeado a ruta si estamos cerca */}
         <Marker 
           position={isFollowing && routeCoordinates && routeCoordinates.length > 0 
-            ? findClosestPointOnPolyline(userPos, routeCoordinates).distance < 25 
-              ? findClosestPointOnPolyline(userPos, routeCoordinates).point 
-              : userPos 
+            ? (() => {
+                const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
+                return snapped.distance < 25 ? snapped.point : userPos;
+              })()
             : userPos
           } 
-          icon={carIconRef.current} 
+          icon={createCarIcon(heading)} 
         />
       </MapContainer>
     </div>
