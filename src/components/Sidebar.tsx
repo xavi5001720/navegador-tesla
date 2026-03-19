@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Navigation, AlertTriangle, ShieldAlert, X, Volume2, VolumeX } from 'lucide-react';
+import { Navigation, AlertTriangle, ShieldAlert, X, Volume2, VolumeX, Play } from 'lucide-react';
 import SearchPanel from './SearchPanel';
+import { playTestSound } from '@/utils/sound';
 
 interface SidebarProps {
   isSidebarOpen: boolean;
@@ -84,9 +85,18 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
         
         <div className="flex flex-col gap-2">
-          <div className="flex justify-between text-[10px] text-gray-500 font-bold uppercase">
+          <div className="flex justify-between text-[10px] text-gray-500 font-bold uppercase items-center">
             <span>Volumen</span>
-            <span>{Math.round(alertVolume * 100)}%</span>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => playTestSound(alertVolume)}
+                className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-gray-400 hover:text-white px-2 py-0.5 rounded-md transition-all active:scale-95"
+              >
+                <Play className="h-2 w-2" />
+                <span>Test</span>
+              </button>
+              <span>{Math.round(alertVolume * 100)}%</span>
+            </div>
           </div>
           <input 
             type="range" 
@@ -141,8 +151,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <span className="text-xl font-bold text-blue-400">{remainingRadars}</span>
                 </div>
               )}
-                </div>
-              </div>
            </div>
 
            <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 ${isAnyPegasusNearby ? 'bg-blue-600/20 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'bg-white/5 border-white/10'}`}>

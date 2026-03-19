@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Radar } from './useRadars';
+import { playRadarAlert } from '@/utils/sound';
 
 // Fórmula de Haversine para distancia en metros entre dos puntos
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -82,7 +83,7 @@ export function useAlerts(
 
       if (!isAlertActive) {
          if (isSoundEnabled) {
-            playAlertSound(alertVolume, type);
+            playRadarAlert(alertVolume, type);
          }
       }
       setIsAlertActive(true);
@@ -91,33 +92,6 @@ export function useAlerts(
     }
 
   }, [userPos, radars, isSoundEnabled, alertVolume, currentSpeed, passedRadarIds, isAlertActive]);
-
-  const playAlertSound = (volume: number, type: 'safe' | 'danger') => {
-    if (typeof window !== 'undefined') {
-      try {
-        const isDanger = type === 'danger';
-        
-        // Voz diferenciada
-        const msg = isDanger ? 'Peligro, exceso de velocidad en radar' : 'Atención, radar próximo';
-        const utterance = new SpeechSynthesisUtterance(msg);
-        utterance.lang = 'es-ES';
-        utterance.volume = volume;
-        utterance.pitch = isDanger ? 1.2 : 1; 
-        window.speechSynthesis.speak(utterance);
-
-        // Sonido diferenciado
-        const audioUrl = isDanger 
-          ? 'https://actions.google.com/sounds/v1/alarms/alarm_clock_beeping.ogg' // Más urgente
-          : 'https://actions.google.com/sounds/v1/alarms/beep_short.ogg';
-        
-        const audio = new Audio(audioUrl);
-        audio.volume = volume;
-        audio.play().catch(e => console.warn("Audio play blocked by browser:", e));
-      } catch (err) {
-        console.error("Error playing alert sound:", err);
-      }
-    }
-  };
 
   return { nearestRadar, distance, isAlertActive, alertType, remainingRadars: radars.length - passedRadarIds.size };
 }
