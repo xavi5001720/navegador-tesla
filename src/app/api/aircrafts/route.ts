@@ -90,6 +90,7 @@ export async function GET() {
         latitude: s[6],
         altitude: s[7] || s[13],
         velocity: s[9],
+        track: s[10] || 0,
         timestamp: s[3]
       }));
       lastFetchTime = now;

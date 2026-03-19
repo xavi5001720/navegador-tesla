@@ -39,15 +39,15 @@ const radarIcon = (speedLimit?: number) => L.divIcon({
   iconAnchor: [16, 16],
 });
 
-const aircraftIcon = (isSuspect: boolean) => L.divIcon({
+const aircraftIcon = (isSuspect: boolean, heading: number) => L.divIcon({
   html: renderToStaticMarkup(
-    <div className={`aircraft-marker flex items-center justify-center p-2 rounded-full border-2 ${isSuspect ? 'bg-blue-600 border-white animate-pulse shadow-[0_0_15px_rgba(37,99,235,0.8)]' : 'bg-gray-600 border-gray-400 opacity-60'} text-white`}>
-      <Plane className="h-4 w-4" style={{ transform: isSuspect ? 'scale(1.2)' : 'none' }} />
+    <div className={`aircraft-marker flex items-center justify-center p-2 rounded-full border-2 ${isSuspect ? 'bg-blue-600 border-white animate-pulse shadow-[0_0_20px_rgba(37,99,235,1)]' : 'bg-gray-700/80 border-gray-500 opacity-80'} text-white`}>
+      <Plane className="h-4 w-4" style={{ transform: `rotate(${heading - 45}deg) scale(${isSuspect ? 1.4 : 1})` }} />
     </div>
   ),
   className: 'custom-aircraft-icon',
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
+  iconSize: [36, 36],
+  iconAnchor: [18, 18],
 });
 
 const DARK_MAP_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
@@ -194,7 +194,7 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
           <Marker
             key={aircraft.icao24}
             position={[aircraft.lat, aircraft.lon]}
-            icon={aircraftIcon(aircraft.isSuspect)}
+            icon={aircraftIcon(aircraft.isSuspect, aircraft.track)}
           >
             <Popup className="tesla-popup">
               <div className="p-2 text-gray-900">

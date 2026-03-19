@@ -10,6 +10,7 @@ export interface Aircraft {
   lon: number;
   altitude: number;
   velocity: number;
+  track: number;
   isSuspect: boolean;
 }
 
@@ -54,6 +55,7 @@ export function usePegasus(userPos: [number, number]) {
                 lat: s.latitude,
                 altitude: s.altitude,
                 velocity: s.velocity,
+                track: s.track || 0,
                 isSuspect: false
              }));
              setRawAircrafts(aircrafts);
@@ -67,39 +69,31 @@ export function usePegasus(userPos: [number, number]) {
     };
 
     fetchAircrafts();
-    const interval = setInterval(fetchAircrafts, 120000); // 2 minutos
+    const interval = setInterval(fetchAircrafts, 30000); // 30 segundos para mayor frescura
     return () => clearInterval(interval);
-  }, []); // Dependencias vacías para evitar re-fetch por movimiento
+  }, []);
 
   // 2. Filtering logic: Reactiva a la posición del usuario pero SIN peticiones extra.
   const aircrafts = useMemo(() => {
     return rawAircrafts.map(aircraft => {
       // Heurística de vigilancia refinada para España:
-      // 1. Callsign típico: DGT, PESG (Pegasus), SAER (Guardia Civil), POL (Policía), CIPHER (Militar/Vigilancia)
       const hasCallsign = /DGT|PESG|SAER|POLIC|GUARDIA|GC|POL|CIPHER/i.test(aircraft.callsign);
-      
-      // 2. Comportamiento: Vuelo muy bajo (<1000m) y lento (<60m/s ~ 215km/h) 
-      // Los aviones comerciales rara vez bajan de 1000m si no están aterrizando.
       const isLow = aircraft.altitude !== null && aircraft.altitude < 1000;
       const isSlow = aircraft.velocity !== null && aircraft.velocity < 60;
       
-      // 3. Códigos Hex (ICAO24) conocidos de helicópteros DGT en España (comienzan por 34...)
-      // Por ahora usamos la combinación de parámetros + callsign
-      const isSuspect = (isLow && isSlow) || hasCallsign;
+      // ICAO24 específicos de helicópteros DGT (comienzan por 34...)
+      const isDGT = aircraft.icao24.startsWith('34'); 
       
+      const isSuspect = (isLow && isSlow) || hasCallsign || isDGT;
       return { ...aircraft, isSuspect };
-    }).filter(aircraft => {
-      // FILTRADO GEOGRÁFICO:
-      // - Si es Pegasus (Suspect), lo vemos en toda España sin restricciones.
-      if (aircraft.isSuspect) return true;
-      
-      // - Si es normal, solo en radio de 15km alrededor del usuario.
-      const dist = getDistance(userPos, [aircraft.lat, aircraft.lon]);
-      return dist < 15000;
     });
-  }, [rawAircrafts, userPos]); 
+    // SE ELIMINA EL FILTRADO GEOGRÁFICO POR PETICIÓN DEL USUARIO
+  }, [rawAircrafts]); 
 
-  const isAnyPegasusNearby = useMemo(() => aircrafts.some((a: Aircraft) => a.isSuspect), [aircrafts]);
+  const isAnyPegasusNearby = useMemo(() => {
+     // Para la alerta en el coche, sí consideramos la cercanía
+     return aircrafts.some((a: Aircraft) => a.isSuspect && getDistance(userPos, [a.lat, a.lon]) < 15000);
+  }, [aircrafts, userPos]);
 
   return { aircrafts, isAnyPegasusNearby, loading, isRateLimited };
 }
