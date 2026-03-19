@@ -29,9 +29,8 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
         let currentSampledPoints: [number, number][] = [];
         
         if (routeCoordinates && routeCoordinates.length > 0) {
-          // Si hay ruta, muestreamos puntos cada ~2km para evitar Bounding Boxes gigantes
-          // OSRM suele dar puntos muy densos, así que tomamos uno cada 20-30 puntos
-          const step = Math.max(1, Math.floor(routeCoordinates.length / 40)); 
+          // Si hay ruta, muestreamos puntos cada ~2km o máximo 100 puntos para no saturar
+          const step = Math.max(1, Math.floor(routeCoordinates.length / 100)); 
           for (let i = 0; i < routeCoordinates.length; i += step) {
             currentSampledPoints.push(routeCoordinates[i]);
           }
@@ -40,20 +39,19 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
             currentSampledPoints.push(routeCoordinates[routeCoordinates.length - 1]);
           }
 
-          // Construimos una query 'around' con todos los puntos muestreados
-          // Esto busca en un radio de 500m alrededor de cada punto
+          // Construimos una query 'around' con un radio de 1000m para cubrir desviaciones leves
           const aroundQueries = currentSampledPoints
-            .map(p => `node["highway"="speed_camera"](around:500,${p[0]},${p[1]});`)
+            .map(p => `node["highway"="speed_camera"](around:1000,${p[0]},${p[1]});`)
             .join('\n');
 
           query = `
-            [out:json][timeout:30];
+            [out:json][timeout:50];
             (
               ${aroundQueries}
             );
             out body;
           `;
-          console.log(`[useRadars] Fetching radars for route using ${currentSampledPoints.length} sample points.`);
+          console.log(`[useRadars] Fetching radars for route using ${currentSampledPoints.length} sample points (1km radius).`);
         } else {
           query = `
             [out:json][timeout:25];

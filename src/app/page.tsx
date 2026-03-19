@@ -91,7 +91,7 @@ export default function Home() {
     return allRadars.filter(radar => {
       const radarPos: [number, number] = [radar.lat, radar.lon];
       const distToPath = distanceToPolyline(radarPos, route.coordinates);
-      return distToPath < 150;
+      return distToPath < 500;
     });
   }, [allRadars, route]);
 
