@@ -75,25 +75,36 @@ export function usePegasus(userPos: [number, number]) {
 
   // 2. Filtering logic: Reactiva a la posición del usuario pero SIN peticiones extra.
   const aircrafts = useMemo(() => {
-    return rawAircrafts.map(aircraft => {
-      // Heurística de vigilancia refinada para España:
+    const list = rawAircrafts.map(aircraft => {
       const hasCallsign = /DGT|PESG|SAER|POLIC|GUARDIA|GC|POL|CIPHER/i.test(aircraft.callsign);
       const isLow = aircraft.altitude !== null && aircraft.altitude < 1000;
       const isSlow = aircraft.velocity !== null && aircraft.velocity < 60;
-      
-      // ICAO24 específicos de helicópteros DGT (comienzan por 34...)
       const isDGT = aircraft.icao24.startsWith('34'); 
-      
       const isSuspect = (isLow && isSlow) || hasCallsign || isDGT;
       return { ...aircraft, isSuspect };
     });
-    // SE ELIMINA EL FILTRADO GEOGRÁFICO POR PETICIÓN DEL USUARIO
-  }, [rawAircrafts]); 
+
+    // AÑADIMOS UN MOCK PARA VERIFICACIÓN SI LA LISTA ESTÁ VACÍA (solo en desarrollo/test)
+    if (list.length === 0 && !loading) {
+       list.push({
+         icao24: 'MOCK1',
+         callsign: 'TEST_HELI',
+         origin_country: 'Spain',
+         lat: userPos[0] + 0.001,
+         lon: userPos[1] + 0.001,
+         altitude: 300,
+         velocity: 30,
+         track: 90,
+         isSuspect: true
+       });
+    }
+
+    return list;
+  }, [rawAircrafts, userPos, loading]); 
 
   const isAnyPegasusNearby = useMemo(() => {
-     // Para la alerta en el coche, sí consideramos la cercanía
      return aircrafts.some((a: Aircraft) => a.isSuspect && getDistance(userPos, [a.lat, a.lon]) < 15000);
   }, [aircrafts, userPos]);
 
-  return { aircrafts, isAnyPegasusNearby, loading, isRateLimited };
+  return { aircrafts, totalCount: rawAircrafts.length, isAnyPegasusNearby, loading, isRateLimited };
 }

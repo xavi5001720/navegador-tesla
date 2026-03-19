@@ -97,7 +97,7 @@ export default function Home() {
 
   const speed = useSpeed();
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, alertVolume, speed);
-  const { aircrafts, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts } = usePegasus(userPos);
+  const { aircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts } = usePegasus(userPos);
 
   const handleSearchSubmit = async (query: string) => {
     const origin: [number, number] = userPos || [40.4168, -3.7038];
@@ -155,6 +155,7 @@ export default function Home() {
         isAnyPegasusNearby={isAnyPegasusNearby}
         isRateLimited={isRateLimited}
         loadingAircrafts={loadingAircrafts}
+        aircraftCount={aircraftCount}
         hasLocation={hasLocation}
         onSearch={handleSearchSubmit}
         isSoundEnabled={isSoundEnabled}

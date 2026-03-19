@@ -18,6 +18,7 @@ interface SidebarProps {
   isAnyPegasusNearby: boolean;
   isRateLimited: boolean;
   loadingAircrafts: boolean;
+  aircraftCount?: number;
   hasLocation: boolean;
   onSearch: (query: string) => void;
   isSoundEnabled: boolean;
@@ -39,6 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   isAnyPegasusNearby,
   isRateLimited,
   loadingAircrafts,
+  aircraftCount = 0,
   hasLocation,
   onSearch,
   isSoundEnabled,
@@ -161,10 +163,15 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Pegasus</span>
                   <span className={`text-2xl font-black ${isAnyPegasusNearby ? 'text-blue-400' : 'text-white/60'}`}>
-                    {loadingAircrafts ? 'BUSCANDO...' : (isAnyPegasusNearby ? 'ACTIVO' : 'Inactivo')}
+                    {loadingAircrafts ? 'BUSCANDO...' : aircraftCount}
                   </span>
                 </div>
               </div>
+              {isAnyPegasusNearby && (
+                <p className="mt-2 text-[10px] text-blue-400 font-bold uppercase tracking-wider animate-pulse">
+                  OBJETIVO SOSPECHOSO DETECTADO
+                </p>
+              )}
               {isRateLimited && (
                 <p className="mt-2 text-[10px] text-amber-500/80 font-medium leading-tight">
                   Límite de API alcanzado.
