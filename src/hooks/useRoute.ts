@@ -10,6 +10,7 @@ interface RouteResult {
 
 export function useRoute() {
   const [route, setRoute] = useState<RouteResult | null>(null);
+  const [destination, setDestination] = useState<Coordinates | null>(null);
   const [loadingRoute, setLoadingRoute] = useState(false);
   const [routeError, setRouteError] = useState<string | null>(null);
 
@@ -58,6 +59,8 @@ export function useRoute() {
         duration: mainRoute.duration,
       });
 
+      setDestination(destination);
+
     } catch (err: any) {
       setRouteError(err.message || "Error calculando ruta.");
       setRoute(null);
@@ -83,13 +86,16 @@ export function useRoute() {
   
   const clearRoute = () => {
      setRoute(null);
+     setDestination(null);
      setRouteError(null);
   };
 
   return {
     route,
+    destination,
     loadingRoute,
     routeError,
+    calculateRoute,
     findAndTraceRoute,
     clearRoute
   };
