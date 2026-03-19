@@ -89,26 +89,15 @@ const createCarIcon = (heading: number) => {
   const iconHtml = renderToStaticMarkup(
     <div className="relative flex items-center justify-center h-16 w-16 group" style={{ transform: `rotate(${heading}deg)` }}>
       {/* Sombra/Halo de dirección */}
-      <div className="absolute inset-0 bg-blue-500/10 rounded-full blur-xl scale-150"></div>
+      <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl scale-125"></div>
       
-      <svg viewBox="0 0 100 100" className="w-14 h-14 drop-shadow-[0_8px_8px_rgba(0,0,0,0.6)] transform -rotate-90">
-        {/* Cuerpo del Tesla (Vista Superior) */}
-        <path d="M25 50 C25 35, 35 20, 50 20 C65 20, 75 35, 75 50 C75 65, 65 80, 50 80 C35 80, 25 65, 25 50 Z" fill="#3b82f6" />
-        
-        {/* Cabina / Techo de cristal */}
-        <path d="M40 50 C40 40, 45 32, 53 32 C61 32, 66 40, 66 50 C66 60, 61 68, 53 68 C45 68, 40 60, 40 50 Z" fill="#1e293b" />
-        
-        {/* Morro / Capó */}
-        <path d="M70 42 L82 50 L70 58 Z" fill="#1d4ed8" />
-        
-        {/* Luces Delanteras (Faros) */}
-        <circle cx="75" cy="38" r="3" fill="white" fillOpacity="0.9" />
-        <circle cx="75" cy="62" r="3" fill="white" fillOpacity="0.9" />
-        
-        {/* Luces Traseras (Freno) */}
-        <rect x="26" y="38" width="4" height="6" rx="1" fill="#ef4444" />
-        <rect x="26" y="56" width="4" height="6" rx="1" fill="#ef4444" />
-      </svg>
+      {/* Nuevo Icono de Coche Deportivo Rojo */}
+      <img 
+        src="/car-icon.png" 
+        alt="Car" 
+        className="w-14 h-14 drop-shadow-[0_8px_8px_rgba(0,0,0,0.6)] object-contain"
+        style={{ transform: 'rotate(-90deg)' }} // Ajuste si la imagen original no apunta hacia arriba
+      />
     </div>
   );
   return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [64, 64], iconAnchor: [32, 32] });
