@@ -44,21 +44,36 @@ export function distanceToPolyline(p: [number, number], polyline: [number, numbe
   return minD;
 }
 
+export function getBearing(p1: [number, number], p2: [number, number]) {
+  const lat1 = p1[0] * Math.PI / 180;
+  const lon1 = p1[1] * Math.PI / 180;
+  const lat2 = p2[0] * Math.PI / 180;
+  const lon2 = p2[1] * Math.PI / 180;
+
+  const y = Math.sin(lon2 - lon1) * Math.cos(lat2);
+  const x = Math.cos(lat1) * Math.sin(lat2) -
+            Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1);
+  const θ = Math.atan2(y, x);
+  const brng = (θ * 180 / Math.PI + 360) % 360; 
+  return brng;
+}
+
 export function findClosestPointOnPolyline(p: [number, number], polyline: [number, number][]) {
   let minD = Infinity;
   let closestPoint: [number, number] = p;
+  let segmentIndex = 0;
   
   for (let i = 0; i < polyline.length - 1; i++) {
     const v = polyline[i];
     const w = polyline[i+1];
     
-    // Proyección del punto sobre el segmento [v, w]
     const l2 = Math.pow(v[0] - w[0], 2) + Math.pow(v[1] - w[1], 2);
     if (l2 === 0) {
       const d = getDistance(p, v);
       if (d < minD) {
         minD = d;
         closestPoint = v;
+        segmentIndex = i;
       }
       continue;
     }
@@ -71,7 +86,8 @@ export function findClosestPointOnPolyline(p: [number, number], polyline: [numbe
     if (d < minD) {
       minD = d;
       closestPoint = projection;
+      segmentIndex = i;
     }
   }
-  return { point: closestPoint, distance: minD };
+  return { point: closestPoint, distance: minD, segmentIndex };
 }

@@ -8,7 +8,7 @@ import { Navigation, Camera, Plane } from 'lucide-react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Radar } from '@/hooks/useRadars';
 import { Aircraft } from '@/hooks/usePegasus';
-import { findClosestPointOnPolyline } from '@/utils/geo';
+import { findClosestPointOnPolyline, getBearing } from '@/utils/geo';
 
 const defaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -87,20 +87,32 @@ interface MapUIProps {
 
 const createCarIcon = (heading: number) => {
   const iconHtml = renderToStaticMarkup(
-    <div className="relative flex items-center justify-center h-16 w-16 group" style={{ transform: `rotate(${heading}deg)` }}>
+    <div className="relative flex items-center justify-center h-20 w-20 group" style={{ transform: `rotate(${heading}deg)` }}>
       {/* Sombra/Halo de dirección */}
-      <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl scale-125"></div>
+      <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-2xl scale-125"></div>
       
-      {/* Nuevo Icono de Coche Deportivo Rojo */}
-      <img 
-        src="/car-icon.png" 
-        alt="Car" 
-        className="w-14 h-14 drop-shadow-[0_8px_8px_rgba(0,0,0,0.6)] object-contain"
-        style={{ transform: 'rotate(-90deg)' }} // Ajuste si la imagen original no apunta hacia arriba
-      />
+      {/* Coche Tesla en SVG (Orientado al Norte) */}
+      <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_10px_10px_rgba(0,0,0,0.6)] object-contain">
+        {/* Cuerpo del Coche */}
+        <path d="M50 5 C40 5 35 10 32 18 L28 45 L28 85 C28 90 32 94 37 94 L63 94 C68 94 72 90 72 85 L72 45 L68 18 C65 10 60 5 50 5 Z" fill="#E81922" />
+        {/* Parabrisas */}
+        <path d="M35 30 C35 25 40 22 50 22 C60 22 65 25 65 30 L63 42 C63 42 55 45 50 45 C45 45 37 42 37 42 Z" fill="#1A1A1A" />
+        {/* Techo de Cristal / Sunroof */}
+        <path d="M38 45 L62 45 L60 75 L40 75 Z" fill="#0D0D0D" />
+        {/* Ventanilla Trasera */}
+        <path d="M40 78 L60 78 L58 88 L42 88 Z" fill="#1A1A1A" />
+        {/* Faros delanteros (subtiles) */}
+        <path d="M32 12 Q35 10 38 12" stroke="white" strokeWidth="1" fill="none" opacity="0.4" />
+        <path d="M68 12 Q65 10 62 12" stroke="white" strokeWidth="1" fill="none" opacity="0.4" />
+        {/* Logo Tesla "T" Plateado en el Capó */}
+        <g transform="translate(50, 13) scale(0.4)" fill="#CBD5E1">
+          <path d="M-10 0 C-10 0 -5 -1 0 -1 C5 -1 10 0 10 0 L10 2 C10 2 5 1 0 1 C-5 1 -10 2 -10 2 Z" />
+          <path d="M-2 3 L2 3 L1 9 C1 9 0 10 -1 9 L-2 3 Z" />
+        </g>
+      </svg>
     </div>
   );
-  return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [64, 64], iconAnchor: [32, 32] });
+  return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [80, 80], iconAnchor: [40, 40] });
 };
 
 function MapRotator({ heading, isFollowing }: { heading: number, isFollowing: boolean }) {
@@ -207,16 +219,24 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
           </Marker>
         ))}
 
-        <Marker 
-          position={isFollowing && routeCoordinates && routeCoordinates.length > 0 
-            ? (() => {
-                const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
-                return snapped.distance < 25 ? snapped.point : userPos;
-              })()
-            : userPos
-          } 
-          icon={createCarIcon(heading)} 
-        />
+        {(() => {
+          let pos = userPos;
+          let carHeading = heading;
+          
+          if (isFollowing && routeCoordinates && routeCoordinates.length > 0) {
+            const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
+            if (snapped.distance < 25) {
+              pos = snapped.point;
+              const p1 = routeCoordinates[snapped.segmentIndex];
+              const p2 = routeCoordinates[snapped.segmentIndex + 1];
+              if (p1 && p2) {
+                carHeading = getBearing(p1, p2);
+              }
+            }
+          }
+          
+          return <Marker position={pos} icon={createCarIcon(carHeading)} />;
+        })()}
       </MapContainer>
     </div>
   );
