@@ -29,32 +29,33 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
         let currentSampledPoints: [number, number][] = [];
         
         if (routeCoordinates && routeCoordinates.length > 0) {
-          // Simplificar la ruta a unos 30-40 puntos máximo para la polyline de Overpass
+          // Simplificar la ruta a unos 40 puntos máximo para no saturar Overpass con miles de statements
           const maxPoints = 40;
           const step = Math.max(1, Math.floor(routeCoordinates.length / maxPoints)); 
           
-          let polylineCoords = [];
+          let currentSampledPoints = [];
           for (let i = 0; i < routeCoordinates.length; i += step) {
-            polylineCoords.push(`${routeCoordinates[i][0]},${routeCoordinates[i][1]}`);
+            currentSampledPoints.push(routeCoordinates[i]);
           }
           // Asegurar destino final
           const lastPoint = routeCoordinates[routeCoordinates.length - 1];
-          const lastPointStr = `${lastPoint[0]},${lastPoint[1]}`;
-          if (polylineCoords[polylineCoords.length - 1] !== lastPointStr) {
-            polylineCoords.push(lastPointStr);
+          if (currentSampledPoints[currentSampledPoints.length - 1] !== lastPoint) {
+            currentSampledPoints.push(lastPoint);
           }
 
-          // Consultar a lo largo de la polilínea (radio 1000m = 1km a cada lado)
-          const polylineString = polylineCoords.join(',');
+          // Construimos una query UNION '(...) ' con múltiples around
+          const aroundQueries = currentSampledPoints
+            .map(p => `node["highway"="speed_camera"](around:1500,${p[0]},${p[1]});`)
+            .join('\n              ');
           
           query = `
             [out:json][timeout:50];
             (
-              node["highway"="speed_camera"](around:1000,${polylineString});
+              ${aroundQueries}
             );
             out body;
           `;
-          console.log(`[useRadars] Fetching radars along polyline (${polylineCoords.length} points).`);
+          console.log(`[useRadars] Fetching radars using ${currentSampledPoints.length} sample points (1.5km radius).`);
         } else {
           query = `
             [out:json][timeout:25];
