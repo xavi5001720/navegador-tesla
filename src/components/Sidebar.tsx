@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Navigation, AlertTriangle, ShieldAlert, X, Volume2, VolumeX, Play } from 'lucide-react';
+import { Navigation, Radar, Plane, X, Volume2, VolumeX, Play } from 'lucide-react';
 import SearchPanel from './SearchPanel';
 import { playTestSound } from '@/utils/sound';
 
@@ -140,11 +140,19 @@ const Sidebar: React.FC<SidebarProps> = ({
            <div className="flex items-center justify-between rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-xl bg-rose-500/20 text-rose-400">
-                  <AlertTriangle className="h-6 w-6" />
+                  <Radar className="h-6 w-6" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Radares</span>
-                  <span className="text-2xl font-black">{loadingRadars ? '...' : radars.length}</span>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Radares</span>
+                    {!loadingRadars && radars.length > 0 && (
+                      <div className="flex items-center gap-1 bg-green-500/10 px-1.5 py-0.5 rounded-full border border-green-500/20">
+                        <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                        <span className="text-[8px] font-bold text-green-500 uppercase">Activado</span>
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-2xl font-black leading-none">{loadingRadars ? '...' : radars.length}</span>
                 </div>
               </div>
               {remainingRadars < radars.length && !loadingRadars && (
@@ -158,11 +166,19 @@ const Sidebar: React.FC<SidebarProps> = ({
            <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 ${isAnyPegasusNearby ? 'bg-blue-600/20 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'bg-white/5 border-white/10'}`}>
               <div className="flex items-center gap-4">
                 <div className={`p-3 rounded-xl ${isAnyPegasusNearby ? 'bg-blue-500 text-white animate-pulse' : 'bg-blue-500/20 text-blue-400'}`}>
-                  <ShieldAlert className="h-6 w-6" />
+                  <Plane className="h-6 w-6" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Pegasus</span>
-                  <span className={`text-2xl font-black ${isAnyPegasusNearby ? 'text-blue-400' : 'text-white/60'}`}>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Aviones</span>
+                    {!loadingAircrafts && (
+                      <div className="flex items-center gap-1 bg-green-500/10 px-1.5 py-0.5 rounded-full border border-green-500/20">
+                        <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                        <span className="text-[8px] font-bold text-green-500 uppercase">Activado</span>
+                      </div>
+                    )}
+                  </div>
+                  <span className={`text-2xl font-black leading-none ${isAnyPegasusNearby ? 'text-blue-400' : 'text-white/60'}`}>
                     {loadingAircrafts ? 'BUSCANDO...' : aircraftCount}
                   </span>
                 </div>

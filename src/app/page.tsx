@@ -164,7 +164,7 @@ export default function Home() {
         isAnyPegasusNearby={isAnyPegasusNearby}
         isRateLimited={isRateLimited}
         loadingAircrafts={loadingAircrafts}
-        aircraftCount={aircraftCount}
+        aircraftCount={aircrafts.length}
         hasLocation={hasLocation}
         onSearch={handleSearchSubmit}
         isSoundEnabled={isSoundEnabled}
