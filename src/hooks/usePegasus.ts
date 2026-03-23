@@ -157,10 +157,11 @@ export function usePegasus(userPos: [number, number]) {
     });
 
     const lowSlow = mapped.filter(a => a.altitude < 1000 && a.velocity < 60).length;
-    const suspects = mapped.filter(a => a.isSuspect);
-    console.log(`[usePegasus] Bajos+lentos: ${lowSlow} | Sospechosos totales: ${suspects.length}`);
+    // Filtro absoluto: excluir > 2000m o > 300km/h (83.33 m/s), eliminando falsos positivos comerciales
+    const suspects = mapped.filter(a => a.isSuspect && a.altitude <= 2000 && a.velocity <= 83.33);
+    console.log(`[usePegasus] Bajos+lentos: ${lowSlow} | Sospechosos tras filtro final: ${suspects.length}`);
     if (suspects.length > 0) {
-      console.log('[usePegasus] Sospechosos:', suspects.map(a => `${a.callsign}(${a.icao24}) alt=${Math.round(a.altitude)}m vel=${Math.round(a.velocity)}km/h`).join(', '));
+      console.log('[usePegasus] Sospechosos:', suspects.map(a => `${a.callsign}(${a.icao24}) alt=${Math.round(a.altitude)}m vel=${Math.round(a.velocity * 3.6)}km/h`).join(', '));
     }
 
     return suspects;
