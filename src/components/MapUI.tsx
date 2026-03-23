@@ -197,9 +197,10 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
 
         {radars.map((radar) => (
           <Marker 
-            key={radar.id} 
+            key={`radar-${radar.id}`} 
             position={[radar.lat, radar.lon]} 
             icon={radarIcon(radar.speedLimit)}
+            zIndexOffset={100}
           >
             <Popup className="tesla-popup">
               <div className="p-2">
@@ -212,9 +213,10 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
 
         {aircrafts.map((aircraft) => (
           <Marker
-            key={aircraft.icao24}
+            key={`ac-${aircraft.icao24}`}
             position={[aircraft.lat, aircraft.lon]}
             icon={aircraftIcon(aircraft.isSuspect, aircraft.track)}
+            zIndexOffset={90}
           >
             <Popup className="tesla-popup">
               <div className="p-2 text-gray-900">
@@ -222,6 +224,8 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
                   {aircraft.isSuspect ? 'PEGASUS / VIGILANCIA' : 'VUELO CIVIL'}
                 </p>
                 <p className="text-sm">Altitud: <b>{Math.round(aircraft.altitude || 0)}m</b></p>
+                <p className="text-sm">Llamada: <b>{aircraft.callsign}</b></p>
+                <p className="text-sm">Velocidad: <b>{Math.round(aircraft.velocity * 3.6)} km/h</b></p>
               </div>
             </Popup>
           </Marker>
@@ -243,7 +247,7 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
             }
           }
           
-          return <Marker position={pos} icon={createCarIcon(carHeading)} />;
+          return <Marker position={pos} icon={createCarIcon(carHeading)} zIndexOffset={1000} />;
         })()}
       </MapContainer>
     </div>

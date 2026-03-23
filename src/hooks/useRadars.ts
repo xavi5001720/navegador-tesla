@@ -29,29 +29,32 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
         let currentSampledPoints: [number, number][] = [];
         
         if (routeCoordinates && routeCoordinates.length > 0) {
-          // Si hay ruta, muestreamos puntos cada ~2km o máximo 100 puntos para no saturar
-          const step = Math.max(1, Math.floor(routeCoordinates.length / 100)); 
+          // Simplificar la ruta a unos 30-40 puntos máximo para la polyline de Overpass
+          const maxPoints = 40;
+          const step = Math.max(1, Math.floor(routeCoordinates.length / maxPoints)); 
+          
+          let polylineCoords = [];
           for (let i = 0; i < routeCoordinates.length; i += step) {
-            currentSampledPoints.push(routeCoordinates[i]);
+            polylineCoords.push(`${routeCoordinates[i][0]},${routeCoordinates[i][1]}`);
           }
-          // Aseguramos incluir el destino final
-          if (currentSampledPoints[currentSampledPoints.length - 1] !== routeCoordinates[routeCoordinates.length - 1]) {
-            currentSampledPoints.push(routeCoordinates[routeCoordinates.length - 1]);
+          // Asegurar destino final
+          const lastPoint = routeCoordinates[routeCoordinates.length - 1];
+          const lastPointStr = `${lastPoint[0]},${lastPoint[1]}`;
+          if (polylineCoords[polylineCoords.length - 1] !== lastPointStr) {
+            polylineCoords.push(lastPointStr);
           }
 
-          // Construimos una query 'around' con un radio de 1000m para cubrir desviaciones leves
-          const aroundQueries = currentSampledPoints
-            .map(p => `node["highway"="speed_camera"](around:1000,${p[0]},${p[1]});`)
-            .join('\n');
-
+          // Consultar a lo largo de la polilínea (radio 1000m = 1km a cada lado)
+          const polylineString = polylineCoords.join(',');
+          
           query = `
             [out:json][timeout:50];
             (
-              ${aroundQueries}
+              node["highway"="speed_camera"](around:1000,${polylineString});
             );
             out body;
           `;
-          console.log(`[useRadars] Fetching radars for route using ${currentSampledPoints.length} sample points (1km radius).`);
+          console.log(`[useRadars] Fetching radars along polyline (${polylineCoords.length} points).`);
         } else {
           query = `
             [out:json][timeout:25];
@@ -63,7 +66,6 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
           console.log(`[useRadars] Fetching nearby radars for [${userPos[0]}, ${userPos[1]}]`);
         }
         
-        console.log(`[useRadars] Fetching radars. Route points: ${currentSampledPoints.length}`);
         const url = `https://overpass-api.de/api/interpreter`;
         const response = await fetch(url, {
           method: 'POST',
