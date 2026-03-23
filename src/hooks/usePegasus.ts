@@ -12,6 +12,7 @@ export interface Aircraft {
   velocity: number;
   track: number;
   isSuspect: boolean;
+  distanceToUser: number;
 }
 
 // Distancia entre dos puntos [lat, lon] en metros (Haversine)
@@ -142,6 +143,7 @@ export function usePegasus(userPos: [number, number]) {
       // Excepto si tiene callsign o hex de vigilancia explícito
       const nearAirport = isNearAirport(lat, lon);
       const isSuspect = hasCallsign || isDGT || ((isLow && isSlow) && !nearAirport);
+      const distanceToUser = getDistance(userPos, [lat, lon]);
 
       return {
         icao24,
@@ -153,12 +155,13 @@ export function usePegasus(userPos: [number, number]) {
         velocity,
         track: s[10] ?? 0,
         isSuspect,
+        distanceToUser,
       };
     });
 
     const lowSlow = mapped.filter(a => a.altitude < 1000 && a.velocity < 60).length;
-    // Filtro absoluto: excluir > 2000m o > 300km/h (83.33 m/s), eliminando falsos positivos comerciales
-    const suspects = mapped.filter(a => a.isSuspect && a.altitude <= 2000 && a.velocity <= 83.33);
+    // Filtro absoluto: excluir < 100m, > 2000m o > 300km/h (83.33 m/s), eliminando falsos positivos comerciales y drones en el maletero
+    const suspects = mapped.filter(a => a.isSuspect && a.altitude >= 100 && a.altitude <= 2000 && a.velocity <= 83.33);
     console.log(`[usePegasus] Bajos+lentos: ${lowSlow} | Sospechosos tras filtro final: ${suspects.length}`);
     if (suspects.length > 0) {
       console.log('[usePegasus] Sospechosos:', suspects.map(a => `${a.callsign}(${a.icao24}) alt=${Math.round(a.altitude)}m vel=${Math.round(a.velocity * 3.6)}km/h`).join(', '));
@@ -168,8 +171,8 @@ export function usePegasus(userPos: [number, number]) {
   }, [rawAircrafts]);
 
   const isAnyPegasusNearby = useMemo(() => {
-    return aircrafts.some(a => getDistance(userPos, [a.lat, a.lon]) < 15000);
-  }, [aircrafts, userPos]);
+    return aircrafts.some(a => a.distanceToUser < 10000);
+  }, [aircrafts]);
 
   return { aircrafts, totalCount: rawAircrafts.length, isAnyPegasusNearby, loading, isRateLimited };
 }

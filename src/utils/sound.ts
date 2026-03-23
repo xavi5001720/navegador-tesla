@@ -57,3 +57,26 @@ export const playTestSound = (volume: number) => {
     console.error("Error in playTestSound:", err);
   }
 };
+
+export const playPegasusAlert = (volume: number, callsign: string, altitude: number, speed_kmh: number) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    const nameStr = callsign && callsign !== 'N/A' ? `llamada ${callsign}` : 'Aeronave';
+    const msg = `Alerta. Objetivo aéreo en radio de 10 kilómetros. ${nameStr} detectada a ${Math.round(altitude)} metros de altura y ${Math.round(speed_kmh)} kilómetros por hora. Posible vigilancia.`;
+    
+    const utterance = new SpeechSynthesisUtterance(msg);
+    utterance.lang = 'es-ES';
+    utterance.volume = volume;
+    utterance.pitch = 0.9;
+    
+    // Para Pegasus no cancelamos la cola de speechSynthesis por si se está cantando un radar fijo
+    window.speechSynthesis.speak(utterance);
+
+    const audio = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock_beeping.ogg');
+    audio.volume = volume;
+    audio.play().catch(e => console.warn("Audio play blocked directly", e));
+  } catch (err) {
+    console.error("Error pegasus sound:", err);
+  }
+};

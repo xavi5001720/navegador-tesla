@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { MapPin, Navigation, Menu, X, AlertTriangle } from 'lucide-react';
 
 import Sidebar from '@/components/Sidebar';
@@ -16,6 +16,7 @@ import { usePegasus } from '@/hooks/usePegasus';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
 import { distanceToPolyline } from '@/utils/geo';
+import { playPegasusAlert } from '@/utils/sound';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -93,6 +94,19 @@ export default function Home() {
   const speed = useSpeed();
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, alertVolume, speed);
   const { aircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts } = usePegasus(userPos);
+
+  const notifiedPegasus = useRef<Set<string>>(new Set());
+  
+  useEffect(() => {
+    if (!isSoundEnabled || !aircrafts || aircrafts.length === 0) return;
+    
+    aircrafts.forEach(ac => {
+      if (ac.distanceToUser < 10000 && !notifiedPegasus.current.has(ac.icao24)) {
+        notifiedPegasus.current.add(ac.icao24);
+        playPegasusAlert(alertVolume, ac.callsign, ac.altitude, ac.velocity * 3.6);
+      }
+    });
+  }, [aircrafts, isSoundEnabled, alertVolume]);
 
   const handleSearchSubmit = async (query: string) => {
     const origin: [number, number] = userPos || [40.4168, -3.7038];
