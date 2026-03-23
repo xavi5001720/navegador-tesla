@@ -108,17 +108,20 @@ const createCarIcon = (heading: number) => {
   return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [110, 110], iconAnchor: [55, 55] });
 };
 
-function MapRotator({ heading, isFollowing }: { heading: number, isFollowing: boolean }) {
+function MapRotator({ heading, isFollowing, hasRoute, speed = 0 }: { heading: number, isFollowing: boolean, hasRoute: boolean, speed?: number }) {
   const map = useMap();
   useEffect(() => {
     const container = map.getContainer();
-    if (isFollowing) {
+    const isOverview = hasRoute && speed < 10;
+    
+    if (isFollowing && !isOverview) {
       container.style.transition = 'transform 0.5s ease-out';
       container.style.transform = `rotate(${-heading}deg)`;
     } else {
+      container.style.transition = 'transform 0.5s ease-out';
       container.style.transform = 'none';
     }
-  }, [map, heading, isFollowing]);
+  }, [map, heading, isFollowing, hasRoute, speed]);
   return null;
 }
 
@@ -184,7 +187,7 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
         zoomControl={false}
       >
         <MapEvents onDragStart={() => setIsFollowing(false)} />
-        <MapRotator heading={heading} isFollowing={isFollowing} />
+        <MapRotator heading={heading} isFollowing={isFollowing} hasRoute={!!routeCoordinates} speed={speed} />
         <TileLayer attribution={MAP_ATTRIBUTION} url={DARK_MAP_TILES} />
         
         <RouteFitter routeCoordinates={routeCoordinates} />
