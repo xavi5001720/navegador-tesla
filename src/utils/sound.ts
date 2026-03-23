@@ -1,13 +1,21 @@
 // src/utils/sound.ts
 
-export const playRadarAlert = (volume: number, type: 'safe' | 'danger') => {
+export const playRadarAlert = (volume: number, type: 'safe_first' | 'safe_second' | 'danger') => {
   if (typeof window === 'undefined') return;
 
   try {
     const isDanger = type === 'danger';
     
     // 1. Voz sintetizada
-    const msg = isDanger ? '¡Peligro! Exceso de velocidad en radar próximo' : 'Atención, radar próximo';
+    let msg = '';
+    if (type === 'danger') {
+      msg = '¡Peligro! Exceso de velocidad en radar próximo. Reduzca la velocidad.';
+    } else if (type === 'safe_first') {
+      msg = 'Atención, radar próximo. Velocidad correcta.';
+    } else if (type === 'safe_second') {
+      msg = 'Radar muy cercano. Velocidad correcta.';
+    }
+
     const utterance = new SpeechSynthesisUtterance(msg);
     utterance.lang = 'es-ES';
     utterance.volume = volume;

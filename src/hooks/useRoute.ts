@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 type Coordinates = [number, number]; // [latitud, longitud]
 
@@ -8,14 +8,8 @@ interface RouteResult {
   duration: number; // en segundos
 }
 
-export function useRoute() {
-  const [route, setRoute] = useState<RouteResult | null>(null);
-  const [destination, setDestination] = useState<Coordinates | null>(null);
-  const [loadingRoute, setLoadingRoute] = useState(false);
-  const [routeError, setRouteError] = useState<string | null>(null);
-
-  // 1. Geocoding: Texto -> Coordenadas (Usando Nominatim / OpenStreetMap)
-  const geocodeAddress = async (query: string): Promise<Coordinates | null> => {
+// 1. Geocoding: Texto -> Coordenadas (Usando Nominatim / OpenStreetMap)
+const geocodeAddress = async (query: string): Promise<Coordinates | null> => {
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
       const data = await res.json();
@@ -31,8 +25,14 @@ export function useRoute() {
     }
   };
 
+export function useRoute() {
+  const [route, setRoute] = useState<RouteResult | null>(null);
+  const [destination, setDestination] = useState<Coordinates | null>(null);
+  const [loadingRoute, setLoadingRoute] = useState(false);
+  const [routeError, setRouteError] = useState<string | null>(null);
+
   // 2. Routing: Origen -> Destino (Usando OSRM Público)
-  const calculateRoute = async (origin: Coordinates, destination: Coordinates) => {
+  const calculateRoute = useCallback(async (origin: Coordinates, destination: Coordinates) => {
     setLoadingRoute(true);
     setRouteError(null);
     try {
@@ -53,6 +53,13 @@ export function useRoute() {
       // OSRM devuelve GeoJSON con formato [lon, lat], hay que invertirlo para Leaflet [lat, lon]
       const latLngs: Coordinates[] = mainRoute.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
 
+      // Añadimos la posición exacta del usuario al principio de la ruta.
+      // OSRM hace "snap" a la carretera más cercana, lo que puede causar que la ruta generada
+      // inicie a varios metros del punto GPS real, provocando un falso "desvío" inmediatamente.
+      if (latLngs.length > 0) {
+        latLngs.unshift([...origin]);
+      }
+
       setRoute({
         coordinates: latLngs,
         distance: mainRoute.distance,
@@ -67,9 +74,9 @@ export function useRoute() {
     } finally {
       setLoadingRoute(false);
     }
-  };
+  }, []);
 
-  const findAndTraceRoute = async (origin: Coordinates, destinationQuery: string) => {
+  const findAndTraceRoute = useCallback(async (origin: Coordinates, destinationQuery: string) => {
      setLoadingRoute(true);
      setRouteError(null);
      
@@ -82,13 +89,13 @@ export function useRoute() {
 
      await calculateRoute(origin, destCoords);
      return true;
-  };
+  }, [calculateRoute]);
   
-  const clearRoute = () => {
+  const clearRoute = useCallback(() => {
      setRoute(null);
      setDestination(null);
      setRouteError(null);
-  };
+  }, []);
 
   return {
     route,

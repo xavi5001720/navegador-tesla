@@ -93,22 +93,30 @@ const createCarIcon = (heading: number) => {
       
       {/* Coche Tesla en SVG (Orientado al Norte) */}
       <svg viewBox="0 0 100 100" className="w-16 h-16 drop-shadow-[0_10px_10px_rgba(0,0,0,0.6)] object-contain">
-        {/* Cuerpo del Coche */}
-        <path d="M50 5 C40 5 35 10 32 18 L28 45 L28 85 C28 90 32 94 37 94 L63 94 C68 94 72 90 72 85 L72 45 L68 18 C65 10 60 5 50 5 Z" fill="#E81922" />
-        {/* Parabrisas */}
-        <path d="M35 30 C35 25 40 22 50 22 C60 22 65 25 65 30 L63 42 C63 42 55 45 50 45 C45 45 37 42 37 42 Z" fill="#1A1A1A" />
-        {/* Techo de Cristal / Sunroof */}
-        <path d="M38 45 L62 45 L60 75 L40 75 Z" fill="#0D0D0D" />
-        {/* Ventanilla Trasera */}
-        <path d="M40 78 L60 78 L58 88 L42 88 Z" fill="#1A1A1A" />
-        {/* Faros delanteros (subtiles) */}
-        <path d="M32 12 Q35 10 38 12" stroke="white" strokeWidth="1" fill="none" opacity="0.4" />
-        <path d="M68 12 Q65 10 62 12" stroke="white" strokeWidth="1" fill="none" opacity="0.4" />
-        {/* Logo Tesla "T" Plateado en el Capó */}
-        <g transform="translate(50, 13) scale(0.4)" fill="#CBD5E1">
-          <path d="M-10 0 C-10 0 -5 -1 0 -1 C5 -1 10 0 10 0 L10 2 C10 2 5 1 0 1 C-5 1 -10 2 -10 2 Z" />
-          <path d="M-2 3 L2 3 L1 9 C1 9 0 10 -1 9 L-2 3 Z" />
-        </g>
+        {/* Carrocería deportiva moderna */}
+        <path d="M50 8 C42 8 36 12 34 25 C32 35 34 45 34 55 C34 65 31 75 33 85 C34 90 40 92 50 92 C60 92 66 90 67 85 C69 75 66 65 66 55 C66 45 68 35 66 25 C64 12 58 8 50 8 Z" fill="#DC2626" />
+        
+        {/* Detalles de sombreado aerodinámico */}
+        <path d="M50 8 C42 8 36 12 34 25 C32 35 34 45 34 55 Z" fill="#B91C1C" opacity="0.4" />
+        <path d="M50 92 C60 92 66 90 67 85 C69 75 66 65 66 55 Z" fill="#7F1D1D" opacity="0.3" />
+        
+        {/* Parabrisas tintado oscuro y techo panorámico */}
+        <path d="M38 32 C38 25 45 22 50 22 C55 22 62 25 62 32 L58 75 C58 75 55 78 50 78 C45 78 42 75 42 75 Z" fill="#111827" />
+        
+        {/* Reflejo en el cristal para darle volumen */}
+        <path d="M40 32 C40 28 45 25 50 25 L50 75 C47 75 44 72 42 65 Z" fill="#374151" opacity="0.4" />
+        
+        {/* Espejos laterales aerodinámicos */}
+        <path d="M35 38 C31 38 31 42 35 43" fill="#B91C1C" />
+        <path d="M65 38 C69 38 69 42 65 43" fill="#B91C1C" />
+
+        {/* Faros delanteros (Líneas LED Blancas/Azuladas) */}
+        <path d="M36 16 L42 13" stroke="#E0F2FE" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M64 16 L58 13" stroke="#E0F2FE" strokeWidth="2.5" strokeLinecap="round" />
+        
+        {/* Faros traseros (Líneas LED rojas intensas) */}
+        <path d="M35 88 L43 88" stroke="#FECACA" strokeWidth="2" strokeLinecap="round" />
+        <path d="M65 88 L57 88" stroke="#FECACA" strokeWidth="2" strokeLinecap="round" />
       </svg>
     </div>
   );

@@ -54,23 +54,18 @@ export default function Home() {
   useEffect(() => {
     if (!route || !destination || loadingRoute) return;
 
-    const checkDeviation = () => {
-      const now = Date.now();
-      // Cooldown de 10 segundos entre recalculados
-      if (now - lastRecalculationTime < 10000) return;
+    const now = Date.now();
+    // Cooldown de 15 segundos entre recalculados
+    if (now - lastRecalculationTime < 15000) return;
 
-      const distOffRoute = distanceToPolyline(userPos, route.coordinates);
-      
-      // Si estamos a más de 80 metros del camino trazado, recalculamos
-      if (distOffRoute > 80) {
-        console.log("Desviación detectada (" + Math.round(distOffRoute) + "m). Recalculando ruta...");
-        setLastRecalculationTime(now);
-        calculateRoute(userPos, destination);
-      }
-    };
-
-    const interval = setInterval(checkDeviation, 3000); // Comprobamos cada 3 segundos
-    return () => clearInterval(interval);
+    const distOffRoute = distanceToPolyline(userPos, route.coordinates);
+    
+    // Si estamos a más de 100 metros del camino trazado, recalculamos
+    if (distOffRoute > 100) {
+      console.log("Desviación detectada (" + Math.round(distOffRoute) + "m). Recalculando ruta...");
+      setLastRecalculationTime(now);
+      calculateRoute(userPos, destination);
+    }
   }, [userPos, route, destination, loadingRoute, lastRecalculationTime, calculateRoute]);
 
   // Open sidebar by default only on desktop

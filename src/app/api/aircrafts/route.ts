@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 let cachedAircrafts: any[] = [];
 let lastFetchTime = 0;
 let accessToken: string | null = null;
@@ -70,7 +72,7 @@ async function fetchOpenSkyData() {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const now = Date.now();
 
   // Si tenemos caché reciente, la servimos

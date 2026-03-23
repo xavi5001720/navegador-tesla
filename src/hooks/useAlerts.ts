@@ -32,6 +32,13 @@ export function useAlerts(
   const [passedRadarIds, setPassedRadarIds] = useState<Set<string>>(new Set());
   
   const prevDistanceRef = useRef<number | null>(null);
+  
+  // Ref para controlar el estado de alerta actual por radar sin re-renders excesivos
+  const alertStateRef = useRef<{ radarId: string | null; phase: number; lastDangerAlertTime: number }>({
+    radarId: null,
+    phase: 0,
+    lastDangerAlertTime: 0
+  });
 
   useEffect(() => {
     if (!userPos || radars.length === 0) return;
@@ -80,12 +87,38 @@ export function useAlerts(
       const isOverLimit = currentSpeed > ((closestRadar as Radar).speedLimit || 120);
       const type = isOverLimit ? 'danger' : 'safe';
       setAlertType(type);
+      
+      const radarId = String((closestRadar as Radar).id);
+      const state = alertStateRef.current;
+      
+      // Si el radar cambia, reseteamos el estado de alerta
+      if (state.radarId !== radarId) {
+        state.radarId = radarId;
+        state.phase = 0;
+        state.lastDangerAlertTime = 0;
+      }
 
-      if (!isAlertActive) {
-         if (isSoundEnabled) {
-            playRadarAlert(alertVolume, type);
+      const now = Date.now();
+
+      if (isSoundEnabled) {
+         if (isOverLimit) {
+            // Peligro permanente: Alerta repetitiva cada 5 segundos si sigue corriendo
+            if (now - state.lastDangerAlertTime > 5000) {
+               playRadarAlert(alertVolume, 'danger');
+               state.lastDangerAlertTime = now;
+            }
+         } else {
+            // Velocidad segura: 2 fases (Aviso a <500m y aviso a <200m)
+            if (state.phase === 0) {
+               playRadarAlert(alertVolume, 'safe_first');
+               state.phase = 1;
+            } else if (state.phase === 1 && minDistance < 200) {
+               playRadarAlert(alertVolume, 'safe_second');
+               state.phase = 2;
+            }
          }
       }
+      
       setIsAlertActive(true);
     } else {
       setIsAlertActive(false);
