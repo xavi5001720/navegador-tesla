@@ -63,7 +63,7 @@ const AIRPORTS: [number, number][] = [
   [42.0008, 2.7706],   // Girona (GRO)
   [39.8627, 4.2187],   // Menorca (MAH)
 ];
-const AIRPORT_RADIUS_M = 15000; // 15 km de exclusión por aeropuerto
+const AIRPORT_RADIUS_M = 5000; // 5 km de exclusión por aeropuerto (era 15km, demasiado agresivo)
 
 function isNearAirport(lat: number, lon: number): boolean {
   return AIRPORTS.some(ap => getDistance([lat, lon], ap) < AIRPORT_RADIUS_M);
@@ -122,38 +122,47 @@ export function usePegasus(userPos: [number, number]) {
   }, []);
 
   const aircrafts = useMemo<Aircraft[]>(() => {
-    return rawAircrafts
-      .filter(s => s[6] !== null && s[5] !== null) // descartar sin posición
-      .map(s => {
-        const icao24 = s[0] || '';
-        const callsign = (s[1] || '').trim();
-        const hasCallsign = /DGT|PESG|SAER|POLIC|GUARDIA|GC|POL/i.test(callsign);
-        const altitude = s[7] ?? s[13] ?? 0;
-        const velocity = s[9] ?? 0;
-        const isLow = altitude < 1000;
-        const isSlow = velocity < 60;
-        const isDGT = icao24.startsWith('34');
-        const lat = s[6];
-        const lon = s[5];
+    const withPos = rawAircrafts.filter(s => s[6] !== null && s[5] !== null);
+    console.log(`[usePegasus] Total recibidos: ${rawAircrafts.length} | Con posición: ${withPos.length}`);
 
-        // Si está cerca de un aeropuerto y solo es sospechoso por ser bajo/lento → falso positivo
-        // Excepto si tiene callsign o hex de vigilancia explícito
-        const nearAirport = isNearAirport(lat, lon);
-        const isSuspect = hasCallsign || isDGT || ((isLow && isSlow) && !nearAirport);
+    const mapped = withPos.map(s => {
+      const icao24 = s[0] || '';
+      const callsign = (s[1] || '').trim();
+      const hasCallsign = /DGT|PESG|SAER|POLIC|GUARDIA|GC|POL/i.test(callsign);
+      const altitude = s[7] ?? s[13] ?? 0;
+      const velocity = s[9] ?? 0;
+      const isLow = altitude < 1000;
+      const isSlow = velocity < 60;
+      const isDGT = icao24.startsWith('34');
+      const lat = s[6];
+      const lon = s[5];
 
-        return {
-          icao24,
-          callsign: callsign || 'N/A',
-          origin_country: s[2] || '',
-          lon,
-          lat,
-          altitude,
-          velocity,
-          track: s[10] ?? 0,
-          isSuspect,
-        };
-      })
-      .filter(a => a.isSuspect); // solo devolver sospechosos → solo azules en el mapa
+      // Si está cerca de un aeropuerto y solo es sospechoso por isLow+isSlow → falso positivo
+      // Excepto si tiene callsign o hex de vigilancia explícito
+      const nearAirport = isNearAirport(lat, lon);
+      const isSuspect = hasCallsign || isDGT || ((isLow && isSlow) && !nearAirport);
+
+      return {
+        icao24,
+        callsign: callsign || 'N/A',
+        origin_country: s[2] || '',
+        lon,
+        lat,
+        altitude,
+        velocity,
+        track: s[10] ?? 0,
+        isSuspect,
+      };
+    });
+
+    const lowSlow = mapped.filter(a => a.altitude < 1000 && a.velocity < 60).length;
+    const suspects = mapped.filter(a => a.isSuspect);
+    console.log(`[usePegasus] Bajos+lentos: ${lowSlow} | Sospechosos totales: ${suspects.length}`);
+    if (suspects.length > 0) {
+      console.log('[usePegasus] Sospechosos:', suspects.map(a => `${a.callsign}(${a.icao24}) alt=${Math.round(a.altitude)}m vel=${Math.round(a.velocity)}km/h`).join(', '));
+    }
+
+    return suspects;
   }, [rawAircrafts]);
 
   const isAnyPegasusNearby = useMemo(() => {
