@@ -28,7 +28,13 @@ function getDistance(p1: [number, number], p2: [number, number]) {
 
 // Bounding box España peninsular
 const SPAIN_BBOX = { lamin: 35.0, lomin: -10.0, lamax: 44.0, lomax: 5.0 };
-const OPENSKY_URL = `https://opensky-network.org/api/states/all?lamin=${SPAIN_BBOX.lamin}&lomin=${SPAIN_BBOX.lomin}&lamax=${SPAIN_BBOX.lamax}&lomax=${SPAIN_BBOX.lomax}`;
+// Usamos el proxy de Next.js para evitar problemas CORS con OpenSky desde el browser
+const OPENSKY_URL = `/opensky/api/states/all?lamin=${SPAIN_BBOX.lamin}&lomin=${SPAIN_BBOX.lomin}&lamax=${SPAIN_BBOX.lamax}&lomax=${SPAIN_BBOX.lomax}`;
+
+
+// Retry configuration
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 5000; // 5 seconds
 
 export function usePegasus(userPos: [number, number]) {
   const [rawAircrafts, setRawAircrafts] = useState<any[]>([]);
@@ -36,34 +42,52 @@ export function usePegasus(userPos: [number, number]) {
   const [isRateLimited, setIsRateLimited] = useState(false);
 
   useEffect(() => {
-    const fetchAircrafts = async () => {
-      setLoading(true);
+    const fetchAircrafts = async (attempt = 1): Promise<void> => {
+      if (attempt === 1) setLoading(true);
+      console.log(`[usePegasus] Fetching directly from OpenSky (attempt ${attempt}/${MAX_RETRIES})...`);
+
       try {
         const res = await fetch(OPENSKY_URL);
+
+        console.log('[usePegasus] OpenSky response status:', res.status);
+
         if (res.status === 429) {
-          console.warn('[usePegasus] Rate limited');
+          console.warn('[usePegasus] Rate limited by OpenSky (429).');
           setIsRateLimited(true);
+          setLoading(false);
           return;
         }
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+
         const data = await res.json();
         setIsRateLimited(false);
+
         if (data?.states) {
-          console.log(`[usePegasus] Loaded ${data.states.length} raw states from OpenSky`);
+          console.log(`[usePegasus] ✅ ${data.states.length} aircraft loaded from OpenSky.`);
           setRawAircrafts(data.states);
         } else {
-          console.warn('[usePegasus] No states in response');
+          console.warn('[usePegasus] Response OK but no states array:', data);
           setRawAircrafts([]);
         }
-      } catch (error) {
-        console.error('[usePegasus] Error fetching aircraft data:', error);
-      } finally {
         setLoading(false);
+
+      } catch (error) {
+        console.error(`[usePegasus] ❌ Fetch error (attempt ${attempt}):`, error);
+        if (attempt < MAX_RETRIES) {
+          console.log(`[usePegasus] Retrying in ${RETRY_DELAY_MS / 1000}s...`);
+          setTimeout(() => fetchAircrafts(attempt + 1), RETRY_DELAY_MS);
+        } else {
+          console.error('[usePegasus] All retries exhausted.');
+          setLoading(false);
+        }
       }
     };
 
     fetchAircrafts();
-    const interval = setInterval(fetchAircrafts, 60000); // cada 60s
+    const interval = setInterval(() => fetchAircrafts(), 60000); // Refetch every 60s
     return () => clearInterval(interval);
   }, []);
 
