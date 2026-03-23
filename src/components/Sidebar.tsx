@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Navigation, Radar, Plane, X, Volume2, VolumeX, Play } from 'lucide-react';
+import { Navigation, Radar, Plane, X, Volume2, VolumeX, Play, Power } from 'lucide-react';
 import SearchPanel from './SearchPanel';
 import { playTestSound } from '@/utils/sound';
 
@@ -147,7 +147,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       <div className="flex-1 overflow-y-auto no-scrollbar py-4">
         <div className="grid grid-cols-1 gap-3">
-           <div className="flex items-center justify-between rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors">
+           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isRadarsEnabled && 'opacity-70'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className={`p-3 rounded-xl ${isRadarsEnabled ? 'bg-rose-500/20 text-rose-400' : 'bg-gray-500/20 text-gray-400'}`}>
@@ -181,12 +181,14 @@ const Sidebar: React.FC<SidebarProps> = ({
                     )}
                   </div>
                 </div>
-                {/* Switch ON/OFF Radares */}
+                {/* Switch ON/OFF Radares Moderno */}
                 <button 
                   onClick={() => setIsRadarsEnabled(!isRadarsEnabled)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-black ${isRadarsEnabled ? 'bg-rose-500' : 'bg-gray-700'}`}
+                  className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isRadarsEnabled ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
                 >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isRadarsEnabled ? 'translate-x-[22px]' : 'translate-x-[4px]'}`} />
+                  <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isRadarsEnabled ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
+                    <Power className={`h-3 w-3 ${isRadarsEnabled ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
+                  </span>
                 </button>
               </div>
               {remainingRadars < radars.length && !loadingRadars && !fetchingRouteRadars && (
@@ -229,12 +231,14 @@ const Sidebar: React.FC<SidebarProps> = ({
                     )}
                   </div>
                 </div>
-                {/* Switch ON/OFF Aviones */}
+                {/* Switch ON/OFF Aviones Moderno */}
                 <button 
                   onClick={() => setIsAircraftsEnabled(!isAircraftsEnabled)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black ${isAircraftsEnabled ? 'bg-blue-500' : 'bg-gray-700'}`}
+                  className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isAircraftsEnabled ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
                 >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isAircraftsEnabled ? 'translate-x-[22px]' : 'translate-x-[4px]'}`} />
+                  <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isAircraftsEnabled ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
+                    <Power className={`h-3 w-3 ${isAircraftsEnabled ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
+                  </span>
                 </button>
               </div>
               {isAnyPegasusNearby && (
