@@ -26,69 +26,76 @@ function getDistance(p1: [number, number], p2: [number, number]) {
   return R * c;
 }
 
+// Bounding box España peninsular
+const SPAIN_BBOX = { lamin: 35.0, lomin: -10.0, lamax: 44.0, lomax: 5.0 };
+const OPENSKY_URL = `https://opensky-network.org/api/states/all?lamin=${SPAIN_BBOX.lamin}&lomin=${SPAIN_BBOX.lomin}&lamax=${SPAIN_BBOX.lamax}&lomax=${SPAIN_BBOX.lomax}`;
+
 export function usePegasus(userPos: [number, number]) {
-  const [rawAircrafts, setRawAircrafts] = useState<Aircraft[]>([]);
+  const [rawAircrafts, setRawAircrafts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
 
-  // 1. Fetching logic: Solo por intervalo o al montar, NO por posición.
   useEffect(() => {
     const fetchAircrafts = async () => {
       setLoading(true);
       try {
-        const response = await fetch('/api/aircrafts');
-        const data = await response.json();
-        console.log(`[usePegasus] API Response:`, data);
-
-        if (data.error === 'Rate limited') {
+        const res = await fetch(OPENSKY_URL);
+        if (res.status === 429) {
           console.warn('[usePegasus] Rate limited');
           setIsRateLimited(true);
+          return;
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setIsRateLimited(false);
+        if (data?.states) {
+          console.log(`[usePegasus] Loaded ${data.states.length} raw states from OpenSky`);
+          setRawAircrafts(data.states);
         } else {
-          setIsRateLimited(false);
-          if (data.aircrafts) {
-             console.log(`[usePegasus] Loaded ${data.aircrafts.length} raw aircrafts`);
-             const aircrafts = data.aircrafts.map((s: any) => ({
-                icao24: s.icao24,
-                callsign: s.callsign || 'N/A',
-                origin_country: s.origin_country || 'España',
-                lon: s.longitude,
-                lat: s.latitude,
-                altitude: s.altitude,
-                velocity: s.velocity,
-                track: s.track || 0,
-                isSuspect: false
-             }));
-             setRawAircrafts(aircrafts);
-          }
+          console.warn('[usePegasus] No states in response');
+          setRawAircrafts([]);
         }
       } catch (error) {
-        console.error('Error fetching aircraft data:', error);
+        console.error('[usePegasus] Error fetching aircraft data:', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchAircrafts();
-    const interval = setInterval(fetchAircrafts, 30000); // 30 segundos para mayor frescura
+    const interval = setInterval(fetchAircrafts, 60000); // cada 60s
     return () => clearInterval(interval);
   }, []);
 
-  // 2. Filtering logic: Reactiva a la posición del usuario pero SIN peticiones extra.
-  const aircrafts = useMemo(() => {
-    const list = rawAircrafts.map(aircraft => {
-      const hasCallsign = /DGT|PESG|SAER|POLIC|GUARDIA|GC|POL|CIPHER/i.test(aircraft.callsign);
-      const isLow = aircraft.altitude !== null && aircraft.altitude < 1000;
-      const isSlow = aircraft.velocity !== null && aircraft.velocity < 60;
-      const isDGT = aircraft.icao24.startsWith('34'); 
-      const isSuspect = (isLow && isSlow) || hasCallsign || isDGT;
-      return { ...aircraft, isSuspect };
-    });
-
-    return list;
-  }, [rawAircrafts, userPos]); 
+  const aircrafts = useMemo<Aircraft[]>(() => {
+    return rawAircrafts
+      .filter(s => s[6] !== null && s[5] !== null) // filtramos sin posición
+      .map(s => {
+        const icao24 = s[0] || '';
+        const callsign = (s[1] || '').trim();
+        const hasCallsign = /DGT|PESG|SAER|POLIC|GUARDIA|GC|POL/i.test(callsign);
+        const altitude = s[7] ?? s[13] ?? 0;
+        const velocity = s[9] ?? 0;
+        const isLow = altitude < 1000;
+        const isSlow = velocity < 60;
+        const isDGT = icao24.startsWith('34');
+        const isSuspect = (isLow && isSlow) || hasCallsign || isDGT;
+        return {
+          icao24,
+          callsign: callsign || 'N/A',
+          origin_country: s[2] || '',
+          lon: s[5],
+          lat: s[6],
+          altitude,
+          velocity,
+          track: s[10] ?? 0,
+          isSuspect,
+        };
+      });
+  }, [rawAircrafts]);
 
   const isAnyPegasusNearby = useMemo(() => {
-     return aircrafts.some((a: Aircraft) => a.isSuspect && getDistance(userPos, [a.lat, a.lon]) < 15000);
+    return aircrafts.some(a => a.isSuspect && getDistance(userPos, [a.lat, a.lon]) < 15000);
   }, [aircrafts, userPos]);
 
   return { aircrafts, totalCount: rawAircrafts.length, isAnyPegasusNearby, loading, isRateLimited };
