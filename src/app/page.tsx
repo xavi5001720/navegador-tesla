@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { MapPin, Navigation, Menu, X, AlertTriangle } from 'lucide-react';
+import { MapPin, Navigation, Menu, X, AlertTriangle, Power } from 'lucide-react';
 
 import Sidebar from '@/components/Sidebar';
 import AlertOverlay from '@/components/AlertOverlay';
@@ -47,6 +47,8 @@ export default function Home() {
   } = useRoute();
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isRadarsEnabled, setIsRadarsEnabled] = useState(false);
+  const [isAircraftsEnabled, setIsAircraftsEnabled] = useState(false);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [alertVolume, setAlertVolume] = useState(0.5);
   const [lastRecalculationTime, setLastRecalculationTime] = useState(0);
@@ -76,10 +78,11 @@ export default function Home() {
     }
   }, []);
 
-  const { radars: allRadars, loadingRadars, fetchingRouteRadars } = useRadars(userPos, route?.coordinates);
+  const { radars: allRadars, loadingRadars, fetchingRouteRadars } = useRadars(userPos, route?.coordinates, isRadarsEnabled);
 
   // Filtrar radares para mostrar solo los que están en la ruta
   const radars = useMemo(() => {
+    if (!isRadarsEnabled) return [];
     if (!route || !route.coordinates || route.coordinates.length === 0 || allRadars.length === 0) {
       return allRadars;
     }
@@ -93,7 +96,7 @@ export default function Home() {
 
   const speed = useSpeed();
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, alertVolume, speed);
-  const { aircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts } = usePegasus(userPos);
+  const { aircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts } = usePegasus(userPos, isAircraftsEnabled);
 
   const notifiedPegasus = useRef<Set<string>>(new Set());
   
@@ -161,11 +164,15 @@ export default function Home() {
         loadingRadars={loadingRadars}
         fetchingRouteRadars={fetchingRouteRadars}
         radars={radars}
+        isRadarsEnabled={isRadarsEnabled}
+        setIsRadarsEnabled={setIsRadarsEnabled}
         remainingRadars={remainingRadars}
         isAnyPegasusNearby={isAnyPegasusNearby}
         isRateLimited={isRateLimited}
         loadingAircrafts={loadingAircrafts}
         aircraftCount={aircrafts.length}
+        isAircraftsEnabled={isAircraftsEnabled}
+        setIsAircraftsEnabled={setIsAircraftsEnabled}
         hasLocation={hasLocation}
         onSearch={handleSearchSubmit}
         isSoundEnabled={isSoundEnabled}

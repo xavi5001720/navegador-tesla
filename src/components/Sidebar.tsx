@@ -26,6 +26,10 @@ interface SidebarProps {
   setIsSoundEnabled: (enabled: boolean) => void;
   alertVolume: number;
   setAlertVolume: (volume: number) => void;
+  isRadarsEnabled: boolean;
+  setIsRadarsEnabled: (v: boolean) => void;
+  isAircraftsEnabled: boolean;
+  setIsAircraftsEnabled: (v: boolean) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -48,7 +52,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   isSoundEnabled,
   setIsSoundEnabled,
   alertVolume,
-  setAlertVolume
+  setAlertVolume,
+  isRadarsEnabled,
+  setIsRadarsEnabled,
+  isAircraftsEnabled,
+  setIsAircraftsEnabled
 }) => {
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 md:bg-black/40 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -140,26 +148,46 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="flex-1 overflow-y-auto no-scrollbar py-4">
         <div className="grid grid-cols-1 gap-3">
            <div className="flex items-center justify-between rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-xl bg-rose-500/20 text-rose-400">
-                  <Radar className={`h-6 w-6 ${fetchingRouteRadars ? 'animate-spin' : ''}`} />
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Radares</span>
-                    {!loadingRadars && radars.length > 0 && !fetchingRouteRadars && (
-                      <div className="flex items-center gap-1 bg-green-500/10 px-1.5 py-0.5 rounded-full border border-green-500/20">
-                        <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                        <span className="text-[8px] font-bold text-green-500 uppercase">Activado</span>
-                      </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`p-3 rounded-xl ${isRadarsEnabled ? 'bg-rose-500/20 text-rose-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                    <Radar className={`h-6 w-6 ${fetchingRouteRadars ? 'animate-spin' : ''}`} />
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Radares</span>
+                      {isRadarsEnabled ? (
+                        !loadingRadars && !fetchingRouteRadars && (
+                          <div className="flex items-center gap-1 bg-green-500/10 px-1.5 py-0.5 rounded-full border border-green-500/20">
+                            <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                            <span className="text-[8px] font-bold text-green-500 uppercase">Activado</span>
+                          </div>
+                        )
+                      ) : (
+                        <div className="flex items-center gap-1 bg-rose-500/10 px-1.5 py-0.5 rounded-full border border-rose-500/20">
+                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500"></div>
+                          <span className="text-[8px] font-bold text-rose-500 uppercase">No Activado</span>
+                        </div>
+                      )}
+                    </div>
+                    {isRadarsEnabled ? (
+                      fetchingRouteRadars ? (
+                        <span className="text-[10px] font-bold text-rose-400 animate-pulse uppercase mt-1">Calculando ruta...</span>
+                      ) : (
+                        <span className="text-2xl font-black leading-none">{loadingRadars ? '...' : radars.length}</span>
+                      )
+                    ) : (
+                      <span className="text-2xl font-black leading-none text-white/30">OFF</span>
                     )}
                   </div>
-                  {fetchingRouteRadars ? (
-                    <span className="text-[10px] font-bold text-rose-400 animate-pulse uppercase mt-1">Calculando ruta...</span>
-                  ) : (
-                    <span className="text-2xl font-black leading-none">{loadingRadars ? '...' : radars.length}</span>
-                  )}
                 </div>
+                {/* Switch ON/OFF Radares */}
+                <button 
+                  onClick={() => setIsRadarsEnabled(!isRadarsEnabled)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 focus:ring-offset-black ${isRadarsEnabled ? 'bg-rose-500' : 'bg-gray-700'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isRadarsEnabled ? 'translate-x-[22px]' : 'translate-x-[4px]'}`} />
+                </button>
               </div>
               {remainingRadars < radars.length && !loadingRadars && !fetchingRouteRadars && (
                 <div className="flex flex-col items-end">
@@ -170,24 +198,44 @@ const Sidebar: React.FC<SidebarProps> = ({
            </div>
 
            <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 ${isAnyPegasusNearby ? 'bg-blue-600/20 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'bg-white/5 border-white/10'}`}>
-              <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-xl ${isAnyPegasusNearby ? 'bg-blue-500 text-white animate-pulse' : 'bg-blue-500/20 text-blue-400'}`}>
-                  <Plane className="h-6 w-6" />
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Aviones</span>
-                    {!loadingAircrafts && (
-                      <div className="flex items-center gap-1 bg-green-500/10 px-1.5 py-0.5 rounded-full border border-green-500/20">
-                        <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                        <span className="text-[8px] font-bold text-green-500 uppercase">Activado</span>
-                      </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`p-3 rounded-xl ${isAircraftsEnabled ? (isAnyPegasusNearby ? 'bg-blue-500 text-white animate-pulse' : 'bg-blue-500/20 text-blue-400') : 'bg-gray-500/20 text-gray-400'}`}>
+                    <Plane className="h-6 w-6" />
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Aviones</span>
+                      {isAircraftsEnabled ? (
+                        !loadingAircrafts && (
+                          <div className="flex items-center gap-1 bg-green-500/10 px-1.5 py-0.5 rounded-full border border-green-500/20">
+                            <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                            <span className="text-[8px] font-bold text-green-500 uppercase">Activado</span>
+                          </div>
+                        )
+                      ) : (
+                        <div className="flex items-center gap-1 bg-rose-500/10 px-1.5 py-0.5 rounded-full border border-rose-500/20">
+                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500"></div>
+                          <span className="text-[8px] font-bold text-rose-500 uppercase">No Activado</span>
+                        </div>
+                      )}
+                    </div>
+                    {isAircraftsEnabled ? (
+                      <span className={`text-2xl font-black leading-none ${isAnyPegasusNearby ? 'text-blue-400' : 'text-white/60'}`}>
+                        {loadingAircrafts ? '...' : aircraftCount}
+                      </span>
+                    ) : (
+                      <span className="text-2xl font-black leading-none text-white/30">OFF</span>
                     )}
                   </div>
-                  <span className={`text-2xl font-black leading-none ${isAnyPegasusNearby ? 'text-blue-400' : 'text-white/60'}`}>
-                    {loadingAircrafts ? 'BUSCANDO...' : aircraftCount}
-                  </span>
                 </div>
+                {/* Switch ON/OFF Aviones */}
+                <button 
+                  onClick={() => setIsAircraftsEnabled(!isAircraftsEnabled)}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-black ${isAircraftsEnabled ? 'bg-blue-500' : 'bg-gray-700'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isAircraftsEnabled ? 'translate-x-[22px]' : 'translate-x-[4px]'}`} />
+                </button>
               </div>
               {isAnyPegasusNearby && (
                 <p className="mt-2 text-[10px] text-blue-400 font-bold uppercase tracking-wider animate-pulse">

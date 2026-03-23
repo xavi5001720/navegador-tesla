@@ -8,7 +8,7 @@ export interface Radar {
   speedLimit?: number;
 }
 
-export function useRadars(userPos: [number, number] | null, routeCoordinates?: [number, number][]) {
+export function useRadars(userPos: [number, number] | null, routeCoordinates?: [number, number][], isEnabled: boolean = false) {
   const [radars, setRadars] = useState<Radar[]>([]);
   const [loadingRadars, setLoadingRadars] = useState(false);
 
@@ -32,7 +32,12 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
   };
 
   useEffect(() => {
-    if (!userPos) return;
+    if (!isEnabled || !userPos) {
+      if (!isEnabled && radars.length > 0) {
+        setRadars([]);
+      }
+      return;
+    }
 
     const hasRoute = routeCoordinates && routeCoordinates.length > 0;
     const currentType = hasRoute ? 'route' : 'local';
@@ -124,7 +129,7 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
 
     fetchRadars();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userPos?.[0], userPos?.[1], routeLength, routeFirstLat, routeFirstLon, routeLastLat, routeLastLon]);
+  }, [isEnabled, userPos?.[0], userPos?.[1], routeLength, routeFirstLat, routeFirstLon, routeLastLat, routeLastLon]);
 
   return { radars, loadingRadars, fetchingRouteRadars };
 }

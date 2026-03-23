@@ -71,12 +71,19 @@ function isNearAirport(lat: number, lon: number): boolean {
   return AIRPORTS.some(ap => getDistance([lat, lon], ap) < AIRPORT_RADIUS_M);
 }
 
-export function usePegasus(userPos: [number, number]) {
+export function usePegasus(userPos: [number, number] | null, isEnabled: boolean = false) {
   const [rawAircrafts, setRawAircrafts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
 
   useEffect(() => {
+    if (!isEnabled || !userPos) {
+      if (!isEnabled && rawAircrafts.length > 0) {
+        setRawAircrafts([]);
+      }
+      return;
+    }
+
     const fetchAircrafts = async (attempt = 1): Promise<void> => {
       if (attempt === 1) setLoading(true);
       console.log(`[usePegasus] Fetching directly from OpenSky (attempt ${attempt}/${MAX_RETRIES})...`);
@@ -121,9 +128,12 @@ export function usePegasus(userPos: [number, number]) {
     fetchAircrafts();
     const interval = setInterval(() => fetchAircrafts(), 60000);
     return () => clearInterval(interval);
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEnabled, userPos?.[0], userPos?.[1]]);
 
   const aircrafts = useMemo<Aircraft[]>(() => {
+    if (!userPos) return [];
+    
     const withPos = rawAircrafts.filter(s => s[6] !== null && s[5] !== null);
     console.log(`[usePegasus] Total recibidos: ${rawAircrafts.length} | Con posición: ${withPos.length}`);
 
