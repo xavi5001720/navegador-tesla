@@ -28,8 +28,9 @@ function getDistance(p1: [number, number], p2: [number, number]) {
 
 // Bounding box España peninsular
 const SPAIN_BBOX = { lamin: 35.0, lomin: -10.0, lamax: 44.0, lomax: 5.0 };
-// Usamos el proxy de Next.js para evitar problemas CORS con OpenSky desde el browser
-const OPENSKY_URL = `/opensky/api/states/all?lamin=${SPAIN_BBOX.lamin}&lomin=${SPAIN_BBOX.lomin}&lamax=${SPAIN_BBOX.lamax}&lomax=${SPAIN_BBOX.lomax}`;
+// OpenSky ahora soporta CORS directo ('access-control-allow-origin: *').
+// Ya no usamos el proxy de Next.js para evitar que la IP de Vercel sea bloqueada por límite (HTTP 429).
+const OPENSKY_URL = `https://opensky-network.org/api/states/all?lamin=${SPAIN_BBOX.lamin}&lomin=${SPAIN_BBOX.lomin}&lamax=${SPAIN_BBOX.lamax}&lomax=${SPAIN_BBOX.lomax}`;
 
 // Retry configuration
 const MAX_RETRIES = 3;
