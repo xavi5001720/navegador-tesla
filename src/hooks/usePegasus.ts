@@ -84,23 +84,8 @@ export function usePegasus(userPos: [number, number]) {
       return { ...aircraft, isSuspect };
     });
 
-    // AÑADIMOS UN MOCK PARA VERIFICACIÓN SI LA LISTA ESTÁ VACÍA (solo en desarrollo/test)
-    if (list.length === 0 && !loading) {
-       list.push({
-         icao24: 'MOCK1',
-         callsign: 'TEST_HELI',
-         origin_country: 'Spain',
-         lat: userPos[0] + 0.001,
-         lon: userPos[1] + 0.001,
-         altitude: 300,
-         velocity: 30,
-         track: 90,
-         isSuspect: true
-       });
-    }
-
     return list;
-  }, [rawAircrafts, userPos, loading]); 
+  }, [rawAircrafts, userPos]); 
 
   const isAnyPegasusNearby = useMemo(() => {
      return aircrafts.some((a: Aircraft) => a.isSuspect && getDistance(userPos, [a.lat, a.lon]) < 15000);
