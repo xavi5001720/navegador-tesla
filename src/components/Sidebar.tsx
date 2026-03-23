@@ -150,8 +150,8 @@ const Sidebar: React.FC<SidebarProps> = ({
            <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isRadarsEnabled && 'opacity-70'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-xl ${isRadarsEnabled ? 'bg-rose-500/20 text-rose-400' : 'bg-gray-500/20 text-gray-400'}`}>
-                    <Radar className={`h-6 w-6 ${fetchingRouteRadars ? 'animate-spin' : ''}`} />
+                  <div className={`p-2 rounded-xl flex items-center justify-center ${isRadarsEnabled ? 'bg-rose-500/20' : 'bg-gray-500/20'}`}>
+                    <img src="/radares.png" alt="Radares" className={`h-8 w-8 object-contain drop-shadow-md ${fetchingRouteRadars ? 'animate-pulse opacity-50' : ''}`} />
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">
@@ -202,8 +202,8 @@ const Sidebar: React.FC<SidebarProps> = ({
            <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 ${isAnyPegasusNearby ? 'bg-blue-600/20 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'bg-white/5 border-white/10'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className={`p-3 rounded-xl ${isAircraftsEnabled ? (isAnyPegasusNearby ? 'bg-blue-500 text-white animate-pulse' : 'bg-blue-500/20 text-blue-400') : 'bg-gray-500/20 text-gray-400'}`}>
-                    <Plane className="h-6 w-6" />
+                  <div className={`p-2 rounded-xl flex items-center justify-center ${isAircraftsEnabled ? (isAnyPegasusNearby ? 'bg-blue-500 animate-pulse' : 'bg-blue-500/20') : 'bg-gray-500/20'}`}>
+                    <img src="/aviones.png" alt="Aviones" className="h-8 w-8 object-contain drop-shadow-md" />
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">

@@ -101,83 +101,8 @@ const createCarIcon = (heading: number) => {
       {/* Sombra direccional base azulada bajo el vehículo */}
       <div className="absolute inset-0 bg-blue-500/30 rounded-full blur-2xl scale-125"></div>
       
-      {/* Coche Super-Deportivo Futurista en SVG */}
-      <svg viewBox="0 0 120 120" className="w-24 h-24 drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] object-contain transition-transform duration-500">
-        <defs>
-          <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            {/* Color Perla Blanco/Plata */}
-            <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="50%" stopColor="#e2e8f0" />
-            <stop offset="100%" stopColor="#cbd5e1" />
-          </linearGradient>
-          <linearGradient id="glassGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#020617" />
-            <stop offset="100%" stopColor="#1e293b" />
-          </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Llantas ultra anchas y oscuras sobresaliendo un poco */}
-        <rect x="22" y="25" width="10" height="24" rx="4" fill="#0f172a" />
-        <rect x="88" y="25" width="10" height="24" rx="4" fill="#0f172a" />
-        <rect x="22" y="75" width="10" height="26" rx="4" fill="#0f172a" />
-        <rect x="88" y="75" width="10" height="26" rx="4" fill="#0f172a" />
-
-        {/* Chasis oscurecido debajo para dar profundidad */}
-        <path d="M 30 20 L 90 20 L 95 100 L 25 100 Z" fill="#000" opacity="0.6" />
-
-        {/* Carrocería principal súper aerodinámica (Blanc Perla) */}
-        <path d="M 45 6 L 75 6 C 90 15, 98 40, 96 65 C 94 90, 85 108, 70 112 L 50 112 C 35 108, 26 90, 24 65 C 22 40, 30 15, 45 6 Z" fill="url(#bodyGradient)" />
-        
-        {/* Entradas de refrigeración frontales y nervios en capó de carbono */}
-        <path d="M 50 15 L 70 15 L 65 28 L 55 28 Z" fill="#000" opacity="0.85" />
-        <path d="M 55 28 L 65 28 L 60 40 Z" fill="#333" opacity="0.5" />
-        
-        {/* Faldones laterales aerodinámicos (Túnel de Viento) */}
-        <path d="M 26 50 Q 35 65 28 85 Q 38 65 26 50" fill="#1e293b" />
-        <path d="M 94 50 Q 85 65 92 85 Q 82 65 94 50" fill="#1e293b" />
-
-        {/* Front Splitter agresivo tipo F1 en Carbono */}
-        <path d="M 32 10 L 88 10 C 92 12, 92 15, 87 18 L 33 18 C 28 15, 28 12, 32 10 Z" fill="#020617" />
-        
-        {/* Cúpula del habitáculo tintada mega negra rodeada del marco del techo */}
-        <path d="M 45 35 C 45 22, 75 22, 75 35 C 80 50, 75 75, 60 85 C 45 75, 40 50, 45 35 Z" fill="url(#glassGradient)" />
-        {/* Brillo en forma de ola sobre el parabrisas delantero */}
-        <path d="M 47 37 C 47 26, 73 26, 73 37 C 77 50, 75 65, 60 72 C 45 65, 43 50, 47 37 Z" fill="#fff" opacity="0.1" /> 
-        
-        {/* Espejos / cámaras retrovisoras finas y cortantes */}
-        <path d="M 28 40 L 22 38 L 24 43 Z" fill="#cbd5e1" />
-        <path d="M 92 40 L 98 38 L 96 43 Z" fill="#cbd5e1" />
-
-        {/* Faros matriciales delanteros: Líneas de Neón Cyan Cyberpunk */}
-        <path d="M 28 17 L 42 12 L 44 19 L 32 24 Z" fill="#38bdf8" filter="url(#glow)" />
-        <path d="M 92 17 L 78 12 L 76 19 L 88 24 Z" fill="#38bdf8" filter="url(#glow)" />
-        {/* Lentes de proyección central ultra-brillantes blancas/azuladas */}
-        <circle cx="36" cy="18" r="2.5" fill="#ffffff" filter="url(#glow)" />
-        <circle cx="84" cy="18" r="2.5" fill="#ffffff" filter="url(#glow)" />
-
-        {/* Ala trasera deportiva (Spoiler activo elevado) */}
-        <path d="M 30 100 C 40 92, 80 92, 90 100 L 92 104 C 80 96, 40 96, 28 104 Z" fill="#020617" />
-
-        {/* Firma lumínica trasera LED rojo contínuo */}
-        <path d="M 35 106 C 45 109, 75 109, 85 106 L 81 110 C 70 112, 50 112, 39 110 Z" fill="#ef4444" filter="url(#glow)" />
-        
-        {/* Difusor trasero Aerodinámico de Carbono Massive */}
-        <path d="M 42 110 L 78 110 L 72 118 L 48 118 Z" fill="#0f172a" />
-        <line x1="53" y1="110" x2="53" y2="118" stroke="#333" strokeWidth="1" />
-        <line x1="60" y1="110" x2="60" y2="118" stroke="#333" strokeWidth="1" />
-        <line x1="67" y1="110" x2="67" y2="118" stroke="#333" strokeWidth="1" />
-        
-        {/* Escapes iluminados en azul eléctrico / reactores de plasma */}
-        <ellipse cx="56.5" cy="115" rx="2" ry="3" fill="#38bdf8" filter="url(#glow)" />
-        <ellipse cx="63.5" cy="115" rx="2" ry="3" fill="#38bdf8" filter="url(#glow)" />
-      </svg>
+      {/* Imagen del coche proporcionada por el usuario */}
+      <img src="/coche.png" alt="Coche" className="w-full h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] transition-transform duration-500" />
     </div>
   );
   return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [110, 110], iconAnchor: [55, 55] });
