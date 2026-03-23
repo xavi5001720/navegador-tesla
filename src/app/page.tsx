@@ -76,7 +76,7 @@ export default function Home() {
     }
   }, []);
 
-  const { radars: allRadars, loadingRadars } = useRadars(userPos, route?.coordinates);
+  const { radars: allRadars, loadingRadars, fetchingRouteRadars } = useRadars(userPos, route?.coordinates);
 
   // Filtrar radares para mostrar solo los que están en la ruta
   const radars = useMemo(() => {
@@ -159,6 +159,7 @@ export default function Home() {
         route={route}
         clearRoute={clearRoute}
         loadingRadars={loadingRadars}
+        fetchingRouteRadars={fetchingRouteRadars}
         radars={radars}
         remainingRadars={remainingRadars}
         isAnyPegasusNearby={isAnyPegasusNearby}

@@ -13,6 +13,7 @@ interface SidebarProps {
   route: any;
   clearRoute: () => void;
   loadingRadars: boolean;
+  fetchingRouteRadars?: boolean;
   radars: any[];
   remainingRadars?: number;
   isAnyPegasusNearby: boolean;
@@ -35,6 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   route,
   clearRoute,
   loadingRadars,
+  fetchingRouteRadars,
   radars,
   remainingRadars = 0,
   isAnyPegasusNearby,
@@ -140,22 +142,26 @@ const Sidebar: React.FC<SidebarProps> = ({
            <div className="flex items-center justify-between rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors">
               <div className="flex items-center gap-4">
                 <div className="p-3 rounded-xl bg-rose-500/20 text-rose-400">
-                  <Radar className="h-6 w-6" />
+                  <Radar className={`h-6 w-6 ${fetchingRouteRadars ? 'animate-spin' : ''}`} />
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Radares</span>
-                    {!loadingRadars && radars.length > 0 && (
+                    {!loadingRadars && radars.length > 0 && !fetchingRouteRadars && (
                       <div className="flex items-center gap-1 bg-green-500/10 px-1.5 py-0.5 rounded-full border border-green-500/20">
                         <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
                         <span className="text-[8px] font-bold text-green-500 uppercase">Activado</span>
                       </div>
                     )}
                   </div>
-                  <span className="text-2xl font-black leading-none">{loadingRadars ? '...' : radars.length}</span>
+                  {fetchingRouteRadars ? (
+                    <span className="text-[10px] font-bold text-rose-400 animate-pulse uppercase mt-1">Calculando ruta...</span>
+                  ) : (
+                    <span className="text-2xl font-black leading-none">{loadingRadars ? '...' : radars.length}</span>
+                  )}
                 </div>
               </div>
-              {remainingRadars < radars.length && !loadingRadars && (
+              {remainingRadars < radars.length && !loadingRadars && !fetchingRouteRadars && (
                 <div className="flex flex-col items-end">
                   <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Restantes</span>
                   <span className="text-xl font-bold text-blue-400">{remainingRadars}</span>
