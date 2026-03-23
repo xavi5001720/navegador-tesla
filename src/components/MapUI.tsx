@@ -112,7 +112,7 @@ function MapRotator({ heading, isFollowing, hasRoute, speed = 0 }: { heading: nu
   const map = useMap();
   useEffect(() => {
     const container = map.getContainer();
-    const isOverview = hasRoute && speed < 10;
+    const isOverview = speed < 10;
     
     if (isFollowing && !isOverview) {
       container.style.transition = 'transform 0.5s ease-out';
@@ -129,9 +129,10 @@ function LocationTracker({ position, isTracking, hasRoute, speed = 0, routeCoord
   const map = useMap();
   useEffect(() => {
     if (isTracking) {
-      if (hasRoute && routeCoordinates && routeCoordinates.length > 0 && speed < 10) {
-        // Detenido o muy despacio (<10km/h): mostrar toda la ruta restante hasta el destino
-        try {
+      if (speed < 10) {
+        if (hasRoute && routeCoordinates && routeCoordinates.length > 0) {
+          // Detenido o muy despacio (<10km/h) con ruta: mostrar toda la ruta restante
+          try {
            const posArr = Array.isArray(position) ? position as [number, number] : [0, 0] as [number, number];
            // Find user path progress vs the whole polyline. Use distance of 500m fallback
            const snapped = findClosestPointOnPolyline(posArr, routeCoordinates);
@@ -147,7 +148,11 @@ function LocationTracker({ position, isTracking, hasRoute, speed = 0, routeCoord
            map.setView(position, 16, { animate: true, duration: 1 });
         }
       } else {
-        // En movimiento (>10km/h): seguimiento cercano, abriendo el plano gradualmente a más velocidad
+        // Detenido (<10km/h) sin ruta: mostrar vista general de la zona
+        map.setView(position, 15, { animate: true, duration: 1 });
+      }
+    } else {
+      // En movimiento (>10km/h): seguimiento cercano, abriendo el plano gradualmente a más velocidad
         let targetZoom = hasRoute ? 18 : 17;
         if (speed > 50) targetZoom = 17;
         if (speed > 100) targetZoom = 16;
