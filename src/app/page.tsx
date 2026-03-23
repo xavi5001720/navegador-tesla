@@ -189,6 +189,7 @@ export default function Home() {
           routeCoordinates={route?.coordinates} 
           radars={radars}
           aircrafts={aircrafts}
+          speed={speed}
         />
 
         {/* Panel de Avisos Rápidos y Velocímetro */}

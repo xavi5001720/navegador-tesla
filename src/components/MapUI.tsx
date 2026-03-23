@@ -92,6 +92,7 @@ interface MapUIProps {
    routeCoordinates?: [number, number][];
    radars: Radar[];
    aircrafts?: Aircraft[];
+   speed?: number;
 }
 
 const createCarIcon = (heading: number) => {
@@ -146,19 +147,41 @@ function MapRotator({ heading, isFollowing }: { heading: number, isFollowing: bo
   return null;
 }
 
-function LocationTracker({ position, isTracking, hasRoute }: { position: L.LatLngExpression, isTracking: boolean, hasRoute: boolean }) {
+function LocationTracker({ position, isTracking, hasRoute, speed = 0, routeCoordinates }: { position: L.LatLngExpression, isTracking: boolean, hasRoute: boolean, speed?: number, routeCoordinates?: [number, number][] }) {
   const map = useMap();
   useEffect(() => {
     if (isTracking) {
-      // Auto-Zoom: Si estamos en movimiento (tracking activo), nos acercamos más (zoom 17-18)
-      const targetZoom = hasRoute ? 17 : 16;
-      map.setView(position, targetZoom, { animate: true, duration: 1 });
+      if (hasRoute && routeCoordinates && routeCoordinates.length > 0 && speed < 10) {
+        // Detenido o muy despacio (<10km/h): mostrar toda la ruta restante hasta el destino
+        try {
+           const posArr = Array.isArray(position) ? position as [number, number] : [0, 0] as [number, number];
+           // Find user path progress vs the whole polyline. Use distance of 500m fallback
+           const snapped = findClosestPointOnPolyline(posArr, routeCoordinates);
+           const remainingPath = routeCoordinates.slice(snapped.segmentIndex);
+           if (remainingPath.length > 2) {
+             remainingPath.unshift(posArr); // Include car in the viewport
+             const bounds = L.latLngBounds(remainingPath);
+             map.fitBounds(bounds, { padding: [50, 50], animate: true, duration: 1.5 });
+           } else {
+             map.setView(position, 17, { animate: true, duration: 1 });
+           }
+        } catch (e) {
+           map.setView(position, 16, { animate: true, duration: 1 });
+        }
+      } else {
+        // En movimiento (>10km/h): seguimiento cercano, abriendo el plano gradualmente a más velocidad
+        let targetZoom = hasRoute ? 18 : 17;
+        if (speed > 50) targetZoom = 17;
+        if (speed > 100) targetZoom = 16;
+        
+        map.setView(position, targetZoom, { animate: true, duration: 1 });
+      }
     }
-  }, [position, isTracking, map, hasRoute]);
+  }, [position, isTracking, map, hasRoute, speed, routeCoordinates]);
   return null;
 }
 
-export default function MapUI({ userPos, heading, routeCoordinates, radars = [], aircrafts = [] }: MapUIProps) {
+export default function MapUI({ userPos, heading, routeCoordinates, radars = [], aircrafts = [], speed = 0 }: MapUIProps) {
   const [isFollowing, setIsFollowing] = useState(true);
 
   return (
@@ -192,7 +215,7 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
         <RouteFitter routeCoordinates={routeCoordinates} />
         
         {/* Usamos userPos directamente para el tracker de vista, pero visualmente el coche puede ir snappeado */}
-        <LocationTracker position={userPos} isTracking={isFollowing} hasRoute={!!routeCoordinates} />
+        <LocationTracker position={userPos} isTracking={isFollowing} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} />
         
         {routeCoordinates && routeCoordinates.length > 0 && (
            <>
