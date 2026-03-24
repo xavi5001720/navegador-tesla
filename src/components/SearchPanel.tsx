@@ -68,9 +68,6 @@ export default function SearchPanel({ onSearch, isLoading = false }: SearchPanel
       };
 
       recognitionRef.current = recognition;
-    } else {
-       // Si no soporta reconocimiento
-       setMicError('Reconocimiento de voz no soportado en este navegador.');
     }
 
     return () => {
@@ -79,11 +76,16 @@ export default function SearchPanel({ onSearch, isLoading = false }: SearchPanel
   }, []);
 
   const toggleListen = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
+    if (recognitionRef.current) {
+      if (isListening) {
+        recognitionRef.current.stop();
+      } else {
+        setQuery(''); 
+        recognitionRef.current.start();
+      }
     } else {
-      setQuery(''); 
-      recognitionRef.current?.start();
+      setMicError('Reconocimiento de voz no soportado en este navegador.');
+      setTimeout(() => setMicError(''), 5000);
     }
   };
 
