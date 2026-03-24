@@ -124,7 +124,7 @@ export default function Home() {
 
   const speed = useSpeed();
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, alertVolume, speed);
-  const { aircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
+  const { allAircrafts, aircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
 
   const notifiedPegasus = useRef<Set<string>>(new Set());
   
@@ -218,7 +218,7 @@ export default function Home() {
           heading={heading}
           routeCoordinates={route?.coordinates} 
           radars={radars}
-          aircrafts={aircrafts}
+          aircrafts={allAircrafts}
           speed={speed}
           viewMode={viewMode}
           onViewModeChange={setViewMode}

@@ -43,14 +43,20 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
   const isThreat = isSuspect && distanceToUser < 10000;
   return L.divIcon({
     html: renderToStaticMarkup(
-      <div className={`aircraft-marker flex items-center justify-center p-2 rounded-full border-2 ${
-        isThreat
-          ? 'bg-rose-600 border-white animate-pulse shadow-[0_0_20px_rgba(225,29,72,1)]'
-          : isSuspect 
-            ? 'bg-blue-600 border-white shadow-[0_0_15px_rgba(37,99,235,0.6)]' 
-            : 'bg-gray-700/80 border-gray-500 opacity-80'
-      } text-white`}>
-        <Plane className="h-4 w-4" style={{ transform: `rotate(${heading - 45}deg) scale(${isSuspect ? 1.4 : 1})` }} />
+      <div className="aircraft-marker-container">
+        {isSuspect ? (
+          <div className={`flex items-center justify-center p-2 rounded-full border-2 ${
+            isThreat
+              ? 'bg-rose-600 border-white animate-pulse shadow-[0_0_20px_rgba(225,29,72,1)]'
+              : 'bg-blue-600 border-white shadow-[0_0_15px_rgba(37,99,235,0.6)]' 
+          } text-white`}>
+            <Plane className="h-4 w-4" style={{ transform: `rotate(${heading - 45}deg) scale(1.4)` }} />
+          </div>
+        ) : (
+          <div className="flex items-center justify-center text-amber-500/90 drop-shadow-md">
+            <Plane fill="currentColor" className="h-5 w-5" style={{ transform: `rotate(${heading - 45}deg)` }} />
+          </div>
+        )}
       </div>
     ),
     className: 'custom-aircraft-icon',

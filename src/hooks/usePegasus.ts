@@ -160,8 +160,8 @@ export function usePegasus(
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEnabled, !!userPos]);
 
-  const aircrafts = useMemo<Aircraft[]>(() => {
-    if (!userPos) return [];
+  const { allAircrafts, aircrafts } = useMemo(() => {
+    if (!userPos) return { allAircrafts: [], aircrafts: [] };
 
     const withPos = rawAircrafts.filter(s => s[6] !== null && s[5] !== null);
     console.log(`[usePegasus] Con posición: ${withPos.length}`);
@@ -190,17 +190,21 @@ export function usePegasus(
       };
     });
 
-    const suspects = mapped.filter(a => {
-      const isAltSpeedSuspect = a.isSuspect && a.altitude >= 100 && a.altitude <= 2000 && a.velocity <= 83.33;
-      // Si hay ruta, ignoramos todo lo que esté a más de 50km del usuario para "limpiar" el mapa
-      const hasRoute = routeCoordinates && routeCoordinates.length > 0;
+    const hasRoute = routeCoordinates && routeCoordinates.length > 0;
+    
+    // Filtrar todo lo que esté muy lejos para no saturar el mapa si hay ruta
+    const finalMapped = mapped.filter(a => {
       if (hasRoute && a.distanceToUser > 50000) return false;
-      
-      return isAltSpeedSuspect;
+      return true;
     });
-    console.log(`[usePegasus] Sospechosos: ${suspects.length} de ${mapped.length}`);
-    return suspects;
-  }, [rawAircrafts, userPos]);
+
+    const suspects = finalMapped.filter(a => {
+      return a.isSuspect && a.altitude >= 100 && a.altitude <= 2000 && a.velocity <= 83.33;
+    });
+    
+    console.log(`[usePegasus] Sospechosos: ${suspects.length} de ${finalMapped.length} (total en mapa)`);
+    return { allAircrafts: finalMapped, aircrafts: suspects };
+  }, [rawAircrafts, userPos, routeCoordinates]);
 
   const isAnyPegasusNearby = useMemo(
     () => aircrafts.some(a => a.distanceToUser < 10000),
@@ -208,6 +212,7 @@ export function usePegasus(
   );
 
   return {
+    allAircrafts,
     aircrafts,
     totalCount: rawAircrafts.length,
     isAnyPegasusNearby,
