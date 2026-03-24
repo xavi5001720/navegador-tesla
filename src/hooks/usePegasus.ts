@@ -15,32 +15,45 @@ export interface Aircraft {
   distanceToUser: number;
 }
 
-// Distancia entre dos puntos [lat, lon] en metros (Haversine)
+// ── Haversine ─────────────────────────────────────────────────────────────────
 function getDistance(p1: [number, number], p2: [number, number]) {
   const R = 6371e3;
   const dLat = (p2[0] - p1[0]) * Math.PI / 180;
   const dLon = (p2[1] - p1[1]) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(p1[0] * Math.PI / 180) * Math.cos(p2[0] * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(p1[0] * Math.PI / 180) * Math.cos(p2[0] * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// Calcula el bounding box de una ruta con un margen en grados
-// Si no hay ruta, devuelve un bbox de ~10 km alrededor del usuario
+// ── Aeropuertos principales de España ─────────────────────────────────────────
+const AIRPORTS: [number, number][] = [
+  [40.4936, -3.5668], [41.2971, 2.0785], [37.4274, -5.8931],
+  [36.6749, -4.4990], [39.5526, 2.7388], [28.4527, -13.8655],
+  [27.9319, -15.3866], [28.0445, -16.5725], [28.4827, -16.3415],
+  [38.8722, 1.3731], [43.3011, -8.3777], [43.3565, -5.8603],
+  [43.3010, -1.7921], [43.3011, -3.8257], [39.4926, -0.4815],
+  [38.1814, -1.0014], [38.2816, -0.5582], [36.7878, -2.3696],
+];
+const AIRPORT_RADIUS_M = 5000;
+function isNearAirport(lat: number, lon: number): boolean {
+  return AIRPORTS.some(ap => getDistance([lat, lon], ap) < AIRPORT_RADIUS_M);
+}
+
+// ── Aerolíneas comerciales — se excluyen del radar ────────────────────────────
+const COMMERCIAL_RE = /^(EAX|IBE|RYR|VLG|EZY|AFR|DLH|KLM|BAW)/i;
+
+// ── Calcula bbox de la ruta ───────────────────────────────────────────────────
+// Sin ruta → radio amplio (~150 km) | Con ruta → margen ~20 km alrededor del trazado
 function getRouteBbox(
   userPos: [number, number],
   routeCoordinates?: [number, number][]
-): { lamin: number; lomin: number; lamax: number; lomax: number } {
-  const MARGIN_DEG = 0.09; // ~10 km de margen
-  const points = routeCoordinates && routeCoordinates.length > 0
-    ? routeCoordinates
-    : [userPos];
+): string {
+  const hasRoute = routeCoordinates && routeCoordinates.length > 0;
+  const MARGIN_DEG = hasRoute ? 0.18 : 1.5;
+  const points = hasRoute ? routeCoordinates! : [userPos];
 
   let lamin = points[0][0], lamax = points[0][0];
   let lomin = points[0][1], lomax = points[0][1];
-
   for (const [lat, lon] of points) {
     if (lat < lamin) lamin = lat;
     if (lat > lamax) lamax = lat;
@@ -48,63 +61,94 @@ function getRouteBbox(
     if (lon > lomax) lomax = lon;
   }
 
-  return {
-    lamin: +(lamin - MARGIN_DEG).toFixed(4),
-    lomin: +(lomin - MARGIN_DEG).toFixed(4),
-    lamax: +(lamax + MARGIN_DEG).toFixed(4),
-    lomax: +(lomax + MARGIN_DEG).toFixed(4),
-  };
+  const la1 = (lamin - MARGIN_DEG).toFixed(4);
+  const lo1 = (lomin - MARGIN_DEG).toFixed(4);
+  const la2 = (lamax + MARGIN_DEG).toFixed(4);
+  const lo2 = (lomax + MARGIN_DEG).toFixed(4);
+  return `lamin=${la1}&lomin=${lo1}&lamax=${la2}&lomax=${lo2}`;
 }
 
-const FETCH_INTERVAL_MS = 30_000; // 30 s — el servidor cachea por 30 s también
+// ── Credenciales (cuenta 1: la más limpia) ────────────────────────────────────
+const ACCOUNT = { clientId: 'luliloqui-api-client', clientSecret: 'YEXtTfBwCd5w2Kxhvp57W4C0s6f4Pb5n' };
+const tokenCache: { token: string; expiresAt: number } | null = null;
+let _tokenCache: { token: string; expiresAt: number } | null = tokenCache;
+
+async function getToken(): Promise<string | null> {
+  const now = Date.now();
+  if (_tokenCache && _tokenCache.expiresAt > now) return _tokenCache.token;
+  try {
+    const res = await fetch(
+      'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'client_credentials',
+          client_id: ACCOUNT.clientId,
+          client_secret: ACCOUNT.clientSecret,
+        }),
+      }
+    );
+    if (res.ok) {
+      const d = await res.json();
+      if (d.access_token) {
+        _tokenCache = { token: d.access_token, expiresAt: now + 25 * 60_000 };
+        return d.access_token;
+      }
+    }
+  } catch (e) { console.error('[usePegasus] Token error:', e); }
+  return null;
+}
+
+const FETCH_INTERVAL_MS = 45_000; // 45 s entre consultas
 
 export function usePegasus(
   userPos: [number, number] | null,
   isEnabled: boolean = false,
   routeCoordinates?: [number, number][]
 ) {
-  const [rawStates, setRawStates] = useState<any[]>([]);
+  const [rawAircrafts, setRawAircrafts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
 
-  // Ref para que el intervalo siempre tenga acceso a las últimas coordenadas de ruta
   const routeRef = useRef(routeCoordinates);
   useEffect(() => { routeRef.current = routeCoordinates; }, [routeCoordinates]);
 
   useEffect(() => {
     if (!isEnabled || !userPos) {
-      if (!isEnabled && rawStates.length > 0) setRawStates([]);
+      if (!isEnabled && rawAircrafts.length > 0) setRawAircrafts([]);
       return;
     }
 
     const fetchAircrafts = async (): Promise<void> => {
       setLoading(true);
       const bbox = getRouteBbox(userPos, routeRef.current);
-      const params = new URLSearchParams({
-        lamin: String(bbox.lamin),
-        lomin: String(bbox.lomin),
-        lamax: String(bbox.lamax),
-        lomax: String(bbox.lomax),
-      });
+      const url = `https://opensky-network.org/api/states/all?${bbox}`;
+      console.log(`[usePegasus] Fetching OpenSky (cliente directo): ${bbox}`);
 
-      console.log(`[usePegasus] Fetching /api/aircrafts bbox: ${bbox.lamin},${bbox.lomin} → ${bbox.lamax},${bbox.lomax}`);
+      const token = await getToken();
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       try {
-        const res = await fetch(`/api/aircrafts?${params}`);
-        const data = await res.json();
+        const res = await fetch(url, { headers });
+        console.log('[usePegasus] OpenSky status:', res.status);
 
-        if (res.status === 429 || data.rateLimited) {
+        if (res.status === 429) {
           setIsRateLimited(true);
-          console.warn('[usePegasus] Rate limited');
-        } else {
-          setIsRateLimited(false);
+          console.warn('[usePegasus] ⚠️ Rate limited (429)');
+          setLoading(false);
+          return;
         }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
+        const data = await res.json();
+        setIsRateLimited(false);
         if (data?.states) {
-          console.log(`[usePegasus] ✅ ${data.states.length} sospechosos (${data.totalRaw} totales, ${data.tiles} tiles)`);
-          setRawStates(data.states);
+          console.log(`[usePegasus] ✅ ${data.states.length} aviones recibidos en bbox`);
+          setRawAircrafts(data.states);
         } else {
-          setRawStates([]);
+          setRawAircrafts([]);
         }
       } catch (error) {
         console.error('[usePegasus] ❌ Fetch error:', error);
@@ -119,27 +163,42 @@ export function usePegasus(
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEnabled, !!userPos]);
 
-  // El servidor ya filtra sospechosos. Aquí solo mapeamos a Aircraft con distancias.
   const aircrafts = useMemo<Aircraft[]>(() => {
     if (!userPos) return [];
 
-    return rawStates.map(s => {
-      const lat = s[6];
-      const lon = s[5];
+    const withPos = rawAircrafts.filter(s => s[6] !== null && s[5] !== null);
+    console.log(`[usePegasus] Con posición: ${withPos.length}`);
+
+    const mapped = withPos.map(s => {
+      const icao24 = s[0] || '';
+      const callsign = (s[1] || '').trim();
+      const isCommercial = COMMERCIAL_RE.test(callsign);
+      const hasCallsign = /DGT|PESG|SAER|POLIC|GUARDIA|GC|POL/i.test(callsign);
+      const altitude = s[7] ?? s[13] ?? 0;
+      const velocity = s[9] ?? 0;
+      const lat = s[6], lon = s[5];
+      const isDGT = icao24.startsWith('34');
+      const isLow = altitude < 1000;
+      const isSlow = velocity < 60;
+      const nearAirport = isNearAirport(lat, lon);
+      const isSuspect = !isCommercial && (hasCallsign || isDGT || ((isLow && isSlow) && !nearAirport));
+
       return {
-        icao24: s[0] || '',
-        callsign: (s[1] || '').trim() || 'N/A',
+        icao24, callsign: callsign || 'N/A',
         origin_country: s[2] || '',
-        lon,
-        lat,
-        altitude: s[7] ?? s[13] ?? 0,
-        velocity: s[9] ?? 0,
+        lon, lat, altitude, velocity,
         track: s[10] ?? 0,
-        isSuspect: true, // el servidor solo devuelve sospechosos
+        isSuspect,
         distanceToUser: getDistance(userPos, [lat, lon]),
       };
     });
-  }, [rawStates, userPos]);
+
+    const suspects = mapped.filter(a =>
+      a.isSuspect && a.altitude >= 100 && a.altitude <= 2000 && a.velocity <= 83.33
+    );
+    console.log(`[usePegasus] Sospechosos: ${suspects.length} de ${mapped.length}`);
+    return suspects;
+  }, [rawAircrafts, userPos]);
 
   const isAnyPegasusNearby = useMemo(
     () => aircrafts.some(a => a.distanceToUser < 10000),
@@ -148,10 +207,10 @@ export function usePegasus(
 
   return {
     aircrafts,
-    totalCount: rawStates.length,
+    totalCount: rawAircrafts.length,
     isAnyPegasusNearby,
     loading,
     isRateLimited,
-    activeAccount: 1, // mantenemos la prop por compatibilidad con Sidebar
+    activeAccount: 1,
   };
 }
