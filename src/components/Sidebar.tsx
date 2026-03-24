@@ -65,11 +65,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 md:bg-black/40 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white/90">
-            Viajando en <span className="text-blue-500">Tesla</span>
-          </h1>
-          <p className="text-sm text-gray-400 mt-1">en construcción versión 4</p>
+        <div className="flex items-center">
+          <img src="/logo.png" alt="Navegador Tesla Logo" className="h-14 w-auto object-contain drop-shadow-xl" />
         </div>
         <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-2 text-gray-400">
           <X className="h-5 w-5" />
