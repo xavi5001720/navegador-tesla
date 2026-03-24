@@ -86,19 +86,43 @@ export function usePegasus(userPos: [number, number] | null, isEnabled: boolean 
       return;
     }
 
+    const credentialsMap: Record<string, { clientId: string, clientSecret: string }> = {
+      '2': {
+        clientId: 'pepinperez-api-client',
+        clientSecret: 'K922tGbRbq0DsrudGDVKQOJv3tYtnO6A'
+      },
+      '3': {
+        clientId: 'saracruzhortelana-api-client',
+        clientSecret: 'o7FsNtYuca4K6xSHBCb3x4zKo3yiwBS1'
+      }
+    };
+
     const fetchAircrafts = async (attempt = 1): Promise<void> => {
       if (attempt === 1) setLoading(true);
 
       let token = null;
       if (accountIndexRef.current > 1) {
         try {
-          const tRes = await fetch(`/api/opensky-token?account=${accountIndexRef.current}`);
+          const creds = credentialsMap[accountIndexRef.current.toString()];
+          const tRes = await fetch('https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              grant_type: 'client_credentials',
+              client_id: creds.clientId,
+              client_secret: creds.clientSecret,
+            })
+          });
           if (tRes.ok) {
             const tData = await tRes.json();
             token = tData.access_token;
+          } else {
+             console.error('[usePegasus] Failed to get token directly from Keycloak:', tRes.status);
           }
         } catch(e) {
-          console.error('[usePegasus] Error fetching token:', e);
+          console.error('[usePegasus] Error fetching token locally:', e);
         }
       }
 
