@@ -15,7 +15,7 @@ import { useSpeed } from '@/hooks/useSpeed';
 import { usePegasus } from '@/hooks/usePegasus';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
-import { distanceToPolyline } from '@/utils/geo';
+import { distanceToPolyline, findClosestPointOnPolyline } from '@/utils/geo';
 import { playPegasusAlert } from '@/utils/sound';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
@@ -80,19 +80,28 @@ export default function Home() {
 
   const { radars: allRadars, loadingRadars, fetchingRouteRadars } = useRadars(userPos, route?.coordinates, isRadarsEnabled);
 
-  // Filtrar radares para mostrar solo los que están en la ruta
+  // Filtrar radares:
+  // - Sin ruta: solo los próximos (ya se buscan en radio de 10km por useRadars)
+  // - Con ruta: solo los que están en la ruta PENDIENTE por delante del usuario
   const radars = useMemo(() => {
     if (!isRadarsEnabled) return [];
     if (!route || !route.coordinates || route.coordinates.length === 0 || allRadars.length === 0) {
-      return allRadars;
+      return allRadars; // Sin ruta → mostrar los próximos (búsqueda local por radio)
     }
+
+    // Encontrar el segmento de ruta más cercano al usuario
+    const snapped = findClosestPointOnPolyline(userPos, route.coordinates);
+    const currentSegmentIndex = snapped.segmentIndex;
+    // Solo la porción de ruta que queda por delante
+    const remainingRoute = route.coordinates.slice(currentSegmentIndex);
 
     return allRadars.filter(radar => {
       const radarPos: [number, number] = [radar.lat, radar.lon];
-      const distToPath = distanceToPolyline(radarPos, route.coordinates);
+      // El radar debe estar a <500m del trazado restante
+      const distToPath = distanceToPolyline(radarPos, remainingRoute);
       return distToPath < 500;
     });
-  }, [allRadars, route]);
+  }, [allRadars, route, userPos]);
 
   const speed = useSpeed();
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, alertVolume, speed);
