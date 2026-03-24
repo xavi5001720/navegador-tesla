@@ -78,7 +78,7 @@ const rateLimitedAt: Record<number, number> = {};
 const RATE_LIMIT_BACKOFF_MS = 5 * 60 * 1000; // 5 min antes de reintentar una cuenta limitada
 
 const ACCOUNTS: Record<number, { clientId: string; clientSecret: string } | null> = {
-  1: null,
+  1: { clientId: 'luliloqui-api-client', clientSecret: 'YEXtTfBwCd5w2Kxhvp57W4C0s6f4Pb5n' }, // limpia (prioritaria)
   2: { clientId: 'pepinperez-api-client', clientSecret: 'K922tGbRbq0DsrudGDVKQOJv3tYtnO6A' },
   3: { clientId: 'saracruzhortelana-api-client', clientSecret: 'o7FsNtYuca4K6xSHBCb3x4zKo3yiwBS1' }
 };
