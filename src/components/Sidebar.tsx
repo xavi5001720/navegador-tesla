@@ -65,8 +65,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 md:bg-black/40 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center">
+        <div className="flex items-center gap-4">
           <img src="/logo2.png" alt="Navegador Tesla Logo" className="h-14 w-auto object-contain drop-shadow-xl" />
+          <h1 className="text-3xl font-black italic tracking-tighter text-red-600 drop-shadow-[0_2px_4px_rgba(220,38,38,0.4)]">
+            RadarKiLLER
+          </h1>
         </div>
         <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-2 text-gray-400">
           <X className="h-5 w-5" />
