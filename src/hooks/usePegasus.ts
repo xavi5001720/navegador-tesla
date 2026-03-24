@@ -42,30 +42,27 @@ function isNearAirport(lat: number, lon: number): boolean {
 // ── Aerolíneas comerciales — se excluyen del radar ────────────────────────────
 const COMMERCIAL_RE = /^(EAX|IBE|RYR|VLG|EZY|AFR|DLH|KLM|BAW)/i;
 
+// ── Spain bbox completo (fallback sin ruta) ───────────────────────────────────
+const SPAIN_BBOX = `lamin=35.0&lomin=-10.0&lamax=44.0&lomax=5.0`;
+
 // ── Calcula bbox de la ruta ───────────────────────────────────────────────────
-// Sin ruta → radio amplio (~150 km) | Con ruta → margen ~20 km alrededor del trazado
+// Sin ruta → toda España (vista general)
+// Con ruta → caja de ~50 km alrededor del coche (suficiente para la próxima media hora de viaje)
 function getRouteBbox(
   userPos: [number, number],
   routeCoordinates?: [number, number][]
 ): string {
   const hasRoute = routeCoordinates && routeCoordinates.length > 0;
-  const MARGIN_DEG = hasRoute ? 0.18 : 1.5;
-  const points = hasRoute ? routeCoordinates! : [userPos];
+  if (!hasRoute) return SPAIN_BBOX;
 
-  let lamin = points[0][0], lamax = points[0][0];
-  let lomin = points[0][1], lomax = points[0][1];
-  for (const [lat, lon] of points) {
-    if (lat < lamin) lamin = lat;
-    if (lat > lamax) lamax = lat;
-    if (lon < lomin) lomin = lon;
-    if (lon > lomax) lomax = lon;
-  }
-
-  const la1 = (lamin - MARGIN_DEG).toFixed(4);
-  const lo1 = (lomin - MARGIN_DEG).toFixed(4);
-  const la2 = (lamax + MARGIN_DEG).toFixed(4);
-  const lo2 = (lomax + MARGIN_DEG).toFixed(4);
-  return `lamin=${la1}&lomin=${lo1}&lamax=${la2}&lomax=${lo2}`;
+  // Un grado de latitud son ~111 km. 0.45 grados son ~50 km.
+  const MARGIN_DEG = 0.45; 
+  const lamin = (userPos[0] - MARGIN_DEG).toFixed(4);
+  const lomin = (userPos[1] - MARGIN_DEG).toFixed(4);
+  const lamax = (userPos[0] + MARGIN_DEG).toFixed(4);
+  const lomax = (userPos[1] + MARGIN_DEG).toFixed(4);
+  
+  return `lamin=${lamin}&lomin=${lomin}&lamax=${lamax}&lomax=${lomax}`;
 }
 
 // ── Credenciales (cuenta 1: la más limpia) ────────────────────────────────────
@@ -193,9 +190,14 @@ export function usePegasus(
       };
     });
 
-    const suspects = mapped.filter(a =>
-      a.isSuspect && a.altitude >= 100 && a.altitude <= 2000 && a.velocity <= 83.33
-    );
+    const suspects = mapped.filter(a => {
+      const isAltSpeedSuspect = a.isSuspect && a.altitude >= 100 && a.altitude <= 2000 && a.velocity <= 83.33;
+      // Si hay ruta, ignoramos todo lo que esté a más de 50km del usuario para "limpiar" el mapa
+      const hasRoute = routeCoordinates && routeCoordinates.length > 0;
+      if (hasRoute && a.distanceToUser > 50000) return false;
+      
+      return isAltSpeedSuspect;
+    });
     console.log(`[usePegasus] Sospechosos: ${suspects.length} de ${mapped.length}`);
     return suspects;
   }, [rawAircrafts, userPos]);
