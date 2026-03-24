@@ -10,13 +10,12 @@ const credentialsMap: Record<number, { clientId: string, clientSecret: string }>
   3: { clientId: 'saracruzhortelana-api-client', clientSecret: 'o7FsNtYuca4K6xSHBCb3x4zKo3yiwBS1' }
 };
 
-let globalAccountIndex = 1; // 1 = anon, 2 = pepin, 3 = sara
+let globalAccountIndex = 2; // Empezamos en Account 2: las IPs de Vercel están bloqueadas en anónima
 let cachedAircrafts: any[] = [];
 let lastFetchTime = 0;
-const CACHE_DURATION = 30 * 1000; // 30s cache para todos los usuarios
+const CACHE_DURATION = 57 * 1000; // 57s: casi el intervalo del cliente (60s), evita re-fetches dobles
 
 async function getAccessToken(index: number) {
-  if (index === 1) return null;
   const creds = credentialsMap[index];
   if (!creds) return null;
   
@@ -59,11 +58,14 @@ export async function GET() {
       const res = await fetch(URL, { headers, cache: 'no-store' });
       
       if (res.status === 429) {
+        console.warn(`[API] Account ${globalAccountIndex} rate limited (429).`);
         if (globalAccountIndex < 3) {
           globalAccountIndex++;
-          continue; // Saltar a la siguiente cuenta
+          continue;
         } else {
-          return NextResponse.json({ error: 'Rate limited', account: globalAccountIndex, states: cachedAircrafts }, { status: 429 });
+          // Todas agotadas, reset a cuenta 2 para próximas peticiones
+          globalAccountIndex = 2;
+          return NextResponse.json({ error: 'Rate limited', account: 3, states: cachedAircrafts }, { status: 429 });
         }
       }
 
