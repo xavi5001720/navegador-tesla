@@ -66,24 +66,21 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
         let currentSampledPoints: [number, number][] = [];
         
         if (hasRoute && routeCoordinates) {
-          // Simplificar la ruta a unos 40 puntos máximo para no saturar Overpass
-          const maxPoints = 40;
-          const step = Math.max(1, Math.floor(routeCoordinates.length / maxPoints)); 
-          
-          for (let i = 0; i < routeCoordinates.length; i += step) {
-            currentSampledPoints.push(routeCoordinates[i]);
+          let minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
+          for (let i = 0; i < routeCoordinates.length; i++) {
+            minLat = Math.min(minLat, routeCoordinates[i][0]);
+            maxLat = Math.max(maxLat, routeCoordinates[i][0]);
+            minLon = Math.min(minLon, routeCoordinates[i][1]);
+            maxLon = Math.max(maxLon, routeCoordinates[i][1]);
           }
-          const lastPoint = routeCoordinates[routeCoordinates.length - 1];
-          if (currentSampledPoints[currentSampledPoints.length - 1] !== lastPoint) {
-            currentSampledPoints.push(lastPoint);
-          }
+          // Añadir un margen (aprox 2km = 0.02 grados)
+          minLat -= 0.02;
+          maxLat += 0.02;
+          minLon -= 0.02;
+          maxLon += 0.02;
 
-          const aroundQueries = currentSampledPoints
-            .map(p => `node["highway"="speed_camera"](around:1500,${p[0]},${p[1]});`)
-            .join('\n              ');
-          
-          query = `[out:json][timeout:50];\n(\n              ${aroundQueries}\n);\nout body;`;
-          console.log(`[useRadars] Fetching radars using ${currentSampledPoints.length} sample points (1.5km radius).`);
+          query = `[out:json][timeout:25];\n(\n  node["highway"="speed_camera"](${minLat},${minLon},${maxLat},${maxLon});\n);\nout body;`;
+          console.log(`[useRadars] Fetching radars using Route Bounding Box [${minLat.toFixed(3)}, ${minLon.toFixed(3)}, ${maxLat.toFixed(3)}, ${maxLon.toFixed(3)}]`);
         } else {
           query = `[out:json][timeout:25];\n(\n  node["highway"="speed_camera"](around:10000,${userPos[0]},${userPos[1]});\n);\nout body;`;
           console.log(`[useRadars] Fetching nearby radars for [${userPos[0]}, ${userPos[1]}]`);
