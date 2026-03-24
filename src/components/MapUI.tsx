@@ -102,7 +102,7 @@ const createCarIcon = (heading: number) => {
       <div className="absolute inset-0 bg-blue-500/30 rounded-full blur-2xl scale-125"></div>
       
       {/* Imagen del coche proporcionada por el usuario */}
-      <img src="/coche.png" alt="Coche" className="w-full h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] transition-transform duration-500" />
+      <img src="/coche.png" alt="Coche" className="w-full h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] transition-transform duration-500 rotate-180" />
     </div>
   );
   return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [110, 110], iconAnchor: [55, 55] });
