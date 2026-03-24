@@ -67,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <h1 className="text-2xl font-semibold tracking-tight text-white/90">
             Viajando en <span className="text-blue-500">Tesla</span>
           </h1>
-          <p className="text-sm text-gray-400 mt-1">en construcción versión 3</p>
+          <p className="text-sm text-gray-400 mt-1">en construcción versión 4</p>
         </div>
         <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-2 text-gray-400">
           <X className="h-5 w-5" />

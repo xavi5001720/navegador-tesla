@@ -71,52 +71,82 @@ function isNearAirport(lat: number, lon: number): boolean {
   return AIRPORTS.some(ap => getDistance([lat, lon], ap) < AIRPORT_RADIUS_M);
 }
 
+// Cache de tokens persistente fuera del hook para que sobreviva entre renders
+const tokenCache: Record<number, { token: string; expiresAt: number }> = {};
+// Cuándo fue el último 429 por cuenta (para backoff)
+const rateLimitedAt: Record<number, number> = {};
+const RATE_LIMIT_BACKOFF_MS = 5 * 60 * 1000; // 5 min antes de reintentar una cuenta limitada
+
+const ACCOUNTS: Record<number, { clientId: string; clientSecret: string } | null> = {
+  1: null,
+  2: { clientId: 'pepinperez-api-client', clientSecret: 'K922tGbRbq0DsrudGDVKQOJv3tYtnO6A' },
+  3: { clientId: 'saracruzhortelana-api-client', clientSecret: 'o7FsNtYuca4K6xSHBCb3x4zKo3yiwBS1' }
+};
+
+async function getToken(idx: number): Promise<string | null> {
+  const creds = ACCOUNTS[idx];
+  if (!creds) return null;
+  const now = Date.now();
+  // Usar token cacheado si aún es válido (25 min de margen)
+  if (tokenCache[idx] && tokenCache[idx].expiresAt > now) {
+    return tokenCache[idx].token;
+  }
+  try {
+    const tRes = await fetch('https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: creds.clientId,
+        client_secret: creds.clientSecret,
+      })
+    });
+    if (tRes.ok) {
+      const d = await tRes.json();
+      if (d.access_token) {
+        tokenCache[idx] = { token: d.access_token, expiresAt: now + 25 * 60 * 1000 };
+        return d.access_token;
+      }
+    }
+  } catch(e) { console.error('[usePegasus] Token fetch error:', e); }
+  return null;
+}
+
 export function usePegasus(userPos: [number, number] | null, isEnabled: boolean = false) {
   const [rawAircrafts, setRawAircrafts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [activeAccount, setActiveAccount] = useState<number>(1);
-  const accountIndexRef = useRef<number>(1); // 1 = anon, 2 = pepinperez, 3 = saracruzhortelana
-
-  const ACCOUNTS: Record<number, { clientId: string, clientSecret: string } | null> = {
-    1: null, // anónima
-    2: { clientId: 'pepinperez-api-client', clientSecret: 'K922tGbRbq0DsrudGDVKQOJv3tYtnO6A' },
-    3: { clientId: 'saracruzhortelana-api-client', clientSecret: 'o7FsNtYuca4K6xSHBCb3x4zKo3yiwBS1' }
-  };
+  const accountIndexRef = useRef<number>(1);
 
   useEffect(() => {
     if (!isEnabled || !userPos) {
-      if (!isEnabled && rawAircrafts.length > 0) {
-        setRawAircrafts([]);
-      }
+      if (!isEnabled && rawAircrafts.length > 0) setRawAircrafts([]);
       return;
     }
 
-    const getToken = async (idx: number): Promise<string | null> => {
-      const creds = ACCOUNTS[idx];
-      if (!creds) return null;
-      try {
-        const tRes = await fetch('https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            grant_type: 'client_credentials',
-            client_id: creds.clientId,
-            client_secret: creds.clientSecret,
-          })
-        });
-        if (tRes.ok) {
-          const d = await tRes.json();
-          return d.access_token || null;
-        }
-      } catch(e) { console.error('[usePegasus] Token fetch error:', e); }
-      return null;
-    };
-
     const fetchAircrafts = async (): Promise<void> => {
       setLoading(true);
-      const idx = accountIndexRef.current;
-      console.log(`[usePegasus] Fetching from OpenSky via browser (Account ${idx})...`);
+      const now = Date.now();
+
+      // Buscar la primera cuenta disponible (no en backoff)
+      let idx = 1;
+      for (let i = 1; i <= 3; i++) {
+        const limitedAt = rateLimitedAt[i] || 0;
+        if (now - limitedAt >= RATE_LIMIT_BACKOFF_MS) {
+          idx = i;
+          break;
+        }
+        // Si ninguna está disponible, usaremos la menos recientemente limitada
+        if (i === 3) {
+          const leastRecent = [1,2,3].reduce((a, b) => (rateLimitedAt[a]||0) < (rateLimitedAt[b]||0) ? a : b);
+          idx = leastRecent;
+        }
+      }
+
+      accountIndexRef.current = idx;
+      setActiveAccount(idx);
+      console.log(`[usePegasus] Fetching OpenSky via browser (Account ${idx})...`);
 
       const token = await getToken(idx);
       const headers: Record<string, string> = {};
@@ -127,12 +157,13 @@ export function usePegasus(userPos: [number, number] | null, isEnabled: boolean 
         console.log('[usePegasus] OpenSky status:', res.status, '| Account:', idx);
 
         if (res.status === 429) {
-          if (accountIndexRef.current < 3) {
-            accountIndexRef.current += 1;
-            setActiveAccount(accountIndexRef.current);
-            console.warn(`[usePegasus] 429 → Switching to Account ${accountIndexRef.current}`);
+          rateLimitedAt[idx] = now;
+          console.warn(`[usePegasus] 429 on Account ${idx}. Backoff ${RATE_LIMIT_BACKOFF_MS / 60000} min.`);
+          // Comprobar si hay otra cuenta disponible inmediatamente
+          const nextAvailable = [1,2,3].find(i => i !== idx && (now - (rateLimitedAt[i]||0)) >= RATE_LIMIT_BACKOFF_MS);
+          if (nextAvailable !== undefined) {
             setLoading(false);
-            return fetchAircrafts(); // reintentar inmediatamente con la siguiente cuenta
+            return fetchAircrafts(); // reintentar con la siguiente
           } else {
             setIsRateLimited(true);
             setLoading(false);
@@ -145,7 +176,7 @@ export function usePegasus(userPos: [number, number] | null, isEnabled: boolean 
         const data = await res.json();
         setIsRateLimited(false);
         if (data?.states) {
-          console.log(`[usePegasus] ✅ ${data.states.length} aircraft via browser/Account ${idx}`);
+          console.log(`[usePegasus] ✅ ${data.states.length} aircraft (Account ${idx})`);
           setRawAircrafts(data.states);
         } else {
           setRawAircrafts([]);
