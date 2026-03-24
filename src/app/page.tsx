@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { MapPin, Navigation, Menu, X, AlertTriangle, Power } from 'lucide-react';
+import { MapPin, Navigation, Menu, X, AlertTriangle, Power, Map } from 'lucide-react';
 
 import Sidebar from '@/components/Sidebar';
 import AlertOverlay from '@/components/AlertOverlay';
@@ -28,6 +28,8 @@ const DynamicMap = dynamic(() => import('@/components/MapUI'), {
 });
 
 export default function Home() {
+  const [viewMode, setViewMode] = useState<'navigation' | 'overview' | 'explore'>('navigation');
+
   const { 
     userPos, 
     setUserPos, 
@@ -183,6 +185,7 @@ export default function Home() {
         isAircraftsEnabled={isAircraftsEnabled}
         setIsAircraftsEnabled={setIsAircraftsEnabled}
         activeAccount={activeAccount}
+        rawAircraftCount={aircraftCount}
         hasLocation={hasLocation}
         onSearch={handleSearchSubmit}
         isSoundEnabled={isSoundEnabled}
@@ -200,6 +203,8 @@ export default function Home() {
           radars={radars}
           aircrafts={aircrafts}
           speed={speed}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
 
         {/* Panel de Avisos Rápidos y Velocímetro */}
@@ -207,22 +212,22 @@ export default function Home() {
           <Speedometer speed={speed} />
           
           <div className="flex flex-col gap-3 md:flex-row">
-            <button className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl bg-rose-600 shadow-2xl hover:bg-rose-500 transition-all hover:scale-105 active:scale-95 group relative border border-white/20">
-              <AlertTriangle className="h-6 w-6 md:h-7 md:w-7 text-white" />
-              <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Radar Alert</span>
+            <button 
+              onClick={() => setViewMode('overview')}
+              className={`flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 ${viewMode === 'overview' ? 'bg-indigo-600' : 'bg-gray-800 hover:bg-gray-700'}`}
+            >
+              <Map className="h-6 w-6 md:h-7 md:w-7 text-white" />
+              <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Vista General</span>
             </button>
             <button 
               onClick={() => {
-                if (hasLocation) {
-                  setUserPos([...userPos]);
-                } else {
-                  requestGPS();
-                }
+                if (!hasLocation) requestGPS();
+                setViewMode('navigation');
               }}
-              className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl bg-blue-600 shadow-2xl hover:bg-blue-500 transition-all hover:scale-105 active:scale-95 group relative border border-white/20"
+              className={`flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 ${viewMode === 'navigation' ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}
             >
               <Navigation className="h-6 w-6 md:h-7 md:w-7 text-white" />
-              <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Recenter / GPS</span>
+              <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Modo Navegación</span>
             </button>
           </div>
         </div>

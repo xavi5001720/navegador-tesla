@@ -62,14 +62,17 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
 const DARK_MAP_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
 const MAP_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>';
 
-function MapEvents({ onDragStart }: { onDragStart: () => void }) {
+function MapEvents({ onViewModeChange }: { onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void }) {
   const map = useMap();
   useEffect(() => {
+    const onDragStart = () => {
+      if (onViewModeChange) onViewModeChange('explore');
+    };
     map.on('dragstart', onDragStart);
     return () => {
       map.off('dragstart', onDragStart);
     };
-  }, [map, onDragStart]);
+  }, [map, onViewModeChange]);
   return null;
 }
 
@@ -93,6 +96,8 @@ interface MapUIProps {
    radars: Radar[];
    aircrafts?: Aircraft[];
    speed?: number;
+   viewMode?: 'navigation' | 'overview' | 'explore';
+   onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void;
 }
 
 const createCarIcon = (heading: number) => {
@@ -108,51 +113,53 @@ const createCarIcon = (heading: number) => {
   return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [110, 110], iconAnchor: [55, 55] });
 };
 
-function MapRotator({ heading, isFollowing, hasRoute, speed = 0 }: { heading: number, isFollowing: boolean, hasRoute: boolean, speed?: number }) {
+function MapRotator({ heading, viewMode, hasRoute, speed = 0 }: { heading: number, viewMode: string, hasRoute: boolean, speed?: number }) {
   const map = useMap();
   useEffect(() => {
     const container = map.getContainer();
-    const isOverview = speed < 10;
+    const shouldRotate = viewMode === 'navigation' && speed >= 10;
     
-    if (isFollowing && !isOverview) {
+    if (shouldRotate) {
       container.style.transition = 'transform 0.5s ease-out';
       container.style.transform = `rotate(${-heading}deg)`;
     } else {
       container.style.transition = 'transform 0.5s ease-out';
       container.style.transform = 'none';
     }
-  }, [map, heading, isFollowing, hasRoute, speed]);
+  }, [map, heading, viewMode, hasRoute, speed]);
   return null;
 }
 
-function LocationTracker({ position, isTracking, hasRoute, speed = 0, routeCoordinates }: { position: L.LatLngExpression, isTracking: boolean, hasRoute: boolean, speed?: number, routeCoordinates?: [number, number][] }) {
+function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordinates }: { position: L.LatLngExpression, viewMode: string, hasRoute: boolean, speed?: number, routeCoordinates?: [number, number][] }) {
   const map = useMap();
   useEffect(() => {
-    if (isTracking) {
-      if (speed < 10) {
-        if (hasRoute && routeCoordinates && routeCoordinates.length > 0) {
-          // Detenido o muy despacio (<10km/h) con ruta: mostrar toda la ruta restante
-          try {
-           const posArr = Array.isArray(position) ? position as [number, number] : [0, 0] as [number, number];
-           // Find user path progress vs the whole polyline. Use distance of 500m fallback
-           const snapped = findClosestPointOnPolyline(posArr, routeCoordinates);
-           const remainingPath = routeCoordinates.slice(snapped.segmentIndex);
-           if (remainingPath.length > 2) {
-             remainingPath.unshift(posArr); // Include car in the viewport
-             const bounds = L.latLngBounds(remainingPath);
-             map.fitBounds(bounds, { padding: [50, 50], animate: true, duration: 1.5 });
-           } else {
-             map.setView(position, 17, { animate: true, duration: 1 });
-           }
+    if (viewMode === 'explore') return;
+
+    if (viewMode === 'overview') {
+      if (hasRoute && routeCoordinates && routeCoordinates.length > 0) {
+        try {
+          const posArr = Array.isArray(position) ? position as [number, number] : [0, 0] as [number, number];
+          const snapped = findClosestPointOnPolyline(posArr, routeCoordinates);
+          const remainingPath = routeCoordinates.slice(snapped.segmentIndex);
+          if (remainingPath.length > 2) {
+            remainingPath.unshift(posArr);
+            const bounds = L.latLngBounds(remainingPath);
+            map.fitBounds(bounds, { padding: [50, 50], animate: true, duration: 1.5 });
+          } else {
+            map.setView(position, 17, { animate: true, duration: 1 });
+          }
         } catch (e) {
-           map.setView(position, 16, { animate: true, duration: 1 });
+          map.setView(position, 16, { animate: true, duration: 1 });
         }
       } else {
-        // Detenido (<10km/h) sin ruta: mostrar vista general de la zona
-        map.setView(position, 15, { animate: true, duration: 1 });
+        map.setView(position, 14, { animate: true, duration: 1.5 });
       }
-    } else {
-      // En movimiento (>10km/h): seguimiento cercano, abriendo el plano gradualmente a más velocidad
+    } else if (viewMode === 'navigation') {
+      if (speed < 10) {
+        // En detenido o baja velocidad, mostramos vista un poco más cercana en modo navegación
+        map.setView(position, 17, { animate: true, duration: 1 });
+      } else {
+        // En movimiento (>10km/h): seguimiento cercano, abriendo el plano gradualmente a más velocidad
         let targetZoom = hasRoute ? 18 : 17;
         if (speed > 50) targetZoom = 17;
         if (speed > 100) targetZoom = 16;
@@ -160,13 +167,11 @@ function LocationTracker({ position, isTracking, hasRoute, speed = 0, routeCoord
         map.setView(position, targetZoom, { animate: true, duration: 1 });
       }
     }
-  }, [position, isTracking, map, hasRoute, speed, routeCoordinates]);
+  }, [position, viewMode, map, hasRoute, speed, routeCoordinates]);
   return null;
 }
 
-export default function MapUI({ userPos, heading, routeCoordinates, radars = [], aircrafts = [], speed = 0 }: MapUIProps) {
-  const [isFollowing, setIsFollowing] = useState(true);
-
+export default function MapUI({ userPos, heading, routeCoordinates, radars = [], aircrafts = [], speed = 0, viewMode = 'navigation', onViewModeChange }: MapUIProps) {
   return (
     <div className="relative h-full w-full bg-gray-900 overflow-hidden">
       <style jsx global>{`
@@ -175,30 +180,20 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
         }
       `}</style>
 
-      <button 
-        onClick={() => setIsFollowing(true)}
-        className={`absolute bottom-32 right-8 z-[400] flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-lg border transition-all shadow-lg
-          ${isFollowing 
-            ? 'bg-blue-600/90 border-blue-500 text-white shadow-blue-500/30' 
-            : 'bg-white/10 border-white/20 text-gray-300 hover:bg-white/20'}`}
-      >
-        <Navigation className={`h-5 w-5 ${isFollowing ? 'animate-pulse' : ''}`} />
-      </button>
-
       <MapContainer 
         center={userPos} 
         zoom={15} 
         className="h-full w-full z-0"
         zoomControl={false}
       >
-        <MapEvents onDragStart={() => setIsFollowing(false)} />
-        <MapRotator heading={heading} isFollowing={isFollowing} hasRoute={!!routeCoordinates} speed={speed} />
+        <MapEvents onViewModeChange={onViewModeChange} />
+        <MapRotator heading={heading} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} />
         <TileLayer attribution={MAP_ATTRIBUTION} url={DARK_MAP_TILES} />
         
         <RouteFitter routeCoordinates={routeCoordinates} />
         
         {/* Usamos userPos directamente para el tracker de vista, pero visualmente el coche puede ir snappeado */}
-        <LocationTracker position={userPos} isTracking={isFollowing} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} />
+        <LocationTracker position={userPos} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} />
         
         {routeCoordinates && routeCoordinates.length > 0 && (
            <>
@@ -250,7 +245,7 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
           let pos = userPos;
           let carHeading = heading;
           
-          if (isFollowing && routeCoordinates && routeCoordinates.length > 0) {
+          if (viewMode === 'navigation' && routeCoordinates && routeCoordinates.length > 0) {
             const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
             if (snapped.distance < 25) {
               pos = snapped.point;
