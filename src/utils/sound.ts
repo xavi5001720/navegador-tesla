@@ -1,5 +1,31 @@
 // src/utils/sound.ts
 
+let audioUnlocked = false;
+
+export const unlockTeslaAudio = () => {
+  if (typeof window === 'undefined' || audioUnlocked) return;
+  try {
+    // Silent audio trick for Tesla Browser: plays a tiny silent MP3 in an infinite loop
+    // to force the browser to keep the audio session active and route it to car speakers.
+    const silentAudio = new Audio('data:audio/mp3;base64,//OExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq');
+    silentAudio.loop = true;
+    silentAudio.volume = 0.01;
+    silentAudio.play().then(() => {
+      audioUnlocked = true;
+      console.log('Tesla Audio Unlocked successfully');
+    }).catch(e => {
+      console.warn('Silent audio play blocked. Interaction might be needed.', e);
+    });
+    
+    // Also wake up the speechless synthesis engine
+    const utterance = new SpeechSynthesisUtterance('');
+    utterance.volume = 0;
+    window.speechSynthesis.speak(utterance);
+  } catch (err) {
+    console.error("Audio unlock error:", err);
+  }
+};
+
 export const playRadarAlert = (volume: number, type: 'safe_first' | 'safe_second' | 'danger') => {
   if (typeof window === 'undefined') return;
 

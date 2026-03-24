@@ -16,7 +16,7 @@ import { usePegasus } from '@/hooks/usePegasus';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
 import { distanceToPolyline, findClosestPointOnPolyline } from '@/utils/geo';
-import { playPegasusAlert } from '@/utils/sound';
+import { playPegasusAlert, unlockTeslaAudio } from '@/utils/sound';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -72,6 +72,23 @@ export default function Home() {
       calculateRoute(userPos, destination);
     }
   }, [userPos, route, destination, loadingRoute, lastRecalculationTime, calculateRoute]);
+
+  // Unlock audio on first interaction
+  useEffect(() => {
+    const unlockAudio = () => {
+      unlockTeslaAudio();
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    };
+
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
+
+    return () => {
+      document.removeEventListener('click', unlockAudio);
+      document.removeEventListener('touchstart', unlockAudio);
+    };
+  }, []);
 
   // Open sidebar by default only on desktop
   useEffect(() => {
