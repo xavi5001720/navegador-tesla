@@ -86,81 +86,32 @@ export function usePegasus(userPos: [number, number] | null, isEnabled: boolean 
       return;
     }
 
-    const credentialsMap: Record<string, { clientId: string, clientSecret: string }> = {
-      '2': {
-        clientId: 'pepinperez-api-client',
-        clientSecret: 'K922tGbRbq0DsrudGDVKQOJv3tYtnO6A'
-      },
-      '3': {
-        clientId: 'saracruzhortelana-api-client',
-        clientSecret: 'o7FsNtYuca4K6xSHBCb3x4zKo3yiwBS1'
-      }
-    };
-
     const fetchAircrafts = async (attempt = 1): Promise<void> => {
       if (attempt === 1) setLoading(true);
 
-      let token = null;
-      if (accountIndexRef.current > 1) {
-        try {
-          const creds = credentialsMap[accountIndexRef.current.toString()];
-          const tRes = await fetch('https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-              grant_type: 'client_credentials',
-              client_id: creds.clientId,
-              client_secret: creds.clientSecret,
-            })
-          });
-          if (tRes.ok) {
-            const tData = await tRes.json();
-            token = tData.access_token;
-          } else {
-             console.error('[usePegasus] Failed to get token directly from Keycloak:', tRes.status);
-          }
-        } catch(e) {
-          console.error('[usePegasus] Error fetching token locally:', e);
-        }
-      }
-
-      console.log(`[usePegasus] Fetching from OpenSky (Account ${accountIndexRef.current}, attempt ${attempt}/${MAX_RETRIES})...`);
+      console.log(`[usePegasus] Fetching from Next.js proxy API (attempt ${attempt}/${MAX_RETRIES})...`);
 
       try {
-        const headers: Record<string, string> = {};
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        const res = await fetch(OPENSKY_URL, { headers });
-        console.log('[usePegasus] OpenSky response status:', res.status);
+        const res = await fetch('/api/aircrafts', { cache: 'no-store' });
+        console.log('[usePegasus] Proxy response status:', res.status);
 
         if (res.status === 429) {
-          console.warn(`[usePegasus] Rate limited on Account ${accountIndexRef.current} (429).`);
-          
-          if (accountIndexRef.current < 3) {
-            console.log(`[usePegasus] Switching to Account ${accountIndexRef.current + 1}`);
-            accountIndexRef.current += 1;
-            setActiveAccount(accountIndexRef.current);
-            // Retry immediately on the next account
-            return fetchAircrafts(1);
-          } else {
-            console.error('[usePegasus] All accounts exhausted limits.');
-            setIsRateLimited(true);
-            setLoading(false);
-            return;
-          }
+          console.warn(`[usePegasus] Rate limited on ALL accounts from proxy (429).`);
+          setIsRateLimited(true);
+          setLoading(false);
+          // Actualizamos visualmente a cuenta 3 (máxima)
+          setActiveAccount(3);
+          return;
         }
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
         setIsRateLimited(false);
+        setActiveAccount(data.account || 1);
 
         if (data?.states) {
-          console.log(`[usePegasus] ✅ ${data.states.length} aircraft loaded from OpenSky.`);
+          console.log(`[usePegasus] ✅ ${data.states.length} aircraft loaded. (Source: ${data.source})`);
           setRawAircrafts(data.states);
         } else {
           console.warn('[usePegasus] Response OK but no states array:', data);

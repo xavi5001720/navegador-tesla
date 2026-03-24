@@ -2,72 +2,87 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-let cachedAircrafts: any[] = [];
-let lastFetchTime = 0;
+const SPAIN_BBOX = { lamin: 35.0, lomin: -10.0, lamax: 44.0, lomax: 5.0 };
+const URL = `https://opensky-network.org/api/states/all?lamin=${SPAIN_BBOX.lamin}&lomin=${SPAIN_BBOX.lomin}&lamax=${SPAIN_BBOX.lamax}&lomax=${SPAIN_BBOX.lomax}`;
 
-const CACHE_DURATION = 30 * 1000; // 30 segundos
-
-// Bounding box de la Península Ibérica / España
-const SPAIN_BBOX = {
-  lamin: 35.0,
-  lomin: -10.0,
-  lamax: 44.0,
-  lomax: 5.0
+const credentialsMap: Record<number, { clientId: string, clientSecret: string }> = {
+  2: { clientId: 'pepinperez-api-client', clientSecret: 'K922tGbRbq0DsrudGDVKQOJv3tYtnO6A' },
+  3: { clientId: 'saracruzhortelana-api-client', clientSecret: 'o7FsNtYuca4K6xSHBCb3x4zKo3yiwBS1' }
 };
 
-async function fetchOpenSkyData() {
-  const url = `https://opensky-network.org/api/states/all?lamin=${SPAIN_BBOX.lamin}&lomin=${SPAIN_BBOX.lomin}&lamax=${SPAIN_BBOX.lamax}&lomax=${SPAIN_BBOX.lomax}`;
+let globalAccountIndex = 1; // 1 = anon, 2 = pepin, 3 = sara
+let cachedAircrafts: any[] = [];
+let lastFetchTime = 0;
+const CACHE_DURATION = 30 * 1000; // 30s cache para todos los usuarios
+
+async function getAccessToken(index: number) {
+  if (index === 1) return null;
+  const creds = credentialsMap[index];
+  if (!creds) return null;
   
   try {
-    const res = await fetch(url, { next: { revalidate: 0 } });
-    if (!res.ok) {
-        if (res.status === 429) {
-            console.warn('[API] OpenSky Rate Limited');
-            return { error: 'Rate limited' };
-        }
-        throw new Error(`Status ${res.status}`);
+    const tRes = await fetch('https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: creds.clientId,
+        client_secret: creds.clientSecret,
+      }),
+      cache: 'no-store'
+    });
+    if (tRes.ok) {
+      const data = await tRes.json();
+      return data.access_token;
     }
-    return await res.json();
-  } catch (e) {
-    console.error('[API] Fetch failed:', e);
-    return null;
+  } catch (err) {
+    console.error('Token fetch error:', err);
   }
+  return null;
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   const now = Date.now();
-
-  // Servir caché si existe y es reciente
   if (now - lastFetchTime < CACHE_DURATION && cachedAircrafts.length > 0) {
-    return NextResponse.json({ aircrafts: cachedAircrafts, source: 'cache' });
+    return NextResponse.json({ states: cachedAircrafts, account: globalAccountIndex, source: 'cache' });
   }
 
-  const data = await fetchOpenSkyData();
+  let attemptCount = 0;
   
-  if (data?.error === 'Rate limited') {
-     return NextResponse.json({ error: 'Rate limited', aircrafts: cachedAircrafts, source: 'cache_fallback' });
+  while (globalAccountIndex <= 3 && attemptCount < 3) {
+    attemptCount++;
+    const token = await getAccessToken(globalAccountIndex);
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    try {
+      const res = await fetch(URL, { headers, cache: 'no-store' });
+      
+      if (res.status === 429) {
+        if (globalAccountIndex < 3) {
+          globalAccountIndex++;
+          continue; // Saltar a la siguiente cuenta
+        } else {
+          return NextResponse.json({ error: 'Rate limited', account: globalAccountIndex, states: cachedAircrafts }, { status: 429 });
+        }
+      }
+
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+
+      const data = await res.json();
+      if (data && data.states) {
+        cachedAircrafts = data.states;
+        lastFetchTime = now;
+        return NextResponse.json({ states: cachedAircrafts, account: globalAccountIndex, source: 'fresh' });
+      } else {
+        // Obtenemos OK pero no hay states
+        return NextResponse.json({ states: [], account: globalAccountIndex });
+      }
+    } catch (e) {
+      console.error('API Fetch error:', e);
+      break; // Si es error de red que no es 429, cortamos
+    }
   }
 
-  if (data?.states) {
-    cachedAircrafts = data.states.map((s: any) => ({
-      icao24: s[0],
-      callsign: s[1]?.trim() || 'N/A',
-      origin_country: s[2],
-      longitude: s[5],
-      latitude: s[6],
-      altitude: s[7] || s[13] || 0,
-      velocity: s[9] || 0,
-      track: s[10] || 0,
-      timestamp: s[3]
-    }));
-    lastFetchTime = now;
-    console.log(`[API] Success: ${cachedAircrafts.length} aircraft found.`);
-  } else {
-    console.error('[API] Failed to fetch fresh data, returning cache if available.');
-  }
-
-  return NextResponse.json({ 
-    aircrafts: cachedAircrafts, 
-    source: data ? 'fresh' : 'cache_fallback' 
-  });
+  return NextResponse.json({ error: 'Failed', account: globalAccountIndex, states: cachedAircrafts }, { status: 500 });
 }
