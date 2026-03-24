@@ -65,8 +65,8 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
   });
 };
 
-const DARK_MAP_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-const MAP_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>';
+const SATELLITE_MAP_TILES = 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
+const MAP_ATTRIBUTION = '&copy; Google Maps';
 
 function MapEvents({ onViewModeChange }: { onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void }) {
   const map = useMap();
@@ -233,7 +233,7 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
         <ZoomControls onViewModeChange={onViewModeChange} />
         <MapEvents onViewModeChange={onViewModeChange} />
         <MapRotator heading={heading} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} />
-        <TileLayer attribution={MAP_ATTRIBUTION} url={DARK_MAP_TILES} />
+        <TileLayer attribution={MAP_ATTRIBUTION} url={SATELLITE_MAP_TILES} />
         
         <RouteFitter routeCoordinates={routeCoordinates} />
         
