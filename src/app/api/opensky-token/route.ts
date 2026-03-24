@@ -9,12 +9,23 @@ export async function GET(request: Request) {
   }
 
   try {
-    let credentials;
-    // Forzamos al bundler de Vercel/Next.js a hidratar el JSON en el código directamente
-    if (accountIndex === '2') {
-      credentials = require('../../../../API opensky/credentials(2).json');
-    } else {
-      credentials = require('../../../../API opensky/credentials(3).json');
+    // En Vercel, incluir carpetas externas al root a veces da problemas en producción.
+    // Como son estáticas y privadas, las leemos directamente aquí.
+    const credentialsMap: Record<string, { clientId: string, clientSecret: string }> = {
+      '2': {
+        clientId: 'pepinperez-api-client',
+        clientSecret: 'K922tGbRbq0DsrudGDVKQOJv3tYtnO6A'
+      },
+      '3': {
+        clientId: 'saracruzhortelana-api-client',
+        clientSecret: 'o7FsNtYuca4K6xSHBCb3x4zKo3yiwBS1'
+      }
+    };
+
+    const credentials = credentialsMap[accountIndex];
+    
+    if (!credentials) {
+      return NextResponse.json({ error: 'Credentials not found.' }, { status: 404 });
     }
 
     const tokenResponse = await fetch('https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token', {
