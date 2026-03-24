@@ -143,7 +143,14 @@ const Sidebar: React.FC<SidebarProps> = ({
                </div>
                <div>
                   <span className="text-xs text-gray-400 block uppercase tracking-wider">Tiempo</span>
-                  <span className="text-lg font-bold text-white">{Math.floor(route.duration / 60)} min</span>
+                  <span className="text-lg font-bold text-white">
+                    {(() => {
+                      const totalMins = Math.floor(route.duration / 60);
+                      const h = Math.floor(totalMins / 60);
+                      const m = totalMins % 60;
+                      return h > 0 ? `${h}h ${m}m` : `${m}m`;
+                    })()}
+                  </span>
                </div>
             </div>
          </div>
@@ -208,18 +215,19 @@ const Sidebar: React.FC<SidebarProps> = ({
                       <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Sistema Antiaéreo</span>
                     </div>
                     {isAircraftsEnabled ? (
-                      <div className="flex items-baseline gap-2">
-                        <span className={`text-2xl font-black leading-none ${isAnyPegasusNearby ? 'text-blue-400' : 'text-white/60'}`}>
-                          {loadingAircrafts ? '...' : aircraftCount}
-                        </span>
-                        {!loadingAircrafts && aircraftCount !== undefined && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 whitespace-nowrap">
-                            Patriot {activeAccount}
+                      <div className="flex flex-col gap-1 mt-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl font-bold text-white/80">
+                            {loadingAircrafts ? '...' : rawAircraftCount}
                           </span>
-                        )}
-                        {!loadingAircrafts && rawAircraftCount > 0 && (
-                          <span className="text-[10px] text-gray-500">{rawAircraftCount} total</span>
-                        )}
+                          <span className="text-[10px] text-gray-400 uppercase tracking-widest">Detectadas</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-2xl font-black ${isAnyPegasusNearby ? 'text-blue-400 animate-pulse drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]' : 'text-rose-500 drop-shadow-[0_0_4px_rgba(225,29,72,0.5)]'}`}>
+                            {loadingAircrafts ? '...' : aircraftCount}
+                          </span>
+                          <span className="text-[10px] text-rose-400 font-bold uppercase tracking-widest">Sospechosas</span>
+                        </div>
                       </div>
                     ) : (
                       <span className="text-2xl font-black leading-none text-white/30">OFF</span>
