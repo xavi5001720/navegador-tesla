@@ -177,6 +177,44 @@ function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordin
   return null;
 }
 
+function ZoomControls({ onViewModeChange }: { onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void }) {
+  const map = useMap();
+  
+  const handleZoomIn = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onViewModeChange) onViewModeChange('explore');
+    map.zoomIn();
+  };
+  
+  const handleZoomOut = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onViewModeChange) onViewModeChange('explore');
+    map.zoomOut();
+  };
+
+  return (
+    <div 
+      className="absolute top-1/2 right-6 -translate-y-1/2 flex flex-col gap-3 z-[1000]"
+      onPointerDown={(e) => e.stopPropagation()}
+      onDoubleClick={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
+    >
+      <button 
+        onClick={handleZoomIn}
+        className="flex h-12 w-12 md:h-14 md:w-14 items-center justify-center rounded-2xl shadow-2xl bg-black/60 backdrop-blur-xl border border-white/20 hover:bg-white/10 transition-all text-white text-3xl font-light hover:scale-105 active:scale-95"
+      >
+        +
+      </button>
+      <button 
+        onClick={handleZoomOut}
+        className="flex h-12 w-12 md:h-14 md:w-14 items-center justify-center rounded-2xl shadow-2xl bg-black/60 backdrop-blur-xl border border-white/20 hover:bg-white/10 transition-all text-white text-3xl font-light hover:scale-105 active:scale-95 mb-8 md:mb-0"
+      >
+        −
+      </button>
+    </div>
+  );
+}
+
 export default function MapUI({ userPos, heading, routeCoordinates, radars = [], aircrafts = [], speed = 0, viewMode = 'navigation', onViewModeChange }: MapUIProps) {
   return (
     <div className="relative h-full w-full bg-gray-900 overflow-hidden">
@@ -192,6 +230,7 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
         className="h-full w-full z-0"
         zoomControl={false}
       >
+        <ZoomControls onViewModeChange={onViewModeChange} />
         <MapEvents onViewModeChange={onViewModeChange} />
         <MapRotator heading={heading} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} />
         <TileLayer attribution={MAP_ATTRIBUTION} url={DARK_MAP_TILES} />
