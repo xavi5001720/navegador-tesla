@@ -236,7 +236,7 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
             <Popup className="tesla-popup">
               <div className="p-2 text-gray-900">
                 <p className={`font-bold text-lg ${aircraft.isSuspect ? 'text-blue-500' : 'text-gray-400'} mb-1`}>
-                  {aircraft.isSuspect ? 'PEGASUS / VIGILANCIA' : 'VUELO CIVIL'}
+                  {aircraft.isSuspect ? 'AERONAVE' : 'VUELO CIVIL'}
                 </p>
                 <p className="text-sm">Altitud: <b>{Math.round(aircraft.altitude || 0)}m</b></p>
                 <p className="text-sm">Llamada: <b>{aircraft.callsign}</b></p>

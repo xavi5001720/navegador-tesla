@@ -209,7 +209,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Aviones</span>
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Sistema Antiaéreo</span>
                       {isAircraftsEnabled ? (
                         !loadingAircrafts && (
                           <div className="flex items-center gap-1 bg-green-500/10 px-1.5 py-0.5 rounded-full border border-green-500/20">
@@ -231,7 +231,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         </span>
                         {!loadingAircrafts && aircraftCount !== undefined && (
                           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 whitespace-nowrap">
-                            Cuenta {activeAccount}
+                             Patriot {activeAccount}
                           </span>
                         )}
                       </div>
