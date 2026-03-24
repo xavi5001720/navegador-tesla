@@ -203,6 +203,7 @@ export function usePegasus(userPos: [number, number] | null, isEnabled: boolean 
     const mapped = withPos.map(s => {
       const icao24 = s[0] || '';
       const callsign = (s[1] || '').trim();
+      const isCommercial = /^(EAX|IBE|RYR|VLG|EZY|AFR|DLH|KLM|BAW)/i.test(callsign);
       const hasCallsign = /DGT|PESG|SAER|POLIC|GUARDIA|GC|POL/i.test(callsign);
       const altitude = s[7] ?? s[13] ?? 0;
       const velocity = s[9] ?? 0;
@@ -215,7 +216,7 @@ export function usePegasus(userPos: [number, number] | null, isEnabled: boolean 
       // Si está cerca de un aeropuerto y solo es sospechoso por isLow+isSlow → falso positivo
       // Excepto si tiene callsign o hex de vigilancia explícito
       const nearAirport = isNearAirport(lat, lon);
-      const isSuspect = hasCallsign || isDGT || ((isLow && isSlow) && !nearAirport);
+      const isSuspect = !isCommercial && (hasCallsign || isDGT || ((isLow && isSlow) && !nearAirport));
       const distanceToUser = getDistance(userPos, [lat, lon]);
 
       return {
