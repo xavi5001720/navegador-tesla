@@ -20,6 +20,7 @@ interface SidebarProps {
   isRateLimited: boolean;
   loadingAircrafts: boolean;
   aircraftCount?: number;
+  rawAircraftCount?: number;
   hasLocation: boolean;
   onSearch: (query: string) => void;
   isSoundEnabled: boolean;
@@ -58,7 +59,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   setIsRadarsEnabled,
   isAircraftsEnabled,
   setIsAircraftsEnabled,
-  activeAccount = 1
+  activeAccount = 1,
+  rawAircraftCount = 0,
 }) => {
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 md:bg-black/40 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -158,19 +160,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Radares</span>
-                      {isRadarsEnabled ? (
-                        !loadingRadars && !fetchingRouteRadars && (
-                          <div className="flex items-center gap-1 bg-green-500/10 px-1.5 py-0.5 rounded-full border border-green-500/20">
-                            <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                            <span className="text-[8px] font-bold text-green-500 uppercase">Activado</span>
-                          </div>
-                        )
-                      ) : (
-                        <div className="flex items-center gap-1 bg-rose-500/10 px-1.5 py-0.5 rounded-full border border-rose-500/20">
-                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500"></div>
-                          <span className="text-[8px] font-bold text-rose-500 uppercase">No Activado</span>
-                        </div>
-                      )}
                     </div>
                     {isRadarsEnabled ? (
                       fetchingRouteRadars ? (
@@ -183,15 +172,22 @@ const Sidebar: React.FC<SidebarProps> = ({
                     )}
                   </div>
                 </div>
-                {/* Switch ON/OFF Radares Moderno */}
-                <button 
-                  onClick={() => setIsRadarsEnabled(!isRadarsEnabled)}
-                  className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isRadarsEnabled ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
-                >
-                  <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isRadarsEnabled ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
-                    <Power className={`h-3 w-3 ${isRadarsEnabled ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
-                  </span>
-                </button>
+                <div className="flex flex-col items-center gap-1.5">
+                  {/* Switch ON/OFF Radares Moderno */}
+                  <button 
+                    onClick={() => setIsRadarsEnabled(!isRadarsEnabled)}
+                    className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isRadarsEnabled ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
+                  >
+                    <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isRadarsEnabled ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
+                      <Power className={`h-3 w-3 ${isRadarsEnabled ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
+                    </span>
+                  </button>
+                  {isRadarsEnabled ? (
+                    <span className="text-[9px] font-bold text-green-500 uppercase tracking-wider">Activado</span>
+                  ) : (
+                    <span className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">Desactivado</span>
+                  )}
+                </div>
               </div>
               {remainingRadars < radars.length && !loadingRadars && !fetchingRouteRadars && (
                 <div className="flex flex-col items-end">
@@ -210,19 +206,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Sistema Antiaéreo</span>
-                      {isAircraftsEnabled ? (
-                        !loadingAircrafts && (
-                          <div className="flex items-center gap-1 bg-green-500/10 px-1.5 py-0.5 rounded-full border border-green-500/20">
-                            <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                            <span className="text-[8px] font-bold text-green-500 uppercase">Activado</span>
-                          </div>
-                        )
-                      ) : (
-                        <div className="flex items-center gap-1 bg-rose-500/10 px-1.5 py-0.5 rounded-full border border-rose-500/20">
-                          <div className="h-1.5 w-1.5 rounded-full bg-rose-500"></div>
-                          <span className="text-[8px] font-bold text-rose-500 uppercase">No Activado</span>
-                        </div>
-                      )}
                     </div>
                     {isAircraftsEnabled ? (
                       <div className="flex items-baseline gap-2">
@@ -231,8 +214,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                         </span>
                         {!loadingAircrafts && aircraftCount !== undefined && (
                           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 whitespace-nowrap">
-                             Patriot {activeAccount}
+                            Patriot {activeAccount}
                           </span>
+                        )}
+                        {!loadingAircrafts && rawAircraftCount > 0 && (
+                          <span className="text-[10px] text-gray-500">{rawAircraftCount} total</span>
                         )}
                       </div>
                     ) : (
@@ -240,15 +226,22 @@ const Sidebar: React.FC<SidebarProps> = ({
                     )}
                   </div>
                 </div>
-                {/* Switch ON/OFF Aviones Moderno */}
-                <button 
-                  onClick={() => setIsAircraftsEnabled(!isAircraftsEnabled)}
-                  className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isAircraftsEnabled ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
-                >
-                  <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isAircraftsEnabled ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
-                    <Power className={`h-3 w-3 ${isAircraftsEnabled ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
-                  </span>
-                </button>
+                <div className="flex flex-col items-center gap-1.5">
+                  {/* Switch ON/OFF Aviones Moderno */}
+                  <button 
+                    onClick={() => setIsAircraftsEnabled(!isAircraftsEnabled)}
+                    className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isAircraftsEnabled ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
+                  >
+                    <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isAircraftsEnabled ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
+                      <Power className={`h-3 w-3 ${isAircraftsEnabled ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
+                    </span>
+                  </button>
+                  {isAircraftsEnabled ? (
+                    <span className="text-[9px] font-bold text-green-500 uppercase tracking-wider">Activado</span>
+                  ) : (
+                    <span className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">Desactivado</span>
+                  )}
+                </div>
               </div>
               {isAnyPegasusNearby && (
                 <p className="mt-2 text-[10px] text-blue-400 font-bold uppercase tracking-wider animate-pulse">
