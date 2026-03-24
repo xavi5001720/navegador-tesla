@@ -11,6 +11,7 @@ interface SearchPanelProps {
 export default function SearchPanel({ onSearch, isLoading = false }: SearchPanelProps) {
   const [query, setQuery] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [micError, setMicError] = useState('');
   const recognitionRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
 
   const onSearchRef = useRef(onSearch);
@@ -54,6 +55,12 @@ export default function SearchPanel({ onSearch, isLoading = false }: SearchPanel
       recognition.onerror = (event: any) => {
         console.error('Error voz:', event.error);
         setIsListening(false);
+        if (event.error === 'not-allowed' || event.error === 'audio-capture' || event.error === 'service-not-allowed') {
+          setMicError('El navegador del coche bloquea el micrófono por seguridad. Usa el teclado.');
+        } else {
+          setMicError('Error de dictado: ' + event.error);
+        }
+        setTimeout(() => setMicError(''), 5000);
       };
 
       recognition.onend = () => {
@@ -61,6 +68,9 @@ export default function SearchPanel({ onSearch, isLoading = false }: SearchPanel
       };
 
       recognitionRef.current = recognition;
+    } else {
+       // Si no soporta reconocimiento
+       setMicError('Reconocimiento de voz no soportado en este navegador.');
     }
 
     return () => {
@@ -126,6 +136,12 @@ export default function SearchPanel({ onSearch, isLoading = false }: SearchPanel
           <Mic className="h-5 w-5 text-white" />
         )}
       </button>
+      
+      {micError && (
+        <div className="absolute top-16 left-0 right-0 z-50 rounded-xl bg-orange-600/90 text-white text-[11px] font-bold px-4 py-2 text-center shadow-lg border border-orange-500/50 backdrop-blur-md animate-pulse">
+          {micError}
+        </div>
+      )}
     </form>
   );
 }
