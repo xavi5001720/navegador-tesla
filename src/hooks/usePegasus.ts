@@ -76,7 +76,13 @@ export function usePegasus(userPos: [number, number] | null, isEnabled: boolean 
   const [loading, setLoading] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [activeAccount, setActiveAccount] = useState<number>(1);
-  const accountIndexRef = useRef<number>(1); // 1 = Anonymous, 2 = Pepinperez, 3 = Saracruzhortelana
+  const accountIndexRef = useRef<number>(1); // 1 = anon, 2 = pepinperez, 3 = saracruzhortelana
+
+  const ACCOUNTS: Record<number, { clientId: string, clientSecret: string } | null> = {
+    1: null, // anónima
+    2: { clientId: 'pepinperez-api-client', clientSecret: 'K922tGbRbq0DsrudGDVKQOJv3tYtnO6A' },
+    3: { clientId: 'saracruzhortelana-api-client', clientSecret: 'o7FsNtYuca4K6xSHBCb3x4zKo3yiwBS1' }
+  };
 
   useEffect(() => {
     if (!isEnabled || !userPos) {
@@ -86,48 +92,68 @@ export function usePegasus(userPos: [number, number] | null, isEnabled: boolean 
       return;
     }
 
-    const fetchAircrafts = async (attempt = 1): Promise<void> => {
-      if (attempt === 1) setLoading(true);
+    const getToken = async (idx: number): Promise<string | null> => {
+      const creds = ACCOUNTS[idx];
+      if (!creds) return null;
+      try {
+        const tRes = await fetch('https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            grant_type: 'client_credentials',
+            client_id: creds.clientId,
+            client_secret: creds.clientSecret,
+          })
+        });
+        if (tRes.ok) {
+          const d = await tRes.json();
+          return d.access_token || null;
+        }
+      } catch(e) { console.error('[usePegasus] Token fetch error:', e); }
+      return null;
+    };
 
-      console.log(`[usePegasus] Fetching from Next.js proxy API (attempt ${attempt}/${MAX_RETRIES})...`);
+    const fetchAircrafts = async (): Promise<void> => {
+      setLoading(true);
+      const idx = accountIndexRef.current;
+      console.log(`[usePegasus] Fetching from OpenSky via browser (Account ${idx})...`);
+
+      const token = await getToken(idx);
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       try {
-        const res = await fetch('/api/aircrafts', { cache: 'no-store' });
-        console.log('[usePegasus] Proxy response status:', res.status);
+        const res = await fetch(OPENSKY_URL, { headers });
+        console.log('[usePegasus] OpenSky status:', res.status, '| Account:', idx);
 
         if (res.status === 429) {
-          console.warn(`[usePegasus] Rate limited on ALL accounts from proxy (429).`);
-          setIsRateLimited(true);
-          setLoading(false);
-          // Actualizamos visualmente a cuenta 3 (máxima)
-          setActiveAccount(3);
-          return;
+          if (accountIndexRef.current < 3) {
+            accountIndexRef.current += 1;
+            setActiveAccount(accountIndexRef.current);
+            console.warn(`[usePegasus] 429 → Switching to Account ${accountIndexRef.current}`);
+            setLoading(false);
+            return fetchAircrafts(); // reintentar inmediatamente con la siguiente cuenta
+          } else {
+            setIsRateLimited(true);
+            setLoading(false);
+            return;
+          }
         }
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
         setIsRateLimited(false);
-        setActiveAccount(data.account || 1);
-
         if (data?.states) {
-          console.log(`[usePegasus] ✅ ${data.states.length} aircraft loaded. (Source: ${data.source})`);
+          console.log(`[usePegasus] ✅ ${data.states.length} aircraft via browser/Account ${idx}`);
           setRawAircrafts(data.states);
         } else {
-          console.warn('[usePegasus] Response OK but no states array:', data);
           setRawAircrafts([]);
         }
-        setLoading(false);
-
       } catch (error) {
-        console.error(`[usePegasus] ❌ Fetch error (attempt ${attempt}):`, error);
-        if (attempt < MAX_RETRIES) {
-          console.log(`[usePegasus] Retrying in ${RETRY_DELAY_MS / 1000}s...`);
-          setTimeout(() => fetchAircrafts(attempt + 1), RETRY_DELAY_MS);
-        } else {
-          console.error('[usePegasus] All retries exhausted.');
-          setLoading(false);
-        }
+        console.error('[usePegasus] ❌ Fetch error:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
