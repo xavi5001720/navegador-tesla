@@ -12,9 +12,9 @@ export async function GET(request: Request) {
     let credentials;
     // Forzamos al bundler de Vercel/Next.js a hidratar el JSON en el código directamente
     if (accountIndex === '2') {
-      credentials = require('../../../../../API opensky/credentials(2).json');
+      credentials = require('../../../../API opensky/credentials(2).json');
     } else {
-      credentials = require('../../../../../API opensky/credentials(3).json');
+      credentials = require('../../../../API opensky/credentials(3).json');
     }
 
     const tokenResponse = await fetch('https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token', {
