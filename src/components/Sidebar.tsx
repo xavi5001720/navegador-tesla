@@ -30,6 +30,7 @@ interface SidebarProps {
   setIsRadarsEnabled: (v: boolean) => void;
   isAircraftsEnabled: boolean;
   setIsAircraftsEnabled: (v: boolean) => void;
+  activeAccount?: number;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -56,7 +57,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   isRadarsEnabled,
   setIsRadarsEnabled,
   isAircraftsEnabled,
-  setIsAircraftsEnabled
+  setIsAircraftsEnabled,
+  activeAccount = 1
 }) => {
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 md:bg-black/40 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -65,7 +67,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <h1 className="text-2xl font-semibold tracking-tight text-white/90">
             Viajando en <span className="text-blue-500">Tesla</span>
           </h1>
-          <p className="text-sm text-gray-400 mt-1">Navegación OpenSource</p>
+          <p className="text-sm text-gray-400 mt-1">en construcción versión 1</p>
         </div>
         <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-2 text-gray-400">
           <X className="h-5 w-5" />
@@ -223,9 +225,16 @@ const Sidebar: React.FC<SidebarProps> = ({
                       )}
                     </div>
                     {isAircraftsEnabled ? (
-                      <span className={`text-2xl font-black leading-none ${isAnyPegasusNearby ? 'text-blue-400' : 'text-white/60'}`}>
-                        {loadingAircrafts ? '...' : aircraftCount}
-                      </span>
+                      <div className="flex items-baseline gap-2">
+                        <span className={`text-2xl font-black leading-none ${isAnyPegasusNearby ? 'text-blue-400' : 'text-white/60'}`}>
+                          {loadingAircrafts ? '...' : aircraftCount}
+                        </span>
+                        {!loadingAircrafts && aircraftCount !== undefined && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 whitespace-nowrap">
+                            Cuenta {activeAccount}
+                          </span>
+                        )}
+                      </div>
                     ) : (
                       <span className="text-2xl font-black leading-none text-white/30">OFF</span>
                     )}

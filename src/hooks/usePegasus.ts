@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 
 export interface Aircraft {
   icao24: string;
@@ -75,6 +75,8 @@ export function usePegasus(userPos: [number, number] | null, isEnabled: boolean 
   const [rawAircrafts, setRawAircrafts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
+  const [activeAccount, setActiveAccount] = useState<number>(1);
+  const accountIndexRef = useRef<number>(1); // 1 = Anonymous, 2 = Pepinperez, 3 = Saracruzhortelana
 
   useEffect(() => {
     if (!isEnabled || !userPos) {
@@ -86,17 +88,46 @@ export function usePegasus(userPos: [number, number] | null, isEnabled: boolean 
 
     const fetchAircrafts = async (attempt = 1): Promise<void> => {
       if (attempt === 1) setLoading(true);
-      console.log(`[usePegasus] Fetching directly from OpenSky (attempt ${attempt}/${MAX_RETRIES})...`);
+
+      let token = null;
+      if (accountIndexRef.current > 1) {
+        try {
+          const tRes = await fetch(`/api/opensky-token?account=${accountIndexRef.current}`);
+          if (tRes.ok) {
+            const tData = await tRes.json();
+            token = tData.access_token;
+          }
+        } catch(e) {
+          console.error('[usePegasus] Error fetching token:', e);
+        }
+      }
+
+      console.log(`[usePegasus] Fetching from OpenSky (Account ${accountIndexRef.current}, attempt ${attempt}/${MAX_RETRIES})...`);
 
       try {
-        const res = await fetch(OPENSKY_URL);
+        const headers: Record<string, string> = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const res = await fetch(OPENSKY_URL, { headers });
         console.log('[usePegasus] OpenSky response status:', res.status);
 
         if (res.status === 429) {
-          console.warn('[usePegasus] Rate limited by OpenSky (429).');
-          setIsRateLimited(true);
-          setLoading(false);
-          return;
+          console.warn(`[usePegasus] Rate limited on Account ${accountIndexRef.current} (429).`);
+          
+          if (accountIndexRef.current < 3) {
+            console.log(`[usePegasus] Switching to Account ${accountIndexRef.current + 1}`);
+            accountIndexRef.current += 1;
+            setActiveAccount(accountIndexRef.current);
+            // Retry immediately on the next account
+            return fetchAircrafts(1);
+          } else {
+            console.error('[usePegasus] All accounts exhausted limits.');
+            setIsRateLimited(true);
+            setLoading(false);
+            return;
+          }
         }
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -129,7 +160,7 @@ export function usePegasus(userPos: [number, number] | null, isEnabled: boolean 
     const interval = setInterval(() => fetchAircrafts(), 60000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEnabled, userPos?.[0], userPos?.[1]]);
+  }, [isEnabled, !!userPos]);
 
   const aircrafts = useMemo<Aircraft[]>(() => {
     if (!userPos) return [];
@@ -184,5 +215,5 @@ export function usePegasus(userPos: [number, number] | null, isEnabled: boolean 
     return aircrafts.some(a => a.distanceToUser < 10000);
   }, [aircrafts]);
 
-  return { aircrafts, totalCount: rawAircrafts.length, isAnyPegasusNearby, loading, isRateLimited };
+  return { aircrafts, totalCount: rawAircrafts.length, isAnyPegasusNearby, loading, isRateLimited, activeAccount };
 }
