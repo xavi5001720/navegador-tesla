@@ -31,11 +31,6 @@ export const unlockTeslaAudio = () => {
       voicePlayer?.pause();
     }).catch(() => {});
 
-    // Despertamos también speechSynthesis por si acaso para navegadores normales que sí lo soporten
-    const utterance = new SpeechSynthesisUtterance('');
-    utterance.volume = 0;
-    window.speechSynthesis.speak(utterance);
-
     audioUnlocked = true;
     console.log('Tesla Audio Unlocked successfully via HTML5 Audio and TTS Proxy');
   } catch (err) {
@@ -55,25 +50,10 @@ const playBeep = (type: 'beep_short' | 'alarm_clock_beeping', volume: number) =>
 };
 
 const playVoice = (msg: string, volume: number) => {
-  // 1. Intentamos hablar con el motor nativo del navegador (funciona perfecto en Móvil y PC)
-  if (typeof window !== 'undefined' && window.speechSynthesis) {
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(msg);
-      utterance.lang = 'es-ES';
-      utterance.volume = volume;
-      window.speechSynthesis.speak(utterance);
-    } catch (e) {
-      console.warn("SpeechSynthesis error:", e);
-    }
-  }
-
-  // 2. Sistema de contingencia para Tesla:
-  // Como el Tesla no suele hablar por SpeechSynthesis nativo, 
-  // reproducimos en paralelo el MP3 que generamos en nuestro propio servidor backend (proxy)
   if (!voicePlayer) return;
   
-  // Usamos la ruta API local (el servidor Next.js se encarga de saltarse las restricciones de Google)
+  // Usamos la ruta API local (proxy a Google TTS) uniformemente para todos los dispositivos
+  // Esto evita ecos y garantiza que en el coche suene con voz real en vez del sintetizador roto
   const url = `/api/tts?text=${encodeURIComponent(msg)}`;
   
   voicePlayer.src = url;
