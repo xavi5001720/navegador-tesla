@@ -248,6 +248,7 @@ function ZoomControls({ onViewModeChange, onZoomChange }: { onViewModeChange?: (
     <div 
       className="absolute top-1/2 right-6 -translate-y-1/2 flex flex-col gap-3 z-[1000]"
       onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
       onDoubleClick={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
     >
