@@ -229,7 +229,18 @@ function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordin
 
 function ZoomControls({ onViewModeChange, onZoomChange }: { onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void, onZoomChange?: (zoom: number) => void }) {
   const map = useMap();
-  
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // L.DomEvent.disableClickPropagation bloquea los eventos NATIVOS del DOM
+  // (no los sintéticos de React). Es la única forma de que Leaflet no reciba
+  // los clicks de los botones de zoom y abra el menú contextual.
+  useEffect(() => {
+    if (containerRef.current) {
+      L.DomEvent.disableClickPropagation(containerRef.current);
+      L.DomEvent.disableScrollPropagation(containerRef.current);
+    }
+  }, []);
+
   const handleZoomIn = (e: React.MouseEvent) => {
     e.stopPropagation();
     const newZoom = map.getZoom() + 1;
@@ -246,11 +257,8 @@ function ZoomControls({ onViewModeChange, onZoomChange }: { onViewModeChange?: (
 
   return (
     <div 
+      ref={containerRef}
       className="absolute top-1/2 right-6 -translate-y-1/2 flex flex-col gap-3 z-[1000]"
-      onPointerDown={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
-      onDoubleClick={(e) => e.stopPropagation()}
-      onWheel={(e) => e.stopPropagation()}
     >
       <button 
         onClick={handleZoomIn}
@@ -267,6 +275,8 @@ function ZoomControls({ onViewModeChange, onZoomChange }: { onViewModeChange?: (
     </div>
   );
 }
+
+
 
 export default function MapUI({ userPos, heading, routeCoordinates, radars = [], aircrafts = [], speed = 0, viewMode = 'navigation', onViewModeChange, customZoom, onZoomChange, onMapClick }: MapUIProps) {
   return (
