@@ -18,6 +18,7 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { distanceToPolyline, findClosestPointOnPolyline } from '@/utils/geo';
 import { playPegasusAlert, unlockTeslaAudio } from '@/utils/sound';
 import MapContextMenu from '@/components/MapContextMenu';
+import FavoritesPanel from '@/components/FavoritesPanel';
 import { useFavorites } from '@/hooks/useFavorites';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
@@ -60,7 +61,8 @@ export default function Home() {
   const [lastRecalculationTime, setLastRecalculationTime] = useState(0);
   const [customZoom, setCustomZoom] = useState<number | null>(null);
   const [contextMenu, setContextMenu] = useState<{ lat: number; lon: number; screenX: number; screenY: number } | null>(null);
-  const { saveFavorite, isFavorite } = useFavorites();
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
+  const { favorites, saveFavorite, removeFavorite, isFavorite } = useFavorites();
 
   // Lógica de Recalculado Automático
   useEffect(() => {
@@ -161,9 +163,9 @@ export default function Home() {
     calculateRoute(origin, [contextMenu.lat, contextMenu.lon]);
   }, [contextMenu, userPos, calculateRoute]);
 
-  const handleSaveFavorite = useCallback(() => {
+  const handleSaveFavorite = useCallback((name: string) => {
     if (!contextMenu) return;
-    saveFavorite(contextMenu.lat, contextMenu.lon);
+    saveFavorite(contextMenu.lat, contextMenu.lon, name);
   }, [contextMenu, saveFavorite]);
 
   const handleAddStopBefore = useCallback(() => {
@@ -243,6 +245,7 @@ export default function Home() {
         setIsSoundEnabled={setIsSoundEnabled}
         alertVolume={alertVolume}
         setAlertVolume={setAlertVolume}
+        onOpenFavorites={() => setIsFavoritesOpen(true)}
       />
 
       {/* Sección del Mapa (Fondo) */}
@@ -302,6 +305,19 @@ export default function Home() {
           onAddStopBefore={handleAddStopBefore}
           onAddStopAfter={handleAddStopAfter}
           onClose={() => setContextMenu(null)}
+        />
+      )}
+      {/* Panel de Favoritos */}
+      {isFavoritesOpen && (
+        <FavoritesPanel
+          favorites={favorites}
+          onNavigate={(fav) => {
+            const origin: [number, number] = userPos || [40.4168, -3.7038];
+            calculateRoute(origin, [fav.lat, fav.lon]);
+            setIsFavoritesOpen(false);
+          }}
+          onDelete={removeFavorite}
+          onClose={() => setIsFavoritesOpen(false)}
         />
       )}
     </main>

@@ -32,6 +32,7 @@ interface SidebarProps {
   isAircraftsEnabled: boolean;
   setIsAircraftsEnabled: (v: boolean) => void;
   activeAccount?: number;
+  onOpenFavorites: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -61,6 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   setIsAircraftsEnabled,
   activeAccount = 1,
   rawAircraftCount = 0,
+  onOpenFavorites,
 }) => {
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 md:bg-black/40 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -76,7 +78,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
 
-      <SearchPanel onSearch={onSearch} isLoading={loadingRoute} />
+      <SearchPanel onSearch={onSearch} isLoading={loadingRoute} onOpenFavorites={onOpenFavorites} />
 
       {/* Error Feedback */}
       {routeError && (
