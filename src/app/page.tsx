@@ -17,6 +17,8 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 
 import { distanceToPolyline, findClosestPointOnPolyline } from '@/utils/geo';
 import { playPegasusAlert, unlockTeslaAudio } from '@/utils/sound';
+import MapContextMenu from '@/components/MapContextMenu';
+import { useFavorites } from '@/hooks/useFavorites';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -38,13 +40,15 @@ export default function Home() {
     requestGPS 
   } = useGeolocation();
 
-  const { 
+  const {
     route, 
     destination, 
     loadingRoute, 
     routeError, 
     calculateRoute, 
     findAndTraceRoute, 
+    addWaypointBefore,
+    addWaypointAfter,
     clearRoute 
   } = useRoute();
   
@@ -55,6 +59,8 @@ export default function Home() {
   const [alertVolume, setAlertVolume] = useState(0.5);
   const [lastRecalculationTime, setLastRecalculationTime] = useState(0);
   const [customZoom, setCustomZoom] = useState<number | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ lat: number; lon: number; screenX: number; screenY: number } | null>(null);
+  const { saveFavorite, isFavorite } = useFavorites();
 
   // Lógica de Recalculado Automático
   useEffect(() => {
@@ -145,6 +151,33 @@ export default function Home() {
     await findAndTraceRoute(origin, query);
   };
 
+  const handleMapClick = useCallback((lat: number, lon: number, screenX: number, screenY: number) => {
+    setContextMenu({ lat, lon, screenX, screenY });
+  }, []);
+
+  const handleNavigateToPoint = useCallback(() => {
+    if (!contextMenu) return;
+    const origin: [number, number] = userPos || [40.4168, -3.7038];
+    calculateRoute(origin, [contextMenu.lat, contextMenu.lon]);
+  }, [contextMenu, userPos, calculateRoute]);
+
+  const handleSaveFavorite = useCallback(() => {
+    if (!contextMenu) return;
+    saveFavorite(contextMenu.lat, contextMenu.lon);
+  }, [contextMenu, saveFavorite]);
+
+  const handleAddStopBefore = useCallback(() => {
+    if (!contextMenu) return;
+    const origin: [number, number] = userPos || [40.4168, -3.7038];
+    addWaypointBefore(origin, [contextMenu.lat, contextMenu.lon]);
+  }, [contextMenu, userPos, addWaypointBefore]);
+
+  const handleAddStopAfter = useCallback(() => {
+    if (!contextMenu) return;
+    const origin: [number, number] = userPos || [40.4168, -3.7038];
+    addWaypointAfter(origin, [contextMenu.lat, contextMenu.lon]);
+  }, [contextMenu, userPos, addWaypointAfter]);
+
   return (
     <main className="flex h-screen w-full overflow-hidden bg-gray-950 font-sans text-white selection:bg-blue-500/30">
       
@@ -225,6 +258,7 @@ export default function Home() {
           onViewModeChange={setViewMode}
           customZoom={customZoom}
           onZoomChange={setCustomZoom}
+          onMapClick={handleMapClick}
         />
 
         {/* Panel de Avisos Rápidos y Velocímetro */}
@@ -253,6 +287,23 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Menú contextual del mapa */}
+      {contextMenu && (
+        <MapContextMenu
+          lat={contextMenu.lat}
+          lon={contextMenu.lon}
+          screenX={contextMenu.screenX}
+          screenY={contextMenu.screenY}
+          hasRoute={!!route}
+          isFavorite={isFavorite(contextMenu.lat, contextMenu.lon)}
+          onNavigate={handleNavigateToPoint}
+          onSaveFavorite={handleSaveFavorite}
+          onAddStopBefore={handleAddStopBefore}
+          onAddStopAfter={handleAddStopAfter}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
     </main>
   );
 }

@@ -28,20 +28,20 @@ const geocodeAddress = async (query: string): Promise<Coordinates | null> => {
 export function useRoute() {
   const [route, setRoute] = useState<RouteResult | null>(null);
   const [destination, setDestination] = useState<Coordinates | null>(null);
+  const [waypoints, setWaypoints] = useState<Coordinates[]>([]); // paradas intermedias
   const [loadingRoute, setLoadingRoute] = useState(false);
   const [routeError, setRouteError] = useState<string | null>(null);
 
-  // 2. Routing: Origen -> Destino (Usando OSRM Público)
-  const calculateRoute = useCallback(async (origin: Coordinates, destination: Coordinates) => {
+  // 2. Routing: múltiples puntos (Usando OSRM Público)
+  const calculateRoute = useCallback(async (origin: Coordinates, destination: Coordinates, stops: Coordinates[] = []) => {
     setLoadingRoute(true);
     setRouteError(null);
     try {
-      // OSRM API espera "lon,lat"
-      const originStr = `${origin[1]},${origin[0]}`;
-      const destStr = `${destination[1]},${destination[0]}`;
+      // Construimos la cadena de coordenadas: origen;[paradas...];destino
+      const allPoints: Coordinates[] = [origin, ...stops, destination];
+      const coordStr = allPoints.map(p => `${p[1]},${p[0]}`).join(';');
       
-      // Llamada pública a OSRM para coches (driving)
-      const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${originStr};${destStr}?overview=full&geometries=geojson`);
+      const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=full&geometries=geojson`);
       const data = await res.json();
 
       if (data.code !== 'Ok' || !data.routes.length) {
@@ -67,6 +67,7 @@ export function useRoute() {
       });
 
       setDestination(destination);
+      setWaypoints(stops);
 
     } catch (err: any) {
       setRouteError(err.message || "Error calculando ruta.");
@@ -87,23 +88,43 @@ export function useRoute() {
         return false;
      }
 
-     await calculateRoute(origin, destCoords);
+     await calculateRoute(origin, destCoords, []);
      return true;
   }, [calculateRoute]);
   
+  // Añadir parada antes del destino final
+  const addWaypointBefore = useCallback(async (origin: Coordinates, newStop: Coordinates) => {
+    if (!destination) return;
+    // La parada nueva va antes del destino final
+    const newWaypoints = [...waypoints, newStop];
+    await calculateRoute(origin, destination, newWaypoints);
+  }, [destination, waypoints, calculateRoute]);
+
+  // Añadir parada después del destino actual (el destino actual se convierte en parada y la nueva en destino)
+  const addWaypointAfter = useCallback(async (origin: Coordinates, newDestination: Coordinates) => {
+    if (!destination) return;
+    // El destino actual se convierte en parada intermedia, la nueva coordenada es el nuevo destino
+    const newWaypoints = [...waypoints, destination];
+    await calculateRoute(origin, newDestination, newWaypoints);
+  }, [destination, waypoints, calculateRoute]);
+
   const clearRoute = useCallback(() => {
      setRoute(null);
      setDestination(null);
+     setWaypoints([]);
      setRouteError(null);
   }, []);
 
   return {
     route,
     destination,
+    waypoints,
     loadingRoute,
     routeError,
     calculateRoute,
     findAndTraceRoute,
+    addWaypointBefore,
+    addWaypointAfter,
     clearRoute
   };
 }

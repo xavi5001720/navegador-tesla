@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -9,6 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { Radar } from '@/hooks/useRadars';
 import { Aircraft } from '@/hooks/usePegasus';
 import { findClosestPointOnPolyline, getBearing } from '@/utils/geo';
+import MapContextMenu from './MapContextMenu';
 
 const defaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -68,17 +69,22 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
 const SATELLITE_MAP_TILES = 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
 const MAP_ATTRIBUTION = '&copy; Google Maps';
 
-function MapEvents({ onViewModeChange }: { onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void }) {
+function MapEvents({ onViewModeChange, onMapClick }: { onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void, onMapClick?: (lat: number, lon: number, screenX: number, screenY: number) => void }) {
   const map = useMap();
   useEffect(() => {
     const onDragStart = () => {
       if (onViewModeChange) onViewModeChange('explore');
     };
+    const onClick = (e: L.LeafletMouseEvent) => {
+      if (onMapClick) onMapClick(e.latlng.lat, e.latlng.lng, e.originalEvent.clientX, e.originalEvent.clientY);
+    };
     map.on('dragstart', onDragStart);
+    map.on('click', onClick);
     return () => {
       map.off('dragstart', onDragStart);
+      map.off('click', onClick);
     };
-  }, [map, onViewModeChange]);
+  }, [map, onViewModeChange, onMapClick]);
   return null;
 }
 
@@ -106,6 +112,7 @@ interface MapUIProps {
    onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void;
    customZoom?: number | null;
    onZoomChange?: (zoom: number) => void;
+   onMapClick?: (lat: number, lon: number, screenX: number, screenY: number) => void;
 }
 
 const createCarIcon = (heading: number) => {
@@ -260,7 +267,7 @@ function ZoomControls({ onViewModeChange, onZoomChange }: { onViewModeChange?: (
   );
 }
 
-export default function MapUI({ userPos, heading, routeCoordinates, radars = [], aircrafts = [], speed = 0, viewMode = 'navigation', onViewModeChange, customZoom, onZoomChange }: MapUIProps) {
+export default function MapUI({ userPos, heading, routeCoordinates, radars = [], aircrafts = [], speed = 0, viewMode = 'navigation', onViewModeChange, customZoom, onZoomChange, onMapClick }: MapUIProps) {
   return (
     <div className="relative h-full w-full bg-gray-900 overflow-hidden">
       <style jsx global>{`
@@ -276,7 +283,7 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
         zoomControl={false}
       >
         <ZoomControls onViewModeChange={onViewModeChange} onZoomChange={onZoomChange} />
-        <MapEvents onViewModeChange={onViewModeChange} />
+        <MapEvents onViewModeChange={onViewModeChange} onMapClick={onMapClick} />
         <MapRotator heading={heading} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} />
         <TileLayer attribution={MAP_ATTRIBUTION} url={SATELLITE_MAP_TILES} />
         
