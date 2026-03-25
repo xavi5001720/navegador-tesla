@@ -104,6 +104,8 @@ interface MapUIProps {
    speed?: number;
    viewMode?: 'navigation' | 'overview' | 'explore';
    onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void;
+   customZoom?: number | null;
+   onZoomChange?: (zoom: number) => void;
 }
 
 const createCarIcon = (heading: number) => {
@@ -174,7 +176,7 @@ function MapRotator({ heading, viewMode, hasRoute, speed = 0 }: { heading: numbe
   return null;
 }
 
-function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordinates }: { position: L.LatLngExpression, viewMode: string, hasRoute: boolean, speed?: number, routeCoordinates?: [number, number][] }) {
+function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordinates, customZoom }: { position: L.LatLngExpression, viewMode: string, hasRoute: boolean, speed?: number, routeCoordinates?: [number, number][], customZoom?: number | null }) {
   const map = useMap();
   useEffect(() => {
     if (viewMode === 'explore') return;
@@ -199,35 +201,40 @@ function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordin
         map.setView(position, 14, { animate: true, duration: 1.5 });
       }
     } else if (viewMode === 'navigation') {
+      // Si el usuario ha fijado un zoom con los botones +/-, lo respetamos
+      if (customZoom != null) {
+        map.setView(position, customZoom, { animate: true, duration: 0.8 });
+        return;
+      }
+
       if (speed < 10) {
-        // En detenido o baja velocidad, mostramos vista un poco más cercana en modo navegación
         map.setView(position, 17, { animate: true, duration: 1 });
       } else {
-        // En movimiento (>10km/h): seguimiento cercano, abriendo el plano gradualmente a más velocidad
         let targetZoom = hasRoute ? 18 : 17;
         if (speed > 50) targetZoom = 17;
         if (speed > 100) targetZoom = 16;
-        
         map.setView(position, targetZoom, { animate: true, duration: 1 });
       }
     }
-  }, [position, viewMode, map, hasRoute, speed, routeCoordinates]);
+  }, [position, viewMode, map, hasRoute, speed, routeCoordinates, customZoom]);
   return null;
 }
 
-function ZoomControls({ onViewModeChange }: { onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void }) {
+function ZoomControls({ onViewModeChange, onZoomChange }: { onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void, onZoomChange?: (zoom: number) => void }) {
   const map = useMap();
   
   const handleZoomIn = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onViewModeChange) onViewModeChange('explore');
-    map.zoomIn();
+    const newZoom = map.getZoom() + 1;
+    map.setZoom(newZoom);
+    if (onZoomChange) onZoomChange(newZoom);
   };
   
   const handleZoomOut = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onViewModeChange) onViewModeChange('explore');
-    map.zoomOut();
+    const newZoom = map.getZoom() - 1;
+    map.setZoom(newZoom);
+    if (onZoomChange) onZoomChange(newZoom);
   };
 
   return (
@@ -253,7 +260,7 @@ function ZoomControls({ onViewModeChange }: { onViewModeChange?: (mode: 'navigat
   );
 }
 
-export default function MapUI({ userPos, heading, routeCoordinates, radars = [], aircrafts = [], speed = 0, viewMode = 'navigation', onViewModeChange }: MapUIProps) {
+export default function MapUI({ userPos, heading, routeCoordinates, radars = [], aircrafts = [], speed = 0, viewMode = 'navigation', onViewModeChange, customZoom, onZoomChange }: MapUIProps) {
   return (
     <div className="relative h-full w-full bg-gray-900 overflow-hidden">
       <style jsx global>{`
@@ -268,15 +275,14 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
         className="h-full w-full z-0"
         zoomControl={false}
       >
-        <ZoomControls onViewModeChange={onViewModeChange} />
+        <ZoomControls onViewModeChange={onViewModeChange} onZoomChange={onZoomChange} />
         <MapEvents onViewModeChange={onViewModeChange} />
         <MapRotator heading={heading} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} />
         <TileLayer attribution={MAP_ATTRIBUTION} url={SATELLITE_MAP_TILES} />
         
         <RouteFitter routeCoordinates={routeCoordinates} />
         
-        {/* Usamos userPos directamente para el tracker de vista, pero visualmente el coche puede ir snappeado */}
-        <LocationTracker position={userPos} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} />
+        <LocationTracker position={userPos} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} customZoom={customZoom} />
         
         {routeCoordinates && routeCoordinates.length > 0 && (
            <>

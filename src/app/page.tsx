@@ -54,6 +54,7 @@ export default function Home() {
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [alertVolume, setAlertVolume] = useState(0.5);
   const [lastRecalculationTime, setLastRecalculationTime] = useState(0);
+  const [customZoom, setCustomZoom] = useState<number | null>(null);
 
   // Lógica de Recalculado Automático
   useEffect(() => {
@@ -222,6 +223,8 @@ export default function Home() {
           speed={speed}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
+          customZoom={customZoom}
+          onZoomChange={setCustomZoom}
         />
 
         {/* Panel de Avisos Rápidos y Velocímetro */}
@@ -230,7 +233,7 @@ export default function Home() {
           
           <div className="flex flex-col gap-3 md:flex-row">
             <button 
-              onClick={() => setViewMode('overview')}
+              onClick={() => { setViewMode('overview'); setCustomZoom(null); }}
               className={`flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 ${viewMode === 'overview' ? 'bg-indigo-600' : 'bg-gray-800 hover:bg-gray-700'}`}
             >
               <img src="/mapa.png" alt="Vista General" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
@@ -240,6 +243,7 @@ export default function Home() {
               onClick={() => {
                 if (!hasLocation) requestGPS();
                 setViewMode('navigation');
+                setCustomZoom(null);
               }}
               className={`flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 ${viewMode === 'navigation' ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}
             >
