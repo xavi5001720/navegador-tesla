@@ -42,26 +42,18 @@ function isNearAirport(lat: number, lon: number): boolean {
 // ── Aerolíneas comerciales — se excluyen del radar ────────────────────────────
 const COMMERCIAL_RE = /^(EAX|IBE|RYR|VLG|EZY|AFR|DLH|KLM|BAW)/i;
 
-// ── Spain bbox completo (fallback sin ruta) ───────────────────────────────────
-const SPAIN_BBOX = `lamin=35.0&lomin=-10.0&lamax=44.0&lomax=5.0`;
-
-// ── Calcula bbox de la ruta ───────────────────────────────────────────────────
-// Sin ruta → toda España (vista general)
-// Con ruta → caja de ~50 km alrededor del coche (suficiente para la próxima media hora de viaje)
+// ── Calcula bbox local centrado en el usuario ──────────────────────────────────
+// Con ruta o sin ella, siempre buscamos dentro de un radio de ~50 km del usuario.
 function getRouteBbox(
   userPos: [number, number],
   routeCoordinates?: [number, number][]
 ): string {
-  const hasRoute = routeCoordinates && routeCoordinates.length > 0;
-  if (!hasRoute) return SPAIN_BBOX;
-
-  // Un grado de latitud son ~111 km. 0.45 grados son ~50 km.
-  const MARGIN_DEG = 0.45; 
+  // 0.45 grados de latitud ≈ 50 km
+  const MARGIN_DEG = 0.45;
   const lamin = (userPos[0] - MARGIN_DEG).toFixed(4);
   const lomin = (userPos[1] - MARGIN_DEG).toFixed(4);
   const lamax = (userPos[0] + MARGIN_DEG).toFixed(4);
   const lomax = (userPos[1] + MARGIN_DEG).toFixed(4);
-  
   return `lamin=${lamin}&lomin=${lomin}&lamax=${lamax}&lomax=${lomax}`;
 }
 
