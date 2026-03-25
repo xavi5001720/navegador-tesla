@@ -1,116 +1,72 @@
 // src/utils/sound.ts
 
-// Global AudioContext and Buffers
-let audioCtx: AudioContext | null = null;
 let audioUnlocked = false;
 
-const BUFFERS: Record<string, AudioBuffer | null> = {
-  beep_short: null,
-  alarm_clock_beeping: null
-};
-
-// Rutas de audio
-const AUDIO_URLS = {
-  beep_short: 'https://actions.google.com/sounds/v1/alarms/beep_short.ogg',
-  alarm_clock_beeping: 'https://actions.google.com/sounds/v1/alarms/alarm_clock_beeping.ogg'
-};
-
-// Pre-carga los sonidos de la red para decodificarlos en memoria
-const preloadAudioBuffer = async (name: keyof typeof AUDIO_URLS) => {
-  if (!audioCtx) return;
-  try {
-    const response = await fetch(AUDIO_URLS[name]);
-    const arrayBuffer = await response.arrayBuffer();
-    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-    BUFFERS[name] = audioBuffer;
-  } catch (err) {
-    console.error(`Error loading audio ${name}:`, err);
-  }
-};
+// Instanciar reproductores globales de HTML5 Audio para reusar y esquivar bloqueos de autoplay
+let beepPlayer: HTMLAudioElement | null = null;
+let voicePlayer: HTMLAudioElement | null = null;
 
 export const unlockTeslaAudio = () => {
   if (typeof window === 'undefined' || audioUnlocked) return;
   
   try {
-    // Definición estándar y con compatibilidad WebKit para navegadores antiguos
-    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContextClass) {
-      console.warn("Web Audio API no soportada en este navegador");
-      return;
+    // Ya no usamos Web Audio API ("AudioContext") con osciladores continuos 
+    // para evitar que el navegador del coche se apropie permanentemente 
+    // de la sesión multimedia y pare tu música de Spotify.
+
+    if (!beepPlayer) {
+      beepPlayer = new Audio();
+      beepPlayer.preload = 'auto'; // Precarga para evitar demoras
+    }
+    if (!voicePlayer) {
+      voicePlayer = new Audio();
+      voicePlayer.preload = 'auto'; // Precarga
     }
 
-    if (!audioCtx) {
-      audioCtx = new AudioContextClass();
-    }
+    // Truco clásico de "reproducir y pausar" en la primera interacción 
+    // para conseguir el permiso del navegador para saltarse el autoplay-blocking.
+    // Usamos el archivo MP3 silencioso Base64 cortísimo
+    const silentMp3 = 'data:audio/mp3;base64,//OExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq';
+    
+    beepPlayer.src = silentMp3;
+    beepPlayer.play().then(() => {
+      beepPlayer?.pause();
+    }).catch(() => {});
 
-    // Si estaba suspendido, lo reactivamos
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume().catch(e => console.warn("No se pudo reanudar el AudioContext:", e));
-    }
-
-    // 1. Oscilador inaudible para mantener activo el DSP del coche
-    // Esto evita que el amplificador del coche se duerma y que se pierda
-    // el inicio (o la totalidad) de los pitidos cortos por retardo.
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    
-    oscillator.type = 'sine';
-    oscillator.frequency.value = 1; // Frecuencia muy baja, inaudible
-    gainNode.gain.value = 0.001; // Volumen casi nulo
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    oscillator.start();
-    
-    // 2. Precargamos los audios
-    preloadAudioBuffer('beep_short');
-    preloadAudioBuffer('alarm_clock_beeping');
+    voicePlayer.src = silentMp3;
+    voicePlayer.play().then(() => {
+      voicePlayer?.pause();
+    }).catch(() => {});
 
     audioUnlocked = true;
-    console.log('Tesla Audio Unlocked successfully via Web Audio API');
-    
-    // Despertamos también speechSynthesis
-    const utterance = new SpeechSynthesisUtterance('');
-    utterance.volume = 0;
-    window.speechSynthesis.speak(utterance);
-    
+    console.log('Tesla Audio Unlocked successfully via HTML5 Audio and TTS Proxy');
   } catch (err) {
     console.error("Audio unlock error:", err);
   }
 };
 
-// Función auxiliar para tocar un buffer
-const playBuffer = (bufferName: keyof typeof AUDIO_URLS, volume: number) => {
-  if (!audioCtx) return;
+const playBeep = (type: 'beep_short' | 'alarm_clock_beeping', volume: number) => {
+  if (!beepPlayer) return;
+  const url = type === 'beep_short' 
+    ? 'https://actions.google.com/sounds/v1/alarms/beep_short.ogg'
+    : 'https://actions.google.com/sounds/v1/alarms/alarm_clock_beeping.ogg';
+    
+  beepPlayer.src = url;
+  beepPlayer.volume = Math.max(0, Math.min(1, volume));
+  beepPlayer.play().catch(e => console.warn("Beep blocked:", e));
+};
+
+const playVoice = (msg: string, volume: number) => {
+  if (!voicePlayer) return;
+  // TRUCO MAESTRO: Como el "SpeechSynthesis" interno del Chromium de 
+  // Tesla no tiene enrutado el audio, usamos el endpoint de Google Translate 
+  // que nos devuelve un MP3 real con la voz que queremos.
+  // El coche reproducirá la voz igual que lo hace con el audio de un vídeo de Youtube.
+  const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es&q=${encodeURIComponent(msg)}`;
   
-  // Si el navegador suspendió el contexto (e.g. al mandar la app a segundo plano), intentamos revivirlo
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume().catch(() => {});
-  }
-  
-  const buffer = BUFFERS[bufferName];
-  if (!buffer) {
-    console.warn(`Buffer para ${bufferName} no precargado aún.`);
-    // Fallback improvisado a HTML5 si aún no está cargado (solo precaución)
-    const fallbackAudio = new Audio(AUDIO_URLS[bufferName]);
-    fallbackAudio.volume = volume;
-    fallbackAudio.play().catch(() => {});
-    return;
-  }
-
-  try {
-    const source = audioCtx.createBufferSource();
-    source.buffer = buffer;
-
-    const gainNode = audioCtx.createGain();
-    gainNode.gain.value = Math.max(0, Math.min(1, volume)); // clamp entre 0 y 1
-
-    source.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    source.start(0);
-  } catch (err) {
-    console.error("Error playing buffer:", err);
-  }
+  voicePlayer.src = url;
+  voicePlayer.volume = Math.max(0, Math.min(1, volume));
+  voicePlayer.play().catch(e => console.warn("Voice blocked:", e));
 };
 
 export const playRadarAlert = (volume: number, type: 'safe_first' | 'safe_second' | 'danger') => {
@@ -119,17 +75,13 @@ export const playRadarAlert = (volume: number, type: 'safe_first' | 'safe_second
   try {
     const isDanger = type === 'danger';
     
-    // 1. Efecto de sonido inmediato (sin red, desde memoria con Web Audio API)
-    if (isDanger) {
-      playBuffer('alarm_clock_beeping', volume);
-    } else {
-      playBuffer('beep_short', volume);
-    }
+    // 1. Efecto de sonido inmediato
+    playBeep(isDanger ? 'alarm_clock_beeping' : 'beep_short', volume);
 
-    // 2. Voz sintetizada (Avisos de voz para quien los soporte bien)
+    // 2. Voz usando Google TTS (Audio MP3 de verdad)
     let msg = '';
     if (type === 'danger') {
-      msg = '¡Peligro! Exceso de velocidad en radar próximo. Reduzca la velocidad.';
+      msg = 'Peligro. Exceso de velocidad en radar próximo. Reduzca la velocidad.';
     } else if (type === 'safe_first') {
       msg = 'Atención, radar próximo. Velocidad correcta.';
     } else if (type === 'safe_second') {
@@ -137,13 +89,12 @@ export const playRadarAlert = (volume: number, type: 'safe_first' | 'safe_second
     }
 
     if (msg) {
-      const utterance = new SpeechSynthesisUtterance(msg);
-      utterance.lang = 'es-ES';
-      utterance.volume = volume;
-      utterance.pitch = isDanger ? 1.2 : 1; 
-      
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
+        // Le damos un pequeño delay (800ms) a la voz para que suene justo al terminar o mezclar con el pitido.
+        // Además, esto le da unas fracciones de segundo al DSP del coche para despertar 
+        // con el primer pitido, asegurando que no se coma la primera palabra.
+        setTimeout(() => {
+            playVoice(msg, volume);
+        }, 800);
     }
   } catch (err) {
     console.error("Error in playRadarAlert:", err);
@@ -154,15 +105,12 @@ export const playTestSound = (volume: number) => {
   if (typeof window === 'undefined') return;
 
   try {
-    playBuffer('beep_short', volume);
+    playBeep('beep_short', volume);
 
-    const msg = 'Prueba de sonido de radar. Ajusta el volumen ahora.';
-    const utterance = new SpeechSynthesisUtterance(msg);
-    utterance.lang = 'es-ES';
-    utterance.volume = volume;
-    
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+    const msg = 'Prueba de sonido de radar completada. Ajusta tu volumen.';
+    setTimeout(() => {
+        playVoice(msg, volume);
+    }, 800);
   } catch (err) {
     console.error("Error in playTestSound:", err);
   }
@@ -172,17 +120,14 @@ export const playPegasusAlert = (volume: number, callsign: string, altitude: num
   if (typeof window === 'undefined') return;
 
   try {
-    playBuffer('alarm_clock_beeping', volume);
+    playBeep('alarm_clock_beeping', volume);
 
     const nameStr = callsign && callsign !== 'N/A' ? `llamada ${callsign}` : 'Aeronave';
-    const msg = `Alerta. Objetivo aéreo en radio de 10 kilómetros. ${nameStr} detectada a ${Math.round(altitude)} metros de altura y ${Math.round(speed_kmh)} kilómetros por hora. Posible vigilancia.`;
+    const msg = `Alerta. Objetivo aéreo. ${nameStr} detectada a ${Math.round(altitude)} metros de altura. Posible vigilancia.`;
     
-    const utterance = new SpeechSynthesisUtterance(msg);
-    utterance.lang = 'es-ES';
-    utterance.volume = volume;
-    utterance.pitch = 0.9;
-    
-    window.speechSynthesis.speak(utterance);
+    setTimeout(() => {
+        playVoice(msg, volume);
+    }, 800);
   } catch (err) {
     console.error("Error pegasus sound:", err);
   }
