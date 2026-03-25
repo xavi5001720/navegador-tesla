@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -119,20 +119,58 @@ const createCarIcon = (heading: number) => {
   return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [110, 110], iconAnchor: [55, 55] });
 };
 
+// Interpolación angular más corta entre dos ángulos (evita el salto 359° → 0°)
+function lerpAngle(current: number, target: number, alpha: number): number {
+  let diff = ((target - current) % 360 + 540) % 360 - 180; // diff en [-180, 180]
+  return current + diff * alpha;
+}
+
 function MapRotator({ heading, viewMode, hasRoute, speed = 0 }: { heading: number, viewMode: string, hasRoute: boolean, speed?: number }) {
   const map = useMap();
+  const smoothedHeadingRef = useRef<number>(heading);
+  const rafRef = useRef<number | null>(null);
+  const targetHeadingRef = useRef<number>(heading);
+
+  // Actualizamos el target cuando llega un heading nuevo del GPS
+  useEffect(() => {
+    targetHeadingRef.current = heading;
+  }, [heading]);
+
   useEffect(() => {
     const container = map.getContainer();
     const shouldRotate = viewMode === 'navigation' && speed >= 10;
-    
-    if (shouldRotate) {
-      container.style.transition = 'transform 0.5s ease-out';
-      container.style.transform = `rotate(${-heading}deg)`;
-    } else {
-      container.style.transition = 'transform 0.5s ease-out';
-      container.style.transform = 'none';
-    }
-  }, [map, heading, viewMode, hasRoute, speed]);
+
+    // Eliminamos la transición CSS: ahora la animamos manualmente con rAF para tener control total
+    container.style.transition = 'none';
+
+    const animate = () => {
+      if (!shouldRotate) {
+        // Volvemos suavemente al norte cuando estamos detenidos o en otro modo
+        smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, 0, 0.08);
+        container.style.transform = Math.abs(smoothedHeadingRef.current) > 0.1
+          ? `rotate(${-smoothedHeadingRef.current}deg)`
+          : 'none';
+        if (Math.abs(smoothedHeadingRef.current) > 0.1) {
+          rafRef.current = requestAnimationFrame(animate);
+        } else {
+          container.style.transform = 'none';
+        }
+        return;
+      }
+
+      // Factor de suavizado: 0.06 = muy suave (GPS ruidoso), 0.15 = más reactivo
+      smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, targetHeadingRef.current, 0.06);
+      container.style.transform = `rotate(${-smoothedHeadingRef.current}deg)`;
+      rafRef.current = requestAnimationFrame(animate);
+    };
+
+    rafRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  }, [map, viewMode, speed]);
+
   return null;
 }
 
