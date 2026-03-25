@@ -1,5 +1,8 @@
+// src/utils/sound.ts
+
 let audioUnlocked = false;
 
+// Instanciar reproductores globales de HTML5 Audio para reusar y esquivar bloqueos de autoplay
 let beepPlayer: HTMLAudioElement | null = null;
 let voicePlayer: HTMLAudioElement | null = null;
 
@@ -9,11 +12,11 @@ export const unlockTeslaAudio = () => {
   try {
     if (!beepPlayer) {
       beepPlayer = new Audio();
-      beepPlayer.preload = 'auto';
+      beepPlayer.preload = 'auto'; // Precarga
     }
     if (!voicePlayer) {
       voicePlayer = new Audio();
-      voicePlayer.preload = 'auto';
+      voicePlayer.preload = 'auto'; // Precarga
     }
 
     const silentMp3 = 'data:audio/mp3;base64,//OExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq';
@@ -27,6 +30,11 @@ export const unlockTeslaAudio = () => {
     voicePlayer.play().then(() => {
       voicePlayer?.pause();
     }).catch(() => {});
+
+    // Despertamos también speechSynthesis por si acaso para navegadores normales que sí lo soporten
+    const utterance = new SpeechSynthesisUtterance('');
+    utterance.volume = 0;
+    window.speechSynthesis.speak(utterance);
 
     audioUnlocked = true;
     console.log('Tesla Audio Unlocked successfully via HTML5 Audio and TTS Proxy');
@@ -47,13 +55,30 @@ const playBeep = (type: 'beep_short' | 'alarm_clock_beeping', volume: number) =>
 };
 
 const playVoice = (msg: string, volume: number) => {
+  // 1. Intentamos hablar con el motor nativo del navegador (funciona perfecto en Móvil y PC)
+  if (typeof window !== 'undefined' && window.speechSynthesis) {
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(msg);
+      utterance.lang = 'es-ES';
+      utterance.volume = volume;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn("SpeechSynthesis error:", e);
+    }
+  }
+
+  // 2. Sistema de contingencia para Tesla:
+  // Como el Tesla no suele hablar por SpeechSynthesis nativo, 
+  // reproducimos en paralelo el MP3 que generamos en nuestro propio servidor backend (proxy)
   if (!voicePlayer) return;
-  const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es&q=${encodeURIComponent(msg)}`;
   
-  // Añadimos un timestamp al final para evitar caché agresiva del navegador si la URL es idéntica siempre
-  voicePlayer.src = url + '&_=' + Date.now();
+  // Usamos la ruta API local (el servidor Next.js se encarga de saltarse las restricciones de Google)
+  const url = `/api/tts?text=${encodeURIComponent(msg)}`;
+  
+  voicePlayer.src = url;
   voicePlayer.volume = Math.max(0, Math.min(1, volume));
-  voicePlayer.play().catch(e => console.warn("Voice blocked:", e));
+  voicePlayer.play().catch(e => console.warn("Voice Player MP3 blocked:", e));
 };
 
 export const playRadarAlert = (volume: number, type: 'safe_first' | 'safe_second' | 'danger') => {
@@ -74,8 +99,10 @@ export const playRadarAlert = (volume: number, type: 'safe_first' | 'safe_second
     }
 
     if (msg) {
-        // Quitamos el setTimeout para no perder el token de interacción del usuario
-        playVoice(msg, volume);
+        // En navegadores de PC la síntesis nativa y el MP3 sonarían a la vez (eco),
+        // pero en el teléfono/PC prevalece el nativo.
+        // Dado que solo nos importa el coche, la solución híbrida asegura que suene.
+        playVoice(msg, Math.max(0, volume - 0.2)); 
     }
   } catch (err) {
     console.error("Error in playRadarAlert:", err);
@@ -88,9 +115,8 @@ export const playTestSound = (volume: number) => {
   try {
     playBeep('beep_short', volume);
 
-    const msg = 'Prueba de sonido de radar completada. Ajusta tu volumen.';
-    // Sin setTimeout para asegurar que se dispara con la interacción del botón
-    playVoice(msg, volume);
+    const msg = 'Prueba de sonido completada. Ajusta el volumen a tu gusto.';
+    playVoice(msg, Math.max(0, volume - 0.2));
   } catch (err) {
     console.error("Error in playTestSound:", err);
   }
@@ -102,10 +128,10 @@ export const playPegasusAlert = (volume: number, callsign: string, altitude: num
   try {
     playBeep('alarm_clock_beeping', volume);
 
-    const nameStr = callsign && callsign !== 'N/A' ? `llamada ${callsign}` : 'Aeronave';
-    const msg = `Alerta. Objetivo aéreo. ${nameStr} detectada a ${Math.round(altitude)} metros de altura. Posible vigilancia.`;
+    const nameStr = callsign && callsign !== 'N/A' ? `llamada ${callsign}` : 'Una Aeronave';
+    const msg = `Alerta Pegasus. ${nameStr} detectada a ${Math.round(altitude)} metros de altura. Velocidad ${Math.round(speed_kmh)} kilómetros por hora. Posible vigilancia.`;
     
-    playVoice(msg, volume);
+    playVoice(msg, Math.max(0, volume - 0.2));
   } catch (err) {
     console.error("Error pegasus sound:", err);
   }
