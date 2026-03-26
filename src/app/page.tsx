@@ -266,6 +266,25 @@ export default function Home() {
 
         {/* Panel de Avisos Rápidos y Velocímetro */}
         <div className="absolute bottom-6 right-6 z-[500] flex flex-col items-end gap-3 md:flex-row md:items-center md:gap-4 md:bottom-8 md:right-8">
+
+          {/* Botones de Zoom — fijados, a la izquierda del velocímetro */}
+          <div className="flex flex-row gap-3 md:flex-col md:gap-2">
+            <button
+              onClick={() => setCustomZoom((customZoom ?? 17) + 1)}
+              className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl bg-gray-800 hover:bg-gray-700 border border-white/20 transition-all hover:scale-105 active:scale-95 group relative"
+            >
+              <img src="/zoom-in.png" alt="Acercar" className="h-8 w-8 md:h-10 md:w-10 object-contain drop-shadow-md" />
+              <span className="absolute -top-10 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Acercar</span>
+            </button>
+            <button
+              onClick={() => setCustomZoom((customZoom ?? 17) - 1)}
+              className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl bg-gray-800 hover:bg-gray-700 border border-white/20 transition-all hover:scale-105 active:scale-95 group relative"
+            >
+              <img src="/zoom-out.png" alt="Alejar" className="h-8 w-8 md:h-10 md:w-10 object-contain drop-shadow-md" />
+              <span className="absolute -top-10 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Alejar</span>
+            </button>
+          </div>
+
           <Speedometer speed={speed} />
           
           <div className="flex flex-col gap-3 md:flex-row">

@@ -227,54 +227,6 @@ function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordin
   return null;
 }
 
-function ZoomControls({ onViewModeChange, onZoomChange }: { onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void, onZoomChange?: (zoom: number) => void }) {
-  const map = useMap();
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // L.DomEvent.disableClickPropagation bloquea los eventos NATIVOS del DOM
-  // (no los sintéticos de React). Es la única forma de que Leaflet no reciba
-  // los clicks de los botones de zoom y abra el menú contextual.
-  useEffect(() => {
-    if (containerRef.current) {
-      L.DomEvent.disableClickPropagation(containerRef.current);
-      L.DomEvent.disableScrollPropagation(containerRef.current);
-    }
-  }, []);
-
-  const handleZoomIn = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const newZoom = map.getZoom() + 1;
-    map.setZoom(newZoom);
-    if (onZoomChange) onZoomChange(newZoom);
-  };
-  
-  const handleZoomOut = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const newZoom = map.getZoom() - 1;
-    map.setZoom(newZoom);
-    if (onZoomChange) onZoomChange(newZoom);
-  };
-
-  return (
-    <div 
-      ref={containerRef}
-      className="absolute top-1/2 right-6 -translate-y-1/2 flex flex-col gap-3 z-[1000]"
-    >
-      <button 
-        onClick={handleZoomIn}
-        className="flex h-12 w-12 md:h-14 md:w-14 items-center justify-center rounded-2xl shadow-2xl bg-black/60 backdrop-blur-xl border border-white/20 hover:bg-white/10 transition-all text-white text-3xl font-light hover:scale-105 active:scale-95"
-      >
-        +
-      </button>
-      <button 
-        onClick={handleZoomOut}
-        className="flex h-12 w-12 md:h-14 md:w-14 items-center justify-center rounded-2xl shadow-2xl bg-black/60 backdrop-blur-xl border border-white/20 hover:bg-white/10 transition-all text-white text-3xl font-light hover:scale-105 active:scale-95 mb-8 md:mb-0"
-      >
-        −
-      </button>
-    </div>
-  );
-}
 
 
 
@@ -293,7 +245,6 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
         className="h-full w-full z-0"
         zoomControl={false}
       >
-        <ZoomControls onViewModeChange={onViewModeChange} onZoomChange={onZoomChange} />
         <MapEvents onViewModeChange={onViewModeChange} onMapClick={onMapClick} />
         <MapRotator heading={heading} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} />
         <TileLayer attribution={MAP_ATTRIBUTION} url={SATELLITE_MAP_TILES} />
