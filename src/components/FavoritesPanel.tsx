@@ -52,18 +52,7 @@ export default function FavoritesPanel({ favorites, onNavigate, onDelete, onClos
                 key={fav.id}
                 className="flex items-center gap-3 rounded-2xl bg-white/5 border border-white/10 p-4 hover:bg-white/10 transition-colors group"
               >
-                {/* Icono estrella */}
-                <div className="h-9 w-9 shrink-0 rounded-xl bg-amber-500/15 flex items-center justify-center">
-                  <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                </div>
-
-                {/* Nombre y coordenadas */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-white truncate">{fav.name}</p>
-                  <p className="text-[10px] text-gray-500 mt-0.5">{fav.lat.toFixed(4)}, {fav.lon.toFixed(4)}</p>
-                </div>
-
-                {/* Botón navegar */}
+                {/* Botón navegar (izquierda, sustituye a la estrella) */}
                 <button
                   onClick={() => onNavigate(fav)}
                   className="h-9 w-9 shrink-0 flex items-center justify-center rounded-xl bg-blue-500/20 hover:bg-blue-500/40 text-blue-400 transition-colors"
@@ -71,6 +60,12 @@ export default function FavoritesPanel({ favorites, onNavigate, onDelete, onClos
                 >
                   <Navigation className="h-4 w-4" />
                 </button>
+
+                {/* Nombre y coordenadas */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-white truncate">{fav.name}</p>
+                  <p className="text-[10px] text-gray-500 mt-0.5">{fav.lat.toFixed(4)}, {fav.lon.toFixed(4)}</p>
+                </div>
 
                 {/* Botón borrar */}
                 <button
