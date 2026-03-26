@@ -48,8 +48,8 @@ function getRouteBbox(
   userPos: [number, number],
   routeCoordinates?: [number, number][]
 ): string {
-  // 0.45 grados de latitud ≈ 50 km
-  const MARGIN_DEG = 0.45;
+  // 0.22 grados de latitud ≈ 25 km
+  const MARGIN_DEG = 0.22;
   const lamin = (userPos[0] - MARGIN_DEG).toFixed(4);
   const lomin = (userPos[1] - MARGIN_DEG).toFixed(4);
   const lamax = (userPos[0] + MARGIN_DEG).toFixed(4);
@@ -89,7 +89,7 @@ async function getToken(): Promise<string | null> {
   return null;
 }
 
-const FETCH_INTERVAL_MS = 45_000; // 45 s entre consultas
+const FETCH_INTERVAL_MS = 30_000; // 30 s entre consultas
 
 export function usePegasus(
   userPos: [number, number] | null,
