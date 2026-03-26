@@ -157,7 +157,7 @@ function MapRotator({ heading, viewMode, hasRoute, speed = 0 }: { heading: numbe
         // Volvemos suavemente al norte cuando estamos detenidos o en otro modo
         smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, 0, 0.08);
         container.style.transform = Math.abs(smoothedHeadingRef.current) > 0.1
-          ? `rotate(${-smoothedHeadingRef.current}deg)`
+          ? `rotate(${-smoothedHeadingRef.current}deg) scale(1.42)`
           : 'none';
         if (Math.abs(smoothedHeadingRef.current) > 0.1) {
           rafRef.current = requestAnimationFrame(animate);
@@ -168,8 +168,9 @@ function MapRotator({ heading, viewMode, hasRoute, speed = 0 }: { heading: numbe
       }
 
       // Factor de suavizado: 0.06 = muy suave (GPS ruidoso), 0.15 = más reactivo
+      // scale(1.42) = √2: garantiza que el mapa cubre el viewport en cualquier ángulo de rotación
       smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, targetHeadingRef.current, 0.06);
-      container.style.transform = `rotate(${-smoothedHeadingRef.current}deg)`;
+      container.style.transform = `rotate(${-smoothedHeadingRef.current}deg) scale(1.42)`;
       rafRef.current = requestAnimationFrame(animate);
     };
 
