@@ -13,7 +13,7 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
   const [loadingRadars, setLoadingRadars] = useState(false);
 
   const [fetchingRouteRadars, setFetchingRouteRadars] = useState(false);
-  const lastFetchRef = useRef<{ pos: [number, number], routeLength: number } | null>(null);
+  const lastFetchRef = useRef<{ type: 'route'|'local', pos: [number, number], routeLength: number } | null>(null);
 
   // Creamos dependencias primitivas estables para detectar cambios reales en la ruta
   const routeLength = routeCoordinates?.length ?? 0;
@@ -40,13 +40,19 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
     }
 
     const hasRoute = routeCoordinates && routeCoordinates.length > 0;
-    // Lógica para decidir si es necesario refetch: Cada 5000 metros
+    const currentType = hasRoute ? 'route' : 'local';
+
+    // Lógica para decidir si es necesario refetch
     let shouldFetch = false;
     if (!lastFetchRef.current) {
       shouldFetch = true;
-    } else {
+    } else if (lastFetchRef.current.type !== currentType) {
+      shouldFetch = true;
+    } else if (currentType === 'route' && lastFetchRef.current.routeLength !== routeLength) {
+      shouldFetch = true;
+    } else if (currentType === 'local') {
       const dist = getDist(lastFetchRef.current.pos, userPos);
-      if (dist > 5000) shouldFetch = true; // Buscar nuevos radares tras avanzar 5km
+      if (dist > 5000) shouldFetch = true; // Solo buscar si se ha movido 5km en modo libre
     }
 
     if (!shouldFetch) return;
@@ -58,16 +64,41 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
       try {
         let query = '';
         
-        // Siempre usamos una búsqueda circular (15km = approx 10 minutos de conducción por autovía)
-        // en torno al usuario. Si hay ruta, Overpass en un BBox de España entera daría Timeout.
-        // Las llamadas a 15km a la redonda tardan apenas 200 milisegundos y nos dan los radares exactos.
-        query = `[out:json][timeout:15];
+        if (hasRoute && routeCoordinates) {
+           // Muestrear puntos de la ruta cada ~10km para evitar bounding box gigante
+           const sampledPoints: [number, number][] = [];
+           sampledPoints.push(routeCoordinates[0]);
+           
+           let lastPoint = routeCoordinates[0];
+           for (let i = 1; i < routeCoordinates.length; i++) {
+              const pt = routeCoordinates[i];
+              if (getDist(lastPoint, pt) > 10000) {
+                 sampledPoints.push(pt);
+                 lastPoint = pt;
+              }
+           }
+           // Añadir el destino por si acaso
+           if (sampledPoints[sampledPoints.length - 1] !== routeCoordinates[routeCoordinates.length - 1]) {
+              sampledPoints.push(routeCoordinates[routeCoordinates.length - 1]);
+           }
+
+           console.log(`[useRadars] Fetching radars for whole route using ${sampledPoints.length} sample points...`);
+           
+           let mapQueries = sampledPoints.map(p => `
+  node["highway"="speed_camera"](around:10000,${p[0]},${p[1]});
+  node["enforcement"="speed"](around:10000,${p[0]},${p[1]});`).join('');
+           
+           query = `[out:json][timeout:25];\n(${mapQueries}\n);\nout body;`;
+        } else {
+           // Búsqueda circular de 15km cuando no hay ruta (modo local)
+           query = `[out:json][timeout:15];
 (
   node["highway"="speed_camera"](around:15000,${userPos[0]},${userPos[1]});
   node["enforcement"="speed"](around:15000,${userPos[0]},${userPos[1]});
 );
 out body;`;
-        console.log(`[useRadars] Fetching radars 15km around [${userPos[0]}, ${userPos[1]}]`);
+           console.log(`[useRadars] Fetching local radars 15km around [${userPos[0]}, ${userPos[1]}]`);
+        }
         
         const url = `https://overpass-api.de/api/interpreter`;
         const response = await fetch(url, {
@@ -94,6 +125,7 @@ out body;`;
           
           // Actualizar ref con la peticion exitosa
           lastFetchRef.current = {
+            type: currentType,
             pos: userPos,
             routeLength: routeLength
           };
