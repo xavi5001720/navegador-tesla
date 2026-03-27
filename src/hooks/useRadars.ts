@@ -13,7 +13,7 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
   const [loadingRadars, setLoadingRadars] = useState(false);
 
   const [fetchingRouteRadars, setFetchingRouteRadars] = useState(false);
-  const lastFetchRef = useRef<{ type: 'route'|'local', pos: [number, number], routeLength: number } | null>(null);
+  const lastFetchRef = useRef<{ pos: [number, number], routeLength: number } | null>(null);
 
   // Creamos dependencias primitivas estables para detectar cambios reales en la ruta
   const routeLength = routeCoordinates?.length ?? 0;
@@ -40,19 +40,13 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
     }
 
     const hasRoute = routeCoordinates && routeCoordinates.length > 0;
-    const currentType = hasRoute ? 'route' : 'local';
-
-    // Lógica para decidir si es necesario refetch
+    // Lógica para decidir si es necesario refetch: Cada 5000 metros
     let shouldFetch = false;
     if (!lastFetchRef.current) {
       shouldFetch = true;
-    } else if (lastFetchRef.current.type !== currentType) {
-      shouldFetch = true;
-    } else if (currentType === 'route' && lastFetchRef.current.routeLength !== routeLength) {
-      shouldFetch = true;
-    } else if (currentType === 'local') {
+    } else {
       const dist = getDist(lastFetchRef.current.pos, userPos);
-      if (dist > 5000) shouldFetch = true; // Solo buscar si se ha movido 5km sin ruta
+      if (dist > 5000) shouldFetch = true; // Buscar nuevos radares tras avanzar 5km
     }
 
     if (!shouldFetch) return;
@@ -63,28 +57,17 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
       
       try {
         let query = '';
-        let currentSampledPoints: [number, number][] = [];
         
-        if (hasRoute && routeCoordinates) {
-          let minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
-          for (let i = 0; i < routeCoordinates.length; i++) {
-            minLat = Math.min(minLat, routeCoordinates[i][0]);
-            maxLat = Math.max(maxLat, routeCoordinates[i][0]);
-            minLon = Math.min(minLon, routeCoordinates[i][1]);
-            maxLon = Math.max(maxLon, routeCoordinates[i][1]);
-          }
-          // Añadir un margen (aprox 2km = 0.02 grados)
-          minLat -= 0.02;
-          maxLat += 0.02;
-          minLon -= 0.02;
-          maxLon += 0.02;
-
-          query = `[out:json][timeout:25];\n(\n  node["highway"="speed_camera"](${minLat},${minLon},${maxLat},${maxLon});\n);\nout body;`;
-          console.log(`[useRadars] Fetching radars using Route Bounding Box [${minLat.toFixed(3)}, ${minLon.toFixed(3)}, ${maxLat.toFixed(3)}, ${maxLon.toFixed(3)}]`);
-        } else {
-          query = `[out:json][timeout:25];\n(\n  node["highway"="speed_camera"](around:10000,${userPos[0]},${userPos[1]});\n);\nout body;`;
-          console.log(`[useRadars] Fetching nearby radars for [${userPos[0]}, ${userPos[1]}]`);
-        }
+        // Siempre usamos una búsqueda circular (15km = approx 10 minutos de conducción por autovía)
+        // en torno al usuario. Si hay ruta, Overpass en un BBox de España entera daría Timeout.
+        // Las llamadas a 15km a la redonda tardan apenas 200 milisegundos y nos dan los radares exactos.
+        query = `[out:json][timeout:15];
+(
+  node["highway"="speed_camera"](around:15000,${userPos[0]},${userPos[1]});
+  node["enforcement"="speed"](around:15000,${userPos[0]},${userPos[1]});
+);
+out body;`;
+        console.log(`[useRadars] Fetching radars 15km around [${userPos[0]}, ${userPos[1]}]`);
         
         const url = `https://overpass-api.de/api/interpreter`;
         const response = await fetch(url, {
@@ -102,7 +85,7 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
             id: el.id,
             lat: el.lat,
             lon: el.lon,
-            type: el.tags.highway === 'speed_camera' ? 'fixed' : 'unknown',
+            type: (el.tags.highway === 'speed_camera' || el.tags.enforcement === 'speed') ? 'fixed' : 'unknown',
             speedLimit: el.tags.maxspeed ? parseInt(el.tags.maxspeed) : undefined,
           }));
 
@@ -111,7 +94,6 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
           
           // Actualizar ref con la peticion exitosa
           lastFetchRef.current = {
-            type: currentType,
             pos: userPos,
             routeLength: routeLength
           };

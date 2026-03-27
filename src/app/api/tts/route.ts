@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       pitch = '-20Hz'; // Voz anormalmente grave y lenta, efecto robot suave
     }
 
-    return new Promise((resolve) => {
+    return new Promise<NextResponse>((resolve) => {
       let resolved = false;
       const audioChunks: Uint8Array[] = [];
       
