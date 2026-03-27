@@ -6,11 +6,11 @@ const VOLUME = 1.0;
 
 let audioUnlocked = false;
 let beepPlayer: HTMLAudioElement | null = null;
+let audioCtx: AudioContext | null = null;
 
-// ── Unlock audio context on first interaction ───────────────────────────────
+// ── Unlock audio ─────────────────────────────────────────────────────────────
 export const unlockTeslaAudio = () => {
   if (typeof window === 'undefined' || audioUnlocked) return;
-
   try {
     if (!beepPlayer) {
       beepPlayer = new Audio();
@@ -20,12 +20,6 @@ export const unlockTeslaAudio = () => {
       'data:audio/mp3;base64,//OExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq';
     beepPlayer.src = silentMp3;
     beepPlayer.play().then(() => beepPlayer?.pause()).catch(() => {});
-
-    // Also warm up SpeechSynthesis
-    if (window.speechSynthesis) {
-      window.speechSynthesis.getVoices();
-    }
-
     audioUnlocked = true;
     console.log('[Sound] Audio unlocked');
   } catch (err) {
@@ -45,60 +39,71 @@ const playBeep = (type: 'beep_short' | 'alarm_clock_beeping') => {
   beepPlayer.play().catch(e => console.warn('[Sound] Beep blocked:', e));
 };
 
-// ── Voice via Web Speech API ─────────────────────────────────────────────────
-const pickVoice = (voiceType: VoiceType): SpeechSynthesisVoice | null => {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return null;
-  const voices = window.speechSynthesis.getVoices();
-  const esVoices = voices.filter(v => v.lang.startsWith('es'));
+// ── Voice via Google TTS proxy + Web Audio pitch shift ───────────────────────
+const playVoice = async (msg: string, voiceType: VoiceType) => {
+  if (typeof window === 'undefined') return;
 
-  if (voiceType === 'mujer') {
-    // Preferimos voces con nombre femenino (Google es-ES, Microsoft Laura…)
-    return (
-      esVoices.find(v => /laura|elena|carmen|sabina|female|mujer/i.test(v.name)) ??
-      esVoices[0] ??
-      null
-    );
+  try {
+    // Mujer: reproduce el MP3 de Google TTS directamente sin transformación
+    if (voiceType === 'mujer') {
+      const audio = new Audio(`/api/tts?text=${encodeURIComponent(msg)}`);
+      audio.volume = VOLUME;
+      audio.play().catch(e => console.warn('[Sound] Voice blocked:', e));
+      return;
+    }
+
+    // Hombre / Robot: descargamos el audio y lo reproducimos con pitch modificado vía Web Audio API
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+    const response = await fetch(`/api/tts?text=${encodeURIComponent(msg)}`);
+    if (!response.ok) throw new Error(`TTS fetch failed: ${response.status}`);
+    const arrayBuffer = await response.arrayBuffer();
+    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+    const source = audioCtx.createBufferSource();
+    source.buffer = audioBuffer;
+
+    // playbackRate < 1 → más grave y lento; simula una voz masculina/robot
+    if (voiceType === 'hombre') {
+      source.playbackRate.value = 0.78; // grave natural, -3 semitonos aprox.
+    } else {
+      // robot: muy grave + distorsión con WaveShaper
+      source.playbackRate.value = 0.60;
+
+      const waveshaper = audioCtx.createWaveShaper();
+      const curve = new Float32Array(256);
+      for (let i = 0; i < 256; i++) {
+        const x = (i * 2) / 256 - 1;
+        // Soft clipping suave → da textura metálica sin saturar
+        curve[i] = (Math.PI + 80) * x / (Math.PI + 80 * Math.abs(x));
+      }
+      waveshaper.curve = curve;
+      waveshaper.oversample = '4x';
+      source.connect(waveshaper);
+
+      const gainNode = audioCtx.createGain();
+      gainNode.gain.value = VOLUME;
+      waveshaper.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      source.start(0);
+      return;
+    }
+
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.value = VOLUME;
+    source.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    source.start(0);
+  } catch (err) {
+    console.warn('[Sound] playVoice error, fallback to HTML5 Audio:', err);
+    // Fallback: reproduce sin modificar
+    const audio = new Audio(`/api/tts?text=${encodeURIComponent(msg)}`);
+    audio.volume = VOLUME;
+    audio.play().catch(() => {});
   }
-  if (voiceType === 'hombre') {
-    // Preferimos voces masculinas
-    return (
-      esVoices.find(v => /diego|jorge|pablo|miguel|male|hombre/i.test(v.name)) ??
-      esVoices[1] ??
-      esVoices[0] ??
-      null
-    );
-  }
-  // robot: cualquier voz, luego aplicamos pitch/rate extremos
-  return esVoices[0] ?? null;
-};
-
-const playVoice = (msg: string, voiceType: VoiceType) => {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return;
-
-  // Cancel any ongoing speech
-  window.speechSynthesis.cancel();
-
-  const utter = new SpeechSynthesisUtterance(msg);
-  utter.lang = 'es-ES';
-  utter.volume = VOLUME;
-
-  if (voiceType === 'robot') {
-    utter.pitch = 0.1;   // muy grave / mecánico
-    utter.rate  = 0.85;
-  } else if (voiceType === 'hombre') {
-    utter.pitch = 0.75;
-    utter.rate  = 1.0;
-  } else {
-    // mujer
-    utter.pitch = 1.4;
-    utter.rate  = 1.05;
-  }
-
-  // Try to assign a matching voice; if none available the browser uses default
-  const voice = pickVoice(voiceType);
-  if (voice) utter.voice = voice;
-
-  window.speechSynthesis.speak(utter);
 };
 
 // ── Public API ────────────────────────────────────────────────────────────────
@@ -108,9 +113,9 @@ export const playRadarAlert = (voiceType: VoiceType, type: 'safe_first' | 'safe_
     playBeep(type === 'danger' ? 'alarm_clock_beeping' : 'beep_short');
 
     let msg = '';
-    if (type === 'danger')       msg = 'Peligro. Exceso de velocidad en radar próximo. Reduzca la velocidad.';
-    else if (type === 'safe_first')  msg = 'Atención, radar próximo. Velocidad correcta.';
-    else if (type === 'safe_second') msg = 'Radar muy cercano. Velocidad correcta.';
+    if (type === 'danger')        msg = 'Peligro. Exceso de velocidad en radar próximo. Reduzca la velocidad.';
+    else if (type === 'safe_first')   msg = 'Atención, radar próximo. Velocidad correcta.';
+    else if (type === 'safe_second')  msg = 'Radar muy cercano. Velocidad correcta.';
 
     if (msg) playVoice(msg, voiceType);
   } catch (err) {
