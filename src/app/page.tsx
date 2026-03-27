@@ -148,6 +148,27 @@ export default function Home() {
     });
   }, [aircrafts, isSoundEnabled, voiceType]);
 
+  // Cambio Automático de Vista (Navegación <-> Vista General) basado en velocidad
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    if (speed === 0 && viewMode === 'navigation') {
+      // Temporizador de 60 segundos si estamos parados
+      timeoutId = setTimeout(() => {
+        setViewMode('overview');
+        setCustomZoom(null); // Borramos posible zoom manual para usar la vista panorámica natural
+      }, 60000);
+    } else if (speed > 0 && viewMode === 'overview') {
+      // Vuelta automática al arrancar
+      setViewMode('navigation');
+      setCustomZoom(null);
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [speed, viewMode]);
+
   const handleSearchSubmit = async (query: string) => {
     const origin: [number, number] = userPos || [40.4168, -3.7038];
     await findAndTraceRoute(origin, query);

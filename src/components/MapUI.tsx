@@ -241,16 +241,15 @@ function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordin
         return;
       }
 
-      if (speed < 10) {
-        map.setView(position, 17, { animate: true, duration: 1 });
-      } else {
-        let targetZoom = hasRoute ? 18 : 17;
-        if (speed > 50) targetZoom = 17;
-        if (speed > 100) targetZoom = 16;
-        map.setView(position, targetZoom, { animate: true, duration: 1 });
-      }
+      let targetZoom = 18;
+      if (speed < 20) targetZoom = 19;
+      else if (speed < 50) targetZoom = 18;
+      else if (speed < 90) targetZoom = 17;
+      else targetZoom = 16;
+
+      map.setView(position, targetZoom, { animate: true, duration: 1 });
     }
-  }, [position, viewMode, map, hasRoute, speed, routeCoordinates, customZoom]);
+  }, [position, viewMode, hasRoute, speed, map, routeCoordinates, customZoom]);
   return null;
 }
 
