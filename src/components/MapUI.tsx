@@ -42,27 +42,53 @@ const radarIcon = (speedLimit?: number) => L.divIcon({
 
 const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: number = Infinity) => {
   const isThreat = isSuspect && distanceToUser < 10000;
+
+  if (!isSuspect) {
+    // Avión comercial: icono PNG colorido rotado según heading
+    return L.divIcon({
+      html: renderToStaticMarkup(
+        <div style={{ transform: `rotate(${heading - 45}deg)`, width: 40, height: 40 }}>
+          <img
+            src="/avion-comercial.png"
+            alt="Avión comercial"
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          />
+        </div>
+      ),
+      className: 'custom-aircraft-icon',
+      iconSize: [40, 40],
+      iconAnchor: [20, 20],
+    });
+  }
+
+  // Avión sospechoso: icono negro, rojo si está en radio de alarma
+  const colorFilter = isThreat
+    ? 'invert(15%) sepia(100%) saturate(700%) hue-rotate(340deg) brightness(120%) contrast(130%)'
+    : 'none'; // negro puro (el PNG ya es negro)
+
   return L.divIcon({
     html: renderToStaticMarkup(
-      <div className="aircraft-marker-container">
-        {isSuspect ? (
-          <div className={`flex items-center justify-center p-2 rounded-full border-2 ${
-            isThreat
-              ? 'bg-rose-600 border-white animate-pulse shadow-[0_0_20px_rgba(225,29,72,1)]'
-              : 'bg-blue-600 border-white shadow-[0_0_15px_rgba(37,99,235,0.6)]' 
-          } text-white`}>
-            <Plane className="h-4 w-4" style={{ transform: `rotate(${heading - 45}deg) scale(1.4)` }} />
-          </div>
-        ) : (
-          <div className="flex items-center justify-center text-amber-500/90 drop-shadow-md">
-            <Plane fill="currentColor" className="h-5 w-5" style={{ transform: `rotate(${heading - 45}deg)` }} />
-          </div>
-        )}
+      <div style={{
+        transform: `rotate(${heading - 45}deg)`,
+        width: 40,
+        height: 40,
+        animation: isThreat ? 'aircraft-pulse 0.8s ease-in-out infinite' : 'none',
+      }}>
+        <img
+          src="/avion-no-identificado.png"
+          alt="Avión no identificado"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'contain',
+            filter: colorFilter,
+          }}
+        />
       </div>
     ),
     className: 'custom-aircraft-icon',
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
   });
 };
 
@@ -237,6 +263,10 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
       <style jsx global>{`
         .leaflet-container {
            background: #030712 !important;
+        }
+        @keyframes aircraft-pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.15); }
         }
       `}</style>
 

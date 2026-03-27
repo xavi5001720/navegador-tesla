@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Radar } from './useRadars';
-import { playRadarAlert } from '@/utils/sound';
+import { playRadarAlert, VoiceType } from '@/utils/sound';
 
 // Fórmula de Haversine para distancia en metros entre dos puntos
 function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -19,10 +19,10 @@ function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
 }
 
 export function useAlerts(
-  userPos: [number, number] | null, 
-  radars: Radar[], 
-  isSoundEnabled: boolean = true, 
-  alertVolume: number = 0.5,
+  userPos: [number, number] | null,
+  radars: Radar[],
+  isSoundEnabled: boolean = true,
+  voiceType: VoiceType = 'mujer',
   currentSpeed: number = 0
 ) {
   const [nearestRadar, setNearestRadar] = useState<Radar | null>(null);
@@ -104,16 +104,16 @@ export function useAlerts(
          if (isOverLimit) {
             // Peligro permanente: Alerta repetitiva cada 5 segundos si sigue corriendo
             if (now - state.lastDangerAlertTime > 5000) {
-               playRadarAlert(alertVolume, 'danger');
+               playRadarAlert(voiceType, 'danger');
                state.lastDangerAlertTime = now;
             }
          } else {
             // Velocidad segura: 2 fases (Aviso a <500m y aviso a <200m)
             if (state.phase === 0) {
-               playRadarAlert(alertVolume, 'safe_first');
+               playRadarAlert(voiceType, 'safe_first');
                state.phase = 1;
             } else if (state.phase === 1 && minDistance < 200) {
-               playRadarAlert(alertVolume, 'safe_second');
+               playRadarAlert(voiceType, 'safe_second');
                state.phase = 2;
             }
          }
@@ -124,7 +124,7 @@ export function useAlerts(
       setIsAlertActive(false);
     }
 
-  }, [userPos, radars, isSoundEnabled, alertVolume, currentSpeed, passedRadarIds, isAlertActive]);
+  }, [userPos, radars, isSoundEnabled, voiceType, currentSpeed, passedRadarIds, isAlertActive]);
 
   return { nearestRadar, distance, isAlertActive, alertType, remainingRadars: radars.length - passedRadarIds.size };
 }

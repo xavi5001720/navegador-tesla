@@ -3,7 +3,7 @@
 import React from 'react';
 import { Navigation, Radar, Plane, X, Volume2, VolumeX, Play, Power } from 'lucide-react';
 import SearchPanel from './SearchPanel';
-import { playTestSound } from '@/utils/sound';
+import { playTestSound, VoiceType } from '@/utils/sound';
 
 interface SidebarProps {
   isSidebarOpen: boolean;
@@ -25,8 +25,8 @@ interface SidebarProps {
   onSearch: (query: string) => void;
   isSoundEnabled: boolean;
   setIsSoundEnabled: (enabled: boolean) => void;
-  alertVolume: number;
-  setAlertVolume: (volume: number) => void;
+  voiceType: VoiceType;
+  setVoiceType: (v: VoiceType) => void;
   isRadarsEnabled: boolean;
   setIsRadarsEnabled: (v: boolean) => void;
   isAircraftsEnabled: boolean;
@@ -54,8 +54,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onSearch,
   isSoundEnabled,
   setIsSoundEnabled,
-  alertVolume,
-  setAlertVolume,
+  voiceType,
+  setVoiceType,
   isRadarsEnabled,
   setIsRadarsEnabled,
   isAircraftsEnabled,
@@ -102,29 +102,34 @@ const Sidebar: React.FC<SidebarProps> = ({
           </button>
         </div>
         
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-between text-[10px] text-gray-500 font-bold uppercase items-center">
-            <span>Volumen</span>
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={() => playTestSound(alertVolume)}
-                className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-gray-400 hover:text-white px-2 py-0.5 rounded-md transition-all active:scale-95"
-              >
-                <Play className="h-2 w-2" />
-                <span>Test</span>
-              </button>
-              <span>{Math.round(alertVolume * 100)}%</span>
-            </div>
+        <div className="flex flex-col gap-3">
+          {/* Fila: label + botón Test */}
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Tipo de voz</span>
+            <button
+              onClick={() => playTestSound(voiceType)}
+              className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-gray-400 hover:text-white px-2 py-0.5 rounded-md transition-all active:scale-95 text-[10px] font-bold uppercase"
+            >
+              <Play className="h-2 w-2" />
+              Test
+            </button>
           </div>
-          <input 
-            type="range" 
-            min="0" 
-            max="1" 
-            step="0.01" 
-            value={alertVolume} 
-            onChange={(e) => setAlertVolume(parseFloat(e.target.value))}
-            className="w-full h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-          />
+          {/* Botones selectores */}
+          <div className="grid grid-cols-3 gap-2">
+            {(['hombre', 'mujer', 'robot'] as VoiceType[]).map((v) => (
+              <button
+                key={v}
+                onClick={() => setVoiceType(v)}
+                className={`py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider border transition-all active:scale-95 ${
+                  voiceType === v
+                    ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_10px_rgba(37,99,235,0.4)]'
+                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {v === 'hombre' ? '👨 Hombre' : v === 'mujer' ? '👩 Mujer' : '🤖 Robot'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -210,7 +215,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className={`p-2 rounded-xl flex items-center justify-center ${isAircraftsEnabled ? (isAnyPegasusNearby ? 'bg-blue-500 animate-pulse' : 'bg-blue-500/20') : 'bg-gray-500/20'}`}>
-                    <img src="/aviones.png" alt="Aviones" className="h-8 w-8 object-contain drop-shadow-md" />
+                    <img src="/controlador.png" alt="Aviones" className="h-8 w-8 object-contain drop-shadow-md" />
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">

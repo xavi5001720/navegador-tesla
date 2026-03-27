@@ -16,7 +16,7 @@ import { usePegasus } from '@/hooks/usePegasus';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
 import { distanceToPolyline, findClosestPointOnPolyline } from '@/utils/geo';
-import { playPegasusAlert, unlockTeslaAudio } from '@/utils/sound';
+import { playPegasusAlert, unlockTeslaAudio, VoiceType } from '@/utils/sound';
 import MapContextMenu from '@/components/MapContextMenu';
 import FavoritesPanel from '@/components/FavoritesPanel';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -57,7 +57,7 @@ export default function Home() {
   const [isRadarsEnabled, setIsRadarsEnabled] = useState(false);
   const [isAircraftsEnabled, setIsAircraftsEnabled] = useState(false);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
-  const [alertVolume, setAlertVolume] = useState(0.5);
+  const [voiceType, setVoiceType] = useState<VoiceType>('mujer');
   const [lastRecalculationTime, setLastRecalculationTime] = useState(0);
   const [customZoom, setCustomZoom] = useState<number | null>(null);
   const [contextMenu, setContextMenu] = useState<{ lat: number; lon: number; screenX: number; screenY: number } | null>(null);
@@ -132,21 +132,21 @@ export default function Home() {
   }, [allRadars, route, userPos]);
 
   const speed = useSpeed();
-  const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, alertVolume, speed);
+  const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, voiceType, speed);
   const { allAircrafts, aircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
 
   const notifiedPegasus = useRef<Set<string>>(new Set());
   
   useEffect(() => {
     if (!isSoundEnabled || !aircrafts || aircrafts.length === 0) return;
-    
+
     aircrafts.forEach(ac => {
       if (ac.distanceToUser < 10000 && !notifiedPegasus.current.has(ac.icao24)) {
         notifiedPegasus.current.add(ac.icao24);
-        playPegasusAlert(alertVolume, ac.callsign, ac.altitude, ac.velocity * 3.6);
+        playPegasusAlert(voiceType, ac.callsign, ac.altitude, ac.velocity * 3.6);
       }
     });
-  }, [aircrafts, isSoundEnabled, alertVolume]);
+  }, [aircrafts, isSoundEnabled, voiceType]);
 
   const handleSearchSubmit = async (query: string) => {
     const origin: [number, number] = userPos || [40.4168, -3.7038];
@@ -243,8 +243,8 @@ export default function Home() {
         onSearch={handleSearchSubmit}
         isSoundEnabled={isSoundEnabled}
         setIsSoundEnabled={setIsSoundEnabled}
-        alertVolume={alertVolume}
-        setAlertVolume={setAlertVolume}
+        voiceType={voiceType}
+        setVoiceType={setVoiceType}
         onOpenFavorites={() => setIsFavoritesOpen(true)}
       />
 
