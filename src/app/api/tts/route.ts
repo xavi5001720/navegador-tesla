@@ -6,7 +6,7 @@ export const runtime = 'edge';
 const EDGE_WS_URL = 'wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4';
 
 // No dependemos de librerías extrañas de NextJS Edge, usamos Web Crypto
-function getHeadersAndData(voice: string, text: string, rate: string, pitch: string) {
+function getHeadersAndData(voice: string, text: string, rate: string, pitch: string, contour: string = "") {
   const reqId = globalThis.crypto.randomUUID().replace(/-/g, '');
   
   const headers = [
@@ -16,9 +16,11 @@ function getHeadersAndData(voice: string, text: string, rate: string, pitch: str
     `Path:ssml`
   ].join('\r\n');
   
+  const contourAttr = contour ? ` contour='${contour}'` : "";
+
   const ssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='es'>
     <voice name='${voice}'>
-      <prosody rate='${rate}' pitch='${pitch}'>
+      <prosody rate='${rate}' pitch='${pitch}'${contourAttr}>
         ${text}
       </prosody>
     </voice>
@@ -48,14 +50,16 @@ export async function GET(request: NextRequest) {
     let voice = 'es-ES-ElviraNeural'; // Mujer España (muy natural)
     let rate = '+0%';
     let pitch = '+0Hz';
+    let contour = '';
     
     if (lang === 'es-US') {
       voice = 'es-ES-AlvaroNeural'; // Hombre nativo España clarísimo
       pitch = '-5Hz'; 
     } else if (lang === 'es-MX') {
-      voice = 'es-MX-JorgeNeural'; // Robot (Hombre neutro muy bajado de tono)
-      rate = '-10%';  // Habla un poco más lento
-      pitch = '-20Hz'; // Voz anormalmente grave y lenta, efecto robot suave
+      voice = 'es-MX-JorgeNeural'; // Robot
+      rate = '-15%';  // Más lento, pesado
+      pitch = '-40Hz'; // Voz extremadamente grave
+      contour = '(0%, -30%) (100%, -30%)'; // Entonación totalmente plana (monótona)
     }
 
     return new Promise<NextResponse>((resolve) => {
@@ -102,7 +106,7 @@ export async function GET(request: NextRequest) {
         const configMsg = `X-Timestamp:${new Date().toISOString()}\r\nContent-Type:application/json; charset=utf-8\r\nPath:speech.config\r\n\r\n{"context":{"synthesis":{"audio":{"metadataoptions":{"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"true"},"outputFormat":"audio-24khz-48kbitrate-mono-mp3"}}}}`;
         ws.send(configMsg);
 
-        const ssmlMsg = getHeadersAndData(voice, text, rate, pitch);
+        const ssmlMsg = getHeadersAndData(voice, text, rate, pitch, contour);
         ws.send(ssmlMsg);
       };
 

@@ -48,8 +48,8 @@ const playVoice = async (msg: string, voiceType: VoiceType) => {
     if (voiceType === 'hombre') lang = 'es-US'; // Hombre hispanoamericano
     if (voiceType === 'robot') lang = 'es-MX';  // Voz femenina diferente (latina alternativa)
     
-    // Reproduce el MP3 (v=2 fuerza a saltar la caché persistente del navegador)
-    const url = `/api/tts?text=${encodeURIComponent(msg)}&lang=${lang}&v=2`;
+    // Reproduce el MP3 (v=3 fuerza a saltar la caché persistente del navegador)
+    const url = `/api/tts?text=${encodeURIComponent(msg)}&lang=${lang}&v=3`;
     const audio = new Audio(url);
     audio.volume = VOLUME;
     audio.play().catch(e => console.warn('[Sound] Voice blocked:', e));
