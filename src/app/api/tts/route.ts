@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
+
+export const runtime = 'edge';
 
 // Edge config
 const EDGE_WS_URL = 'wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1?TrustedClientToken=6A5AA1D4EAFF4E9FB37E23D68491D6F4';
 
 // No dependemos de librerías extrañas de NextJS Edge, usamos Web Crypto
 function getHeadersAndData(voice: string, text: string, rate: string, pitch: string) {
-  const reqId = crypto.randomUUID().replace(/-/g, '');
+  const reqId = globalThis.crypto.randomUUID().replace(/-/g, '');
   
   const headers = [
     `X-RequestId:${reqId}`,
