@@ -3,13 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const text = searchParams.get('text');
+  const lang = searchParams.get('lang') || 'es';
 
   if (!text) {
     return NextResponse.json({ error: 'Text parameter is required' }, { status: 400 });
   }
 
   try {
-    const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es&q=${encodeURIComponent(text)}`;
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${lang}&q=${encodeURIComponent(text)}`;
     
     // Fetch desde el servidor para evitar bloqueos por CORS o Referer del navegador
     const response = await fetch(url, {
