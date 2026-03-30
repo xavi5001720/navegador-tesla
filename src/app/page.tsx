@@ -322,17 +322,19 @@ export default function Home() {
                 <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Vista General</span>
               </button>
             )}
-            <button 
-              onClick={() => {
-                if (!hasLocation) requestGPS();
-                setViewMode('navigation');
-                setCustomZoom(null);
-              }}
-              className={`flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 ${viewMode === 'navigation' ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}
-            >
-              <img src="/volante.png" alt="Modo Navegación" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
-              <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Modo Navegación</span>
-            </button>
+            {viewMode !== 'navigation' && (
+              <button 
+                onClick={() => {
+                  if (!hasLocation) requestGPS();
+                  setViewMode('navigation');
+                  setCustomZoom(null);
+                }}
+                className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-gray-800 hover:bg-gray-700"
+              >
+                <img src="/volante.png" alt="Modo Navegación" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
+                <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Modo Navegación</span>
+              </button>
+            )}
           </div>
         </div>
       </section>
