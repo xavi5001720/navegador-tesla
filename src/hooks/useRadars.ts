@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
 
 export interface Radar {
   id: number;
@@ -22,7 +23,7 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
   const routeLastLat = routeCoordinates?.[routeLength - 1]?.[0];
   const routeLastLon = routeCoordinates?.[routeLength - 1]?.[1];
 
-  // Helper para distancia rápida
+  // Helper para distancia rápida (haversine simplificado)
   const getDist = (p1: [number, number], p2: [number, number]) => {
     const R = 6371e3;
     const dLat = (p2[0] - p1[0]) * Math.PI / 180;
@@ -42,7 +43,7 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
     const hasRoute = routeCoordinates && routeCoordinates.length > 0;
     const currentType = hasRoute ? 'route' : 'local';
 
-    // Lógica para decidir si es necesario refetch
+    // Lógica para decidir si es necesario un nuevo fetch
     let shouldFetch = false;
     if (!lastFetchRef.current) {
       shouldFetch = true;
@@ -62,76 +63,54 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
       if (hasRoute) setFetchingRouteRadars(true);
       
       try {
-        let query = '';
+        let supabaseData: any[] = [];
         
         if (hasRoute && routeCoordinates) {
-           // Muestrear puntos de la ruta cada ~10km para evitar bounding box gigante
-           const sampledPoints: [number, number][] = [];
-           sampledPoints.push(routeCoordinates[0]);
-           
-           let lastPoint = routeCoordinates[0];
-           for (let i = 1; i < routeCoordinates.length; i++) {
-              const pt = routeCoordinates[i];
-              if (getDist(lastPoint, pt) > 10000) {
-                 sampledPoints.push(pt);
-                 lastPoint = pt;
-              }
-           }
-           // Añadir el destino por si acaso
-           if (sampledPoints[sampledPoints.length - 1] !== routeCoordinates[routeCoordinates.length - 1]) {
-              sampledPoints.push(routeCoordinates[routeCoordinates.length - 1]);
-           }
+          // MODO RUTA: Usamos postgis para filtrar radares a lo largo de la ruta (LINESTRING)
+          // Convertimos la ruta a WKT: LINESTRING(lon lat, lon lat, ...)
+          const wktPoints = routeCoordinates.map(pt => `${pt[1]} ${pt[0]}`).join(', ');
+          const routeWkt = `LINESTRING(${wktPoints})`;
 
-           console.log(`[useRadars] Fetching radars for whole route using ${sampledPoints.length} sample points...`);
-           
-           let mapQueries = sampledPoints.map(p => `
-  node["highway"="speed_camera"](around:10000,${p[0]},${p[1]});
-  node["enforcement"="speed"](around:10000,${p[0]},${p[1]});`).join('');
-           
-           query = `[out:json][timeout:25];\n(${mapQueries}\n);\nout body;`;
+          console.log(`[useRadars] Consultando radares en ruta via Supabase RPC...`);
+          const { data, error } = await supabase.rpc('get_radars_in_route', {
+            route_wkt: routeWkt,
+            buffer_meters: 50 // Margen de 50m configurado
+          });
+
+          if (error) throw error;
+          supabaseData = data || [];
         } else {
-           // Búsqueda circular de 15km cuando no hay ruta (modo local)
-           query = `[out:json][timeout:15];
-(
-  node["highway"="speed_camera"](around:15000,${userPos[0]},${userPos[1]});
-  node["enforcement"="speed"](around:15000,${userPos[0]},${userPos[1]});
-);
-out body;`;
-           console.log(`[useRadars] Fetching local radars 15km around [${userPos[0]}, ${userPos[1]}]`);
+          // MODO LOCAL: Búsqueda circular de 15km
+          console.log(`[useRadars] Consultando radares cercanos via Supabase RPC...`);
+          const { data, error } = await supabase.rpc('get_radars_nearby', {
+            lat: userPos[0],
+            lon: userPos[1],
+            radius_meters: 15000
+          });
+
+          if (error) throw error;
+          supabaseData = data || [];
         }
+
+        // Mapeamos los resultados de Supabase al formato de la interfaz Radar
+        const mappedRadars: Radar[] = supabaseData.map((r: any) => ({
+          id: r.id,
+          lat: r.lat,
+          lon: r.lon,
+          type: r.radar_type || 'fixed',
+          speedLimit: r.speed_limit || undefined
+        }));
+
+        setRadars(mappedRadars);
         
-        const url = `https://overpass-api.de/api/interpreter`;
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: `data=${encodeURIComponent(query)}`
-        });
-
-        if (!response.ok) throw new Error('Overpass Error: ' + response.status);
-
-        const data = await response.json();
-
-        if (data.elements) {
-          const mappedRadars: Radar[] = data.elements.map((el: any) => ({
-            id: el.id,
-            lat: el.lat,
-            lon: el.lon,
-            type: (el.tags.highway === 'speed_camera' || el.tags.enforcement === 'speed') ? 'fixed' : 'unknown',
-            speedLimit: el.tags.maxspeed ? parseInt(el.tags.maxspeed) : undefined,
-          }));
-
-          const uniqueRadars = Array.from(new Map(mappedRadars.map(r => [r.id, r])).values());
-          setRadars(uniqueRadars);
-          
-          // Actualizar ref con la peticion exitosa
-          lastFetchRef.current = {
-            type: currentType,
-            pos: userPos,
-            routeLength: routeLength
-          };
-        }
+        lastFetchRef.current = {
+          type: currentType,
+          pos: userPos,
+          routeLength: routeLength
+        };
+        
       } catch (error) {
-        console.error("[useRadars] Fetching failed:", error);
+        console.error("[useRadars] Erro al obtener radares de Supabase:", error);
       } finally {
         setLoadingRadars(false);
         setFetchingRouteRadars(false);
