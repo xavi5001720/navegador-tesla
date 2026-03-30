@@ -40,19 +40,40 @@ const radarIcon = (speedLimit?: number) => L.divIcon({
   iconAnchor: [16, 16],
 });
 
-const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: number = Infinity) => {
+const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: number = Infinity, viewMode: string = 'navigation', altitude?: number, velocity?: number) => {
   const isThreat = isSuspect && distanceToUser < 10000;
+
+  const labelHtml = (isSuspect && viewMode === 'overview') ? `
+    <div class="absolute top-10 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none" style="min-width: 150px;">
+      <div class="bg-black/80 backdrop-blur-md border border-blue-500/50 rounded-lg p-2 shadow-2xl text-center">
+        <p class="text-[10px] font-black text-blue-400 uppercase tracking-tighter leading-tight whitespace-nowrap">Aeronave no identificada</p>
+        <div class="flex gap-2 mt-1 justify-center">
+          <div class="flex flex-col">
+            <span class="text-[8px] text-gray-400 uppercase font-bold">Altitud</span>
+            <span class="text-[11px] font-black text-white">${Math.round(altitude || 0)}m</span>
+          </div>
+          <div class="flex flex-col border-l border-white/10 pl-2">
+            <span class="text-[8px] text-gray-400 uppercase font-bold">Velocidad</span>
+            <span class="text-[11px] font-black text-white">${Math.round((velocity || 0) * 3.6)} km/h</span>
+          </div>
+        </div>
+      </div>
+      <div class="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-black/80 rotate-180 -mt-1"></div>
+    </div>
+  ` : '';
 
   if (!isSuspect) {
     // Avión comercial: icono PNG colorido rotado según heading
     return L.divIcon({
       html: renderToStaticMarkup(
-        <div style={{ transform: `rotate(${heading - 45}deg)`, width: 40, height: 40 }}>
-          <img
-            src="/avion-comercial.png"
-            alt="Avión comercial"
-            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-          />
+        <div className="relative">
+          <div style={{ transform: `rotate(${heading - 45}deg)`, width: 40, height: 40 }}>
+            <img
+              src="/avion-comercial.png"
+              alt="Avión comercial"
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            />
+          </div>
         </div>
       ),
       className: 'custom-aircraft-icon',
@@ -67,25 +88,18 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
     : 'none'; // negro puro (el PNG ya es negro)
 
   return L.divIcon({
-    html: renderToStaticMarkup(
-      <div style={{
-        transform: `rotate(${heading - 45}deg)`,
-        width: 40,
-        height: 40,
-        animation: isThreat ? 'aircraft-pulse 0.8s ease-in-out infinite' : 'none',
-      }}>
-        <img
-          src="/avion-no-identificado.png"
-          alt="Avión no identificado"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            filter: colorFilter,
-          }}
-        />
+    html: `
+      <div class="relative">
+        <div style="transform: rotate(${heading - 45}deg); width: 40px; height: 40px; ${isThreat ? 'animation: aircraft-pulse 0.8s ease-in-out infinite;' : ''}">
+          <img
+            src="/avion-no-identificado.png"
+            alt="Avión no identificado"
+            style="width: 100%; height: 100%; object-fit: contain; filter: ${colorFilter};"
+          />
+        </div>
+        ${labelHtml}
       </div>
-    ),
+    `,
     className: 'custom-aircraft-icon',
     iconSize: [40, 40],
     iconAnchor: [20, 20],
@@ -218,16 +232,9 @@ function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordin
     if (viewMode === 'overview') {
       if (hasRoute && routeCoordinates && routeCoordinates.length > 0) {
         try {
-          const posArr = Array.isArray(position) ? position as [number, number] : [0, 0] as [number, number];
-          const snapped = findClosestPointOnPolyline(posArr, routeCoordinates);
-          const remainingPath = routeCoordinates.slice(snapped.segmentIndex);
-          if (remainingPath.length > 2) {
-            remainingPath.unshift(posArr);
-            const bounds = L.latLngBounds(remainingPath);
-            map.fitBounds(bounds, { padding: [50, 50], animate: true, duration: 1.5 });
-          } else {
-            map.setView(position, 17, { animate: true, duration: 1 });
-          }
+          // Ajustamos para ver la ruta COMPLETA, no solo el tramo restante
+          const bounds = L.latLngBounds(routeCoordinates);
+          map.fitBounds(bounds, { padding: [80, 80], animate: true, duration: 1.5 });
         } catch (e) {
           map.setView(position, 16, { animate: true, duration: 1 });
         }
@@ -313,7 +320,7 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
           <Marker
             key={`ac-${aircraft.icao24}`}
             position={[aircraft.lat, aircraft.lon]}
-            icon={aircraftIcon(aircraft.isSuspect, aircraft.track, aircraft.distanceToUser)}
+            icon={aircraftIcon(aircraft.isSuspect, aircraft.track, aircraft.distanceToUser, viewMode, aircraft.altitude, aircraft.velocity)}
             zIndexOffset={90}
           >
             <Popup className="tesla-popup">
