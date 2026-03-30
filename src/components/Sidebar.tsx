@@ -119,7 +119,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 md:bg-black/40 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+    <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 md:bg-black/40 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 overflow-y-auto no-scrollbar md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <img src="/logo2.png" alt="Navegador Tesla Logo" className="h-14 w-auto object-contain drop-shadow-xl" />
@@ -258,7 +258,7 @@ const Sidebar: React.FC<SidebarProps> = ({
          </div>
       )}
 
-      <div className="flex-1 overflow-y-auto no-scrollbar py-4">
+      <div className="py-4">
         <div className="grid grid-cols-1 gap-3">
            <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isRadarsEnabled && 'opacity-70'}`}>
               <div className="flex items-center justify-between">
