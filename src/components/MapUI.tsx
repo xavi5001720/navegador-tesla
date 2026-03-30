@@ -439,6 +439,11 @@ export default function MapUI({
              position={[charger.lat, charger.lon]}
              icon={chargerIcon}
              zIndexOffset={80}
+             eventHandlers={{
+               click: (e: L.LeafletMouseEvent) => {
+                 if (onMapClick) onMapClick(charger.lat, charger.lon, e.originalEvent.clientX, e.originalEvent.clientY);
+               }
+             }}
           >
             <Popup className="custom-popup" closeButton={false}>
               <div className="p-3 min-w-[200px] flex flex-col gap-2 bg-gradient-to-b from-gray-900 to-black rounded-lg text-white shadow-2xl border border-emerald-500/50">
