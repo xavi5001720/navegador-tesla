@@ -3,12 +3,43 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const BATCH_SIZE = 500;
+
+async function fetchRadarsFromOverpass(query: string): Promise<any[]> {
+  const response = await fetch('https://overpass-api.de/api/interpreter', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `data=${encodeURIComponent(query)}`
+  });
+  if (!response.ok) throw new Error('Overpass error: ' + response.statusText);
+  const data = await response.json();
+  return data.elements || [];
+}
+
+async function upsertRadars(supabase: any, elements: any[]): Promise<number> {
+  const mappedRadars = elements.map((el: any) => ({
+    id: el.id,
+    geom: `POINT(${el.lon} ${el.lat})`,
+    radar_type: (el.tags?.highway === 'speed_camera' || el.tags?.enforcement === 'speed') ? 'fixed' : 'unknown',
+    speed_limit: el.tags?.maxspeed ? parseInt(el.tags.maxspeed) : null,
+    updated_at: new Date().toISOString(),
+  }));
+
+  let count = 0;
+  for (let i = 0; i < mappedRadars.length; i += BATCH_SIZE) {
+    const batch = mappedRadars.slice(i, i + BATCH_SIZE);
+    const { error } = await supabase.from('radars').upsert(batch, { onConflict: 'id' });
+    if (error) throw error;
+    count += batch.length;
+  }
+  return count;
+}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const secret = searchParams.get('secret');
+  const country = searchParams.get('country') || 'all'; // ?country=es | fr | all
 
-  // Soporta tanto el parámetro ?secret como el header automático de Vercel Cron
   const cronHeader = request.headers.get('Authorization');
   const isVercelCron = cronHeader === `Bearer ${process.env.CRON_SECRET}`;
   const isUserSecret = process.env.SYNC_SECRET && secret === process.env.SYNC_SECRET;
@@ -17,71 +48,49 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const supabase = createClient(supabaseUrl, supabaseKey);
+  const results: Record<string, number> = {};
+
   try {
-    console.log('[RadarSync] Iniciando sincronización de España + Francia...');
-    
-    // Bounding Box combinado que cubre España y Francia
-    // España: (27,-19,44,5) | Francia: (41,-5,51,10)
-    // Combinado con margen: lat_min=27, lon_min=-19, lat_max=51, lon_max=10
-    const overpassQuery = `
-      [out:json][timeout:120];
-      (
-        node["highway"="speed_camera"](27,-19,51,10);
-        node["enforcement"="speed"](27,-19,51,10);
-      );
-      out body;
-    `;
-
-    const response = await fetch('https://overpass-api.de/api/interpreter', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `data=${encodeURIComponent(overpassQuery)}`
-    });
-
-    if (!response.ok) throw new Error('Overpass error: ' + response.statusText);
-
-    const data = await response.json();
-    const elements = data.elements || [];
-
-    console.log(`[RadarSync] Recibidos ${elements.length} elementos de Overpass.`);
-
-    if (elements.length === 0) {
-      return NextResponse.json({ message: 'No radars found' });
+    // ── España ──────────────────────────────────────────────────────────────
+    if (country === 'all' || country === 'es') {
+      console.log('[RadarSync] Sincronizando España...');
+      const queryES = `
+        [out:json][timeout:90];
+        (
+          node["highway"="speed_camera"](27,-19,44,5);
+          node["enforcement"="speed"](27,-19,44,5);
+        );
+        out body;
+      `;
+      const elementsES = await fetchRadarsFromOverpass(queryES);
+      console.log(`[RadarSync] España: ${elementsES.length} elementos.`);
+      results.españa = await upsertRadars(supabase, elementsES);
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Mapeamos los datos al formato de la tabla
-    const mappedRadars = elements.map((el: any) => ({
-      id: el.id,
-      geom: `POINT(${el.lon} ${el.lat})`,
-      radar_type: (el.tags.highway === 'speed_camera' || el.tags.enforcement === 'speed') ? 'fixed' : 'unknown',
-      speed_limit: el.tags.maxspeed ? parseInt(el.tags.maxspeed) : null,
-      updated_at: new Date().toISOString(),
-    }));
-
-    // Ejecutamos el upsert en lotes para evitar problemas de timeout/memoria si son muchos (España tiene ~2500 radares)
-    const BATCH_SIZE = 500;
-    let successCount = 0;
-
-    for (let i = 0; i < mappedRadars.length; i += BATCH_SIZE) {
-      const batch = mappedRadars.slice(i, i + BATCH_SIZE);
-      const { error } = await supabase
-        .from('radars')
-        .upsert(batch, { onConflict: 'id' });
-
-      if (error) {
-        console.error(`[RadarSync] Error en batch ${i}:`, error);
-        throw error;
-      }
-      successCount += batch.length;
+    // ── Francia ──────────────────────────────────────────────────────────────
+    if (country === 'all' || country === 'fr') {
+      console.log('[RadarSync] Sincronizando Francia...');
+      const queryFR = `
+        [out:json][timeout:90];
+        (
+          node["highway"="speed_camera"](41,-5,51,10);
+          node["enforcement"="speed"](41,-5,51,10);
+        );
+        out body;
+      `;
+      const elementsFR = await fetchRadarsFromOverpass(queryFR);
+      console.log(`[RadarSync] Francia: ${elementsFR.length} elementos.`);
+      results.francia = await upsertRadars(supabase, elementsFR);
     }
 
-    console.log(`[RadarSync] Sincronización completada (España + Francia): ${successCount} radares insertados/actualizados.`);
+    const total = Object.values(results).reduce((a, b) => a + b, 0);
+    console.log(`[RadarSync] Completado: ${JSON.stringify(results)} | Total: ${total}`);
 
-    return NextResponse.json({ 
-      success: true, 
-      count: successCount,
+    return NextResponse.json({
+      success: true,
+      results,
+      total,
       timestamp: new Date().toISOString()
     });
 
