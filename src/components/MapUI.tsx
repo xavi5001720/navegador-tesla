@@ -433,6 +433,39 @@ export default function MapUI({
           </Marker>
         ))}
 
+        {chargers.map(charger => (
+          <Marker
+             key={`charger-${charger.id}`}
+             position={[charger.lat, charger.lon]}
+             icon={chargerIcon}
+             zIndexOffset={80}
+          >
+            <Popup className="custom-popup" closeButton={false}>
+              <div className="p-3 min-w-[200px] flex flex-col gap-2 bg-gradient-to-b from-gray-900 to-black rounded-lg text-white shadow-2xl border border-emerald-500/50">
+                <div className="flex items-center gap-2 pb-2 border-b border-emerald-500/30">
+                  <div className="h-6 w-6 rounded-full bg-emerald-600 flex items-center justify-center flex-shrink-0">
+                    <img src="/cargador.png" alt="⚡" className="h-3 w-3 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+                  </div>
+                  <div className="flex flex-col flex-1 overflow-hidden">
+                    <h3 className="font-bold text-xs truncate break-all">{charger.title}</h3>
+                    <p className="text-[10px] text-gray-400 capitalize truncate">{charger.operator}</p>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center text-xs bg-emerald-950/40 p-1.5 rounded-md border border-emerald-500/20">
+                  <span className="text-gray-400">Potencia Máx</span>
+                  <span className="font-black text-emerald-400">{charger.maxPower > 0 ? `${charger.maxPower} kW` : 'N/D'}</span>
+                </div>
+                
+                <div className="text-[10px] text-gray-400 flex flex-col gap-1 mt-1">
+                   <p><span className="font-bold text-gray-500 uppercase tracking-widest">Coste:</span> {charger.usageCost}</p>
+                   <p className="truncate"><span className="font-bold text-gray-500 uppercase tracking-widest">Ubicación:</span> {charger.address}</p>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+
         {(() => {
           let pos = userPos;
           let carHeading = heading;
