@@ -263,8 +263,8 @@ const Sidebar: React.FC<SidebarProps> = ({
            <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isRadarsEnabled && 'opacity-70'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <button onClick={handleToggleRadarStats} className={`p-2 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isRadarsEnabled ? 'bg-rose-500/20 hover:bg-rose-500/30 cursor-pointer' : 'bg-gray-500/20'}`}>
-                    <img src="/radares.png" alt="Radares" className={`h-8 w-8 object-contain drop-shadow-md ${fetchingRouteRadars ? 'animate-pulse opacity-50' : ''}`} />
+                  <button onClick={handleToggleRadarStats} className={`p-1 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isRadarsEnabled ? 'bg-rose-500/20 hover:bg-rose-500/30 cursor-pointer' : 'bg-gray-500/20'}`}>
+                    <img src="/radares.png" alt="Radares" className={`h-11 w-11 object-contain drop-shadow-md ${fetchingRouteRadars ? 'animate-pulse opacity-50' : ''}`} />
                   </button>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">
@@ -362,8 +362,8 @@ const Sidebar: React.FC<SidebarProps> = ({
            <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 ${isAnyPegasusNearby ? 'bg-blue-600/20 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'bg-white/5 border-white/10'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className={`p-2 rounded-xl flex items-center justify-center ${isAircraftsEnabled ? (isAnyPegasusNearby ? 'bg-blue-500 animate-pulse' : 'bg-blue-500/20') : 'bg-gray-500/20'}`}>
-                    <img src="/controlador.png" alt="Aviones" className="h-8 w-8 object-contain drop-shadow-md" />
+                  <div className={`p-1 rounded-xl flex items-center justify-center ${isAircraftsEnabled ? (isAnyPegasusNearby ? 'bg-blue-500 animate-pulse' : 'bg-blue-500/20') : 'bg-gray-500/20'}`}>
+                    <img src="/controlador.png" alt="Aviones" className="h-11 w-11 object-contain drop-shadow-md" />
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">
@@ -424,9 +424,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div className="flex items-center gap-4">
                    <button 
                      onClick={() => setShowChargerFilters(!showChargerFilters)}
-                     className={`p-2 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isChargersEnabled ? 'bg-emerald-500/20 hover:bg-emerald-500/30 cursor-pointer' : 'bg-gray-500/20'}`}
+                     className={`p-1 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isChargersEnabled ? 'bg-emerald-500/20 hover:bg-emerald-500/30 cursor-pointer' : 'bg-gray-500/20'}`}
                    >
-                     <img src="/cargador.png" alt="Cargadores" className={`h-8 w-8 object-contain drop-shadow-lg ${loadingChargers ? 'animate-pulse opacity-50' : ''}`} />
+                     <img src="/cargador.png" alt="Cargadores" className={`h-11 w-11 object-contain drop-shadow-lg ${loadingChargers ? 'animate-pulse opacity-50' : ''}`} />
                    </button>
                    <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">
@@ -526,8 +526,8 @@ const Sidebar: React.FC<SidebarProps> = ({
            <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isWeatherEnabled && 'opacity-70'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className={`p-2 rounded-xl flex items-center justify-center ${isWeatherEnabled ? 'bg-sky-500/20' : 'bg-gray-500/20'}`}>
-                    <img src="/clima.png" alt="Clima" className={`h-8 w-8 object-contain drop-shadow-lg ${loadingWeather ? 'animate-pulse opacity-50' : ''}`} />
+                  <div className={`p-1 rounded-xl flex items-center justify-center ${isWeatherEnabled ? 'bg-sky-500/20' : 'bg-gray-500/20'}`}>
+                    <img src="/clima.png" alt="Clima" className={`h-11 w-11 object-contain drop-shadow-lg ${loadingWeather ? 'animate-pulse opacity-50' : ''}`} />
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">

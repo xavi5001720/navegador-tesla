@@ -16,7 +16,7 @@ import { usePegasus } from '@/hooks/usePegasus';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
 import { getDistance, distanceToPolyline, findClosestPointOnPolyline } from '@/utils/geo';
-import { playPegasusAlert, playWaypointAlert, unlockTeslaAudio, VoiceType } from '@/utils/sound';
+import { playPegasusAlert, playWaypointAlert, playTrafficJamAlert, playWeatherAlert, unlockTeslaAudio, VoiceType } from '@/utils/sound';
 import MapContextMenu from '@/components/MapContextMenu';
 import FavoritesPanel from '@/components/FavoritesPanel';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -163,6 +163,8 @@ export default function Home() {
 
   const notifiedPegasus = useRef<Set<string>>(new Set());
   const notifiedWaypoints = useRef<Set<string>>(new Set());
+  const notifiedTraffic = useRef<Set<string>>(new Set());
+  const notifiedWeather = useRef<Set<string>>(new Set());
   
   // Alerta de proximidad a paradas
   useEffect(() => {
@@ -177,7 +179,6 @@ export default function Home() {
       }
     });
   }, [userPos, waypoints, isSoundEnabled, voiceType]);
-
   useEffect(() => {
     if (!isSoundEnabled || !aircrafts || aircrafts.length === 0) return;
 
@@ -188,6 +189,56 @@ export default function Home() {
       }
     });
   }, [aircrafts, isSoundEnabled, voiceType]);
+  
+  // Alerta de tráfico severo próxima (Aviso de colisión / retención)
+  useEffect(() => {
+    if (!userPos || !route || !route.sections || !isSoundEnabled) return;
+    
+    // Solo avisamos si vamos por encima de una velocidad mínima (ej: autovía) para evitar falsos positivos en ciudad
+    // Sin embargo, el usuario pidió avisar si "los coches deberían ir a más de 80km/h"
+    // TomTom no nos da el límite de velocidad de la vía fácilmente aquí, pero podemos inferir por la posición.
+    
+    const snapped = findClosestPointOnPolyline(userPos, route.coordinates);
+    const currentIndex = snapped.segmentIndex;
+    
+    // Buscamos la próxima sección de tráfico con magnitud 3 o 4 (Congestión/Atasco)
+    const jamSection = route.sections.find(s => s.magnitude >= 3 && s.start > currentIndex);
+    
+    if (jamSection) {
+      // Calculamos distancia aproximada por la polilínea
+      let distanceToJam = 0;
+      for (let i = currentIndex; i < jamSection.start; i++) {
+        distanceToJam += getDistance(route.coordinates[i], route.coordinates[i+1]);
+      }
+      
+      // Si estamos a menos de 10km (10000 metros) y no hemos avisado para esta sección
+      const sectionKey = `jam-${jamSection.start}-${jamSection.end}`;
+      if (distanceToJam < 10000 && distanceToJam > 500 && !notifiedTraffic.current.has(sectionKey)) {
+        notifiedTraffic.current.add(sectionKey);
+        playTrafficJamAlert(voiceType, distanceToJam / 1000);
+      }
+    }
+  }, [userPos, route, isSoundEnabled, voiceType]);
+
+  // Alerta de clima adverso próximo
+  useEffect(() => {
+    if (!userPos || !weatherPoints || weatherPoints.length === 0 || !isSoundEnabled || !isWeatherEnabled) return;
+    
+    weatherPoints.forEach(wp => {
+      // Si el clima es lluvia, nieve o tormenta
+      const badWeather = ['Rain', 'Snow', 'Thunderstorm', 'Drizzle'].includes(wp.condition);
+      if (!badWeather) return;
+      
+      const dist = getDistance(userPos, [wp.lat, wp.lon]);
+      const wpKey = `weather-${wp.lat.toFixed(4)}-${wp.lon.toFixed(4)}-${wp.condition}`;
+      
+      // Avisamos a los 15km (15000 metros)
+      if (dist < 15000 && dist > 2000 && !notifiedWeather.current.has(wpKey)) {
+        notifiedWeather.current.add(wpKey);
+        playWeatherAlert(voiceType, wp.condition);
+      }
+    });
+  }, [userPos, weatherPoints, isSoundEnabled, isWeatherEnabled, voiceType]);
 
   // Cambio Automático de Vista (Navegación <-> Vista General) basado en velocidad
   useEffect(() => {

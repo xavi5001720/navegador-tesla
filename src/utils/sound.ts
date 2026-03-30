@@ -108,3 +108,31 @@ export const playWaypointAlert = (voiceType: VoiceType, stopNumber: number, dist
     console.error('[Sound] playWaypointAlert error:', err);
   }
 };
+
+export const playTrafficJamAlert = (voiceType: VoiceType, distanceKm: number) => {
+  if (typeof window === 'undefined') return;
+  try {
+    playBeep('alarm_clock_beeping');
+    const distStr = distanceKm < 1 ? 'menos de un kilómetro' : `${Math.round(distanceKm)} kilómetros`;
+    const msg = `¡Precaución! Tráfico detenido a ${distStr}. Por favor, reduzca su velocidad. Atasco detectado.`;
+    playVoice(msg, voiceType);
+  } catch (err) {
+    console.error('[Sound] playTrafficJamAlert error:', err);
+  }
+};
+
+export const playWeatherAlert = (voiceType: VoiceType, condition: string) => {
+  if (typeof window === 'undefined') return;
+  try {
+    playBeep('beep_short');
+    let conditionStr = 'precipitaciones';
+    if (condition === 'Rain') conditionStr = 'lluvia fuerte';
+    if (condition === 'Snow') conditionStr = 'nieve';
+    if (condition === 'Thunderstorm') conditionStr = 'tormenta eléctrica';
+    
+    const msg = `Atención. El radar meteorológico detecta ${conditionStr} en su ruta más adelante. Extreme las precauciones.`;
+    playVoice(msg, voiceType);
+  } catch (err) {
+    console.error('[Sound] playWeatherAlert error:', err);
+  }
+};

@@ -7,6 +7,7 @@ export interface RouteSection {
   end: number;
   color: string;
   delay: number;
+  magnitude: number;
 }
 
 interface RouteResult {
@@ -64,6 +65,7 @@ const fetchRouteTomTom = async (allPoints: Coordinates[], key: string): Promise<
       end: s.endPointIndex,
       color: TRAFFIC_COLORS[s.magnitudeOfDelay ?? 0] ?? '#3b82f6',
       delay: s.delayInSeconds || 0,
+      magnitude: s.magnitudeOfDelay ?? 0,
     }));
 
   return {
