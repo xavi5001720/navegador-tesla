@@ -185,7 +185,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                           <span className="text-2xl font-black leading-none">{loadingRadars ? '...' : radars.length}</span>
                           {lastRadarUpdate && (
                             <span className="text-[9px] text-gray-500 font-medium mt-1">
-                              Base de datos actualizada: {new Date(lastRadarUpdate).toLocaleString('es-ES', { 
+                              Actualizado: {new Date(lastRadarUpdate).toLocaleString('es-ES', { 
                                 day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' 
                               })}
                             </span>
