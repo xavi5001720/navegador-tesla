@@ -52,7 +52,7 @@ export async function GET(request: Request) {
   const results: Record<string, number> = {};
 
   try {
-    // ── España ──────────────────────────────────────────────────────────────
+    // ── España ── (cron 3:00 AM)
     if (country === 'all' || country === 'es') {
       console.log('[RadarSync] Sincronizando España...');
       const queryES = `
@@ -68,20 +68,36 @@ export async function GET(request: Request) {
       results.españa = await upsertRadars(supabase, elementsES);
     }
 
-    // ── Francia ──────────────────────────────────────────────────────────────
-    if (country === 'all' || country === 'fr') {
-      console.log('[RadarSync] Sincronizando Francia...');
-      const queryFR = `
+    // ── Francia Norte ── (cron 4:00 AM) bbox: lat 46-51, lon -5-10
+    if (country === 'all' || country === 'fr' || country === 'fr_north') {
+      console.log('[RadarSync] Sincronizando Francia Norte...');
+      const queryFRN = `
         [out:json][timeout:90];
         (
-          node["highway"="speed_camera"](41,-5,51,10);
-          node["enforcement"="speed"](41,-5,51,10);
+          node["highway"="speed_camera"](46,-5,51,10);
+          node["enforcement"="speed"](46,-5,51,10);
         );
         out body;
       `;
-      const elementsFR = await fetchRadarsFromOverpass(queryFR);
-      console.log(`[RadarSync] Francia: ${elementsFR.length} elementos.`);
-      results.francia = await upsertRadars(supabase, elementsFR);
+      const elementsFRN = await fetchRadarsFromOverpass(queryFRN);
+      console.log(`[RadarSync] Francia Norte: ${elementsFRN.length} elementos.`);
+      results.francia_norte = await upsertRadars(supabase, elementsFRN);
+    }
+
+    // ── Francia Sur ── (cron 5:00 AM) bbox: lat 41-46, lon -5-10
+    if (country === 'all' || country === 'fr' || country === 'fr_south') {
+      console.log('[RadarSync] Sincronizando Francia Sur...');
+      const queryFRS = `
+        [out:json][timeout:90];
+        (
+          node["highway"="speed_camera"](41,-5,46,10);
+          node["enforcement"="speed"](41,-5,46,10);
+        );
+        out body;
+      `;
+      const elementsFRS = await fetchRadarsFromOverpass(queryFRS);
+      console.log(`[RadarSync] Francia Sur: ${elementsFRS.length} elementos.`);
+      results.francia_sur = await upsertRadars(supabase, elementsFRS);
     }
 
     const total = Object.values(results).reduce((a, b) => a + b, 0);

@@ -1,7 +1,15 @@
 {
   "crons": [
     {
-      "path": "/api/radars/sync",
+      "path": "/api/radars/sync?country=es",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/radars/sync?country=fr_north",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/radars/sync?country=fr_south",
       "schedule": "0 5 * * *"
     }
   ]
