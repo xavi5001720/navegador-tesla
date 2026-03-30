@@ -65,24 +65,30 @@ export default function Home() {
   const [contextMenu, setContextMenu] = useState<{ lat: number; lon: number; screenX: number; screenY: number } | null>(null);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const { favorites, saveFavorite, removeFavorite, isFavorite } = useFavorites();
+  const speed = useSpeed(); // declarado aquí para usarlo en el recalculado automático
 
   // Lógica de Recalculado Automático
   useEffect(() => {
     if (!route || !destination || loadingRoute) return;
 
+    // Solo recalculamos si el usuario se está moviendo (>5 km/h)
+    // Si está parado, asumimos que aún no ha empezado el trayecto
+    const speedKmh = (speed ?? 0) * 3.6;
+    if (speedKmh < 5) return;
+
     const now = Date.now();
-    // Cooldown de 15 segundos entre recalculados
-    if (now - lastRecalculationTime < 15000) return;
+    // Cooldown de 30 segundos entre recalculados
+    if (now - lastRecalculationTime < 30000) return;
 
     const distOffRoute = distanceToPolyline(userPos, route.coordinates);
     
     // Si estamos a más de 100 metros del camino trazado, recalculamos
     if (distOffRoute > 100) {
-      console.log("Desviación detectada (" + Math.round(distOffRoute) + "m). Recalculando ruta...");
+      console.log("Desviación detectada (" + Math.round(distOffRoute) + "m) a " + speedKmh.toFixed(0) + " km/h. Recalculando...");
       setLastRecalculationTime(now);
       calculateRoute(userPos, destination);
     }
-  }, [userPos, route, destination, loadingRoute, lastRecalculationTime, calculateRoute]);
+  }, [userPos, speed, route, destination, loadingRoute, lastRecalculationTime, calculateRoute]);
 
   // Refresco de tráfico cada 20km
   useEffect(() => {
@@ -140,7 +146,6 @@ export default function Home() {
     });
   }, [allRadars, route, userPos]);
 
-  const speed = useSpeed();
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, voiceType, speed);
   const { allAircrafts, aircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
 
