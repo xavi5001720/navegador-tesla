@@ -44,8 +44,9 @@ const fetchRouteTomTom = async (allPoints: Coordinates[], key: string): Promise<
   if (!data.routes?.length) throw new Error('TomTom: no se encontró ruta.');
 
   const mainRoute = data.routes[0];
-  const leg = mainRoute.legs[0];
-  const latLngs: Coordinates[] = leg.points.map((p: any) => [p.latitude, p.longitude]);
+  const latLngs: Coordinates[] = mainRoute.legs.flatMap((leg: any) =>
+    leg.points.map((p: any) => [p.latitude, p.longitude] as Coordinates)
+  );
 
   // Colores según magnitudeOfDelay (0-4)
   const TRAFFIC_COLORS: Record<number, string> = {
