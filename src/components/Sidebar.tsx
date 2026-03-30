@@ -35,6 +35,7 @@ interface SidebarProps {
   onOpenFavorites: () => void;
   lastRadarUpdate?: string | null;
   radarProgress?: number;
+  isTrafficEnabled?: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -67,6 +68,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onOpenFavorites,
   lastRadarUpdate,
   radarProgress = 0,
+  isTrafficEnabled = false,
 }) => {
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 md:bg-black/40 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -163,6 +165,20 @@ const Sidebar: React.FC<SidebarProps> = ({
                     })()}
                   </span>
                </div>
+            </div>
+            {/* Badge de estado del tráfico */}
+            <div className="mt-2">
+              {isTrafficEnabled ? (
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Tráfico en tiempo real
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-500/10 border border-gray-500/20 px-2 py-1 rounded-lg">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
+                  Tráfico desactivado
+                </span>
+              )}
             </div>
          </div>
       )}

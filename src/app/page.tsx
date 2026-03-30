@@ -51,7 +51,8 @@ export default function Home() {
     addWaypointBefore,
     addWaypointAfter,
     clearRoute,
-    checkTrafficRefresh 
+    checkTrafficRefresh,
+    isTrafficEnabled 
   } = useRoute();
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -277,6 +278,7 @@ export default function Home() {
         onOpenFavorites={() => setIsFavoritesOpen(true)}
         lastRadarUpdate={lastUpdate}
         radarProgress={progress}
+        isTrafficEnabled={isTrafficEnabled}
       />
 
       {/* Sección del Mapa (Fondo) */}
