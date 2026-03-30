@@ -69,6 +69,16 @@ function encodePolyline(coordinates: [number, number][]) {
   return result;
 }
 
+function isFreeCharger(costStr: string | null | undefined): boolean {
+  if (!costStr) return true; // OCM api suele dejarlo vacío si es gratis usagetype=1
+  const s = costStr.toLowerCase();
+  
+  if (s.includes('free') || s.includes('gratis') || s.includes('sin coste') || s.includes('0.00') || s.includes('0,00')) return true;
+  if (s.includes('€') || s.includes('$') || s.includes('£') || s.includes('0,') || s.includes('0.') || s.match(/[1-9],/) || s.includes('kw') || s.includes('min') || s.match(/[0-9] céntimos/)) return false;
+
+  return true;
+}
+
 export function useChargers(userPos: [number, number] | null, routeCoordinates?: [number, number][], isEnabled: boolean = false, filters: ChargerFilters = {}) {
   const [chargers, setChargers] = useState<Charger[]>([]);
   const [loading, setLoading] = useState(false);
@@ -162,6 +172,8 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
               const data = await res.json();
               if (Array.isArray(data)) {
                 data.forEach(c => {
+                  if (filters.isFree && !isFreeCharger(c.UsageCost)) return; // <-- Filtro estricto de texto para falsos positivos
+
                   if (!uniqueIds.has(c.ID)) {
                     uniqueIds.add(c.ID);
                     const power = c.Connections?.reduce((max: number, conn: any) => Math.max(max, conn.PowerKW || 0), 0) || 0;
@@ -193,9 +205,11 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
           const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
           const data = await res.json();
           if (Array.isArray(data)) {
-            const parsed = data.map(c => {
+            const parsed: Charger[] = [];
+            data.forEach(c => {
+               if (filters.isFree && !isFreeCharger(c.UsageCost)) return; // <-- Filtro estricto de texto
                const power = c.Connections?.reduce((max: number, conn: any) => Math.max(max, conn.PowerKW || 0), 0) || 0;
-               return {
+               parsed.push({
                   id: c.ID,
                   lat: c.AddressInfo.Latitude,
                   lon: c.AddressInfo.Longitude,
@@ -205,7 +219,7 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
                   usageCost: c.UsageCost || (filters.isFree ? 'Gratuito' : 'Desconocido'),
                   maxPower: power,
                   connections: c.Connections || []
-               };
+               });
             });
             setChargers(parsed);
           }
