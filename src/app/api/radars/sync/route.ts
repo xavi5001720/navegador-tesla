@@ -16,13 +16,12 @@ export async function GET(request: Request) {
   try {
     console.log('[RadarSync] Iniciando sincronización de España...');
     
-    // Consulta para obtener todos los radares de España
+    // Consulta optimizada con Bounding Box (Caja de coordenadas) que es mucho más rápida que buscar por "Área"
     const overpassQuery = `
-      [out:json][timeout:180];
-      area["name"="España"]->.spain;
+      [out:json][timeout:90];
       (
-        node["highway"="speed_camera"](area.spain);
-        node["enforcement"="speed"](area.spain);
+        node["highway"="speed_camera"](27,-19,44,5);
+        node["enforcement"="speed"](27,-19,44,5);
       );
       out body;
     `;
