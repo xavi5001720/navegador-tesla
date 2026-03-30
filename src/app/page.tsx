@@ -15,8 +15,8 @@ import { useSpeed } from '@/hooks/useSpeed';
 import { usePegasus } from '@/hooks/usePegasus';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
-import { distanceToPolyline, findClosestPointOnPolyline } from '@/utils/geo';
-import { playPegasusAlert, unlockTeslaAudio, VoiceType } from '@/utils/sound';
+import { getDistance, distanceToPolyline, findClosestPointOnPolyline } from '@/utils/geo';
+import { playPegasusAlert, playWaypointAlert, unlockTeslaAudio, VoiceType } from '@/utils/sound';
 import MapContextMenu from '@/components/MapContextMenu';
 import FavoritesPanel from '@/components/FavoritesPanel';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -44,6 +44,7 @@ export default function Home() {
   const {
     route, 
     destination, 
+    waypoints,
     loadingRoute, 
     routeError, 
     calculateRoute, 
@@ -86,9 +87,9 @@ export default function Home() {
     if (distOffRoute > 100) {
       console.log("Desviación detectada (" + Math.round(distOffRoute) + "m) a " + speedKmh.toFixed(0) + " km/h. Recalculando...");
       setLastRecalculationTime(now);
-      calculateRoute(userPos, destination);
+      calculateRoute(userPos, destination, waypoints);
     }
-  }, [userPos, speed, route, destination, loadingRoute, lastRecalculationTime, calculateRoute]);
+  }, [userPos, speed, route, destination, waypoints, loadingRoute, lastRecalculationTime, calculateRoute]);
 
   // Refresco de tráfico cada 20km
   useEffect(() => {
@@ -150,7 +151,22 @@ export default function Home() {
   const { allAircrafts, aircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
 
   const notifiedPegasus = useRef<Set<string>>(new Set());
+  const notifiedWaypoints = useRef<Set<string>>(new Set());
   
+  // Alerta de proximidad a paradas
+  useEffect(() => {
+    if (!userPos || !waypoints || waypoints.length === 0 || !isSoundEnabled) return;
+    
+    waypoints.forEach((wp, index) => {
+      const wpKey = `${wp[0].toFixed(5)},${wp[1].toFixed(5)}`;
+      const dist = getDistance(userPos, wp);
+      if (dist < 500 && !notifiedWaypoints.current.has(wpKey)) {
+        notifiedWaypoints.current.add(wpKey);
+        playWaypointAlert(voiceType, index + 1, dist);
+      }
+    });
+  }, [userPos, waypoints, isSoundEnabled, voiceType]);
+
   useEffect(() => {
     if (!isSoundEnabled || !aircrafts || aircrafts.length === 0) return;
 
@@ -284,6 +300,7 @@ export default function Home() {
         lastRadarUpdate={lastUpdate}
         radarProgress={progress}
         isTrafficEnabled={isTrafficEnabled}
+        waypoints={waypoints}
       />
 
       {/* Sección del Mapa (Fondo) */}
@@ -294,6 +311,7 @@ export default function Home() {
           routeCoordinates={route?.coordinates} 
           radars={radars}
           aircrafts={allAircrafts}
+          waypoints={waypoints}
           speed={speed}
           viewMode={viewMode}
           onViewModeChange={setViewMode}

@@ -148,6 +148,7 @@ interface MapUIProps {
    routeCoordinates?: [number, number][];
    radars: Radar[];
    aircrafts?: Aircraft[];
+   waypoints?: [number, number][];
    speed?: number;
    viewMode?: 'navigation' | 'overview' | 'explore';
    onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void;
@@ -271,6 +272,7 @@ export default function MapUI({
   routeCoordinates, 
   radars = [], 
   aircrafts = [], 
+  waypoints = [],
   speed = 0, 
   viewMode = 'navigation', 
   onViewModeChange, 
@@ -372,6 +374,9 @@ export default function MapUI({
                     lineJoin: 'round' 
                   }}
                 />
+              ))}
+              {waypoints.map((wp, i) => (
+                <Marker key={`waypoint-${i}`} position={wp} icon={endMarkerIcon} />
               ))}
               <Marker position={routeCoordinates[routeCoordinates.length - 1]} icon={endMarkerIcon} />
             </>

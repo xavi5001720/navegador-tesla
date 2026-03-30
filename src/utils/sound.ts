@@ -96,3 +96,15 @@ export const playPegasusAlert = (voiceType: VoiceType, callsign: string, altitud
     console.error('[Sound] playPegasusAlert error:', err);
   }
 };
+
+export const playWaypointAlert = (voiceType: VoiceType, stopNumber: number, distanceM: number) => {
+  if (typeof window === 'undefined') return;
+  try {
+    playBeep('beep_short');
+    const dist = distanceM < 200 ? 'muy cercana' : `a ${Math.round(distanceM)} metros`;
+    const msg = `Parada ${stopNumber} ${dist}. Prepárese para detenerse.`;
+    playVoice(msg, voiceType);
+  } catch (err) {
+    console.error('[Sound] playWaypointAlert error:', err);
+  }
+};

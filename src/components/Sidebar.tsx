@@ -36,6 +36,7 @@ interface SidebarProps {
   lastRadarUpdate?: string | null;
   radarProgress?: number;
   isTrafficEnabled?: boolean;
+  waypoints?: [number, number][];
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -69,6 +70,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   lastRadarUpdate,
   radarProgress = 0,
   isTrafficEnabled = false,
+  waypoints = [],
 }) => {
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 md:bg-black/40 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -85,6 +87,17 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       <SearchPanel onSearch={onSearch} isLoading={loadingRoute} onOpenFavorites={onOpenFavorites} />
+
+      {/* Botón Eliminar Ruta (solo cuando hay ruta activa) */}
+      {route && (
+        <button
+          onClick={clearRoute}
+          className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-400 hover:bg-rose-500/20 hover:text-rose-300 active:scale-95 transition-all text-sm font-bold"
+        >
+          <X className="h-4 w-4" />
+          Eliminar ruta
+        </button>
+      )}
 
       {/* Error Feedback */}
       {routeError && (
@@ -166,6 +179,22 @@ const Sidebar: React.FC<SidebarProps> = ({
                   </span>
                </div>
             </div>
+            {/* Paradas intermedias */}
+            {waypoints.length > 0 && (
+              <div className="mt-3 flex flex-col gap-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Paradas</span>
+                {waypoints.map((wp, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-1.5">
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center flex-shrink-0">
+                      <span className="text-[9px] font-black text-emerald-400">{i + 1}</span>
+                    </div>
+                    <span className="text-[11px] text-gray-300 font-medium">
+                      {wp[0].toFixed(4)}, {wp[1].toFixed(4)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
             {/* Badge de estado del tráfico */}
             <div className="mt-2">
               {isTrafficEnabled ? (
