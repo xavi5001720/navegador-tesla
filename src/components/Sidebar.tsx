@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Navigation, Radar, Plane, X, Volume2, VolumeX, Play, Power } from 'lucide-react';
+import React, { useState } from 'react';
+import { Navigation, Radar, Plane, X, Volume2, VolumeX, Play, Power, Database } from 'lucide-react';
 import SearchPanel from './SearchPanel';
 import { playTestSound, VoiceType } from '@/utils/sound';
 
@@ -72,6 +72,26 @@ const Sidebar: React.FC<SidebarProps> = ({
   isTrafficEnabled = false,
   waypoints = [],
 }) => {
+  const [showRadarStats, setShowRadarStats] = useState(false);
+  const [radarStatsData, setRadarStatsData] = useState<any>(null);
+  const [loadingRadarStats, setLoadingRadarStats] = useState(false);
+
+  const handleToggleRadarStats = async () => {
+    setShowRadarStats(!showRadarStats);
+    if (!showRadarStats && !radarStatsData) {
+      setLoadingRadarStats(true);
+      try {
+        const res = await fetch('/api/radars/stats');
+        const data = await res.json();
+        setRadarStatsData(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingRadarStats(false);
+      }
+    }
+  };
+
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 md:bg-black/40 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="mb-8 flex items-center justify-between">
@@ -217,12 +237,12 @@ const Sidebar: React.FC<SidebarProps> = ({
            <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isRadarsEnabled && 'opacity-70'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className={`p-2 rounded-xl flex items-center justify-center ${isRadarsEnabled ? 'bg-rose-500/20' : 'bg-gray-500/20'}`}>
+                  <button onClick={handleToggleRadarStats} className={`p-2 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isRadarsEnabled ? 'bg-rose-500/20 hover:bg-rose-500/30 cursor-pointer' : 'bg-gray-500/20'}`}>
                     <img src="/radares.png" alt="Radares" className={`h-8 w-8 object-contain drop-shadow-md ${fetchingRouteRadars ? 'animate-pulse opacity-50' : ''}`} />
-                  </div>
+                  </button>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Radares</span>
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Sistema Antiradar</span>
                     </div>
                     {isRadarsEnabled ? (
                       fetchingRouteRadars ? (
@@ -269,6 +289,48 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <span className="text-xl font-bold text-blue-400">{remainingRadars}</span>
                 </div>
               )}
+
+              {/* Estadísticas de Radares (Desplegable) */}
+              {showRadarStats && (
+                <div className="mt-4 pt-4 border-t border-white/10 animate-fade-in">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Database className="h-4 w-4 text-rose-400" />
+                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">Base de Datos Original</span>
+                  </div>
+                  
+                  {loadingRadarStats ? (
+                    <div className="text-[11px] text-gray-400 animate-pulse text-center py-2">Cargando base de datos...</div>
+                  ) : radarStatsData ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
+                        <span className="text-xs text-gray-300 font-medium tracking-wide">🇪🇸 España ({radarStatsData.es.count})</span>
+                        <span className="text-[9px] text-gray-500 font-bold bg-black/40 px-2 py-0.5 rounded-full">
+                          {radarStatsData.es.lastUpdate ? new Date(radarStatsData.es.lastUpdate).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
+                        <span className="text-xs text-gray-300 font-medium tracking-wide">🇫🇷 Francia Sur ({radarStatsData.fr_south.count})</span>
+                        <span className="text-[9px] text-gray-500 font-bold bg-black/40 px-2 py-0.5 rounded-full">
+                          {radarStatsData.fr_south.lastUpdate ? new Date(radarStatsData.fr_south.lastUpdate).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
+                        <span className="text-xs text-gray-300 font-medium tracking-wide">🇫🇷 Francia Norte ({radarStatsData.fr_north.count})</span>
+                        <span className="text-[9px] text-gray-500 font-bold bg-black/40 px-2 py-0.5 rounded-full">
+                          {radarStatsData.fr_north.lastUpdate ? new Date(radarStatsData.fr_north.lastUpdate).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center pt-3 border-t border-white/5 mt-1">
+                        <span className="text-xs font-black text-rose-400 uppercase tracking-widest">Total Sincronizado</span>
+                        <span className="text-sm font-black text-rose-400 bg-rose-500/10 px-3 py-1 rounded-xl border border-rose-500/20">{radarStatsData.total}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-[11px] text-rose-400 text-center py-2 bg-rose-500/10 rounded-lg">Error al cargar datos</div>
+                  )}
+                </div>
+              )}
+
            </div>
 
            <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 ${isAnyPegasusNearby ? 'bg-blue-600/20 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'bg-white/5 border-white/10'}`}>
