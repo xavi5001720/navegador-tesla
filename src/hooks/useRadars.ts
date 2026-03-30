@@ -12,6 +12,7 @@ export interface Radar {
 export function useRadars(userPos: [number, number] | null, routeCoordinates?: [number, number][], isEnabled: boolean = false) {
   const [radars, setRadars] = useState<Radar[]>([]);
   const [loadingRadars, setLoadingRadars] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<string | null>(null);
 
   const [fetchingRouteRadars, setFetchingRouteRadars] = useState(false);
   const lastFetchRef = useRef<{ type: 'route'|'local', pos: [number, number], routeLength: number } | null>(null);
@@ -31,6 +32,27 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(p1[0] * Math.PI / 180) * Math.cos(p2[0] * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
   };
+
+  // Efecto para obtener la fecha de última actualización una sola vez al cargar
+  useEffect(() => {
+    const fetchLastUpdate = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('radars')
+          .select('updated_at')
+          .order('updated_at', { ascending: false })
+          .limit(1);
+        
+        if (error) throw error;
+        if (data && data.length > 0) {
+          setLastUpdate(data[0].updated_at);
+        }
+      } catch (err) {
+        console.error("Error fetching last radar update:", err);
+      }
+    };
+    fetchLastUpdate();
+  }, []);
 
   useEffect(() => {
     if (!isEnabled || !userPos) {
@@ -121,5 +143,5 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEnabled, userPos?.[0], userPos?.[1], routeLength, routeFirstLat, routeFirstLon, routeLastLat, routeLastLon]);
 
-  return { radars, loadingRadars, fetchingRouteRadars };
+  return { radars, loadingRadars, fetchingRouteRadars, lastUpdate };
 }

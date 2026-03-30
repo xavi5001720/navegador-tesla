@@ -33,6 +33,7 @@ interface SidebarProps {
   setIsAircraftsEnabled: (v: boolean) => void;
   activeAccount?: number;
   onOpenFavorites: () => void;
+  lastRadarUpdate?: string | null;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -63,6 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   activeAccount = 1,
   rawAircraftCount = 0,
   onOpenFavorites,
+  lastRadarUpdate,
 }) => {
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 md:bg-black/40 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -179,7 +181,16 @@ const Sidebar: React.FC<SidebarProps> = ({
                       fetchingRouteRadars ? (
                         <span className="text-[10px] font-bold text-rose-400 animate-pulse uppercase mt-1">Calculando ruta...</span>
                       ) : (
-                        <span className="text-2xl font-black leading-none">{loadingRadars ? '...' : radars.length}</span>
+                        <div className="flex flex-col">
+                          <span className="text-2xl font-black leading-none">{loadingRadars ? '...' : radars.length}</span>
+                          {lastRadarUpdate && (
+                            <span className="text-[9px] text-gray-500 font-medium mt-1">
+                              Act: {new Date(lastRadarUpdate).toLocaleString('es-ES', { 
+                                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' 
+                              })}
+                            </span>
+                          )}
+                        </div>
                       )
                     ) : (
                       <span className="text-2xl font-black leading-none text-white/30">OFF</span>
