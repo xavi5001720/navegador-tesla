@@ -10,6 +10,7 @@ import { Radar } from '@/hooks/useRadars';
 import { Aircraft } from '@/hooks/usePegasus';
 import { findClosestPointOnPolyline, getBearing } from '@/utils/geo';
 import MapContextMenu from './MapContextMenu';
+import { RouteSection } from '@/hooks/useRoute';
 
 const defaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -153,6 +154,7 @@ interface MapUIProps {
    customZoom?: number | null;
    onZoomChange?: (zoom: number) => void;
    onMapClick?: (lat: number, lon: number, screenX: number, screenY: number) => void;
+   routeSections?: RouteSection[];
 }
 
 const createCarIcon = (heading: number) => {
@@ -263,7 +265,20 @@ function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordin
 
 
 
-export default function MapUI({ userPos, heading, routeCoordinates, radars = [], aircrafts = [], speed = 0, viewMode = 'navigation', onViewModeChange, customZoom, onZoomChange, onMapClick }: MapUIProps) {
+export default function MapUI({ 
+  userPos, 
+  heading, 
+  routeCoordinates, 
+  radars = [], 
+  aircrafts = [], 
+  speed = 0, 
+  viewMode = 'navigation', 
+  onViewModeChange, 
+  customZoom, 
+  onZoomChange, 
+  onMapClick,
+  routeSections = []
+}: MapUIProps) {
   return (
     <div className="relative h-full w-full bg-gray-900 overflow-hidden">
       <style jsx global>{`
@@ -290,15 +305,78 @@ export default function MapUI({ userPos, heading, routeCoordinates, radars = [],
         
         <LocationTracker position={userPos} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} customZoom={customZoom} />
         
-        {routeCoordinates && routeCoordinates.length > 0 && (
-           <>
-             <Polyline 
-                positions={routeCoordinates} 
-                pathOptions={{ color: '#3b82f6', weight: 6, opacity: 0.8, lineCap: 'round', lineJoin: 'round' }}
-             />
-             <Marker position={routeCoordinates[routeCoordinates.length - 1]} icon={endMarkerIcon} />
-           </>
-        )}
+        {(() => {
+          if (!routeCoordinates || routeCoordinates.length === 0) return null;
+
+          const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
+          const currentIndex = snapped.segmentIndex;
+
+          // Solo dibujamos desde la posición actual hasta el final
+          const remainingCoords = routeCoordinates.slice(currentIndex);
+          // Si el snapped está muy cerca de la línea, forzamos que el primer punto sea la posición "snapped" 
+          // para suavizar la conexión coche-línea.
+          if (remainingCoords.length > 0 && snapped.distance < 30) {
+            remainingCoords[0] = snapped.point;
+          }
+
+          // Construimos los segmentos de color
+          const polylines = [];
+          let lastIndex = currentIndex;
+
+          // Ordenamos las secciones por inicio
+          const sortedSections = [...routeSections].sort((a, b) => a.start - b.start);
+
+          sortedSections.forEach((section, idx) => {
+            // Si la sección termina antes de nuestra posición actual, la ignoramos
+            if (section.end <= currentIndex) return;
+
+            // Si hay un hueco entre el último punto procesado y el inicio de esta sección lenta,
+            // lo pintamos en el azul estándar.
+            const startIdx = Math.max(lastIndex, section.start);
+            if (startIdx > lastIndex) {
+              polylines.push({
+                coords: routeCoordinates.slice(lastIndex, startIdx + 1),
+                color: '#3b82f6'
+              });
+            }
+
+            // Pintamos la sección de tráfico
+            const endIdx = section.end;
+            polylines.push({
+              coords: routeCoordinates.slice(startIdx, endIdx + 1),
+              color: section.color
+            });
+
+            lastIndex = endIdx;
+          });
+
+          // Pintamos el tramo final si queda algo después de la última sección de tráfico
+          if (lastIndex < routeCoordinates.length - 1) {
+            polylines.push({
+              coords: routeCoordinates.slice(lastIndex),
+              color: '#3b82f6'
+            });
+          }
+
+          return (
+            <>
+              {polylines.map((p, i) => (
+                <Polyline 
+                  key={`route-seg-${i}`}
+                  positions={p.coords}
+                  pathOptions={{ 
+                    color: p.color, 
+                    weight: 8, 
+                    opacity: 0.9, 
+                    lineCap: 'round', 
+                    lineJoin: 'round' 
+                  }}
+                />
+              ))}
+              <Marker position={routeCoordinates[routeCoordinates.length - 1]} icon={endMarkerIcon} />
+            </>
+          );
+        })()}
 
         {radars.map((radar) => (
           <Marker 

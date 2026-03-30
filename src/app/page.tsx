@@ -50,7 +50,8 @@ export default function Home() {
     findAndTraceRoute, 
     addWaypointBefore,
     addWaypointAfter,
-    clearRoute 
+    clearRoute,
+    checkTrafficRefresh 
   } = useRoute();
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -81,6 +82,13 @@ export default function Home() {
       calculateRoute(userPos, destination);
     }
   }, [userPos, route, destination, loadingRoute, lastRecalculationTime, calculateRoute]);
+
+  // Refresco de tráfico cada 20km
+  useEffect(() => {
+    if (userPos) {
+      checkTrafficRefresh(userPos);
+    }
+  }, [userPos, checkTrafficRefresh]);
 
   // Unlock audio on first interaction
   useEffect(() => {
@@ -285,6 +293,7 @@ export default function Home() {
           customZoom={customZoom}
           onZoomChange={setCustomZoom}
           onMapClick={handleMapClick}
+          routeSections={route?.sections}
         />
 
         {/* Panel de Avisos Rápidos y Velocímetro */}
