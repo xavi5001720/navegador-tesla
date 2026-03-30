@@ -35,7 +35,8 @@ const geocodeAddress = async (query: string): Promise<Coordinates | null> => {
 
 // Ruta con TomTom (tráfico en tiempo real)
 const fetchRouteTomTom = async (allPoints: Coordinates[], key: string): Promise<RouteResult> => {
-  const coordStr = allPoints.map(p => `${p[1]},${p[0]}`).join(':');
+  // TomTom espera lat,lon en la URL (al contrario que OSRM que espera lon,lat)
+  const coordStr = allPoints.map(p => `${p[0]},${p[1]}`).join(':');
   const url = `https://api.tomtom.com/routing/1/calculateRoute/${coordStr}/json?key=${key}&traffic=true&sectionType=traffic&report=effectiveSettings`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`TomTom API error: ${res.status}`);
