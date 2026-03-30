@@ -5,6 +5,8 @@ import { Navigation, Radar, Plane, X, Volume2, VolumeX, Play, Power, Database } 
 import SearchPanel from './SearchPanel';
 import { playTestSound, VoiceType } from '@/utils/sound';
 
+import { ChargerFilters } from '@/hooks/useChargers';
+
 interface SidebarProps {
   isSidebarOpen: boolean;
   setIsSidebarOpen: (open: boolean) => void;
@@ -31,6 +33,13 @@ interface SidebarProps {
   setIsRadarsEnabled: (v: boolean) => void;
   isAircraftsEnabled: boolean;
   setIsAircraftsEnabled: (v: boolean) => void;
+  isChargersEnabled: boolean;
+  setIsChargersEnabled: (v: boolean) => void;
+  chargerFilters: ChargerFilters;
+  setChargerFilters: (f: ChargerFilters) => void;
+  chargersCount: number;
+  loadingChargers: boolean;
+  chargerProgress: number;
   activeAccount?: number;
   onOpenFavorites: () => void;
   lastRadarUpdate?: string | null;
@@ -71,8 +80,16 @@ const Sidebar: React.FC<SidebarProps> = ({
   radarProgress = 0,
   isTrafficEnabled = false,
   waypoints = [],
+  isChargersEnabled,
+  setIsChargersEnabled,
+  chargerFilters,
+  setChargerFilters,
+  chargersCount,
+  loadingChargers,
+  chargerProgress
 }) => {
   const [showRadarStats, setShowRadarStats] = useState(false);
+  const [showChargerFilters, setShowChargerFilters] = useState(false);
   const [radarStatsData, setRadarStatsData] = useState<any>(null);
   const [loadingRadarStats, setLoadingRadarStats] = useState(false);
 
@@ -391,7 +408,112 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </p>
               )}
            </div>
+
+           {/* Bloque Cargadores */}
+           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isChargersEnabled && 'opacity-70'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <button 
+                     onClick={() => setShowChargerFilters(!showChargerFilters)}
+                     className={`p-2 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isChargersEnabled ? 'bg-emerald-500/20 hover:bg-emerald-500/30 cursor-pointer' : 'bg-gray-500/20'}`}
+                  >
+                    <img src="/cargador.png" alt="Cargadores" className={`h-8 w-8 object-contain drop-shadow-md ${loadingChargers ? 'animate-pulse opacity-50' : ''}`} style={{ filter: 'brightness(0) invert(1)' }} />
+                  </button>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Cargadores EV</span>
+                    </div>
+                    {isChargersEnabled ? (
+                      loadingChargers ? (
+                        <span className="text-[10px] font-bold text-emerald-400 animate-pulse uppercase mt-1">
+                          Buscando... {chargerProgress > 0 && `${chargerProgress}%`}
+                        </span>
+                      ) : (
+                        <div className="flex flex-col">
+                          <span className="text-2xl font-black leading-none text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]">{chargersCount}</span>
+                          <span className="text-[9px] text-gray-500 font-medium mt-1 uppercase">Públicos Mapeados</span>
+                        </div>
+                      )
+                    ) : (
+                      <span className="text-2xl font-black leading-none text-white/30">OFF</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-1.5">
+                  <button 
+                    onClick={() => setIsChargersEnabled(!isChargersEnabled)}
+                    className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isChargersEnabled ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
+                  >
+                    <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isChargersEnabled ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
+                      <Power className={`h-3 w-3 ${isChargersEnabled ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
+                    </span>
+                  </button>
+                  {isChargersEnabled ? (
+                    <span className="text-[9px] font-bold text-green-500 uppercase tracking-wider">Activado</span>
+                  ) : (
+                    <span className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">Desactivado</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Filtros de Cargadores (Desplegable) */}
+              {showChargerFilters && (
+                <div className="mt-4 pt-4 border-t border-white/10 animate-fade-in flex flex-col gap-3">
+                  <div className="flex items-center justify-between bg-white/5 p-2 rounded-lg">
+                     <span className="text-xs font-medium text-white">Solo gratuitos</span>
+                     <button 
+                       onClick={() => setChargerFilters({ ...chargerFilters, isFree: !chargerFilters.isFree })}
+                       className={`w-8 h-4 rounded-full transition-colors relative ${chargerFilters.isFree ? 'bg-emerald-500' : 'bg-gray-600'}`}
+                     >
+                        <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform duration-200 ${chargerFilters.isFree ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                     </button>
+                  </div>
+                  
+                  <div className="bg-white/5 p-2 rounded-lg flex flex-col gap-2">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Conector</span>
+                      <div className="flex flex-wrap gap-2">
+                         {(['ccs', 'tipo2', 'enchufe'] as const).map(c => (
+                            <button 
+                               key={c}
+                               onClick={() => {
+                                 let newC = [...(chargerFilters.connectors || [])] as ('ccs' | 'tipo2' | 'enchufe')[];
+                                 if (newC.includes(c)) newC = newC.filter(x => x !== c);
+                                 else newC.push(c);
+                                 setChargerFilters({ ...chargerFilters, connectors: newC });
+                               }}
+                               className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md transition-colors ${chargerFilters.connectors?.includes(c) ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                            >
+                               {c}
+                            </button>
+                         ))}
+                         <button 
+                            onClick={() => setChargerFilters({ ...chargerFilters, connectors: [] })}
+                            className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md transition-colors ${!chargerFilters.connectors?.length ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-700 text-gray-400'}`}
+                         >
+                            Todos
+                         </button>
+                      </div>
+                  </div>
+
+                  <div className="bg-white/5 p-2 rounded-lg flex flex-col gap-2">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Potencia Mínima</span>
+                      <div className="flex gap-2">
+                         {[0, 22, 50, 150].map(p => (
+                            <button 
+                               key={p}
+                               onClick={() => setChargerFilters({ ...chargerFilters, minPower: p })}
+                               className={`flex-1 py-1 text-[10px] font-bold rounded-md transition-colors ${chargerFilters.minPower === p ? 'bg-emerald-600 text-white shadow-lg' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                            >
+                               {p === 0 ? 'Todas' : `>${p}kW`}
+                            </button>
+                         ))}
+                      </div>
+                  </div>
+                </div>
+              )}
+           </div>
         </div>
+
       </div>
 
       {/* GPS Status Indicator */}

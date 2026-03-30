@@ -20,6 +20,7 @@ import { playPegasusAlert, playWaypointAlert, unlockTeslaAudio, VoiceType } from
 import MapContextMenu from '@/components/MapContextMenu';
 import FavoritesPanel from '@/components/FavoritesPanel';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useChargers, ChargerFilters } from '@/hooks/useChargers';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -59,6 +60,12 @@ export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isRadarsEnabled, setIsRadarsEnabled] = useState(false);
   const [isAircraftsEnabled, setIsAircraftsEnabled] = useState(false);
+  const [isChargersEnabled, setIsChargersEnabled] = useState(false);
+  const [chargerFilters, setChargerFilters] = useState<ChargerFilters>({
+    isFree: false,
+    connectors: [],
+    minPower: 0
+  });
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [voiceType, setVoiceType] = useState<VoiceType>('mujer');
   const [lastRecalculationTime, setLastRecalculationTime] = useState(0);
@@ -149,6 +156,7 @@ export default function Home() {
 
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, voiceType, speed);
   const { allAircrafts, aircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
+  const { chargers, loading: loadingChargers, progress: chargerProgress } = useChargers(userPos, route?.coordinates, isChargersEnabled, chargerFilters);
 
   const notifiedPegasus = useRef<Set<string>>(new Set());
   const notifiedWaypoints = useRef<Set<string>>(new Set());
@@ -297,10 +305,16 @@ export default function Home() {
         voiceType={voiceType}
         setVoiceType={setVoiceType}
         onOpenFavorites={() => setIsFavoritesOpen(true)}
-        lastRadarUpdate={lastUpdate}
         radarProgress={progress}
         isTrafficEnabled={isTrafficEnabled}
         waypoints={waypoints}
+        isChargersEnabled={isChargersEnabled}
+        setIsChargersEnabled={setIsChargersEnabled}
+        chargerFilters={chargerFilters}
+        setChargerFilters={setChargerFilters}
+        chargersCount={chargers.length}
+        loadingChargers={loadingChargers}
+        chargerProgress={chargerProgress}
       />
 
       {/* Sección del Mapa (Fondo) */}
@@ -311,6 +325,7 @@ export default function Home() {
           routeCoordinates={route?.coordinates} 
           radars={radars}
           aircrafts={allAircrafts}
+          chargers={chargers}
           waypoints={waypoints}
           speed={speed}
           viewMode={viewMode}

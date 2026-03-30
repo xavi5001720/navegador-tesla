@@ -8,6 +8,7 @@ import { Navigation, Camera, Plane } from 'lucide-react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Radar } from '@/hooks/useRadars';
 import { Aircraft } from '@/hooks/usePegasus';
+import { Charger } from '@/hooks/useChargers';
 import { findClosestPointOnPolyline, getBearing } from '@/utils/geo';
 import MapContextMenu from './MapContextMenu';
 import { RouteSection } from '@/hooks/useRoute';
@@ -37,6 +38,17 @@ const radarIcon = (speedLimit?: number) => L.divIcon({
     </div>
   ),
   className: 'custom-radar-icon',
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+});
+
+const chargerIcon = L.divIcon({
+  html: renderToStaticMarkup(
+    <div className="h-8 w-8 flex items-center justify-center rounded-full bg-emerald-600 border-2 border-white shadow-[0_0_15px_rgba(5,150,105,0.8)]">
+       <img src="/cargador.png" alt="C" className="h-4 w-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+    </div>
+  ),
+  className: 'custom-charger-icon pointer-events-auto',
   iconSize: [32, 32],
   iconAnchor: [16, 16],
 });
@@ -148,6 +160,7 @@ interface MapUIProps {
    routeCoordinates?: [number, number][];
    radars: Radar[];
    aircrafts?: Aircraft[];
+   chargers?: Charger[];
    waypoints?: [number, number][];
    speed?: number;
    viewMode?: 'navigation' | 'overview' | 'explore';
@@ -272,6 +285,7 @@ export default function MapUI({
   routeCoordinates, 
   radars = [], 
   aircrafts = [], 
+  chargers = [],
   waypoints = [],
   speed = 0, 
   viewMode = 'navigation', 
