@@ -6,6 +6,7 @@ import SearchPanel from './SearchPanel';
 import { playTestSound, VoiceType } from '@/utils/sound';
 
 import { ChargerFilters } from '@/hooks/useChargers';
+import { WeatherPoint } from '@/hooks/useWeather';
 
 interface SidebarProps {
   isSidebarOpen: boolean;
@@ -40,6 +41,10 @@ interface SidebarProps {
   chargersCount: number;
   loadingChargers: boolean;
   chargerProgress: number;
+  isWeatherEnabled: boolean;
+  setIsWeatherEnabled: (v: boolean) => void;
+  loadingWeather: boolean;
+  currentWeather: WeatherPoint | null;
   activeAccount?: number;
   onOpenFavorites: () => void;
   lastRadarUpdate?: string | null;
@@ -86,7 +91,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   setChargerFilters,
   chargersCount,
   loadingChargers,
-  chargerProgress
+  chargerProgress,
+  isWeatherEnabled,
+  setIsWeatherEnabled,
+  loadingWeather,
+  currentWeather
 }) => {
   const [showRadarStats, setShowRadarStats] = useState(false);
   const [showChargerFilters, setShowChargerFilters] = useState(false);
@@ -512,6 +521,61 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               )}
            </div>
+
+           {/* Bloque Meteorológico (Clima) */}
+           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isWeatherEnabled && 'opacity-70'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`p-2 rounded-xl flex items-center justify-center ${isWeatherEnabled ? 'bg-sky-500/20' : 'bg-gray-500/20'}`}>
+                    <img src="/clima.png" alt="Clima" className={`h-8 w-8 object-contain drop-shadow-md ${loadingWeather ? 'animate-pulse opacity-50' : ''}`} style={{ filter: 'brightness(0) invert(1)' }} />
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Sistema Meteorológico</span>
+                    </div>
+                    {isWeatherEnabled ? (
+                      loadingWeather ? (
+                        <span className="text-[10px] font-bold text-sky-400 animate-pulse uppercase mt-1">
+                          Escaneando atmósfera...
+                        </span>
+                      ) : currentWeather ? (
+                        <div className="flex gap-3 mt-1">
+                           <div className="flex flex-col">
+                              <span className="text-2xl font-black leading-none text-sky-400 drop-shadow-[0_0_8px_rgba(56,189,248,0.5)]">{Math.round(currentWeather.temp)}º</span>
+                              <span className="text-[9px] text-gray-500 font-medium mt-1 uppercase truncate max-w-[80px]">{currentWeather.description}</span>
+                           </div>
+                           <div className="w-px bg-white/10 my-1"></div>
+                           <div className="flex flex-col justify-center">
+                              <span className="text-xs font-bold text-gray-300">{Math.round(currentWeather.windSpeed)} <span className="text-[9px] text-gray-500">km/h</span></span>
+                              <span className="text-[9px] text-gray-500 font-medium uppercase mt-0.5">Viento</span>
+                           </div>
+                        </div>
+                      ) : (
+                        <span className="text-sm font-bold leading-none text-gray-400 mt-1">Sin datos locales</span>
+                      )
+                    ) : (
+                      <span className="text-2xl font-black leading-none text-white/30 truncate">OFF</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-1.5 shrink-0 align-self-start mt-1">
+                  <button 
+                    onClick={() => setIsWeatherEnabled(!isWeatherEnabled)}
+                    className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isWeatherEnabled ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
+                  >
+                    <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isWeatherEnabled ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
+                      <Power className={`h-3 w-3 ${isWeatherEnabled ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
+                    </span>
+                  </button>
+                  {isWeatherEnabled ? (
+                    <span className="text-[9px] font-bold text-green-500 uppercase tracking-wider">Activado</span>
+                  ) : (
+                    <span className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">Desactivado</span>
+                  )}
+                </div>
+              </div>
+           </div>
+
         </div>
 
       </div>

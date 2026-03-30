@@ -12,6 +12,7 @@ import { Charger } from '@/hooks/useChargers';
 import { findClosestPointOnPolyline, getBearing } from '@/utils/geo';
 import MapContextMenu from './MapContextMenu';
 import { RouteSection } from '@/hooks/useRoute';
+import { WeatherPoint } from '@/hooks/useWeather';
 
 const defaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -119,6 +120,28 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
   });
 };
 
+const weatherEmojiMap: Record<string, string> = {
+  'Clear': '☀️',
+  'Clouds': '⛅',
+  'Rain': '🌧️',
+  'Drizzle': '🌦️',
+  'Thunderstorm': '⛈️',
+  'Snow': '❄️',
+  'Mist': '🌫️',
+  'Fog': '🌫️'
+};
+
+const createWeatherIcon = (temp: number, condition: string) => {
+  const emoji = weatherEmojiMap[condition] || '🌡️';
+  const iconHtml = renderToStaticMarkup(
+    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-md border border-white/20 rounded-full shadow-[0_0_15px_rgba(0,0,0,0.5)] text-white font-bold whitespace-nowrap">
+       <span className="text-lg drop-shadow-md leading-none">{emoji}</span>
+       <span className="text-sm drop-shadow-md leading-none">{Math.round(temp)}º</span>
+    </div>
+  );
+  return L.divIcon({ html: iconHtml, className: 'custom-weather-icon bg-transparent border-none', iconSize: [75, 36], iconAnchor: [37, 18] });
+};
+
 const SATELLITE_MAP_TILES = 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
 const MAP_ATTRIBUTION = '&copy; Google Maps';
 
@@ -161,6 +184,7 @@ interface MapUIProps {
    radars: Radar[];
    aircrafts?: Aircraft[];
    chargers?: Charger[];
+   weatherPoints?: WeatherPoint[];
    waypoints?: [number, number][];
    speed?: number;
    viewMode?: 'navigation' | 'overview' | 'explore';
@@ -286,6 +310,7 @@ export default function MapUI({
   radars = [], 
   aircrafts = [], 
   chargers = [],
+  weatherPoints = [],
   waypoints = [],
   speed = 0, 
   viewMode = 'navigation', 
@@ -469,6 +494,16 @@ export default function MapUI({
               </div>
             </Popup>
           </Marker>
+        ))}
+
+        {weatherPoints.map(wp => (
+          <Marker
+             key={`weather-${wp.id}`}
+             position={[wp.lat, wp.lon]}
+             icon={createWeatherIcon(wp.temp, wp.condition)}
+             zIndexOffset={70}
+             interactive={false}
+          />
         ))}
 
         {(() => {

@@ -21,6 +21,7 @@ import MapContextMenu from '@/components/MapContextMenu';
 import FavoritesPanel from '@/components/FavoritesPanel';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useChargers, ChargerFilters } from '@/hooks/useChargers';
+import { useWeather } from '@/hooks/useWeather';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -61,6 +62,7 @@ export default function Home() {
   const [isRadarsEnabled, setIsRadarsEnabled] = useState(false);
   const [isAircraftsEnabled, setIsAircraftsEnabled] = useState(false);
   const [isChargersEnabled, setIsChargersEnabled] = useState(false);
+  const [isWeatherEnabled, setIsWeatherEnabled] = useState(false);
   const [chargerFilters, setChargerFilters] = useState<ChargerFilters>({
     isFree: false,
     connectors: [],
@@ -157,6 +159,7 @@ export default function Home() {
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, voiceType, speed);
   const { allAircrafts, aircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
   const { chargers, loading: loadingChargers, progress: chargerProgress } = useChargers(userPos, route?.coordinates, isChargersEnabled, chargerFilters);
+  const { weatherPoints, loadingWeather, currentWeather } = useWeather(userPos, route?.coordinates, isWeatherEnabled);
 
   const notifiedPegasus = useRef<Set<string>>(new Set());
   const notifiedWaypoints = useRef<Set<string>>(new Set());
@@ -315,6 +318,10 @@ export default function Home() {
         chargersCount={chargers.length}
         loadingChargers={loadingChargers}
         chargerProgress={chargerProgress}
+        isWeatherEnabled={isWeatherEnabled}
+        setIsWeatherEnabled={setIsWeatherEnabled}
+        currentWeather={currentWeather}
+        loadingWeather={loadingWeather}
       />
 
       {/* Sección del Mapa (Fondo) */}
@@ -326,6 +333,7 @@ export default function Home() {
           radars={radars}
           aircrafts={allAircrafts}
           chargers={chargers}
+          weatherPoints={weatherPoints}
           waypoints={waypoints}
           speed={speed}
           viewMode={viewMode}
