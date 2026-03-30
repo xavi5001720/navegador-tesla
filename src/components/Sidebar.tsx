@@ -34,6 +34,7 @@ interface SidebarProps {
   activeAccount?: number;
   onOpenFavorites: () => void;
   lastRadarUpdate?: string | null;
+  radarProgress?: number;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -65,6 +66,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   rawAircraftCount = 0,
   onOpenFavorites,
   lastRadarUpdate,
+  radarProgress = 0,
 }) => {
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 md:bg-black/40 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -179,7 +181,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                     </div>
                     {isRadarsEnabled ? (
                       fetchingRouteRadars ? (
-                        <span className="text-[10px] font-bold text-rose-400 animate-pulse uppercase mt-1">Calculando ruta...</span>
+                        <span className="text-[10px] font-bold text-rose-400 animate-pulse uppercase mt-1">
+                          Calculando ruta... {radarProgress > 0 && `${radarProgress}%`}
+                        </span>
                       ) : (
                         <div className="flex flex-col">
                           <span className="text-2xl font-black leading-none">{loadingRadars ? '...' : radars.length}</span>

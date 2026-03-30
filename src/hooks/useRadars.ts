@@ -9,10 +9,13 @@ export interface Radar {
   speedLimit?: number;
 }
 
+const CHUNK_DISTANCE_M = 50000; // 50 km per chunk
+
 export function useRadars(userPos: [number, number] | null, routeCoordinates?: [number, number][], isEnabled: boolean = false) {
   const [radars, setRadars] = useState<Radar[]>([]);
   const [loadingRadars, setLoadingRadars] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
 
   const [fetchingRouteRadars, setFetchingRouteRadars] = useState(false);
   const lastFetchRef = useRef<{ type: 'route'|'local', pos: [number, number], routeLength: number } | null>(null);
@@ -82,27 +85,78 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
 
     const fetchRadars = async () => {
       setLoadingRadars(true);
-      if (hasRoute) setFetchingRouteRadars(true);
+      if (hasRoute) {
+        setFetchingRouteRadars(true);
+        setProgress(0);
+        setRadars([]); // Limpiamos para la nueva carga incremental
+      }
       
       try {
-        let supabaseData: any[] = [];
-        
         if (hasRoute && routeCoordinates) {
-          // MODO RUTA: Usamos postgis para filtrar radares a lo largo de la ruta (LINESTRING)
-          // Convertimos la ruta a WKT: LINESTRING(lon lat, lon lat, ...)
-          const wktPoints = routeCoordinates.map(pt => `${pt[1]} ${pt[0]}`).join(', ');
-          const routeWkt = `LINESTRING(${wktPoints})`;
+          // MODO RUTA (EN CASCADA por tramos de 50km)
+          
+          // 1. Dividir la ruta en tramos
+          const chunks: [number, number][][] = [];
+          let currentChunk: [number, number][] = [routeCoordinates[0]];
+          let currentDist = 0;
 
-          console.log(`[useRadars] Consultando radares en ruta via Supabase RPC...`);
-          const { data, error } = await supabase.rpc('get_radars_in_route', {
-            route_wkt: routeWkt,
-            buffer_meters: 50 // Margen de 50m configurado
-          });
+          for (let i = 1; i < routeCoordinates.length; i++) {
+            const d = getDist(routeCoordinates[i-1], routeCoordinates[i]);
+            currentDist += d;
+            currentChunk.push(routeCoordinates[i]);
 
-          if (error) throw error;
-          supabaseData = data || [];
+            if (currentDist >= CHUNK_DISTANCE_M) {
+              chunks.push(currentChunk);
+              currentChunk = [routeCoordinates[i]];
+              currentDist = 0;
+            }
+          }
+          if (currentChunk.length > 1) chunks.push(currentChunk);
+
+          // 2. Cargar cada tramo de forma secuencial
+          console.log(`[useRadars] Iniciando carga de ${chunks.length} tramos (50km cada uno)...`);
+          
+          const uniqueRadarIds = new Set<number>();
+          const accumulatedRadars: Radar[] = [];
+
+          for (let i = 0; i < chunks.length; i++) {
+            const chunk = chunks[i];
+            // Convertimos el tramo a WKT
+            const wktPoints = chunk.map(pt => `${pt[1]} ${pt[0]}`).join(', ');
+            const routeWkt = `LINESTRING(${wktPoints})`;
+
+            const { data, error } = await supabase.rpc('get_radars_in_route', {
+              route_wkt: routeWkt,
+              buffer_meters: 100 // Usamos 100m para rutas largas para mayor seguridad
+            });
+
+            if (error) {
+              console.error(`[useRadars] Error en tramo ${i}:`, error);
+              continue;
+            }
+
+            if (data) {
+              data.forEach((r: any) => {
+                if (!uniqueRadarIds.has(r.id)) {
+                  uniqueRadarIds.add(r.id);
+                  accumulatedRadars.push({
+                    id: r.id,
+                    lat: r.lat,
+                    lon: r.lon,
+                    type: r.radar_type || 'fixed',
+                    speedLimit: r.speed_limit || undefined
+                  });
+                }
+              });
+              // Actualizamos el estado de forma incremental para que se vayan dibujando
+              setRadars([...accumulatedRadars]);
+            }
+            
+            // Actualizamos progreso
+            setProgress(Math.round(((i + 1) / chunks.length) * 100));
+          }
         } else {
-          // MODO LOCAL: Búsqueda circular de 15km
+          // MODO LOCAL: Búsqueda circular de 15km (Solo 1 petición)
           console.log(`[useRadars] Consultando radares cercanos via Supabase RPC...`);
           const { data, error } = await supabase.rpc('get_radars_nearby', {
             lat: userPos[0],
@@ -111,20 +165,16 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
           });
 
           if (error) throw error;
-          supabaseData = data || [];
+          const mappedRadars: Radar[] = (data || []).map((r: any) => ({
+            id: r.id,
+            lat: r.lat,
+            lon: r.lon,
+            type: r.radar_type || 'fixed',
+            speedLimit: r.speed_limit || undefined
+          }));
+          setRadars(mappedRadars);
         }
 
-        // Mapeamos los resultados de Supabase al formato de la interfaz Radar
-        const mappedRadars: Radar[] = supabaseData.map((r: any) => ({
-          id: r.id,
-          lat: r.lat,
-          lon: r.lon,
-          type: r.radar_type || 'fixed',
-          speedLimit: r.speed_limit || undefined
-        }));
-
-        setRadars(mappedRadars);
-        
         lastFetchRef.current = {
           type: currentType,
           pos: userPos,
@@ -136,6 +186,7 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
       } finally {
         setLoadingRadars(false);
         setFetchingRouteRadars(false);
+        setProgress(100);
       }
     };
 
@@ -143,5 +194,5 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEnabled, userPos?.[0], userPos?.[1], routeLength, routeFirstLat, routeFirstLon, routeLastLat, routeLastLon]);
 
-  return { radars, loadingRadars, fetchingRouteRadars, lastUpdate };
+  return { radars, loadingRadars, fetchingRouteRadars, lastUpdate, progress };
 }

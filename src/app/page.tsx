@@ -106,7 +106,7 @@ export default function Home() {
     }
   }, []);
 
-  const { radars: allRadars, loadingRadars, fetchingRouteRadars, lastUpdate } = useRadars(userPos, route?.coordinates, isRadarsEnabled);
+  const { radars: allRadars, loadingRadars, fetchingRouteRadars, lastUpdate, progress } = useRadars(userPos, route?.coordinates, isRadarsEnabled);
 
   // Filtrar radares:
   // - Sin ruta: solo los próximos (ya se buscan en radio de 10km por useRadars)
@@ -268,6 +268,7 @@ export default function Home() {
         setVoiceType={setVoiceType}
         onOpenFavorites={() => setIsFavoritesOpen(true)}
         lastRadarUpdate={lastUpdate}
+        radarProgress={progress}
       />
 
       {/* Sección del Mapa (Fondo) */}
