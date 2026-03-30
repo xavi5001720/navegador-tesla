@@ -8,8 +8,12 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const secret = searchParams.get('secret');
 
-  // Opcional: Proteger el endpoint con un secreto para que no ocurra por accidente
-  if (process.env.SYNC_SECRET && secret !== process.env.SYNC_SECRET) {
+  // Soporta tanto el parámetro ?secret como el header automático de Vercel Cron
+  const cronHeader = request.headers.get('Authorization');
+  const isVercelCron = cronHeader === `Bearer ${process.env.CRON_SECRET}`;
+  const isUserSecret = process.env.SYNC_SECRET && secret === process.env.SYNC_SECRET;
+
+  if (!isVercelCron && !isUserSecret) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
