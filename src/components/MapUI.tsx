@@ -474,7 +474,7 @@ export default function MapUI({
               <div className="p-3 min-w-[200px] flex flex-col gap-2 bg-gradient-to-b from-gray-900 to-black rounded-lg text-white shadow-2xl border border-emerald-500/50">
                 <div className="flex items-center gap-2 pb-2 border-b border-emerald-500/30">
                   <div className="h-6 w-6 rounded-full bg-emerald-600 flex items-center justify-center flex-shrink-0">
-                    <img src="/cargador.png" alt="⚡" className="h-3 w-3 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+                    <img src="/cargador.png" alt="⚡" className="h-4 w-4 object-contain" />
                   </div>
                   <div className="flex flex-col flex-1 overflow-hidden">
                     <h3 className="font-bold text-xs truncate break-all">{charger.title}</h3>

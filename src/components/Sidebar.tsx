@@ -422,13 +422,13 @@ const Sidebar: React.FC<SidebarProps> = ({
            <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isChargersEnabled && 'opacity-70'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <button 
+                   <button 
                      onClick={() => setShowChargerFilters(!showChargerFilters)}
                      className={`p-2 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isChargersEnabled ? 'bg-emerald-500/20 hover:bg-emerald-500/30 cursor-pointer' : 'bg-gray-500/20'}`}
-                  >
-                    <img src="/cargador.png" alt="Cargadores" className={`h-8 w-8 object-contain drop-shadow-md ${loadingChargers ? 'animate-pulse opacity-50' : ''}`} style={{ filter: 'brightness(0) invert(1)' }} />
-                  </button>
-                  <div className="flex flex-col">
+                   >
+                     <img src="/cargador.png" alt="Cargadores" className={`h-8 w-8 object-contain drop-shadow-lg ${loadingChargers ? 'animate-pulse opacity-50' : ''}`} />
+                   </button>
+                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Cargadores EV</span>
                     </div>
@@ -527,7 +527,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className={`p-2 rounded-xl flex items-center justify-center ${isWeatherEnabled ? 'bg-sky-500/20' : 'bg-gray-500/20'}`}>
-                    <img src="/clima.png" alt="Clima" className={`h-8 w-8 object-contain drop-shadow-md ${loadingWeather ? 'animate-pulse opacity-50' : ''}`} style={{ filter: 'brightness(0) invert(1)' }} />
+                    <img src="/clima.png" alt="Clima" className={`h-8 w-8 object-contain drop-shadow-lg ${loadingWeather ? 'animate-pulse opacity-50' : ''}`} />
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">
