@@ -18,14 +18,16 @@ export async function GET(request: Request) {
   }
 
   try {
-    console.log('[RadarSync] Iniciando sincronización de España...');
+    console.log('[RadarSync] Iniciando sincronización de España + Francia...');
     
-    // Consulta optimizada con Bounding Box (Caja de coordenadas) que es mucho más rápida que buscar por "Área"
+    // Bounding Box combinado que cubre España y Francia
+    // España: (27,-19,44,5) | Francia: (41,-5,51,10)
+    // Combinado con margen: lat_min=27, lon_min=-19, lat_max=51, lon_max=10
     const overpassQuery = `
-      [out:json][timeout:90];
+      [out:json][timeout:120];
       (
-        node["highway"="speed_camera"](27,-19,44,5);
-        node["enforcement"="speed"](27,-19,44,5);
+        node["highway"="speed_camera"](27,-19,51,10);
+        node["enforcement"="speed"](27,-19,51,10);
       );
       out body;
     `;
@@ -75,7 +77,7 @@ export async function GET(request: Request) {
       successCount += batch.length;
     }
 
-    console.log(`[RadarSync] Sincronización completada: ${successCount} radares insertados/actualizados.`);
+    console.log(`[RadarSync] Sincronización completada (España + Francia): ${successCount} radares insertados/actualizados.`);
 
     return NextResponse.json({ 
       success: true, 
