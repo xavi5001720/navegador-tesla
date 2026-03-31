@@ -35,13 +35,20 @@ const endMarkerIcon = L.divIcon({
 
 const radarIcon = (speedLimit?: number) => L.divIcon({
   html: renderToStaticMarkup(
-    <div className="h-8 w-8 flex items-center justify-center rounded-full bg-rose-600 border-2 border-white shadow-lg animate-pulse">
-       <Camera className="h-4 w-4 text-white" />
+    <div className="relative h-10 w-10 flex flex-col items-center">
+      <div className="h-8 w-8 flex items-center justify-center rounded-full bg-rose-600 border-2 border-white shadow-lg animate-pulse z-10">
+         <Camera className="h-4 w-4 text-white" />
+      </div>
+      {speedLimit && (
+        <div className="absolute -bottom-1 bg-white border-2 border-rose-600 rounded-full h-5 w-5 flex items-center justify-center shadow-md z-20">
+          <span className="text-[10px] font-black text-black leading-none">{speedLimit}</span>
+        </div>
+      )}
     </div>
   ),
   className: 'custom-radar-icon',
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
+  iconSize: [40, 44],
+  iconAnchor: [20, 32],
 });
 
 const chargerIcon = L.divIcon({
@@ -68,11 +75,14 @@ const gasStationIcon = L.divIcon({
 
 const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: number = Infinity, viewMode: string = 'navigation', altitude?: number, velocity?: number) => {
   const isThreat = isSuspect && distanceToUser < 10000;
+  const colorFilter = isThreat
+    ? 'invert(15%) sepia(100%) saturate(700%) hue-rotate(340deg) brightness(120%) contrast(130%)'
+    : 'none';
 
-  const labelHtml = (isSuspect && viewMode === 'overview') ? `
+  const labelHtml = (viewMode === 'overview') ? `
     <div class="absolute top-10 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none" style="min-width: 150px;">
-      <div class="bg-black/80 backdrop-blur-md border border-blue-500/50 rounded-lg p-2 shadow-2xl text-center">
-        <p class="text-[10px] font-black text-blue-400 uppercase tracking-tighter leading-tight whitespace-nowrap">Aeronave no identificada</p>
+      <div class="bg-black/80 backdrop-blur-md border border-${isSuspect ? 'blue' : 'gray'}-500/50 rounded-lg p-2 shadow-2xl text-center">
+        <p class="text-[10px] font-black text-${isSuspect ? 'blue' : 'gray'}-400 uppercase tracking-tighter leading-tight whitespace-nowrap">${isSuspect ? 'Aeronave no identificada' : 'Vuelo Comercial'}</p>
         <div class="flex gap-2 mt-1 justify-center">
           <div class="flex flex-col">
             <span class="text-[8px] text-gray-400 uppercase font-bold">Altitud</span>
@@ -88,38 +98,13 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
     </div>
   ` : '';
 
-  if (!isSuspect) {
-    // Avión comercial: icono PNG colorido rotado según heading
-    return L.divIcon({
-      html: renderToStaticMarkup(
-        <div className="relative">
-          <div style={{ transform: `rotate(${heading - 45}deg)`, width: 40, height: 40 }}>
-            <img
-              src="/avion-comercial.png"
-              alt="Avión comercial"
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-            />
-          </div>
-        </div>
-      ),
-      className: 'custom-aircraft-icon',
-      iconSize: [40, 40],
-      iconAnchor: [20, 20],
-    });
-  }
-
-  // Avión sospechoso: icono negro, rojo si está en radio de alarma
-  const colorFilter = isThreat
-    ? 'invert(15%) sepia(100%) saturate(700%) hue-rotate(340deg) brightness(120%) contrast(130%)'
-    : 'none'; // negro puro (el PNG ya es negro)
-
   return L.divIcon({
     html: `
       <div class="relative">
         <div style="transform: rotate(${heading - 45}deg); width: 40px; height: 40px; ${isThreat ? 'animation: aircraft-pulse 0.8s ease-in-out infinite;' : ''}">
           <img
-            src="/avion-no-identificado.png"
-            alt="Avión no identificado"
+            src="${isSuspect ? '/avion-no-identificado.png' : '/avion-comercial.png'}"
+            alt="Avión"
             style="width: 100%; height: 100%; object-fit: contain; filter: ${colorFilter};"
           />
         </div>
@@ -286,23 +271,36 @@ function MapRotator({ heading, viewMode, hasRoute, speed = 0 }: { heading: numbe
 
 function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordinates, customZoom }: { position: L.LatLngExpression, viewMode: string, hasRoute: boolean, speed?: number, routeCoordinates?: [number, number][], customZoom?: number | null }) {
   const map = useMap();
-  useEffect(() => {
-    if (viewMode === 'explore') return;
+  const lastOverviewRouteRef = useRef<string>('');
 
+  // Efecto para VISTA GENERAL: solo se ejecuta cuando cambia la ruta o el modo
+  useEffect(() => {
     if (viewMode === 'overview') {
+      const routeKey = JSON.stringify(routeCoordinates);
       if (hasRoute && routeCoordinates && routeCoordinates.length > 0) {
-        try {
-          // Ajustamos para ver la ruta COMPLETA, no solo el tramo restante
-          const bounds = L.latLngBounds(routeCoordinates);
-          map.fitBounds(bounds, { padding: [80, 80], animate: true, duration: 1.5 });
-        } catch (e) {
-          map.setView(position, 16, { animate: true, duration: 1 });
+        if (lastOverviewRouteRef.current !== routeKey) {
+          try {
+            const bounds = L.latLngBounds(routeCoordinates);
+            map.fitBounds(bounds, { padding: [80, 80], animate: true, duration: 1.5 });
+            lastOverviewRouteRef.current = routeKey;
+          } catch (e) {
+            map.setView(position, 14, { animate: true, duration: 1.5 });
+          }
         }
       } else {
         map.setView(position, 14, { animate: true, duration: 1.5 });
       }
-    } else if (viewMode === 'navigation') {
-      // Si el usuario ha fijado un zoom con los botones +/-, lo respetamos
+    } else {
+      // Limpiamos la referencia cuando salimos de overview
+      lastOverviewRouteRef.current = '';
+    }
+  }, [viewMode, hasRoute, routeCoordinates, map]);
+
+  // Efecto para NAVEGACIÓN: sigue al coche
+  useEffect(() => {
+    if (viewMode === 'explore' || viewMode === 'overview') return;
+
+    if (viewMode === 'navigation') {
       if (customZoom != null) {
         map.setView(position, customZoom, { animate: true, duration: 0.8 });
         return;
@@ -316,7 +314,8 @@ function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordin
 
       map.setView(position, targetZoom, { animate: true, duration: 1 });
     }
-  }, [position, viewMode, hasRoute, speed, map, routeCoordinates, customZoom]);
+  }, [position, viewMode, speed, map, customZoom]);
+  
   return null;
 }
 
