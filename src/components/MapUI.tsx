@@ -361,7 +361,19 @@ export default function MapUI({
       >
         <MapEvents onViewModeChange={onViewModeChange} onMapClick={onMapClick} />
         <MapRotator heading={heading} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} />
-        <TileLayer attribution={MAP_ATTRIBUTION} url={SATELLITE_MAP_TILES} />
+        
+        {/* Capa de Satélite Limpia (Sin etiquetas ni iconos) */}
+        <TileLayer 
+          attribution="&copy; Google Maps"
+          url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" 
+        />
+        
+        {/* Capa de Etiquetas Limpias (Solo nombres de ciudades y carreteras, SIN POIs) */}
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png"
+          opacity={0.8}
+        />
         
         <RouteFitter routeCoordinates={routeCoordinates} />
         
