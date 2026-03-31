@@ -36,15 +36,15 @@ const getDist = (p1: [number, number], p2: [number, number]) => {
 
 function processStations(stations: any[], filters: GasStationFilters): GasStation[] {
   const processed: GasStation[] = [];
+  const fuelTypes = (filters.fuels && filters.fuels.length > 0) 
+    ? filters.fuels 
+    : ['g95', 'g98', 'diesel', 'glp'];
+
+  let cheapestPerFuel: Record<string, { station: GasStation, price: number }> = {};
 
   for (const s of stations) {
     let isValid = false;
     let cheapestFuelPrice = Infinity;
-
-    // Si no hay combustibles seleccionados, asumimos que se buscan TODOS.
-    const fuelTypes = (filters.fuels && filters.fuels.length > 0) 
-      ? filters.fuels 
-      : ['g95', 'g98', 'diesel', 'glp'];
 
     for (const fuel of fuelTypes) {
       const price = s[`price_${fuel}`];
@@ -59,7 +59,7 @@ function processStations(stations: any[], filters: GasStationFilters): GasStatio
     }
 
     if (isValid) {
-      processed.push({
+      const gasStation: GasStation = {
         id: s.id,
         lat: s.lat,
         lon: s.lon,
@@ -72,16 +72,38 @@ function processStations(stations: any[], filters: GasStationFilters): GasStatio
         price_diesel: s.price_diesel,
         price_glp: s.price_glp,
         cheapestFuelPrice: cheapestFuelPrice === Infinity ? undefined : cheapestFuelPrice,
-      });
+      };
+
+      processed.push(gasStation);
+
+      if (filters.onlyCheapest) {
+        for (const fuel of fuelTypes) {
+          const price = s[`price_${fuel}`];
+          if (price !== null && price > 0 && (!filters.maxPrice || price <= filters.maxPrice)) {
+            if (!cheapestPerFuel[fuel] || price < cheapestPerFuel[fuel].price) {
+              cheapestPerFuel[fuel] = { station: gasStation, price };
+            }
+          }
+        }
+      }
     }
   }
 
-  // Ordenar de más barato a más caro
-  const sorted = processed.sort((a, b) => (a.cheapestFuelPrice || Infinity) - (b.cheapestFuelPrice || Infinity));
-  if (filters.onlyCheapest && sorted.length > 0) {
-    return [sorted[0]];
+  if (filters.onlyCheapest) {
+    const uniqueIds = new Set<number>();
+    const winners: GasStation[] = [];
+    for (const fuel of Object.keys(cheapestPerFuel)) {
+      const st = cheapestPerFuel[fuel].station;
+      if (!uniqueIds.has(st.id)) {
+        uniqueIds.add(st.id);
+        winners.push(st);
+      }
+    }
+    return winners.sort((a, b) => (a.cheapestFuelPrice || Infinity) - (b.cheapestFuelPrice || Infinity));
   }
-  return sorted;
+
+  // Ordenar de más barato a más caro
+  return processed.sort((a, b) => (a.cheapestFuelPrice || Infinity) - (b.cheapestFuelPrice || Infinity));
 }
 
 export function useGasStations(userPos: [number, number] | null, routeCoordinates?: [number, number][], isEnabled: boolean = false, filters: GasStationFilters = {}) {
