@@ -8,7 +8,7 @@ interface GarageModalProps {
   isOpen: boolean;
   onClose: () => void;
   profile: UserProfile | null;
-  onUpdate: (updates: Partial<UserProfile>) => Promise<boolean | undefined>;
+  onUpdate: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>;
 }
 
 const colors = [
@@ -26,9 +26,14 @@ export default function GarageModal({ isOpen, onClose, profile, onUpdate }: Gara
 
   const handleSave = async () => {
     setSaving(true);
-    await onUpdate({ car_name: name, car_color: color });
+    const result = await onUpdate({ car_name: name, car_color: color });
     setSaving(false);
-    onClose();
+    
+    if (result && !result.success) {
+      alert(`⚠️ ERROR AL GUARDAR EN BASE DE DATOS:\n${result.error}\n\nPor favor, verifica que hayas ejecutado el script SQL de permisos en Supabase.`);
+    } else {
+      onClose();
+    }
   };
 
   return (

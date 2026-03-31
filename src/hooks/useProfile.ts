@@ -43,10 +43,8 @@ export function useProfile(session: Session | null) {
   }, [fetchProfile]);
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!session?.user) return;
+    if (!session?.user) return { success: false, error: 'No hay sesión activa' };
 
-    // Aseguramos que el email siempre esté presente para cumplir con el esquema NOT NULL 
-    // en caso de que sea un INSERT inicial.
     const { error } = await supabase
       .from('profiles')
       .upsert({ 
@@ -57,7 +55,7 @@ export function useProfile(session: Session | null) {
 
     if (error) {
       console.error('Error saving profile to Supabase:', error.message);
-      return false;
+      return { success: false, error: error.message };
     }
 
     setProfile(prev => {
@@ -71,7 +69,7 @@ export function useProfile(session: Session | null) {
         ...updates
       } as UserProfile;
     });
-    return true;
+    return { success: true };
   };
 
   return { profile, loading, updateProfile, refreshProfile: fetchProfile };
