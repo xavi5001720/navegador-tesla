@@ -73,16 +73,26 @@ const gasStationIcon = L.divIcon({
   iconAnchor: [16, 16],
 });
 
-const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: number = Infinity, viewMode: string = 'navigation', altitude?: number, velocity?: number) => {
+const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: number = Infinity, viewMode: string = 'navigation', altitude?: number, velocity?: number, callsign?: string) => {
   const isThreat = isSuspect && distanceToUser < 10000;
   const colorFilter = isThreat
     ? 'invert(15%) sepia(100%) saturate(700%) hue-rotate(340deg) brightness(120%) contrast(130%)'
     : 'none';
 
+  let airlineName = 'Vuelo Comercial';
+  if (callsign) {
+    const prefix = callsign.trim().substring(0, 3).toUpperCase();
+    if (airlineMapping[prefix]) {
+      airlineName = `✈️ ${airlineMapping[prefix]}`;
+    } else if (callsign.trim()) {
+      airlineName = `Vuelo ${callsign.trim()}`;
+    }
+  }
+
   const labelHtml = (viewMode === 'overview') ? `
     <div class="absolute top-10 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none" style="min-width: 150px;">
       <div class="bg-black/80 backdrop-blur-md border border-${isSuspect ? 'blue' : 'gray'}-500/50 rounded-lg p-2 shadow-2xl text-center">
-        <p class="text-[10px] font-black text-${isSuspect ? 'blue' : 'gray'}-400 uppercase tracking-tighter leading-tight whitespace-nowrap">${isSuspect ? 'Aeronave no identificada' : 'Vuelo Comercial'}</p>
+        <p class="text-[10px] font-black text-${isSuspect ? 'blue' : 'gray'}-400 uppercase tracking-tighter leading-tight whitespace-nowrap">${isSuspect ? 'Aeronave no identificada' : airlineName}</p>
         <div class="flex gap-2 mt-1 justify-center">
           <div class="flex flex-col">
             <span class="text-[8px] text-gray-400 uppercase font-bold">Altitud</span>
@@ -137,6 +147,30 @@ const createWeatherIcon = (temp: number, condition: string) => {
     </div>
   );
   return L.divIcon({ html: iconHtml, className: 'custom-weather-icon bg-transparent border-none', iconSize: [75, 36], iconAnchor: [37, 18] });
+};
+
+const airlineMapping: Record<string, string> = {
+  'IBE': 'Iberia',
+  'VLG': 'Vueling',
+  'AEA': 'Air Europa',
+  'RYR': 'Ryanair',
+  'EZY': 'easyJet',
+  'BAW': 'British Airways',
+  'AFR': 'Air France',
+  'DLH': 'Lufthansa',
+  'KLM': 'KLM',
+  'SWR': 'Swiss International Air Lines',
+  'AAL': 'American Airlines',
+  'DAL': 'Delta Air Lines',
+  'UAL': 'United Airlines',
+  'UAE': 'Emirates',
+  'QTR': 'Qatar Airways',
+  'THY': 'Turkish Airlines',
+  'SIA': 'Singapore Airlines',
+  'WZZ': 'Wizz Air',
+  'EJU': 'easyJet Europe',
+  'TVF': 'Transavia France',
+  'TRA': 'Transavia'
 };
 
 const fuelLabels: Record<string, string> = {
@@ -474,7 +508,7 @@ export default function MapUI({
           <Marker
             key={`ac-${aircraft.icao24}`}
             position={[aircraft.lat, aircraft.lon]}
-            icon={aircraftIcon(aircraft.isSuspect, aircraft.track, aircraft.distanceToUser, viewMode, aircraft.altitude, aircraft.velocity)}
+            icon={aircraftIcon(aircraft.isSuspect, aircraft.track, aircraft.distanceToUser, viewMode, aircraft.altitude, aircraft.velocity, aircraft.callsign)}
             zIndexOffset={90}
           >
             <Popup className="tesla-popup">
