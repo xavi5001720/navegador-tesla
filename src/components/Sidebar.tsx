@@ -486,7 +486,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                      onClick={() => setShowChargerFilters(!showChargerFilters)}
                      className={`p-1 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isChargersEnabled ? 'bg-emerald-500/20 hover:bg-emerald-500/30 cursor-pointer' : 'bg-gray-500/20'}`}
                    >
-                     <img src="/cargador.png" alt="Cargadores" className={`h-11 w-11 object-contain drop-shadow-lg ${loadingChargers ? 'animate-pulse opacity-50' : ''}`} />
+                     <img src="/cargadorEV.png" alt="Cargadores" className={`h-11 w-11 object-contain drop-shadow-lg ${loadingChargers ? 'animate-pulse opacity-50' : ''}`} />
                    </button>
                    <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">
