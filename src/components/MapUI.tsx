@@ -161,7 +161,7 @@ const fuelLabels: Record<string, string> = {
   glp: 'GLP'
 };
 
-const SATELLITE_MAP_TILES = 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
+const SATELLITE_MAP_TILES = 'https://mt1.google.com/vt/lyrs=y&apistyle=s.t:3|p.v:off&x={x}&y={y}&z={z}';
 const MAP_ATTRIBUTION = '&copy; Google Maps';
 
 function MapEvents({ onViewModeChange, onMapClick }: { onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void, onMapClick?: (lat: number, lon: number, screenX: number, screenY: number) => void }) {
