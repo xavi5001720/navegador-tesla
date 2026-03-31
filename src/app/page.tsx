@@ -25,8 +25,13 @@ import { useGasStations, GasStationFilters } from '@/hooks/useGasStations';
 import { useWeather } from '@/hooks/useWeather';
 import { supabase } from '@/lib/supabase';
 import AuthModal from '@/components/AuthModal';
-import { User, LogOut } from 'lucide-react';
+import UserMenu from '@/components/UserMenu';
+import GarageModal from '@/components/GarageModal';
+import SocialModal from '@/components/SocialModal';
+import { User, LogOut, ChevronRight } from 'lucide-react';
 import { Session } from '@supabase/supabase-js';
+import { useProfile } from '@/hooks/useProfile';
+import { useSocial } from '@/hooks/useSocial';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -88,10 +93,17 @@ export default function Home() {
   const [contextMenu, setContextMenu] = useState<{ lat: number; lon: number; screenX: number; screenY: number } | null>(null);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isGarageOpen, setIsGarageOpen] = useState(false);
+  const [isSocialOpen, setIsSocialOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
-  
+
   const { favorites, saveFavorite, removeFavorite, isFavorite } = useFavorites();
   const speed = useSpeed(); // declarado aquí para usarlo en el recalculado automático
+  
+  const { profile, updateProfile } = useProfile(session);
+  const { friends, addFriend } = useSocial(session, userPos);
 
   // Escuchar cambios de autenticación
   useEffect(() => {
@@ -370,15 +382,14 @@ export default function Home() {
         {session ? (
           <div className="flex items-center gap-2 group">
             <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black text-white uppercase italic tracking-tighter bg-blue-600 px-2 py-0.5 rounded-sm shadow-lg">USUARIO ACTIVO</span>
-              <span className="text-[11px] font-bold text-gray-400">{session.user.email?.split('@')[0]}</span>
+              <span className="text-[10px] font-black text-white uppercase italic tracking-tighter bg-blue-600 px-2 py-0.5 rounded-sm shadow-lg leading-none">USUARIO ACTIVO</span>
+              <span className="text-[14px] font-black text-white italic tracking-tight">{profile?.car_name || session.user.email?.split('@')[0]}</span>
             </div>
             <button 
-              onClick={handleSignOut}
-              className="h-12 w-12 flex items-center justify-center rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-rose-500/20 hover:border-rose-500/50 transition-all group overflow-hidden"
+              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              className="h-12 w-12 flex items-center justify-center rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all group overflow-hidden"
             >
-              <img src="/avatar.png" alt="Avatar" className="h-full w-full object-cover group-hover:opacity-20 transition-opacity" />
-              <LogOut className="absolute h-5 w-5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+              <img src="/avatar.png" alt="Avatar" className="h-full w-full object-cover group-hover:scale-110 transition-transform" />
             </button>
           </div>
         ) : (
@@ -390,6 +401,52 @@ export default function Home() {
           </button>
         )}
       </div>
+
+      {/* Menú Desplegable de Usuario */}
+      <UserMenu 
+        isOpen={isUserMenuOpen}
+        onClose={() => setIsUserMenuOpen(false)}
+        onOpenGarage={() => setIsGarageOpen(true)}
+        onOpenSocial={() => setIsSocialOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onLogout={handleSignOut}
+      />
+
+      {/* Lista de Amigos (Right Side) */}
+      {session && friends.length > 0 && (
+        <div className="fixed top-24 right-6 z-[500] flex flex-col gap-2 animate-in fade-in slide-in-from-right-4 duration-1000">
+          <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/5 self-end mb-2">
+            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none">Amigos Conectados</span>
+          </div>
+          {friends.map((friend) => (
+            <div 
+              key={friend.id}
+              className="flex items-center gap-3 bg-black/60 backdrop-blur-xl border border-white/10 p-2 pr-4 rounded-2xl shadow-xl group hover:border-white/20 transition-all"
+            >
+              <div className="relative">
+                <div className="h-10 w-10 rounded-xl bg-gray-800 flex items-center justify-center overflow-hidden border border-white/5">
+                   <img src="/avatar.png" alt={friend.car_name} className="h-full w-full object-cover opacity-50" />
+                </div>
+                <div className={`absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-gray-900 ${friend.is_online ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-white italic leading-tight uppercase">{friend.car_name}</span>
+                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter leading-none">En su {friend.car_color}</span>
+              </div>
+              <button 
+                className="ml-2 opacity-0 group-hover:opacity-100 transition-all h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10"
+                onClick={() => {
+                   if (friend.last_lat && friend.last_lon) {
+                     // Centrar mapa en amigo (Lógica extra si se desea)
+                   }
+                }}
+              >
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Panel Izquierdo (Bloque de Control) */}
       <Sidebar 
@@ -552,6 +609,22 @@ export default function Home() {
       {isAuthModalOpen && (
         <AuthModal onClose={() => setIsAuthModalOpen(false)} />
       )}
+
+      {/* Modal de Mi Vehículo (Garaje) */}
+      <GarageModal 
+        isOpen={isGarageOpen}
+        onClose={() => setIsGarageOpen(false)}
+        profile={profile}
+        onUpdate={updateProfile}
+      />
+
+      {/* Modal Social (Viajar con Amigos) */}
+      <SocialModal 
+        isOpen={isSocialOpen}
+        onClose={() => setIsSocialOpen(false)}
+        session={session}
+        onAddFriend={addFriend}
+      />
     </main>
   );
 }
