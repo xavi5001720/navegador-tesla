@@ -23,16 +23,25 @@ export default function GarageModal({ isOpen, onClose, profile, onUpdate }: Gara
   const [name, setName] = useState(profile?.car_name || '');
   const [color, setColor] = useState(profile?.car_color || 'Blanco');
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSave = async () => {
+    console.log('--- Intentando guardar garaje ---');
+    setError(null);
     setSaving(true);
-    const result = await onUpdate({ car_name: name, car_color: color });
-    setSaving(false);
     
-    if (result && !result.success) {
-      alert(`⚠️ ERROR AL GUARDAR EN BASE DE DATOS:\n${result.error}\n\nPor favor, verifica que hayas ejecutado el script SQL de permisos en Supabase.`);
-    } else {
-      onClose();
+    try {
+      const result = await onUpdate({ car_name: name, car_color: color });
+      setSaving(false);
+      
+      if (result && !result.success) {
+        setError(result.error || 'Error desconocido');
+      } else {
+        onClose();
+      }
+    } catch (e: any) {
+      setSaving(false);
+      setError(e.message || 'Error de conexión');
     }
   };
 
@@ -60,7 +69,10 @@ export default function GarageModal({ isOpen, onClose, profile, onUpdate }: Gara
                 <div className="h-12 w-12 rounded-2xl bg-blue-600/20 flex items-center justify-center border border-blue-500/30">
                   <Car className="h-6 w-6 text-blue-500" />
                 </div>
-                <h2 className="text-3xl font-black tracking-tight text-white uppercase italic">Mi Garaje</h2>
+                <div>
+                  <h2 className="text-3xl font-black tracking-tight text-white uppercase italic leading-none">Mi Garaje</h2>
+                  <span className="text-[10px] text-gray-500 font-bold tracking-widest uppercase mt-1 block">Sincronización v2.2</span>
+                </div>
               </div>
               <button 
                 onClick={onClose}
@@ -137,6 +149,25 @@ export default function GarageModal({ isOpen, onClose, profile, onUpdate }: Gara
                 </div>
               </div>
 
+              {/* Manejo de Errores Visual */}
+              <AnimatePresence>
+                {error && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl"
+                  >
+                    <p className="text-red-500 text-sm font-bold text-center">
+                      ⚠️ ERROR: {error}
+                    </p>
+                    <p className="text-red-400 text-[10px] text-center mt-1 uppercase font-black tracking-widest">
+                      Verifica los permisos SQL en Supabase
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Botón Guardar */}
               <button
                 onClick={handleSave}
@@ -144,11 +175,14 @@ export default function GarageModal({ isOpen, onClose, profile, onUpdate }: Gara
                 className="w-full flex items-center justify-center gap-3 bg-white text-black p-5 rounded-2xl font-black text-lg hover:scale-[1.02] active:scale-95 transition-all shadow-2xl disabled:opacity-50"
               >
                 {saving ? (
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                  <div className="flex items-center gap-2">
+                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                    <span>ENVIANDO...</span>
+                  </div>
                 ) : (
                   <>
                     <Save className="h-6 w-6" />
-                    GUARDAR CAMBIOS EN EL GARAJE
+                    ESTABLECER CONFIGURACIÓN
                   </>
                 )}
               </button>
