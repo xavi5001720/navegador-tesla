@@ -20,6 +20,7 @@ export interface GasStation {
   price_diesel: number | null;
   price_glp: number | null;
   cheapestFuelPrice?: number; // Calculated field based on filters
+  targetFuels?: string[]; // The fuels that made this station a 'winner'
 }
 
 const CONSTANTS = {
@@ -90,16 +91,30 @@ function processStations(stations: any[], filters: GasStationFilters): GasStatio
   }
 
   if (filters.onlyCheapest) {
-    const uniqueIds = new Set<number>();
-    const winners: GasStation[] = [];
-    for (const fuel of Object.keys(cheapestPerFuel)) {
-      const st = cheapestPerFuel[fuel].station;
-      if (!uniqueIds.has(st.id)) {
-        uniqueIds.add(st.id);
-        winners.push(st);
+    const winners: Map<number, GasStation> = new Map();
+    
+    for (const fuel of fuelTypes) {
+      const best = cheapestPerFuel[fuel];
+      if (best) {
+        if (!winners.has(best.station.id)) {
+          winners.set(best.station.id, { 
+            ...best.station, 
+            cheapestFuelPrice: best.price, // Use the price of the winning fuel
+            targetFuels: [fuel] 
+          });
+        } else {
+          // If already a winner for another fuel, add this fuel to the list
+          const existing = winners.get(best.station.id)!;
+          existing.targetFuels = [...(existing.targetFuels || []), fuel];
+          // Keep the cheapest absolute price for display (optional, but consistent)
+          if (best.price < (existing.cheapestFuelPrice || Infinity)) {
+            existing.cheapestFuelPrice = best.price;
+          }
+        }
       }
     }
-    return winners.sort((a, b) => (a.cheapestFuelPrice || Infinity) - (b.cheapestFuelPrice || Infinity));
+    
+    return Array.from(winners.values()).sort((a, b) => (a.cheapestFuelPrice || Infinity) - (b.cheapestFuelPrice || Infinity));
   }
 
   // Ordenar de más barato a más caro

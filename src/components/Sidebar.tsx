@@ -604,7 +604,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                       ) : (
                         <div className="flex flex-col">
                           <span className="text-2xl font-black leading-none text-orange-400 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]">{gasStationsCount}</span>
-                          <span className="text-[9px] text-gray-500 font-medium mt-1 uppercase">Gasolineras locales</span>
+                          <span className="text-[9px] text-gray-500 font-medium mt-1 uppercase">
+                            {route ? 'Gasolineras en ruta' : 'Gasolineras locales'}
+                          </span>
                         </div>
                       )
                     ) : (

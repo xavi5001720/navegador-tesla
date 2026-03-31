@@ -154,6 +154,13 @@ const createWeatherIcon = (temp: number, condition: string) => {
   return L.divIcon({ html: iconHtml, className: 'custom-weather-icon bg-transparent border-none', iconSize: [75, 36], iconAnchor: [37, 18] });
 };
 
+const fuelLabels: Record<string, string> = {
+  g95: 'G95',
+  g98: 'G98',
+  diesel: 'Diésel',
+  glp: 'GLP'
+};
+
 const SATELLITE_MAP_TILES = 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}';
 const MAP_ATTRIBUTION = '&copy; Google Maps';
 
@@ -535,9 +542,21 @@ export default function MapUI({
                 </div>
                 
                 {station.cheapestFuelPrice && (
-                  <div className="flex justify-between items-center text-xs bg-orange-950/40 p-1.5 rounded-md border border-orange-500/20">
-                    <span className="text-gray-400">Precio Búsqueda</span>
-                    <span className="font-black text-orange-400">{station.cheapestFuelPrice.toFixed(3)} €/L</span>
+                  <div className="flex flex-col gap-1 bg-orange-950/40 p-1.5 rounded-md border border-orange-500/20">
+                    <div className="flex justify-between items-center text-xs">
+                       <span className="text-gray-400">Precio Búsqueda</span>
+                       <span className="font-black text-orange-400">{station.cheapestFuelPrice.toFixed(3)} €/L</span>
+                    </div>
+                    {station.targetFuels && station.targetFuels.length > 0 && (
+                      <div className="flex items-center gap-1.5 pt-1 border-t border-orange-500/10">
+                        <span className="text-[8px] font-bold text-orange-600 uppercase tracking-tighter">Mejor precio de:</span>
+                        <div className="flex gap-1">
+                          {station.targetFuels.map(f => (
+                            <span key={f} className="text-[8px] font-black text-white bg-orange-600 px-1 rounded-sm">{fuelLabels[f] || f}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 
