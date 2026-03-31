@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 export interface GasStationFilters {
   fuels?: ('g95' | 'g98' | 'diesel' | 'glp')[];
   maxPrice?: number | null;
+  onlyCheapest?: boolean;
 }
 
 export interface GasStation {
@@ -76,7 +77,11 @@ function processStations(stations: any[], filters: GasStationFilters): GasStatio
   }
 
   // Ordenar de más barato a más caro
-  return processed.sort((a, b) => (a.cheapestFuelPrice || Infinity) - (b.cheapestFuelPrice || Infinity));
+  const sorted = processed.sort((a, b) => (a.cheapestFuelPrice || Infinity) - (b.cheapestFuelPrice || Infinity));
+  if (filters.onlyCheapest && sorted.length > 0) {
+    return [sorted[0]];
+  }
+  return sorted;
 }
 
 export function useGasStations(userPos: [number, number] | null, routeCoordinates?: [number, number][], isEnabled: boolean = false, filters: GasStationFilters = {}) {
@@ -174,9 +179,9 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
         } else {
           // Busqueda local 15km
           const { data, error } = await supabase.rpc('get_stations_nearby', {
-            lat: userPos[0],
-            lon: userPos[1],
-            radius_meters: 15000
+            p_lat: userPos[0],
+            p_lon: userPos[1],
+            p_radius_meters: 15000
           });
 
           if (error) throw error;

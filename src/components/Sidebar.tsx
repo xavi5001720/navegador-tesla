@@ -696,6 +696,16 @@ const Sidebar: React.FC<SidebarProps> = ({
                          />
                       </div>
                   </div>
+                  
+                  <div className="flex items-center justify-between bg-orange-500/10 border border-orange-500/20 p-2 rounded-lg">
+                     <span className="text-[10px] font-bold text-orange-400 uppercase tracking-wider">Mostrar solo la más barata</span>
+                     <button 
+                       onClick={() => setGasStationFilters({ ...gasStationFilters, onlyCheapest: !gasStationFilters.onlyCheapest })}
+                       className={`w-8 h-4 rounded-full transition-colors relative ${gasStationFilters.onlyCheapest ? 'bg-orange-500' : 'bg-gray-600'}`}
+                     >
+                        <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform duration-200 ${gasStationFilters.onlyCheapest ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                     </button>
+                  </div>
                 </div>
               )}
            </div>
