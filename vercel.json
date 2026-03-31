@@ -11,6 +11,10 @@
     {
       "path": "/api/radars/sync?country=fr_north",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/gas/sync",
+      "schedule": "0 23 * * *"
     }
   ]
 }

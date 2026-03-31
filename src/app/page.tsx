@@ -21,6 +21,7 @@ import MapContextMenu from '@/components/MapContextMenu';
 import FavoritesPanel from '@/components/FavoritesPanel';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useChargers, ChargerFilters } from '@/hooks/useChargers';
+import { useGasStations, GasStationFilters } from '@/hooks/useGasStations';
 import { useWeather } from '@/hooks/useWeather';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
@@ -70,6 +71,11 @@ export default function Home() {
     isFree: false,
     connectors: [],
     minPower: 0
+  });
+  const [isGasStationsEnabled, setIsGasStationsEnabled] = useState(false);
+  const [gasStationFilters, setGasStationFilters] = useState<GasStationFilters>({
+    fuels: [],
+    maxPrice: null
   });
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [voiceType, setVoiceType] = useState<VoiceType>('mujer');
@@ -163,6 +169,7 @@ export default function Home() {
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, voiceType, speed);
   const { allAircrafts, aircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
   const { chargers, loading: loadingChargers, progress: chargerProgress } = useChargers(userPos, route?.coordinates, isChargersEnabled, chargerFilters);
+  const { stations: gasStations, loading: loadingGasStations, progress: gasProgress } = useGasStations(userPos, route?.coordinates, isGasStationsEnabled, gasStationFilters);
   const { weatherPoints, loadingWeather, currentWeather } = useWeather(userPos, route?.coordinates, isWeatherEnabled);
 
   const notifiedPegasus = useRef<Set<string>>(new Set());
@@ -375,6 +382,13 @@ export default function Home() {
         chargersCount={chargers.length}
         loadingChargers={loadingChargers}
         chargerProgress={chargerProgress}
+        isGasStationsEnabled={isGasStationsEnabled}
+        setIsGasStationsEnabled={setIsGasStationsEnabled}
+        gasStationFilters={gasStationFilters}
+        setGasStationFilters={setGasStationFilters}
+        gasStationsCount={gasStations.length}
+        loadingGasStations={loadingGasStations}
+        gasProgress={gasProgress}
         isWeatherEnabled={isWeatherEnabled}
         setIsWeatherEnabled={setIsWeatherEnabled}
         currentWeather={currentWeather}
@@ -390,6 +404,7 @@ export default function Home() {
           radars={radars}
           aircrafts={allAircrafts}
           chargers={chargers}
+          gasStations={gasStations}
           weatherPoints={weatherPoints}
           waypoints={waypoints}
           speed={speed}

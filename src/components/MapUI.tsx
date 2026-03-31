@@ -9,6 +9,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { Radar } from '@/hooks/useRadars';
 import { Aircraft } from '@/hooks/usePegasus';
 import { Charger } from '@/hooks/useChargers';
+import { GasStation } from '@/hooks/useGasStations';
 import { findClosestPointOnPolyline, getBearing } from '@/utils/geo';
 import MapContextMenu from './MapContextMenu';
 import { RouteSection } from '@/hooks/useRoute';
@@ -50,6 +51,17 @@ const chargerIcon = L.divIcon({
     </div>
   ),
   className: 'custom-charger-icon pointer-events-auto',
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
+});
+
+const gasStationIcon = L.divIcon({
+  html: renderToStaticMarkup(
+    <div className="h-8 w-8 flex items-center justify-center rounded-full bg-orange-500 border-2 border-white shadow-[0_0_15px_rgba(249,115,22,0.8)]">
+       <img src="/gasolinera.png" alt="G" className="h-4 w-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+    </div>
+  ),
+  className: 'custom-gas-icon pointer-events-auto',
   iconSize: [32, 32],
   iconAnchor: [16, 16],
 });
@@ -184,6 +196,7 @@ interface MapUIProps {
    radars: Radar[];
    aircrafts?: Aircraft[];
    chargers?: Charger[];
+   gasStations?: GasStation[];
    weatherPoints?: WeatherPoint[];
    waypoints?: [number, number][];
    speed?: number;
@@ -310,6 +323,7 @@ export default function MapUI({
   radars = [], 
   aircrafts = [], 
   chargers = [],
+  gasStations = [],
   weatherPoints = [],
   waypoints = [],
   speed = 0, 
@@ -490,6 +504,53 @@ export default function MapUI({
                 <div className="text-[10px] text-gray-400 flex flex-col gap-1 mt-1">
                    <p><span className="font-bold text-gray-500 uppercase tracking-widest">Coste:</span> {charger.usageCost}</p>
                    <p className="truncate"><span className="font-bold text-gray-500 uppercase tracking-widest">Ubicación:</span> {charger.address}</p>
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+
+        {gasStations.map(station => (
+          <Marker
+             key={`gas-${station.id}`}
+             position={[station.lat, station.lon]}
+             icon={gasStationIcon}
+             zIndexOffset={85}
+             eventHandlers={{
+               click: (e: L.LeafletMouseEvent) => {
+                 if (onMapClick) onMapClick(station.lat, station.lon, e.originalEvent.clientX, e.originalEvent.clientY);
+               }
+             }}
+          >
+            <Popup className="custom-popup" closeButton={false}>
+              <div className="p-3 min-w-[200px] flex flex-col gap-2 bg-gradient-to-b from-gray-900 to-black rounded-lg text-white shadow-2xl border border-orange-500/50">
+                <div className="flex items-center gap-2 pb-2 border-b border-orange-500/30">
+                  <div className="h-6 w-6 rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0">
+                    <img src="/gasolinera.png" alt="⛽" className="h-4 w-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+                  </div>
+                  <div className="flex flex-col flex-1 overflow-hidden">
+                    <h3 className="font-bold text-xs truncate break-all">{station.name}</h3>
+                    <p className="text-[10px] text-gray-400 capitalize truncate">{station.city}</p>
+                  </div>
+                </div>
+                
+                {station.cheapestFuelPrice && (
+                  <div className="flex justify-between items-center text-xs bg-orange-950/40 p-1.5 rounded-md border border-orange-500/20">
+                    <span className="text-gray-400">Precio Búsqueda</span>
+                    <span className="font-black text-orange-400">{station.cheapestFuelPrice.toFixed(3)} €/L</span>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-1 text-[9px] text-gray-400 bg-white/5 p-1.5 rounded border border-white/10">
+                   {station.price_g95 && <div className="flex justify-between"><span>G95</span><span className="font-bold text-white">{station.price_g95.toFixed(3)}€</span></div>}
+                   {station.price_g98 && <div className="flex justify-between"><span>G98</span><span className="font-bold text-white">{station.price_g98.toFixed(3)}€</span></div>}
+                   {station.price_diesel && <div className="flex justify-between"><span>Diésel</span><span className="font-bold text-white">{station.price_diesel.toFixed(3)}€</span></div>}
+                   {station.price_glp && <div className="flex justify-between"><span>GLP</span><span className="font-bold text-white">{station.price_glp.toFixed(3)}€</span></div>}
+                </div>
+
+                <div className="text-[10px] text-gray-400 flex flex-col gap-1 mt-1">
+                   <p className="truncate"><span className="font-bold text-gray-500 uppercase tracking-widest">Horario:</span> {station.schedule}</p>
+                   <p className="truncate"><span className="font-bold text-gray-500 uppercase tracking-widest">Dirección:</span> {station.address}</p>
                 </div>
               </div>
             </Popup>

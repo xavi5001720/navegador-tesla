@@ -6,6 +6,7 @@ import SearchPanel from './SearchPanel';
 import { playTestSound, VoiceType } from '@/utils/sound';
 
 import { ChargerFilters } from '@/hooks/useChargers';
+import { GasStationFilters } from '@/hooks/useGasStations';
 import { WeatherPoint } from '@/hooks/useWeather';
 
 interface SidebarProps {
@@ -41,6 +42,13 @@ interface SidebarProps {
   chargersCount: number;
   loadingChargers: boolean;
   chargerProgress: number;
+  isGasStationsEnabled: boolean;
+  setIsGasStationsEnabled: (v: boolean) => void;
+  gasStationFilters: GasStationFilters;
+  setGasStationFilters: (f: GasStationFilters) => void;
+  gasStationsCount: number;
+  loadingGasStations: boolean;
+  gasProgress: number;
   isWeatherEnabled: boolean;
   setIsWeatherEnabled: (v: boolean) => void;
   loadingWeather: boolean;
@@ -96,6 +104,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   chargersCount,
   loadingChargers,
   chargerProgress,
+  isGasStationsEnabled,
+  setIsGasStationsEnabled,
+  gasStationFilters,
+  setGasStationFilters,
+  gasStationsCount,
+  loadingGasStations,
+  gasProgress,
   isWeatherEnabled,
   setIsWeatherEnabled,
   loadingWeather,
@@ -118,6 +133,26 @@ const Sidebar: React.FC<SidebarProps> = ({
         console.error(err);
       } finally {
         setLoadingRadarStats(false);
+      }
+    }
+  };
+
+  const [showGasFilters, setShowGasFilters] = useState(false);
+  const [gasStatsData, setGasStatsData] = useState<any>(null);
+  const [loadingGasStats, setLoadingGasStats] = useState(false);
+
+  const handleToggleGasStats = async () => {
+    setShowGasFilters(!showGasFilters);
+    if (!showGasFilters && !gasStatsData) {
+      setLoadingGasStats(true);
+      try {
+        const res = await fetch('/api/gas/stats');
+        const data = await res.json();
+        setGasStatsData(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingGasStats(false);
       }
     }
   };
@@ -541,6 +576,124 @@ const Sidebar: React.FC<SidebarProps> = ({
                                {p === 0 ? 'Todas' : `>${p}kW`}
                             </button>
                          ))}
+                      </div>
+                  </div>
+                </div>
+              )}
+           </div>
+
+           {/* Bloque Gasolineras */}
+           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isGasStationsEnabled && 'opacity-70'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                   <button 
+                     onClick={handleToggleGasStats}
+                     className={`p-1 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isGasStationsEnabled ? 'bg-orange-500/20 hover:bg-orange-500/30 cursor-pointer' : 'bg-gray-500/20'}`}
+                   >
+                     <img src="/gasolinera.png" alt="Gasolineras" className={`h-11 w-11 object-contain drop-shadow-lg ${loadingGasStations ? 'animate-pulse opacity-50' : ''}`} />
+                   </button>
+                   <div className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Gasoil / Gasolina</span>
+                    </div>
+                    {isGasStationsEnabled ? (
+                      loadingGasStations ? (
+                        <span className="text-[10px] font-bold text-orange-400 animate-pulse uppercase mt-1">
+                          Buscando... {gasProgress > 0 && `${gasProgress}%`}
+                        </span>
+                      ) : (
+                        <div className="flex flex-col">
+                          <span className="text-2xl font-black leading-none text-orange-400 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]">{gasStationsCount}</span>
+                          <span className="text-[9px] text-gray-500 font-medium mt-1 uppercase">Gasolineras locales</span>
+                        </div>
+                      )
+                    ) : (
+                      <span className="text-2xl font-black leading-none text-white/30">OFF</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-1.5 shrink-0 align-self-start mt-1">
+                  <button 
+                    onClick={() => setIsGasStationsEnabled(!isGasStationsEnabled)}
+                    className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isGasStationsEnabled ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
+                  >
+                    <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isGasStationsEnabled ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
+                      <Power className={`h-3 w-3 ${isGasStationsEnabled ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
+                    </span>
+                  </button>
+                  {isGasStationsEnabled ? (
+                    <span className="text-[9px] font-bold text-green-500 uppercase tracking-wider">Activado</span>
+                  ) : (
+                    <span className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">Desactivado</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Filtros de Gasolineras y Estadísticas (Desplegable) */}
+              {showGasFilters && (
+                <div className="mt-4 pt-4 border-t border-white/10 animate-fade-in flex flex-col gap-3">
+                  
+                  {/* Stats */}
+                  <div className="bg-white/5 p-2 rounded-lg flex flex-col justify-between items-center text-xs">
+                     <span className="text-xs text-gray-300 font-medium w-full pb-1 border-b border-white/5 mb-2">Sincronización Transición Ecológica</span>
+                     {loadingGasStats ? (
+                       <span className="text-[10px] text-gray-400 animate-pulse w-full text-center">Cargando base de datos...</span>
+                     ) : gasStatsData ? (
+                       <div className="flex justify-between w-full">
+                         <span className="text-gray-400">Total España: {gasStatsData.total}</span>
+                         <span className="text-[9px] font-bold text-gray-400 bg-black/40 px-2 py-0.5 rounded-full">
+                           {gasStatsData.es?.lastUpdate ? new Date(gasStatsData.es.lastUpdate).toLocaleString('es-ES', { timeZone: 'Europe/Madrid', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Sin datos'}
+                         </span>
+                       </div>
+                     ) : (
+                       <span className="text-[10px] text-rose-400 text-center w-full">Error al cargar datos</span>
+                     )}
+                  </div>
+
+                  <div className="bg-white/5 p-2 rounded-lg flex flex-col gap-2">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Combustible</span>
+                      <div className="flex flex-wrap gap-2">
+                         {(['g95', 'g98', 'diesel', 'glp'] as const).map(f => {
+                            const labelMap = { g95: 'G95', g98: 'G98', diesel: 'Diésel', glp: 'GLP/GNC' };
+                            return (
+                              <button 
+                                 key={f}
+                                 onClick={() => {
+                                   let newF = [...(gasStationFilters.fuels || [])] as ('g95' | 'g98' | 'diesel' | 'glp')[];
+                                   if (newF.includes(f)) newF = newF.filter(x => x !== f);
+                                   else newF.push(f);
+                                   setGasStationFilters({ ...gasStationFilters, fuels: newF });
+                                 }}
+                                 className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md transition-colors ${gasStationFilters.fuels?.includes(f) ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                              >
+                                 {labelMap[f]}
+                              </button>
+                            );
+                         })}
+                         <button 
+                            onClick={() => setGasStationFilters({ ...gasStationFilters, fuels: [] })}
+                            className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md transition-colors ${!gasStationFilters.fuels?.length ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                         >
+                            Todos
+                         </button>
+                      </div>
+                  </div>
+
+                  <div className="bg-white/5 p-2 rounded-lg flex flex-col gap-2">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Precio Máximo (€/L)</span>
+                      <div className="flex gap-2">
+                         <input 
+                           type="number"
+                           step="0.01"
+                           min="0"
+                           placeholder="Sin límite..."
+                           value={gasStationFilters.maxPrice || ''}
+                           onChange={(e) => {
+                             const val = e.target.value ? parseFloat(e.target.value) : null;
+                             setGasStationFilters({ ...gasStationFilters, maxPrice: val });
+                           }}
+                           className="w-full bg-black/40 border border-white/10 rounded-md py-1.5 px-3 text-xs text-white focus:outline-none focus:border-orange-500 placeholder-gray-600 font-bold"
+                         />
                       </div>
                   </div>
                 </div>
