@@ -23,6 +23,10 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { useChargers, ChargerFilters } from '@/hooks/useChargers';
 import { useGasStations, GasStationFilters } from '@/hooks/useGasStations';
 import { useWeather } from '@/hooks/useWeather';
+import { supabase } from '@/lib/supabase';
+import AuthModal from '@/components/AuthModal';
+import { User, LogOut } from 'lucide-react';
+import { Session } from '@supabase/supabase-js';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -83,8 +87,28 @@ export default function Home() {
   const [customZoom, setCustomZoom] = useState<number | null>(null);
   const [contextMenu, setContextMenu] = useState<{ lat: number; lon: number; screenX: number; screenY: number } | null>(null);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  
   const { favorites, saveFavorite, removeFavorite, isFavorite } = useFavorites();
   const speed = useSpeed(); // declarado aquí para usarlo en el recalculado automático
+
+  // Escuchar cambios de autenticación
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
 
   // Lógica de Recalculado Automático
   useEffect(() => {
@@ -341,6 +365,31 @@ export default function Home() {
         </div>
       )}
 
+      {/* Botón de Perfil / Iniciar Sesión (Top Right) */}
+      <div className="fixed top-6 right-6 z-[600] flex items-center gap-3">
+        {session ? (
+          <div className="flex items-center gap-2 group">
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] font-black text-white uppercase italic tracking-tighter bg-blue-600 px-2 py-0.5 rounded-sm shadow-lg">USUARIO ACTIVO</span>
+              <span className="text-[11px] font-bold text-gray-400">{session.user.email?.split('@')[0]}</span>
+            </div>
+            <button 
+              onClick={handleSignOut}
+              className="h-12 w-12 flex items-center justify-center rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-rose-500/20 hover:border-rose-500/50 transition-all group"
+            >
+              <LogOut className="h-5 w-5 text-gray-400 group-hover:text-rose-500" />
+            </button>
+          </div>
+        ) : (
+          <button 
+            onClick={() => setIsAuthModalOpen(true)}
+            className="h-12 w-12 flex items-center justify-center rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all animate-in fade-in slide-in-from-top-4 duration-700"
+          >
+            <User className="h-6 w-6 text-white" />
+          </button>
+        )}
+      </div>
+
       {/* Panel Izquierdo (Bloque de Control) */}
       <Sidebar 
         isSidebarOpen={isSidebarOpen}
@@ -496,6 +545,11 @@ export default function Home() {
           onDelete={removeFavorite}
           onClose={() => setIsFavoritesOpen(false)}
         />
+      )}
+
+      {/* Modal de Autenticación */}
+      {isAuthModalOpen && (
+        <AuthModal onClose={() => setIsAuthModalOpen(false)} />
       )}
     </main>
   );
