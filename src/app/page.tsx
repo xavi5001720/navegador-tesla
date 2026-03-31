@@ -55,7 +55,10 @@ export default function Home() {
     addWaypointAfter,
     clearRoute,
     checkTrafficRefresh,
-    isTrafficEnabled 
+    isTrafficEnabled,
+    liveDistance,
+    liveDuration,
+    updateLiveMetrics
   } = useRoute();
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -104,8 +107,9 @@ export default function Home() {
   useEffect(() => {
     if (userPos) {
       checkTrafficRefresh(userPos);
+      updateLiveMetrics(userPos);
     }
-  }, [userPos, checkTrafficRefresh]);
+  }, [userPos, checkTrafficRefresh, updateLiveMetrics]);
 
   // Unlock audio on first interaction
   useEffect(() => {
@@ -361,6 +365,8 @@ export default function Home() {
         onOpenFavorites={() => setIsFavoritesOpen(true)}
         radarProgress={progress}
         isTrafficEnabled={isTrafficEnabled}
+        liveDistance={liveDistance}
+        liveDuration={liveDuration}
         waypoints={waypoints}
         isChargersEnabled={isChargersEnabled}
         setIsChargersEnabled={setIsChargersEnabled}

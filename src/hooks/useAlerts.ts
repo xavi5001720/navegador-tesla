@@ -40,6 +40,20 @@ export function useAlerts(
     lastDangerAlertTime: 0
   });
 
+  // Ref con los IDs de la última lista de radares conocida
+  const knownRadarIdsRef = useRef<string>('');
+
+  // Cuando cambia el conjunto de radares (nueva ruta), reseteamos los radares "pasados"
+  useEffect(() => {
+    const currentIds = radars.map(r => String(r.id)).sort().join(',');
+    if (currentIds !== knownRadarIdsRef.current) {
+      knownRadarIdsRef.current = currentIds;
+      setPassedRadarIds(new Set());
+      prevDistanceRef.current = null;
+      alertStateRef.current = { radarId: null, phase: 0, lastDangerAlertTime: 0 };
+    }
+  }, [radars]);
+
   useEffect(() => {
     if (!userPos || radars.length === 0) return;
 
@@ -126,5 +140,6 @@ export function useAlerts(
 
   }, [userPos, radars, isSoundEnabled, voiceType, currentSpeed, passedRadarIds, isAlertActive]);
 
-  return { nearestRadar, distance, isAlertActive, alertType, remainingRadars: radars.length - passedRadarIds.size };
+  const remainingRadars = Math.max(0, radars.length - passedRadarIds.size);
+  return { nearestRadar, distance, isAlertActive, alertType, remainingRadars };
 }

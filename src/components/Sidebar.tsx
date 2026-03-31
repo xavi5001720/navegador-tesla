@@ -50,6 +50,8 @@ interface SidebarProps {
   lastRadarUpdate?: string | null;
   radarProgress?: number;
   isTrafficEnabled?: boolean;
+  liveDistance?: number | null;
+  liveDuration?: number | null;
   waypoints?: [number, number][];
 }
 
@@ -84,6 +86,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   lastRadarUpdate,
   radarProgress = 0,
   isTrafficEnabled = false,
+  liveDistance = null,
+  liveDuration = null,
   waypoints = [],
   isChargersEnabled,
   setIsChargersEnabled,
@@ -211,13 +215,16 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div className="grid grid-cols-2 gap-2 mt-2">
                <div>
                   <span className="text-xs text-gray-400 block uppercase tracking-wider">Distancia</span>
-                  <span className="text-lg font-bold text-white">{(route.distance / 1000).toFixed(1)} km</span>
+                  <span className="text-lg font-bold text-white">
+                    {((liveDistance ?? route.distance) / 1000).toFixed(1)} km
+                  </span>
                </div>
                <div>
                   <span className="text-xs text-gray-400 block uppercase tracking-wider">Tiempo</span>
                   <span className="text-lg font-bold text-white">
                     {(() => {
-                      const totalMins = Math.floor(route.duration / 60);
+                      const duration = liveDuration ?? route.duration;
+                      const totalMins = Math.floor(duration / 60);
                       const h = Math.floor(totalMins / 60);
                       const m = totalMins % 60;
                       return h > 0 ? `${h}h ${m}m` : `${m}m`;
@@ -331,19 +338,37 @@ const Sidebar: React.FC<SidebarProps> = ({
                       <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
                         <span className="text-xs text-gray-300 font-medium tracking-wide">🇪🇸 España ({radarStatsData.es.count})</span>
                         <span className="text-[9px] text-gray-500 font-bold bg-black/40 px-2 py-0.5 rounded-full">
-                          {radarStatsData.es.lastUpdate ? new Date(radarStatsData.es.lastUpdate).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                          {radarStatsData.es.lastUpdate 
+                            ? new Date(radarStatsData.es.lastUpdate).toLocaleString('es-ES', { 
+                                timeZone: 'Europe/Madrid',
+                                day: '2-digit', month: '2-digit', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit'
+                              }) 
+                            : 'Sin datos'}
                         </span>
                       </div>
                       <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
                         <span className="text-xs text-gray-300 font-medium tracking-wide">🇫🇷 Francia Sur ({radarStatsData.fr_south.count})</span>
                         <span className="text-[9px] text-gray-500 font-bold bg-black/40 px-2 py-0.5 rounded-full">
-                          {radarStatsData.fr_south.lastUpdate ? new Date(radarStatsData.fr_south.lastUpdate).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                          {radarStatsData.fr_south.lastUpdate 
+                            ? new Date(radarStatsData.fr_south.lastUpdate).toLocaleString('es-ES', { 
+                                timeZone: 'Europe/Madrid',
+                                day: '2-digit', month: '2-digit', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit'
+                              }) 
+                            : 'Sin datos'}
                         </span>
                       </div>
                       <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
                         <span className="text-xs text-gray-300 font-medium tracking-wide">🇫🇷 Francia Norte ({radarStatsData.fr_north.count})</span>
                         <span className="text-[9px] text-gray-500 font-bold bg-black/40 px-2 py-0.5 rounded-full">
-                          {radarStatsData.fr_north.lastUpdate ? new Date(radarStatsData.fr_north.lastUpdate).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                          {radarStatsData.fr_north.lastUpdate 
+                            ? new Date(radarStatsData.fr_north.lastUpdate).toLocaleString('es-ES', { 
+                                timeZone: 'Europe/Madrid',
+                                day: '2-digit', month: '2-digit', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit'
+                              }) 
+                            : 'Sin datos'}
                         </span>
                       </div>
                       <div className="flex justify-between items-center pt-3 border-t border-white/5 mt-1">

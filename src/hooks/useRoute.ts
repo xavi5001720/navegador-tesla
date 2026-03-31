@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { findClosestPointOnPolyline, getDistance } from '@/utils/geo';
 
 type Coordinates = [number, number]; // [latitud, longitud]
 
@@ -102,6 +103,8 @@ export function useRoute() {
   const [loadingRoute, setLoadingRoute] = useState(false);
   const [routeError, setRouteError] = useState<string | null>(null);
   const [isTrafficEnabled, setIsTrafficEnabled] = useState<boolean>(false);
+  const [liveDistance, setLiveDistance] = useState<number | null>(null);
+  const [liveDuration, setLiveDuration] = useState<number | null>(null);
 
   const lastTrafficPosRef = useRef<Coordinates | null>(null);
 
@@ -140,6 +143,8 @@ export function useRoute() {
       }
 
       setRoute(result);
+      setLiveDistance(result.distance);
+      setLiveDuration(result.duration);
       setDestination(destination);
       setWaypoints(stops);
     } catch (err: any) {
@@ -181,6 +186,8 @@ export function useRoute() {
     setRouteError(null);
     setIsTrafficEnabled(false);
     lastTrafficPosRef.current = null;
+    setLiveDistance(null);
+    setLiveDuration(null);
   }, []);
 
   // Refresco automático de tráfico cada 20km
@@ -193,6 +200,34 @@ export function useRoute() {
     }
   }, [route, destination, waypoints, loadingRoute, calculateRoute]);
 
+  // Actualización de métricas en vivo basadas en la posición
+  const updateLiveMetrics = useCallback((currentPos: Coordinates) => {
+    if (!route || !route.coordinates.length) return;
+
+    // 1. Encontrar el punto más cercano en la polilínea
+    const snapped = findClosestPointOnPolyline(currentPos, route.coordinates);
+    const idx = snapped.segmentIndex;
+
+    // 2. Calcular distancia restante: 
+    // Comienza desde la posición actual "proyectada" hasta el siguiente vértice, 
+    // y suma todos los segmentos restantes.
+    let remainingDist = getDistance(currentPos, route.coordinates[idx + 1] || route.coordinates[idx]);
+    
+    for (let i = idx + 1; i < route.coordinates.length - 1; i++) {
+      remainingDist += getDistance(route.coordinates[i], route.coordinates[i + 1]);
+    }
+
+    setLiveDistance(remainingDist);
+
+    // 3. Estimar duración restante
+    // Mantenemos la proporción del tiempo original de la API de TomTom
+    // Si la API decía 10km en 10 min, y ahora faltan 5km, estimamos 5 min.
+    if (route.distance > 0) {
+      const ratio = remainingDist / route.distance;
+      setLiveDuration(Math.round(route.duration * ratio));
+    }
+  }, [route]);
+
   return {
     route,
     destination,
@@ -200,11 +235,14 @@ export function useRoute() {
     loadingRoute,
     routeError,
     isTrafficEnabled,
+    liveDistance,
+    liveDuration,
     calculateRoute,
     findAndTraceRoute,
     addWaypointBefore,
     addWaypointAfter,
     clearRoute,
     checkTrafficRefresh,
+    updateLiveMetrics,
   };
 }

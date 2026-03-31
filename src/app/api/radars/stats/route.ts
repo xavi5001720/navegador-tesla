@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-export const revalidate = 3600; // Cachear por 1 hora
+export const revalidate = 0; // Sin caché — datos siempre en tiempo real
 
 export async function GET() {
   if (!supabaseUrl || !supabaseKey) {
@@ -59,10 +59,14 @@ export async function GET() {
       if (lon !== null && lat !== null) {
         const updatedTime = new Date(r.updated_at).getTime();
 
+        // España: bbox de la query Overpass (lat 27-44, lon -19 a 5)
         if (lat >= 27 && lat <= 44 && lon >= -19 && lon <= 5) {
           es.count++;
           if (updatedTime > es.lastUpdate) es.lastUpdate = updatedTime;
-        } else if (lat > 44 && lat <= 46 && lon >= -5 && lon <= 10) {
+        // Francia Sur: bbox de la query Overpass (lat 41-46, lon -5 a 10)
+        // Nota: hay solapamiento con España en 41-44 pero en la práctica
+        // los puntos en esa banda lon>5 son Francia
+        } else if (lat >= 41 && lat <= 46 && lon > 5 && lon <= 10) {
           frS.count++;
           if (updatedTime > frS.lastUpdate) frS.lastUpdate = updatedTime;
         } else if (lat > 46 && lat <= 51 && lon >= -5 && lon <= 10) {
