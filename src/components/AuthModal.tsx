@@ -16,6 +16,19 @@ export default function AuthModal({ onClose }: AuthModalProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSignupSuccess, setIsSignupSuccess] = useState(false);
 
+  const translateAuthError = (message: string) => {
+    const msg = message.toLowerCase();
+    if (msg.includes('rate limit')) return 'Se ha superado el límite de intentos. Por favor, inténtalo de nuevo en unos minutos.';
+    if (msg.includes('invalid login credentials')) return 'Email o contraseña incorrectos. Revisa tus datos.';
+    if (msg.includes('user already registered')) return 'Este email ya está registrado. Intenta iniciar sesión.';
+    if (msg.includes('email not confirmed')) return 'Debes confirmar tu correo electrónico. Revisa tu bandeja de entrada o SPAM.';
+    if (msg.includes('signup is disabled')) return 'El registro está desactivado temporalmente.';
+    if (msg.includes('invalid email')) return 'Por favor, introduce una dirección de correo válida.';
+    if (msg.includes('provide your email')) return 'Por favor, introduce tu email.';
+    if (msg.includes('password should be at least 6 characters')) return 'La contraseña debe tener al menos 6 caracteres.';
+    return message;
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -33,7 +46,7 @@ export default function AuthModal({ onClose }: AuthModalProps) {
         });
 
     if (error) {
-      setError(error.message === 'To signup, please provide your email' ? 'Por favor, introduce un email válido' : error.message);
+      setError(translateAuthError(error.message));
       setLoading(false);
     } else {
       if (!isLogin && data?.user && !data.session) {
@@ -57,7 +70,7 @@ export default function AuthModal({ onClose }: AuthModalProps) {
     });
 
     if (error) {
-      setError(error.message);
+      setError(translateAuthError(error.message));
       setLoading(false);
     }
   };
