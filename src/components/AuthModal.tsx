@@ -14,13 +14,15 @@ export default function AuthModal({ onClose }: AuthModalProps) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSignupSuccess, setIsSignupSuccess] = useState(false);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setIsSignupSuccess(false);
 
-    const { error } = isLogin
+    const { data, error } = isLogin
       ? await supabase.auth.signInWithPassword({ email, password })
       : await supabase.auth.signUp({ 
           email, 
@@ -34,7 +36,13 @@ export default function AuthModal({ onClose }: AuthModalProps) {
       setError(error.message === 'To signup, please provide your email' ? 'Por favor, introduce un email válido' : error.message);
       setLoading(false);
     } else {
-      onClose();
+      if (!isLogin && data?.user && !data.session) {
+        // Registro exitoso pero requiere verificación de email
+        setIsSignupSuccess(true);
+        setLoading(false);
+      } else {
+        onClose();
+      }
     }
   };
 
@@ -85,70 +93,96 @@ export default function AuthModal({ onClose }: AuthModalProps) {
             </div>
           )}
 
-          {/* Opción de Google — Destacada estilo Tesla */}
-          <button
-            onClick={signInWithGoogle}
-            disabled={loading}
-            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white p-3.5 text-sm font-black text-black transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
-          >
-            <Chrome className="h-5 w-5" />
-            CONTINUAR CON GOOGLE
-          </button>
-
-          <div className="my-6 flex items-center gap-4">
-            <div className="h-px flex-1 bg-white/10"></div>
-            <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">o usa tu email</span>
-            <div className="h-px flex-1 bg-white/10"></div>
-          </div>
-
-          <form onSubmit={handleAuth} className="space-y-4">
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="email"
-                placeholder="Email"
-                required
-                className="w-full rounded-2xl bg-gray-800 border border-white/5 p-4 pl-12 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500/50 transition-all"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+          {isSignupSuccess ? (
+            <div className="flex flex-col items-center gap-6 py-8 animate-in fade-in zoom-in duration-500">
+              <div className="h-20 w-20 rounded-full bg-blue-600/20 flex items-center justify-center border border-blue-500/30">
+                <Mail className="h-10 w-10 text-blue-500" />
+              </div>
+              <div className="text-center space-y-4">
+                <h3 className="text-xl font-black text-white uppercase italic">¡Revisa tu correo!</h3>
+                <p className="text-sm text-gray-400 leading-relaxed max-w-[280px]">
+                  Hemos enviado un enlace de confirmación a <span className="text-white font-bold">{email}</span>. 
+                  Una vez confirmado, ya podrás acceder a tu cuenta.
+                </p>
+                <div className="rounded-xl bg-blue-500/10 border border-blue-500/20 p-3 text-xs text-blue-400 font-medium">
+                  Nota: Si no lo recibes, revisa tu carpeta de <b>SPAM</b> o correo no deseado.
+                </div>
+              </div>
+              <button
+                onClick={() => { setIsLogin(true); setIsSignupSuccess(false); }}
+                className="mt-4 text-xs font-black text-blue-400 hover:underline uppercase tracking-widest"
+              >
+                Volver al inicio de sesión
+              </button>
             </div>
-            
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="password"
-                placeholder="Contraseña"
-                required
-                className="w-full rounded-2xl bg-gray-800 border border-white/5 p-4 pl-12 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500/50 transition-all"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+          ) : (
+            <>
+              {/* Opción de Google — Destacada estilo Tesla */}
+              <button
+                onClick={signInWithGoogle}
+                disabled={loading}
+                className="flex w-full items-center justify-center gap-3 rounded-2xl bg-white p-3.5 text-sm font-black text-black transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+              >
+                <Chrome className="h-5 w-5" />
+                CONTINUAR CON GOOGLE
+              </button>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 p-4 text-sm font-black text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
-            >
-              {loading ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
-              ) : (
-                isLogin ? <LogIn className="h-5 w-5" /> : <UserPlus className="h-5 w-5" />
-              )}
-              {isLogin ? 'ACCEDER' : 'CREAR MI CUENTA'}
-            </button>
-          </form>
+              <div className="my-6 flex items-center gap-4">
+                <div className="h-px flex-1 bg-white/10"></div>
+                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">o usa tu email</span>
+                <div className="h-px flex-1 bg-white/10"></div>
+              </div>
 
-          <p className="mt-6 text-center text-xs text-gray-500">
-            {isLogin ? '¿Aún no tienes cuenta?' : '¿Ya eres usuario?'}
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="ml-2 font-black text-blue-400 hover:underline uppercase"
-            >
-              {isLogin ? 'Regístrate aquí' : 'Inicia sesión'}
-            </button>
-          </p>
+              <form onSubmit={handleAuth} className="space-y-4">
+                <div className="relative">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="email"
+                    placeholder="Email"
+                    required
+                    className="w-full rounded-2xl bg-gray-800 border border-white/5 p-4 pl-12 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500/50 transition-all"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="password"
+                    placeholder="Contraseña"
+                    required
+                    className="w-full rounded-2xl bg-gray-800 border border-white/5 p-4 pl-12 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500/50 transition-all"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 p-4 text-sm font-black text-white shadow-lg shadow-blue-600/20 transition-all hover:bg-blue-500 hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                >
+                  {loading ? (
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
+                  ) : (
+                    isLogin ? <LogIn className="h-5 w-5" /> : <UserPlus className="h-5 w-5" />
+                  )}
+                  {isLogin ? 'ACCEDER' : 'CREAR MI CUENTA'}
+                </button>
+              </form>
+
+              <p className="mt-6 text-center text-xs text-gray-500">
+                {isLogin ? '¿Aún no tienes cuenta?' : '¿Ya eres usuario?'}
+                <button
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="ml-2 font-black text-blue-400 hover:underline uppercase"
+                >
+                  {isLogin ? 'Regístrate aquí' : 'Inicia sesión'}
+                </button>
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>
