@@ -17,7 +17,7 @@ CREATE TABLE gas_stations (
 
 CREATE INDEX idx_gas_stations_geom ON gas_stations USING GIST (geom);
 
-CREATE OR REPLACE FUNCTION get_stations_nearby(lat DOUBLE PRECISION, lon DOUBLE PRECISION, radius_meters DOUBLE PRECISION DEFAULT 15000)
+CREATE OR REPLACE FUNCTION get_stations_nearby(p_lat DOUBLE PRECISION, p_lon DOUBLE PRECISION, p_radius_meters DOUBLE PRECISION DEFAULT 15000)
 RETURNS TABLE (
   id INTEGER,
   lat DOUBLE PRECISION,
@@ -36,9 +36,9 @@ BEGIN
   RETURN QUERY
   SELECT 
     g.id, g.lat, g.lon, g.name, g.address, g.city, g.schedule, g.price_g95, g.price_g98, g.price_diesel, g.price_glp,
-    ST_Distance(g.geom, ST_SetSRID(ST_MakePoint(lon, lat), 4326)::geography) AS distance_meters
+    ST_Distance(g.geom, ST_SetSRID(ST_MakePoint(p_lon, p_lat), 4326)::geography) AS distance_meters
   FROM gas_stations g
-  WHERE ST_DWithin(g.geom, ST_SetSRID(ST_MakePoint(lon, lat), 4326)::geography, radius_meters)
+  WHERE ST_DWithin(g.geom, ST_SetSRID(ST_MakePoint(p_lon, p_lat), 4326)::geography, p_radius_meters)
   ORDER BY distance_meters ASC
   LIMIT 200;
 END;
