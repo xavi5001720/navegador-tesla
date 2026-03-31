@@ -363,7 +363,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div className="mt-4 pt-4 border-t border-white/10 animate-fade-in">
                   <div className="flex items-center gap-2 mb-3">
                     <Database className="h-4 w-4 text-rose-400" />
-                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">Base de Datos Original</span>
+                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">BASE DE DATOS ACTUALIZADA</span>
                   </div>
                   
                   {loadingRadarStats ? (
@@ -637,7 +637,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   
                   {/* Stats */}
                   <div className="bg-white/5 p-2 rounded-lg flex flex-col justify-between items-center text-xs">
-                     <span className="text-xs text-gray-300 font-medium w-full pb-1 border-b border-white/5 mb-2">Sincronización Transición Ecológica</span>
+                     <span className="text-[10px] text-gray-300 font-bold w-full pb-1 border-b border-white/5 mb-2 uppercase tracking-wider">BASE DE DATOS ACTUALIZADA</span>
                      {loadingGasStats ? (
                        <span className="text-[10px] text-gray-400 animate-pulse w-full text-center">Cargando base de datos...</span>
                      ) : gasStatsData ? (
