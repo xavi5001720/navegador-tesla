@@ -14,6 +14,7 @@ import { findClosestPointOnPolyline, getBearing } from '@/utils/geo';
 import MapContextMenu from './MapContextMenu';
 import { RouteSection } from '@/hooks/useRoute';
 import { WeatherPoint } from '@/hooks/useWeather';
+import { getCarFilter } from '@/utils/carStyles';
 
 const defaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -218,6 +219,7 @@ function RouteFitter({ routeCoordinates }: { routeCoordinates?: [number, number]
 interface MapUIProps {
    userPos: [number, number];
    heading: number;
+   carColor?: string;
    routeCoordinates?: [number, number][];
    radars: Radar[];
    aircrafts?: Aircraft[];
@@ -234,14 +236,22 @@ interface MapUIProps {
    routeSections?: RouteSection[];
 }
 
-const createCarIcon = (heading: number) => {
+const createCarIcon = (heading: number, color?: string) => {
   const iconHtml = renderToStaticMarkup(
     <div className="relative flex items-center justify-center h-28 w-28 group" style={{ transform: `rotate(${heading}deg)` }}>
       {/* Sombra direccional base azulada bajo el vehículo */}
-      <div className="absolute inset-0 bg-blue-500/30 rounded-full blur-2xl scale-125"></div>
+      <div className={`absolute inset-0 rounded-full blur-2xl scale-125 transition-all duration-700 ${
+           color === 'Rojo' ? 'bg-red-500/30' : 
+           color === 'Azul' ? 'bg-blue-500/30' : 
+           color === 'Negro' ? 'bg-gray-900/40' : 'bg-blue-500/20'}`}></div>
       
-      {/* Imagen del coche proporcionada por el usuario */}
-      <img src="/coche.png" alt="Coche" className="w-full h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] transition-transform duration-500 rotate-180" />
+      {/* Imagen del coche con filtro dinámico */}
+      <img 
+        src="/coche.png" 
+        alt="Coche" 
+        className="w-full h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] transition-all duration-700 rotate-180" 
+        style={{ filter: getCarFilter(color) }}
+      />
     </div>
   );
   return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [110, 110], iconAnchor: [55, 55] });
@@ -359,6 +369,7 @@ function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordin
 export default function MapUI({ 
   userPos, 
   heading, 
+  carColor,
   routeCoordinates, 
   radars = [], 
   aircrafts = [], 
@@ -647,7 +658,7 @@ export default function MapUI({
             }
           }
           
-          return <Marker position={pos} icon={createCarIcon(carHeading)} zIndexOffset={1000} />;
+          return <Marker position={pos} icon={createCarIcon(carHeading, carColor)} zIndexOffset={1000} />;
         })()}
       </MapContainer>
     </div>

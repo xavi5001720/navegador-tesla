@@ -1,9 +1,8 @@
-'use client';
-
 import { useState } from 'react';
 import { X, Save, Car, Palette, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserProfile } from '@/hooks/useProfile';
+import { getCarFilter } from '@/utils/carStyles';
 
 interface GarageModalProps {
   isOpen: boolean;
@@ -68,15 +67,28 @@ export default function GarageModal({ isOpen, onClose, profile, onUpdate }: Gara
 
             <div className="p-8 space-y-12">
               {/* Visualización del Coche */}
-              <div className="relative h-64 w-full bg-radial-gradient from-blue-500/10 to-transparent flex items-center justify-center">
+              <div className="relative h-64 w-full flex items-center justify-center">
+                <div className="absolute inset-0 bg-radial-gradient from-blue-500/10 to-transparent pointer-events-none" />
                 <motion.div
                   key={color}
-                  initial={{ opacity: 0, x: 50 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="relative group"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="relative group w-full h-full flex items-center justify-center"
                 >
-                  <Car className="h-48 w-48 text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.2)]" />
-                  <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 h-2 w-32 rounded-full blur-xl opacity-50 ${colors.find(c => c.name === color)?.class || 'bg-white'}`} />
+                  <img 
+                    src="/coche.png" 
+                    alt="Coche Previsualización" 
+                    className="h-56 w-auto object-contain drop-shadow-[0_0_50px_rgba(255,255,255,0.1)] transition-all duration-700 rotate-180"
+                    style={{ filter: getCarFilter(color) }}
+                  />
+                  {/* Sombra de suelo con color dinámico */}
+                  <div 
+                    className={`absolute bottom-4 left-1/2 -translate-x-1/2 h-4 w-48 rounded-full blur-2xl opacity-40 transition-all duration-700 ${
+                        color === 'Blanco' ? 'bg-white' : 
+                        color === 'Negro' ? 'bg-gray-800' : 
+                        color === 'Azul' ? 'bg-blue-600' : 
+                        color === 'Rojo' ? 'bg-red-600' : 'bg-gray-400'}`} 
+                  />
                 </motion.div>
                 
                 <div className="absolute top-0 right-0 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">

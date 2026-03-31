@@ -521,6 +521,7 @@ export default function Home() {
           onZoomChange={setCustomZoom}
           onMapClick={handleMapClick}
           routeSections={route?.sections}
+          carColor={profile?.car_color}
         />
 
         {/* Panel de Avisos Rápidos y Velocímetro */}
