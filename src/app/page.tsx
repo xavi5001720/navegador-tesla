@@ -375,17 +375,18 @@ export default function Home() {
             </div>
             <button 
               onClick={handleSignOut}
-              className="h-12 w-12 flex items-center justify-center rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-rose-500/20 hover:border-rose-500/50 transition-all group"
+              className="h-12 w-12 flex items-center justify-center rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-rose-500/20 hover:border-rose-500/50 transition-all group overflow-hidden"
             >
-              <LogOut className="h-5 w-5 text-gray-400 group-hover:text-rose-500" />
+              <img src="/avatar.png" alt="Avatar" className="h-full w-full object-cover group-hover:opacity-20 transition-opacity" />
+              <LogOut className="absolute h-5 w-5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
             </button>
           </div>
         ) : (
           <button 
             onClick={() => setIsAuthModalOpen(true)}
-            className="h-12 w-12 flex items-center justify-center rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all animate-in fade-in slide-in-from-top-4 duration-700"
+            className="h-12 w-12 flex items-center justify-center rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all animate-in fade-in slide-in-from-top-4 duration-700 overflow-hidden group"
           >
-            <User className="h-6 w-6 text-white" />
+            <img src="/avatar.png" alt="Avatar" className="h-full w-full object-cover group-hover:scale-110 transition-transform" />
           </button>
         )}
       </div>
