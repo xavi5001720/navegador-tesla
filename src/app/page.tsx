@@ -383,7 +383,11 @@ export default function Home() {
           <div className="flex items-center gap-2 group">
             <div className="flex flex-col items-end">
               <span className="text-[10px] font-black text-white uppercase italic tracking-tighter bg-blue-600 px-2 py-0.5 rounded-sm shadow-lg leading-none">USUARIO ACTIVO</span>
-              <span className="text-[14px] font-black text-white italic tracking-tight">{profile?.car_name || session.user.email?.split('@')[0]}</span>
+              <span className="text-[14px] font-black text-white italic tracking-tight">
+                {profile?.car_name && profile.car_name.trim().length > 0 
+                  ? profile.car_name 
+                  : (session.user.user_metadata?.full_name || session.user.email?.split('@')[0])}
+              </span>
             </div>
             <button 
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}

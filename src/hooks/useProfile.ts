@@ -47,15 +47,20 @@ export function useProfile(session: Session | null) {
 
     const { error } = await supabase
       .from('profiles')
-      .update(updates)
-      .eq('id', session.user.id);
+      .upsert({ id: session.user.id, ...updates });
 
-    if (error) {
-      console.error('Error updating profile:', error);
-      return false;
-    }
-
-    setProfile(prev => prev ? { ...prev, ...updates } : null);
+    setProfile(prev => {
+      if (prev) return { ...prev, ...updates };
+      // Si no había perfil previo (null), creamos uno inicial combinando los updates con datos de la sesión
+      return {
+        email: session.user.email || '',
+        car_name: 'Mi Tesla',
+        car_type: 'Model 3',
+        car_color: 'Blanco',
+        is_sharing_location: false,
+        ...updates
+      } as UserProfile;
+    });
     return true;
   };
 
