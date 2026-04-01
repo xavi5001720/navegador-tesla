@@ -111,6 +111,13 @@ export default function Home() {
   const { friends, addFriend } = useSocial(session, userPos);
   
   const wasStoppedRef = useRef(true);
+  const isManualOverviewRef = useRef(false);
+
+  const handleManualViewModeChange = useCallback((mode: 'navigation' | 'overview') => {
+    isManualOverviewRef.current = mode === 'overview';
+    setViewMode(mode);
+    setCustomZoom(null);
+  }, []);
 
   // Escuchar cambios de autenticación
   useEffect(() => {
@@ -310,7 +317,8 @@ export default function Home() {
       }
     } else if (speedKmh > 7) {
       // Solo volvemos a navegación si veníamos de estar parados (para no obligar a volver si el usuario cambió a overview manualmente conduciendo)
-      if (wasStoppedRef.current && viewMode === 'overview') {
+      // Y además, si el usuario explícitamente puso el modo manual general, NO le obligamos a volver.
+      if (wasStoppedRef.current && viewMode === 'overview' && !isManualOverviewRef.current) {
         setViewMode('navigation');
         setCustomZoom(null);
         wasStoppedRef.current = false;
@@ -335,15 +343,15 @@ export default function Home() {
 
   const handleChargerClick = useCallback((charger: Charger) => {
     setSelectedPOI({ type: 'charger', data: charger });
-    setViewMode('overview');
+    handleManualViewModeChange('overview');
     setContextMenu(null);
-  }, []);
+  }, [handleManualViewModeChange]);
 
   const handleGasStationClick = useCallback((station: GasStation) => {
     setSelectedPOI({ type: 'gasStation', data: station });
-    setViewMode('overview');
+    handleManualViewModeChange('overview');
     setContextMenu(null);
-  }, []);
+  }, [handleManualViewModeChange]);
 
   const handleNavigateToPoint = useCallback(() => {
     if (!contextMenu) return;
@@ -549,7 +557,7 @@ export default function Home() {
           waypoints={waypoints}
           speed={speed}
           viewMode={viewMode}
-          onViewModeChange={(mode) => setViewMode(mode as 'navigation' | 'overview')}
+          onViewModeChange={(mode) => handleManualViewModeChange(mode as 'navigation' | 'overview')}
           customZoom={customZoom}
           onZoomChange={setCustomZoom}
           onMapClick={handleMapClick}
@@ -568,7 +576,7 @@ export default function Home() {
           <div className="flex flex-col gap-3 md:flex-row">
             {viewMode === 'navigation' && (
               <button 
-                onClick={() => { setViewMode('overview'); setCustomZoom(null); }}
+                onClick={() => handleManualViewModeChange('overview')}
                 className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-gray-800 hover:bg-gray-700"
               >
                 <img src="/mapa.png" alt="Vista General" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
@@ -579,8 +587,7 @@ export default function Home() {
               <button 
                 onClick={() => {
                   if (!hasLocation) requestGPS();
-                  setViewMode('navigation');
-                  setCustomZoom(null);
+                  handleManualViewModeChange('navigation');
                 }}
                 className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-blue-600/80 hover:bg-blue-500 border-blue-400/50"
               >
