@@ -682,10 +682,15 @@ export default function Home() {
                   const s = poi as GasStation;
                   return (
                     <div className="flex flex-col gap-2">
-                      {s.cheapestFuelPrice && (
+                      {s.cheapestFuelPrice && (gasStationFilters.fuels?.length ?? 0) > 0 && (
                         <div className="flex justify-between items-center bg-orange-950/30 border border-orange-500/20 rounded-xl px-3 py-2">
-                          <span className="text-xs text-gray-400">Mejor precio encontrado</span>
-                          <span className="font-black text-orange-400 text-sm">{s.cheapestFuelPrice.toFixed(3)} €/L</span>
+                          <div className="flex flex-col">
+                            <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Precio más barato</span>
+                            <span className="text-[10px] text-orange-300">
+                              {(gasStationFilters.fuels ?? []).map(f => ({'g95': 'G95', 'g98': 'G98', 'diesel': 'Diésel', 'glp': 'GLP'}[f] ?? f)).join(' / ')}
+                            </span>
+                          </div>
+                          <span className="font-black text-orange-400 text-base">{s.cheapestFuelPrice.toFixed(3)} €/L</span>
                         </div>
                       )}
                       {(s.price_g95 || s.price_g98 || s.price_diesel || s.price_glp) && (
