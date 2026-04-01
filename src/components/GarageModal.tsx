@@ -86,7 +86,7 @@ export default function GarageModal({ isOpen, onClose, profile, onUpdate }: Gara
               {/* Visualización del Coche */}
               <div className="relative h-64 w-full flex items-center justify-center">
                 <div className="absolute inset-0 rounded-[2rem] overflow-hidden pointer-events-none">
-                  <img src="/fondogaraje.png" alt="Taller" className="w-full h-full object-cover opacity-70 mix-blend-screen" />
+                  <img src="/fondogarajetesla.png" alt="Taller" className="w-full h-full object-cover opacity-70 mix-blend-screen" />
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-gray-900/50" />
                 </div>
                 <motion.div
