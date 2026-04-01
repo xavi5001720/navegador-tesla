@@ -118,6 +118,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [showRadarStats, setShowRadarStats] = useState(false);
   const [showChargerFilters, setShowChargerFilters] = useState(false);
+  const [showSoundOptions, setShowSoundOptions] = useState(false);
   const [radarStatsData, setRadarStatsData] = useState<any>(null);
   const [loadingRadarStats, setLoadingRadarStats] = useState(false);
 
@@ -191,51 +192,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       )}
 
-      {/* Configuración de Alertas */}
-      <div className="mt-6 p-4 rounded-2xl bg-white/5 border border-white/10">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            {isSoundEnabled ? <Volume2 className="h-4 w-4 text-blue-400" /> : <VolumeX className="h-4 w-4 text-gray-500" />}
-            <span className="text-xs font-bold uppercase tracking-wider text-gray-300">Alertas de Sonido</span>
-          </div>
-          <button 
-            onClick={() => setIsSoundEnabled(!isSoundEnabled)}
-            className={`w-10 h-5 rounded-full transition-colors relative ${isSoundEnabled ? 'bg-blue-600' : 'bg-gray-700'}`}
-          >
-            <div className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform ${isSoundEnabled ? 'translate-x-5' : ''}`} />
-          </button>
-        </div>
-        
-        <div className="flex flex-col gap-3">
-          {/* Fila: label + botón Test */}
-          <div className="flex justify-between items-center">
-            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Tipo de voz</span>
-            <button
-              onClick={() => playTestSound(voiceType)}
-              className="flex items-center gap-1 bg-white/10 hover:bg-white/20 text-gray-400 hover:text-white px-2 py-0.5 rounded-md transition-all active:scale-95 text-[10px] font-bold uppercase"
-            >
-              <Play className="h-2 w-2" />
-              Test
-            </button>
-          </div>
-          {/* Botones selectores */}
-          <div className="grid grid-cols-3 gap-2">
-            {(['hombre', 'mujer', 'robot'] as VoiceType[]).map((v) => (
-              <button
-                key={v}
-                onClick={() => setVoiceType(v)}
-                className={`py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-wider border transition-all active:scale-95 ${
-                  voiceType === v
-                    ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_10px_rgba(37,99,235,0.4)]'
-                    : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white'
-                }`}
-              >
-                {v === 'hombre' ? '👨 Hombre' : v === 'mujer' ? '👩 Mujer' : '🤖 Robot'}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
+
 
       {/* Información de Ruta Activa */}
       {route && (
@@ -302,6 +259,60 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       <div className="py-4">
         <div className="grid grid-cols-1 gap-3">
+
+           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isSoundEnabled && 'opacity-70'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <button onClick={() => setShowSoundOptions(!showSoundOptions)} className={`p-1 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isSoundEnabled ? 'bg-blue-500/20 hover:bg-blue-500/30 cursor-pointer' : 'bg-gray-500/20'}`}>
+                     <div className="h-11 w-11 flex items-center justify-center drop-shadow-md">
+                        {isSoundEnabled ? <Volume2 className="h-7 w-7 text-blue-400" /> : <VolumeX className="h-7 w-7 text-gray-400" />}
+                     </div>
+                  </button>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Alertas de Sonido</span>
+                    </div>
+                    {isSoundEnabled ? (
+                      <span className="text-2xl font-black leading-none text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]">ON</span>
+                    ) : (
+                      <span className="text-2xl font-black leading-none text-white/30 truncate">OFF</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-1.5 shrink-0 align-self-start mt-1">
+                  <button 
+                    onClick={() => setIsSoundEnabled(!isSoundEnabled)}
+                    className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isSoundEnabled ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
+                  >
+                    <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isSoundEnabled ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
+                      <Power className={`h-3 w-3 ${isSoundEnabled ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
+                    </span>
+                  </button>
+                  {isSoundEnabled ? (
+                    <span className="text-[9px] font-bold text-green-500 uppercase tracking-wider">Activado</span>
+                  ) : (
+                    <span className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">Desactivado</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Opciones de sonido (Desplegable test) */}
+              {showSoundOptions && (
+                 <div className="mt-4 pt-4 border-t border-white/10 animate-fade-in flex flex-col gap-3">
+                    <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
+                       <span className="text-[10px] text-gray-300 font-bold uppercase tracking-wider">Voz del sistema</span>
+                       <button
+                         onClick={() => playTestSound(voiceType)}
+                         className="flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 text-blue-300 px-3 py-1.5 rounded-xl transition-all active:scale-95 text-[10px] font-bold uppercase"
+                       >
+                         <Play className="h-3 w-3" />
+                         Reproducir Test
+                       </button>
+                    </div>
+                 </div>
+              )}
+           </div>
+
            <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isRadarsEnabled && 'opacity-70'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
