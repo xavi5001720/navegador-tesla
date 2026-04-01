@@ -109,6 +109,8 @@ export default function Home() {
   
   const { profile, updateProfile } = useProfile(session);
   const { friends, addFriend } = useSocial(session, userPos);
+  
+  const wasStoppedRef = useRef(true);
 
   // Escuchar cambios de autenticación
   useEffect(() => {
@@ -297,17 +299,24 @@ export default function Home() {
     let timeoutId: NodeJS.Timeout;
     const speedKmh = (speed ?? 0) * 3.6;
 
-    if (speedKmh < 1 && viewMode === 'navigation') {
-      // Parado (menos de 1 km/h real): temporizador de 60 segundos para volver a vista general
-      timeoutId = setTimeout(() => {
-        setViewMode('overview');
+    if (speedKmh < 4) {
+      wasStoppedRef.current = true;
+      if (viewMode === 'navigation') {
+        // Parado (menos de 4 km/h real para ignorar ruido): temporizador para volver a vista general
+        timeoutId = setTimeout(() => {
+          setViewMode('overview');
+          setCustomZoom(null);
+        }, 60000);
+      }
+    } else if (speedKmh > 7) {
+      // Solo volvemos a navegación si veníamos de estar parados (para no obligar a volver si el usuario cambió a overview manualmente conduciendo)
+      if (wasStoppedRef.current && viewMode === 'overview') {
+        setViewMode('navigation');
         setCustomZoom(null);
-      }, 60000);
-    } else if (speedKmh > 12 && viewMode === 'overview') {
-      // Solo volvemos a navegación cuando la velocidad es claramente real (> 12 km/h)
-      // Evita que el ruido GPS de 1-3 km/h active el modo navegación accidentalmente
-      setViewMode('navigation');
-      setCustomZoom(null);
+        wasStoppedRef.current = false;
+      } else {
+        wasStoppedRef.current = false;
+      }
     }
 
     return () => {

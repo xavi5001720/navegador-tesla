@@ -285,27 +285,28 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
   const rafRef = useRef<number | null>(null);
   const targetHeadingRef = useRef<number>(heading);
 
-  // Solo actualizamos el target heading cuando la velocidad es real (>= 15 km/h)
-  // Evita que el ruido GPS en heading haga girar el mapa al estar parado
+  // Actualizamos el target heading cuando nos movemos un poco (>= 4 km/h)
+  // Ignoramos ruidos < 4 km/h para que de parado no gire el mapa
   useEffect(() => {
     const speedKmh = speed * 3.6;
-    if (speedKmh >= 15) {
+    if (speedKmh >= 4) {
       targetHeadingRef.current = heading;
     }
   }, [heading, speed]);
 
   useEffect(() => {
     const container = map.getContainer();
-    // Solo rotamos en modo navegación y cuando vamos a más de 10 km/h
     const speedKmh = speed * 3.6;
-    const shouldRotate = viewMode === 'navigation' && speedKmh >= 10;
+    // Solo rotamos en modo navegación, con tolerancia al ruido de parado (< 4 no rota, pero mantiene el que tenía de llegar, o lo deshace suavemente si usamos 0 de target)
+    // Para simplificar, consideramos "navigation" suficiente para rotar, pero el target ya lo gestiona el useEffect de arriba
+    const shouldRotate = viewMode === 'navigation';
 
     container.style.transition = 'none';
 
     const animate = () => {
       if (!shouldRotate) {
         // Volvemos suavemente al norte
-        smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, 0, 0.08);
+        smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, 0, 0.04);
         if (Math.abs(smoothedHeadingRef.current) > 0.1) {
           container.style.transform = `rotate(${-smoothedHeadingRef.current}deg) scale(1.42)`;
           rafRef.current = requestAnimationFrame(animate);
@@ -315,8 +316,8 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
         return;
       }
 
-      // Suavizado angular con rAF — scale(1.42) = √2 para cubrir el viewport en rotación
-      smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, targetHeadingRef.current, 0.06);
+      // Suavizado angular extralento para evitar sacudidas
+      smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, targetHeadingRef.current, 0.04);
       container.style.transform = `rotate(${-smoothedHeadingRef.current}deg) scale(1.42)`;
       rafRef.current = requestAnimationFrame(animate);
     };
@@ -326,7 +327,7 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
-  }, [map, viewMode, speed]);
+  }, [map, viewMode]);
 
   return null;
 }
