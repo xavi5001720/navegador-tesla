@@ -807,6 +807,7 @@ export default function Home() {
         isOpen={isGarageOpen}
         onClose={() => setIsGarageOpen(false)}
         profile={profile}
+        sessionName={session?.user?.user_metadata?.full_name || session?.user?.email || ''}
         onUpdate={updateProfile}
       />
 

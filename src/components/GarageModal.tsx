@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Save, Car, Palette, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserProfile } from '@/hooks/useProfile';
@@ -8,6 +8,7 @@ interface GarageModalProps {
   isOpen: boolean;
   onClose: () => void;
   profile: UserProfile | null;
+  sessionName?: string;
   onUpdate: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -19,11 +20,18 @@ const colors = [
   { name: 'Rojo', hex: '#FF0000', class: 'bg-red-600' },
 ];
 
-export default function GarageModal({ isOpen, onClose, profile, onUpdate }: GarageModalProps) {
-  const [name, setName] = useState(profile?.car_name || '');
-  const [color, setColor] = useState(profile?.car_color || 'Blanco');
+export default function GarageModal({ isOpen, onClose, profile, sessionName, onUpdate }: GarageModalProps) {
+  const [name, setName] = useState('');
+  const [color, setColor] = useState('Blanco');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setName(profile?.car_name || sessionName || '');
+      setColor(profile?.car_color || 'Blanco');
+    }
+  }, [isOpen, profile, sessionName]);
 
   const handleSave = async () => {
     console.log('--- Intentando guardar garaje ---');
@@ -113,7 +121,7 @@ export default function GarageModal({ isOpen, onClose, profile, onUpdate }: Gara
                 
                 <div className="absolute top-0 right-0 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
                   <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest leading-none">VEHÍCULO ACTUAL</span>
-                  <p className="text-xl font-black text-white italic">{profile?.car_type || 'Tesla Model 3'}</p>
+                  <p className="text-xl font-black text-white italic">{profile?.car_type || 'TESLA'}</p>
                 </div>
               </div>
 
@@ -122,7 +130,7 @@ export default function GarageModal({ isOpen, onClose, profile, onUpdate }: Gara
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 text-gray-400">
                     <Edit3 className="h-4 w-4" />
-                    <span className="text-xs font-black uppercase tracking-widest leading-none">Nombre Personalizado</span>
+                    <span className="text-xs font-black uppercase tracking-widest leading-none">Nombre</span>
                   </div>
                   <input
                     type="text"
@@ -185,7 +193,7 @@ export default function GarageModal({ isOpen, onClose, profile, onUpdate }: Gara
                 ) : (
                   <>
                     <Save className="h-6 w-6" />
-                    ESTABLECER CONFIGURACIÓN
+                    GUARDAR CAMBIOS
                   </>
                 )}
               </button>
