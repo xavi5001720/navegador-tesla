@@ -159,7 +159,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 md:bg-black/40 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 overflow-y-auto no-scrollbar md:relative ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+    <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 overflow-y-auto no-scrollbar ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <img src="/logo2.png" alt="Navegador Tesla Logo" className="h-14 w-auto object-contain drop-shadow-xl" />
