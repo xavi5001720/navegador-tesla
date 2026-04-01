@@ -657,27 +657,20 @@ const Sidebar: React.FC<SidebarProps> = ({
                       <div className="flex flex-wrap gap-2">
                          {(['g95', 'g98', 'diesel', 'glp'] as const).map(f => {
                             const labelMap = { g95: 'G95', g98: 'G98', diesel: 'Diésel', glp: 'GLP/GNC' };
+                            const isSelected = gasStationFilters.fuels?.[0] === f;
                             return (
                               <button 
                                  key={f}
                                  onClick={() => {
-                                   let newF = [...(gasStationFilters.fuels || [])] as ('g95' | 'g98' | 'diesel' | 'glp')[];
-                                   if (newF.includes(f)) newF = newF.filter(x => x !== f);
-                                   else newF.push(f);
-                                   setGasStationFilters({ ...gasStationFilters, fuels: newF });
+                                   // Selección única: si ya está seleccionado, lo quita (ninguno); si no, lo pone solo
+                                   setGasStationFilters({ ...gasStationFilters, fuels: isSelected ? [] : [f] });
                                  }}
-                                 className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md transition-colors ${gasStationFilters.fuels?.includes(f) ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                                 className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-md transition-colors ${isSelected ? 'bg-orange-600 text-white shadow-lg ring-2 ring-orange-400/30' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
                               >
                                  {labelMap[f]}
                               </button>
                             );
                          })}
-                         <button 
-                            onClick={() => setGasStationFilters({ ...gasStationFilters, fuels: [] })}
-                            className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md transition-colors ${!gasStationFilters.fuels?.length ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
-                         >
-                            Todos
-                         </button>
                       </div>
                   </div>
 
