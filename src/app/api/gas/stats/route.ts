@@ -5,6 +5,8 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export const revalidate = 0;
+export const maxDuration = 60; // Hasta 60s en Vercel
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   if (!supabaseUrl || !supabaseKey) {

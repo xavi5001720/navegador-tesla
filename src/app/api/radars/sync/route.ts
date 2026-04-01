@@ -5,6 +5,9 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const BATCH_SIZE = 500;
 
+export const maxDuration = 60; // Permitir hasta 60s en Vercel
+export const dynamic = 'force-dynamic';
+
 async function fetchRadarsFromOverpass(query: string): Promise<any[]> {
   const response = await fetch('https://overpass-api.de/api/interpreter', {
     method: 'POST',
