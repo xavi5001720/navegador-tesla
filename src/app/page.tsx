@@ -43,7 +43,7 @@ const DynamicMap = dynamic(() => import('@/components/MapUI'), {
 });
 
 export default function Home() {
-  const [viewMode, setViewMode] = useState<'navigation' | 'overview' | 'explore'>('navigation');
+  const [viewMode, setViewMode] = useState<'navigation' | 'overview'>('overview');
 
   const { 
     userPos, 
@@ -292,13 +292,13 @@ export default function Home() {
     let timeoutId: NodeJS.Timeout;
 
     if (speed === 0 && viewMode === 'navigation') {
-      // Temporizador de 60 segundos si estamos parados
+      // Temporizador de 60 segundos si estamos parados → volvemos a la vista general
       timeoutId = setTimeout(() => {
         setViewMode('overview');
-        setCustomZoom(null); // Borramos posible zoom manual para usar la vista panorámica natural
+        setCustomZoom(null);
       }, 60000);
-    } else if (speed > 0 && viewMode === 'overview') {
-      // Vuelta automática al arrancar
+    } else if ((speed ?? 0) * 3.6 > 5 && viewMode === 'overview') {
+      // Vuelta automática a navegación cuando el coche arranca
       setViewMode('navigation');
       setCustomZoom(null);
     }
@@ -520,7 +520,7 @@ export default function Home() {
           waypoints={waypoints}
           speed={speed}
           viewMode={viewMode}
-          onViewModeChange={setViewMode}
+          onViewModeChange={(mode) => setViewMode(mode as 'navigation' | 'overview')}
           customZoom={customZoom}
           onZoomChange={setCustomZoom}
           onMapClick={handleMapClick}
@@ -531,8 +531,8 @@ export default function Home() {
         {/* Panel de Avisos Rápidos y Velocímetro */}
         <div className="absolute bottom-6 right-6 z-[500] flex flex-col items-end gap-3 md:flex-row md:items-center md:gap-4 md:bottom-8 md:right-8">
 
-          {/* Botones de Zoom — visibles solo en navegación/exploración */}
-          {viewMode !== 'overview' && (
+          {/* Botones de Zoom — visibles solo en modo navegación */}
+          {viewMode === 'navigation' && (
             <div className="flex flex-row gap-3 md:flex-col md:gap-2">
               <button
                 onClick={() => setCustomZoom((customZoom ?? 17) + 1)}
@@ -554,7 +554,7 @@ export default function Home() {
           <Speedometer speed={speed} />
           
           <div className="flex flex-col gap-3 md:flex-row">
-            {viewMode !== 'overview' && (
+            {viewMode === 'navigation' && (
               <button 
                 onClick={() => { setViewMode('overview'); setCustomZoom(null); }}
                 className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-gray-800 hover:bg-gray-700"
@@ -563,14 +563,14 @@ export default function Home() {
                 <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Vista General</span>
               </button>
             )}
-            {viewMode !== 'navigation' && (
+            {viewMode === 'overview' && (
               <button 
                 onClick={() => {
                   if (!hasLocation) requestGPS();
                   setViewMode('navigation');
                   setCustomZoom(null);
                 }}
-                className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-gray-800 hover:bg-gray-700"
+                className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-blue-600/80 hover:bg-blue-500 border-blue-400/50"
               >
                 <img src="/volante.png" alt="Modo Navegación" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
                 <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Modo Navegación</span>

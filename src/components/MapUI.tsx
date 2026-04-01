@@ -184,22 +184,32 @@ const fuelLabels: Record<string, string> = {
 const SATELLITE_MAP_TILES = 'https://mt1.google.com/vt/lyrs=y&apistyle=s.t:3|p.v:off&x={x}&y={y}&z={z}';
 const MAP_ATTRIBUTION = '&copy; Google Maps';
 
-function MapEvents({ onViewModeChange, onMapClick }: { onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void, onMapClick?: (lat: number, lon: number, screenX: number, screenY: number) => void }) {
+// Ref global para comunicar el drag desde MapEvents a LocationTracker sin re-renders
+const userIsDraggingRef = { current: false };
+
+function MapEvents({ onMapClick }: { onMapClick?: (lat: number, lon: number, screenX: number, screenY: number) => void }) {
   const map = useMap();
   useEffect(() => {
     const onDragStart = () => {
-      if (onViewModeChange) onViewModeChange('explore');
+      // Marcamos que el usuario está arrastrando; LocationTracker lo usará para pausar el seguimiento
+      userIsDraggingRef.current = true;
+    };
+    const onDragEnd = () => {
+      // Tras soltar, esperamos 5 segundos antes de volver a seguir al coche
+      setTimeout(() => { userIsDraggingRef.current = false; }, 5000);
     };
     const onClick = (e: L.LeafletMouseEvent) => {
       if (onMapClick) onMapClick(e.latlng.lat, e.latlng.lng, e.originalEvent.clientX, e.originalEvent.clientY);
     };
     map.on('dragstart', onDragStart);
+    map.on('dragend', onDragEnd);
     map.on('click', onClick);
     return () => {
       map.off('dragstart', onDragStart);
+      map.off('dragend', onDragEnd);
       map.off('click', onClick);
     };
-  }, [map, onViewModeChange, onMapClick]);
+  }, [map, onMapClick]);
   return null;
 }
 
@@ -228,8 +238,8 @@ interface MapUIProps {
    weatherPoints?: WeatherPoint[];
    waypoints?: [number, number][];
    speed?: number;
-   viewMode?: 'navigation' | 'overview' | 'explore';
-   onViewModeChange?: (mode: 'navigation' | 'overview' | 'explore') => void;
+   viewMode?: 'navigation' | 'overview';
+   onViewModeChange?: (mode: 'navigation' | 'overview') => void;
    customZoom?: number | null;
    onZoomChange?: (zoom: number) => void;
    onMapClick?: (lat: number, lon: number, screenX: number, screenY: number) => void;
@@ -263,7 +273,7 @@ function lerpAngle(current: number, target: number, alpha: number): number {
   return current + diff * alpha;
 }
 
-function MapRotator({ heading, viewMode, hasRoute, speed = 0 }: { heading: number, viewMode: string, hasRoute: boolean, speed?: number }) {
+function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMode: string, speed?: number }) {
   const map = useMap();
   const smoothedHeadingRef = useRef<number>(heading);
   const rafRef = useRef<number | null>(null);
@@ -276,19 +286,18 @@ function MapRotator({ heading, viewMode, hasRoute, speed = 0 }: { heading: numbe
 
   useEffect(() => {
     const container = map.getContainer();
-    const shouldRotate = viewMode === 'navigation' && speed >= 10;
+    // Solo rotamos en modo navegación y cuando vamos a más de 10 km/h
+    const speedKmh = speed * 3.6;
+    const shouldRotate = viewMode === 'navigation' && speedKmh >= 10;
 
-    // Eliminamos la transición CSS: ahora la animamos manualmente con rAF para tener control total
     container.style.transition = 'none';
 
     const animate = () => {
       if (!shouldRotate) {
-        // Volvemos suavemente al norte cuando estamos detenidos o en otro modo
+        // Volvemos suavemente al norte
         smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, 0, 0.08);
-        container.style.transform = Math.abs(smoothedHeadingRef.current) > 0.1
-          ? `rotate(${-smoothedHeadingRef.current}deg) scale(1.42)`
-          : 'none';
         if (Math.abs(smoothedHeadingRef.current) > 0.1) {
+          container.style.transform = `rotate(${-smoothedHeadingRef.current}deg) scale(1.42)`;
           rafRef.current = requestAnimationFrame(animate);
         } else {
           container.style.transform = 'none';
@@ -296,8 +305,7 @@ function MapRotator({ heading, viewMode, hasRoute, speed = 0 }: { heading: numbe
         return;
       }
 
-      // Factor de suavizado: 0.06 = muy suave (GPS ruidoso), 0.15 = más reactivo
-      // scale(1.42) = √2: garantiza que el mapa cubre el viewport en cualquier ángulo de rotación
+      // Suavizado angular con rAF — scale(1.42) = √2 para cubrir el viewport en rotación
       smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, targetHeadingRef.current, 0.06);
       container.style.transform = `rotate(${-smoothedHeadingRef.current}deg) scale(1.42)`;
       rafRef.current = requestAnimationFrame(animate);
@@ -316,50 +324,66 @@ function MapRotator({ heading, viewMode, hasRoute, speed = 0 }: { heading: numbe
 function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordinates, customZoom }: { position: L.LatLngExpression, viewMode: string, hasRoute: boolean, speed?: number, routeCoordinates?: [number, number][], customZoom?: number | null }) {
   const map = useMap();
   const lastOverviewRouteRef = useRef<string>('');
+  const lastViewModeRef = useRef<string>(viewMode);
 
-  // Efecto para VISTA GENERAL: solo se ejecuta cuando cambia la ruta o el modo
+  // VISTA GENERAL: centrado inicial cuando se entra al modo o cambia la ruta.
+  // Después de eso el mapa es completamente libre: el usuario puede mover y hacer zoom sin restricciones.
   useEffect(() => {
-    if (viewMode === 'overview') {
-      const routeKey = JSON.stringify(routeCoordinates);
-      if (hasRoute && routeCoordinates && routeCoordinates.length > 0) {
-        if (lastOverviewRouteRef.current !== routeKey) {
-          try {
-            const bounds = L.latLngBounds(routeCoordinates);
-            map.fitBounds(bounds, { padding: [80, 80], animate: true, duration: 1.5 });
-            lastOverviewRouteRef.current = routeKey;
-          } catch (e) {
-            map.setView(position, 14, { animate: true, duration: 1.5 });
-          }
-        }
-      } else {
-        map.setView(position, 14, { animate: true, duration: 1.5 });
+    if (viewMode !== 'overview') {
+      lastOverviewRouteRef.current = '';
+      lastViewModeRef.current = viewMode;
+      return;
+    }
+
+    const routeKey = JSON.stringify(routeCoordinates);
+    const modeJustChanged = lastViewModeRef.current !== 'overview';
+    lastViewModeRef.current = 'overview';
+
+    // Solo centramos si acabamos de entrar al modo o si llegó una ruta nueva
+    if (!modeJustChanged && lastOverviewRouteRef.current === routeKey) return;
+
+    lastOverviewRouteRef.current = routeKey;
+
+    if (hasRoute && routeCoordinates && routeCoordinates.length > 0) {
+      try {
+        const bounds = L.latLngBounds(routeCoordinates);
+        map.fitBounds(bounds, { padding: [80, 80], animate: true, duration: 1.5 });
+      } catch (e) {
+        map.setView(position, 13, { animate: true, duration: 1.5 });
       }
     } else {
-      // Limpiamos la referencia cuando salimos de overview
-      lastOverviewRouteRef.current = '';
+      // Sin ruta: zoom de ciudad centrado en el usuario
+      map.setView(position, 13, { animate: true, duration: 1.5 });
     }
-  }, [viewMode, hasRoute, routeCoordinates, map]);
+  }, [viewMode, hasRoute, routeCoordinates, map, position]);
 
-  // Efecto para NAVEGACIÓN: sigue al coche
+  // MODO NAVEGACIÓN: sigue al coche con zoom dinámico.
+  // Si el usuario arrastra el mapa, pausamos el seguimiento 5 segundos.
   useEffect(() => {
-    if (viewMode === 'explore' || viewMode === 'overview') return;
+    if (viewMode !== 'navigation') return;
+    // Si el usuario está arrastrando, no interferimos
+    if (userIsDraggingRef.current) return;
 
-    if (viewMode === 'navigation') {
-      if (customZoom != null) {
-        map.setView(position, customZoom, { animate: true, duration: 0.8 });
-        return;
-      }
+    const speedKmh = speed * 3.6;
 
-      let targetZoom = 18;
-      if (speed < 20) targetZoom = 19;
-      else if (speed < 50) targetZoom = 18;
-      else if (speed < 90) targetZoom = 17;
-      else targetZoom = 16;
-
-      map.setView(position, targetZoom, { animate: true, duration: 1 });
+    let targetZoom: number;
+    if (customZoom != null) {
+      targetZoom = customZoom;
+    } else if (speedKmh < 10) {
+      targetZoom = 19; // Muy lento / parado: máximo detalle
+    } else if (speedKmh < 40) {
+      targetZoom = 18; // Ciudad
+    } else if (speedKmh < 80) {
+      targetZoom = 17; // Carretera secundaria
+    } else if (speedKmh < 120) {
+      targetZoom = 16; // Autovía
+    } else {
+      targetZoom = 15; // Autopista / alta velocidad
     }
+
+    map.setView(position, targetZoom, { animate: true, duration: 0.8 });
   }, [position, viewMode, speed, map, customZoom]);
-  
+
   return null;
 }
 
@@ -378,7 +402,7 @@ export default function MapUI({
   weatherPoints = [],
   waypoints = [],
   speed = 0, 
-  viewMode = 'navigation', 
+  viewMode = 'overview', 
   onViewModeChange, 
   customZoom, 
   onZoomChange, 
@@ -403,8 +427,8 @@ export default function MapUI({
         className="h-full w-full z-0"
         zoomControl={false}
       >
-        <MapEvents onViewModeChange={onViewModeChange} onMapClick={onMapClick} />
-        <MapRotator heading={heading} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} />
+        <MapEvents onMapClick={onMapClick} />
+        <MapRotator heading={heading} viewMode={viewMode} speed={speed} />
         
         {/* Capa de Satélite Limpia (Sin etiquetas ni iconos) */}
         <TileLayer 
