@@ -529,14 +529,8 @@ export default function MapUI({
             position={[radar.lat, radar.lon]} 
             icon={radarIcon(radar.speedLimit)}
             zIndexOffset={100}
-          >
-            <Popup className="tesla-popup">
-              <div className="p-2">
-                <p className="font-bold text-lg text-red-500 mb-1">RADAR {radar.type.toUpperCase()}</p>
-                {radar.speedLimit && <p className="text-sm font-medium">Límite: <span className="text-xl font-bold">{radar.speedLimit} km/h</span></p>}
-              </div>
-            </Popup>
-          </Marker>
+            interactive={false}
+          />
         ))}
 
         {aircrafts.map((aircraft) => (
