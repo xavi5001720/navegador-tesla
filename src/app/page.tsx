@@ -539,6 +539,7 @@ export default function Home() {
         <DynamicMap 
           userPos={userPos}
           heading={heading}
+          hasLocation={hasLocation}
           routeCoordinates={route?.coordinates} 
           radars={radars}
           aircrafts={allAircrafts}

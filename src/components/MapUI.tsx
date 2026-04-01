@@ -252,6 +252,7 @@ interface MapUIProps {
    weatherPoints?: WeatherPoint[];
    waypoints?: [number, number][];
    speed?: number;
+   hasLocation?: boolean;
    viewMode?: 'navigation' | 'overview';
    onViewModeChange?: (mode: 'navigation' | 'overview') => void;
    customZoom?: number | null;
@@ -342,10 +343,19 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
   return null;
 }
 
-function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordinates, customZoom }: { position: L.LatLngExpression, viewMode: string, hasRoute: boolean, speed?: number, routeCoordinates?: [number, number][], customZoom?: number | null }) {
+function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordinates, customZoom, hasLocation }: { position: L.LatLngExpression, viewMode: string, hasRoute: boolean, speed?: number, routeCoordinates?: [number, number][], customZoom?: number | null, hasLocation?: boolean }) {
   const map = useMap();
   const lastOverviewRouteRef = useRef<string>('');
   const lastViewModeRef = useRef<string>(viewMode);
+  const firstLocationReceivedRef = useRef(false);
+
+  // VISTA GENERAL: centrado al obtener GPS por primera vez
+  useEffect(() => {
+    if (viewMode === 'overview' && hasLocation && !firstLocationReceivedRef.current && !hasRoute) {
+      firstLocationReceivedRef.current = true;
+      map.setView(position, 14, { animate: true, duration: 1.5 });
+    }
+  }, [hasLocation, viewMode, position, hasRoute, map]);
 
   // VISTA GENERAL: centrado inicial cuando se entra al modo o cambia la ruta.
   // Después de eso el mapa es completamente libre: el usuario puede mover y hacer zoom sin restricciones.
@@ -420,6 +430,7 @@ export default function MapUI({
   weatherPoints = [],
   waypoints = [],
   speed = 0, 
+  hasLocation = false,
   viewMode = 'overview', 
   onViewModeChange, 
   customZoom, 
@@ -465,7 +476,7 @@ export default function MapUI({
         
         <RouteFitter routeCoordinates={routeCoordinates} />
         
-        <LocationTracker position={userPos} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} customZoom={customZoom} />
+        <LocationTracker position={userPos} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} customZoom={customZoom} hasLocation={hasLocation} />
         
         {(() => {
           if (!routeCoordinates || routeCoordinates.length === 0) return null;
