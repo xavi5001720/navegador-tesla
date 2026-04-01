@@ -15,6 +15,7 @@ import MapContextMenu from './MapContextMenu';
 import { RouteSection } from '@/hooks/useRoute';
 import { WeatherPoint } from '@/hooks/useWeather';
 import { getCarFilter, getCarImage } from '@/utils/carStyles';
+import { Friend } from '@/hooks/useSocial';
 
 const defaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -247,6 +248,7 @@ interface MapUIProps {
    routeCoordinates?: [number, number][];
    radars: Radar[];
    aircrafts?: Aircraft[];
+   friends?: Friend[];
    chargers?: Charger[];
    gasStations?: GasStation[];
    weatherPoints?: WeatherPoint[];
@@ -261,6 +263,7 @@ interface MapUIProps {
    onChargerClick?: (charger: Charger) => void;
    onGasStationClick?: (station: GasStation) => void;
    routeSections?: RouteSection[];
+   centerOverride?: [number, number] | null;
 }
 
 const createCarIcon = (heading: number, color?: string) => {
@@ -282,6 +285,29 @@ const createCarIcon = (heading: number, color?: string) => {
     </div>
   );
   return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [110, 110], iconAnchor: [55, 55] });
+};
+
+const createFriendIcon = (color?: string, name?: string) => {
+  const iconHtml = renderToStaticMarkup(
+    <div className="relative flex flex-col items-center justify-center pointer-events-none">
+      <div className="relative flex items-center justify-center h-20 w-20 group drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
+        <div className={`absolute inset-0 rounded-full blur-2xl scale-125 transition-all duration-700 ${
+             color === 'Rojo' ? 'bg-red-500/30' : 
+             color === 'Azul' ? 'bg-blue-500/30' : 
+             color === 'Negro' ? 'bg-gray-900/40' : 'bg-blue-500/20'}`}></div>
+        <img 
+          src={getCarImage(color)} 
+          alt="Amigo" 
+          className="w-full h-full object-contain transition-all duration-700 rotate-180 opacity-90" 
+          style={{ filter: getCarFilter(color) }}
+        />
+      </div>
+      <div className="mt-2 px-3 py-1 bg-black/80 backdrop-blur-md border border-green-500/50 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.3)]">
+         <span className="text-[10px] font-black text-white italic tracking-widest uppercase">{name}</span>
+      </div>
+    </div>
+  );
+  return L.divIcon({ html: iconHtml, className: 'custom-friend-icon', iconSize: [100, 130], iconAnchor: [50, 65] });
 };
 
 // Interpolación angular más corta entre dos ángulos (evita el salto 359° → 0°)
@@ -343,11 +369,18 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
   return null;
 }
 
-function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordinates, customZoom, hasLocation }: { position: L.LatLngExpression, viewMode: string, hasRoute: boolean, speed?: number, routeCoordinates?: [number, number][], customZoom?: number | null, hasLocation?: boolean }) {
+function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordinates, customZoom, hasLocation, centerOverride }: { position: L.LatLngExpression, viewMode: string, hasRoute: boolean, speed?: number, routeCoordinates?: [number, number][], customZoom?: number | null, hasLocation?: boolean, centerOverride?: [number, number] | null }) {
   const map = useMap();
   const lastOverviewRouteRef = useRef<string>('');
   const lastViewModeRef = useRef<string>(viewMode);
   const firstLocationReceivedRef = useRef(false);
+
+  // VISTA GENERAL: override center si clicn en amigo u otro
+  useEffect(() => {
+    if (centerOverride) {
+      map.flyTo(centerOverride, 16, { animate: true, duration: 2 });
+    }
+  }, [centerOverride, map]);
 
   // VISTA GENERAL: centrado al obtener GPS por primera vez
   useEffect(() => {
@@ -438,7 +471,9 @@ export default function MapUI({
   onMapClick,
   onChargerClick,
   onGasStationClick,
-  routeSections = []
+  routeSections = [],
+  friends = [],
+  centerOverride = null
 }: MapUIProps) {
   return (
     <div className="relative h-full w-full bg-gray-900 overflow-hidden">
@@ -476,7 +511,7 @@ export default function MapUI({
         
         <RouteFitter routeCoordinates={routeCoordinates} />
         
-        <LocationTracker position={userPos} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} customZoom={customZoom} hasLocation={hasLocation} />
+        <LocationTracker position={userPos} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} customZoom={customZoom} hasLocation={hasLocation} centerOverride={centerOverride} />
         
         {(() => {
           if (!routeCoordinates || routeCoordinates.length === 0) return null;
@@ -615,6 +650,16 @@ export default function MapUI({
              icon={createWeatherIcon(wp.temp, wp.condition)}
              zIndexOffset={70}
              interactive={false}
+          />
+        ))}
+
+        {friends.filter(f => f.is_sharing_location && f.last_lat && f.last_lon).map((friend) => (
+          <Marker 
+            key={`friend-${friend.id}`} 
+            position={[friend.last_lat!, friend.last_lon!]} 
+            icon={createFriendIcon(friend.car_color, friend.car_name)} 
+            zIndexOffset={800} 
+            interactive={true}
           />
         ))}
 

@@ -137,6 +137,7 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
         .eq('user_id', friendId)
         .eq('friend_id', session.user.id);
         
+      await fetchFriends();
       return { success: true, accepted: true, error };
     }
 
@@ -144,6 +145,7 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
       .from('friendships')
       .insert({ user_id: session.user.id, friend_id: friendId, status: 'pending' });
 
+    await fetchFriends();
     return { success: true, accepted: false, error };
   };
 

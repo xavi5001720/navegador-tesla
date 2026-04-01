@@ -112,6 +112,7 @@ export default function Home() {
   
   const wasStoppedRef = useRef(true);
   const isManualOverviewRef = useRef(false);
+  const [mapCenterOverride, setMapCenterOverride] = useState<[number, number] | null>(null);
 
   const handleManualViewModeChange = useCallback((mode: 'navigation' | 'overview') => {
     isManualOverviewRef.current = mode === 'overview';
@@ -477,7 +478,8 @@ export default function Home() {
                 className="ml-2 opacity-0 group-hover:opacity-100 transition-all h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10"
                 onClick={() => {
                    if (friend.last_lat && friend.last_lon) {
-                     // Centrar mapa en amigo (Lógica extra si se desea)
+                     setViewMode('overview');
+                     setMapCenterOverride([friend.last_lat, friend.last_lon]);
                    }
                 }}
               >
@@ -565,6 +567,8 @@ export default function Home() {
           onGasStationClick={handleGasStationClick}
           routeSections={route?.sections}
           carColor={profile?.car_color}
+          friends={friends}
+          centerOverride={mapCenterOverride}
         />
 
         {/* Panel de Avisos Rápidos y Velocímetro */}
