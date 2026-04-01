@@ -1,6 +1,6 @@
 'use client';
 
-import { Car, Users, Settings, LogOut, X } from 'lucide-react';
+import { Car, Users, Maximize, Minimize, LogOut, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface UserMenuProps {
@@ -8,7 +8,8 @@ interface UserMenuProps {
   onClose: () => void;
   onOpenGarage: () => void;
   onOpenSocial: () => void;
-  onOpenSettings: () => void;
+  isFullscreen: boolean;
+  onToggleFullscreen: () => void;
   onLogout: () => void;
 }
 
@@ -17,7 +18,8 @@ export default function UserMenu({
   onClose, 
   onOpenGarage, 
   onOpenSocial, 
-  onOpenSettings, 
+  isFullscreen,
+  onToggleFullscreen, 
   onLogout 
 }: UserMenuProps) {
   return (
@@ -48,9 +50,9 @@ export default function UserMenu({
                 onClick={() => { onOpenSocial(); onClose(); }} 
               />
               <MenuButton 
-                icon={<Settings className="h-5 w-5" />} 
-                label="Preferencias" 
-                onClick={() => { onOpenSettings(); onClose(); }} 
+                icon={isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />} 
+                label={isFullscreen ? "Ver menú" : "Ver pantalla completa"} 
+                onClick={() => { onToggleFullscreen(); onClose(); }} 
               />
               
               <div className="h-px bg-white/5 my-2 mx-4" />

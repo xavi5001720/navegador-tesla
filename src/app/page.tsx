@@ -449,7 +449,8 @@ export default function Home() {
         onClose={() => setIsUserMenuOpen(false)}
         onOpenGarage={() => setIsGarageOpen(true)}
         onOpenSocial={() => setIsSocialOpen(true)}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        isFullscreen={!isSidebarOpen}
+        onToggleFullscreen={() => setIsSidebarOpen(!isSidebarOpen)}
         onLogout={handleSignOut}
       />
 
