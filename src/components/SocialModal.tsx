@@ -131,7 +131,7 @@ export default function SocialModal({ isOpen, onClose, session, onAddFriend }: S
                     <p className="text-sm text-gray-400">Escaneen este código para vincularse contigo</p>
                     <div className="flex items-center gap-2 justify-center bg-white/5 px-4 py-2 rounded-xl border border-white/5">
                       <span className="text-[10px] font-black text-amber-500 uppercase">TU ID</span>
-                      <code className="text-xs text-white opacity-50">{session?.user?.id.substring(0, 8)}...</code>
+                      <code className="text-xs text-white opacity-50 break-all select-all">{session?.user?.id}</code>
                     </div>
                   </div>
 
