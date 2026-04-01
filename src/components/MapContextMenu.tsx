@@ -34,7 +34,7 @@ export default function MapContextMenu({
   const [favName, setFavName] = useState('');
 
   const menuWidth = 240;
-  const approxMenuHeight = hasRoute ? 260 : 165;
+  const approxMenuHeight = hasRoute ? 320 : 220;
   const adjustedX = screenX + menuWidth > window.innerWidth ? screenX - menuWidth : screenX;
   const adjustedY = screenY + approxMenuHeight > window.innerHeight ? screenY - approxMenuHeight : screenY;
 
@@ -58,13 +58,10 @@ export default function MapContextMenu({
         style={{ left: adjustedX, top: adjustedY }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+        <div className="flex items-center justify-center px-4 py-3 border-b border-white/10">
           <span className="text-[10px] font-bold text-white/40 uppercase tracking-wider">
             {lat.toFixed(4)}, {lon.toFixed(4)}
           </span>
-          <button onClick={onClose} className="text-white/30 hover:text-white transition-colors">
-            <X className="h-3.5 w-3.5" />
-          </button>
         </div>
 
         <div className="flex flex-col p-2 gap-1">
@@ -153,6 +150,14 @@ export default function MapContextMenu({
               </button>
             </>
           )}
+
+          {/* Botón Cerrar */}
+          <button
+            onClick={onClose}
+            className="mt-2 w-full py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-white/10 text-sm font-bold text-gray-300 transition-colors"
+          >
+            Cerrar
+          </button>
         </div>
       </div>
     </>
