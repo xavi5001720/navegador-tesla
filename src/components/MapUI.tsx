@@ -184,32 +184,36 @@ const fuelLabels: Record<string, string> = {
 const SATELLITE_MAP_TILES = 'https://mt1.google.com/vt/lyrs=y&apistyle=s.t:3|p.v:off&x={x}&y={y}&z={z}';
 const MAP_ATTRIBUTION = '&copy; Google Maps';
 
-// Ref global para comunicar el drag desde MapEvents a LocationTracker sin re-renders
-const userIsDraggingRef = { current: false };
-
-function MapEvents({ onMapClick }: { onMapClick?: (lat: number, lon: number, screenX: number, screenY: number) => void }) {
+function MapEvents({ 
+  viewMode,
+  onViewModeChange,
+  onMapClick 
+}: { 
+  viewMode?: string;
+  onViewModeChange?: (mode: 'navigation' | 'overview') => void;
+  onMapClick?: (lat: number, lon: number, screenX: number, screenY: number) => void;
+}) {
   const map = useMap();
   useEffect(() => {
-    const onDragStart = () => {
-      // Marcamos que el usuario está arrastrando; LocationTracker lo usará para pausar el seguimiento
-      userIsDraggingRef.current = true;
-    };
-    const onDragEnd = () => {
-      // Tras soltar, esperamos 5 segundos antes de volver a seguir al coche
-      setTimeout(() => { userIsDraggingRef.current = false; }, 5000);
+    const switchToOverview = () => {
+      // Si el usuario interactúa manualmente con el mapa en modo navegación,
+      // pasamos a vista general y nos quedamos allí hasta que pulse el botón explicitamente
+      if (viewMode === 'navigation' && onViewModeChange) {
+        onViewModeChange('overview');
+      }
     };
     const onClick = (e: L.LeafletMouseEvent) => {
       if (onMapClick) onMapClick(e.latlng.lat, e.latlng.lng, e.originalEvent.clientX, e.originalEvent.clientY);
     };
-    map.on('dragstart', onDragStart);
-    map.on('dragend', onDragEnd);
+    map.on('dragstart', switchToOverview);
+    map.on('zoomend', switchToOverview); // también captura el pinch-zoom manual
     map.on('click', onClick);
     return () => {
-      map.off('dragstart', onDragStart);
-      map.off('dragend', onDragEnd);
+      map.off('dragstart', switchToOverview);
+      map.off('zoomend', switchToOverview);
       map.off('click', onClick);
     };
-  }, [map, onMapClick]);
+  }, [map, viewMode, onViewModeChange, onMapClick]);
   return null;
 }
 
@@ -281,10 +285,14 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
   const rafRef = useRef<number | null>(null);
   const targetHeadingRef = useRef<number>(heading);
 
-  // Actualizamos el target cuando llega un heading nuevo del GPS
+  // Solo actualizamos el target heading cuando la velocidad es real (>= 15 km/h)
+  // Evita que el ruido GPS en heading haga girar el mapa al estar parado
   useEffect(() => {
-    targetHeadingRef.current = heading;
-  }, [heading]);
+    const speedKmh = speed * 3.6;
+    if (speedKmh >= 15) {
+      targetHeadingRef.current = heading;
+    }
+  }, [heading, speed]);
 
   useEffect(() => {
     const container = map.getContainer();
@@ -360,11 +368,8 @@ function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordin
   }, [viewMode, hasRoute, routeCoordinates, map, position]);
 
   // MODO NAVEGACIÓN: sigue al coche con zoom dinámico.
-  // Si el usuario arrastra el mapa, pausamos el seguimiento 5 segundos.
   useEffect(() => {
     if (viewMode !== 'navigation') return;
-    // Si el usuario está arrastrando, no interferimos
-    if (userIsDraggingRef.current) return;
 
     const speedKmh = speed * 3.6;
 
@@ -431,7 +436,7 @@ export default function MapUI({
         className="h-full w-full z-0"
         zoomControl={false}
       >
-        <MapEvents onMapClick={onMapClick} />
+        <MapEvents viewMode={viewMode} onViewModeChange={onViewModeChange} onMapClick={onMapClick} />
         <MapRotator heading={heading} viewMode={viewMode} speed={speed} />
         
         {/* Capa de Satélite Limpia (Sin etiquetas ni iconos) */}

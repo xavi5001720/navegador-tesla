@@ -295,15 +295,17 @@ export default function Home() {
   // Cambio Automático de Vista (Navegación <-> Vista General) basado en velocidad
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
+    const speedKmh = (speed ?? 0) * 3.6;
 
-    if (speed === 0 && viewMode === 'navigation') {
-      // Temporizador de 60 segundos si estamos parados → volvemos a la vista general
+    if (speedKmh < 1 && viewMode === 'navigation') {
+      // Parado (menos de 1 km/h real): temporizador de 60 segundos para volver a vista general
       timeoutId = setTimeout(() => {
         setViewMode('overview');
         setCustomZoom(null);
       }, 60000);
-    } else if ((speed ?? 0) * 3.6 > 5 && viewMode === 'overview') {
-      // Vuelta automática a navegación cuando el coche arranca
+    } else if (speedKmh > 12 && viewMode === 'overview') {
+      // Solo volvemos a navegación cuando la velocidad es claramente real (> 12 km/h)
+      // Evita que el ruido GPS de 1-3 km/h active el modo navegación accidentalmente
       setViewMode('navigation');
       setCustomZoom(null);
     }
