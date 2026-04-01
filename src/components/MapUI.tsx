@@ -14,7 +14,7 @@ import { findClosestPointOnPolyline, getBearing } from '@/utils/geo';
 import MapContextMenu from './MapContextMenu';
 import { RouteSection } from '@/hooks/useRoute';
 import { WeatherPoint } from '@/hooks/useWeather';
-import { getCarFilter } from '@/utils/carStyles';
+import { getCarFilter, getCarImage } from '@/utils/carStyles';
 
 const defaultIcon = L.icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
@@ -274,7 +274,7 @@ const createCarIcon = (heading: number, color?: string) => {
       
       {/* Imagen del coche con filtro dinámico */}
       <img 
-        src="/coche.png" 
+        src={getCarImage(color)} 
         alt="Coche" 
         className="w-full h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] transition-all duration-700 rotate-180" 
         style={{ filter: getCarFilter(color) }}

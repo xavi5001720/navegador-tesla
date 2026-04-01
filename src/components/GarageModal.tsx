@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Save, Car, Palette, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserProfile } from '@/hooks/useProfile';
-import { getCarFilter } from '@/utils/carStyles';
+import { getCarFilter, getCarImage } from '@/utils/carStyles';
 
 interface GarageModalProps {
   isOpen: boolean;
@@ -93,7 +93,7 @@ export default function GarageModal({ isOpen, onClose, profile, onUpdate }: Gara
                   className="relative group w-full h-full flex items-center justify-center"
                 >
                   <img 
-                    src="/coche.png" 
+                    src={getCarImage(color)} 
                     alt="Coche Previsualización" 
                     className="h-56 w-auto object-contain drop-shadow-[0_0_50px_rgba(255,255,255,0.1)] transition-all duration-700 rotate-180"
                     style={{ filter: getCarFilter(color) }}
