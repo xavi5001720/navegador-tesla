@@ -20,8 +20,8 @@ import { playPegasusAlert, playWaypointAlert, playTrafficJamAlert, playWeatherAl
 import MapContextMenu from '@/components/MapContextMenu';
 import FavoritesPanel from '@/components/FavoritesPanel';
 import { useFavorites } from '@/hooks/useFavorites';
-import { useChargers, ChargerFilters } from '@/hooks/useChargers';
-import { useGasStations, GasStationFilters } from '@/hooks/useGasStations';
+import { useChargers, ChargerFilters, Charger } from '@/hooks/useChargers';
+import { useGasStations, GasStationFilters, GasStation } from '@/hooks/useGasStations';
 import { useWeather } from '@/hooks/useWeather';
 import { supabase } from '@/lib/supabase';
 import AuthModal from '@/components/AuthModal';
@@ -91,6 +91,11 @@ export default function Home() {
   const [lastRecalculationTime, setLastRecalculationTime] = useState(0);
   const [customZoom, setCustomZoom] = useState<number | null>(null);
   const [contextMenu, setContextMenu] = useState<{ lat: number; lon: number; screenX: number; screenY: number } | null>(null);
+  const [selectedPOI, setSelectedPOI] = useState<
+    | { type: 'charger'; data: Charger }
+    | { type: 'gasStation'; data: GasStation }
+    | null
+  >(null);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -317,6 +322,18 @@ export default function Home() {
     setContextMenu({ lat, lon, screenX, screenY });
   }, []);
 
+  const handleChargerClick = useCallback((charger: Charger) => {
+    setSelectedPOI({ type: 'charger', data: charger });
+    setViewMode('overview');
+    setContextMenu(null);
+  }, []);
+
+  const handleGasStationClick = useCallback((station: GasStation) => {
+    setSelectedPOI({ type: 'gasStation', data: station });
+    setViewMode('overview');
+    setContextMenu(null);
+  }, []);
+
   const handleNavigateToPoint = useCallback(() => {
     if (!contextMenu) return;
     const origin: [number, number] = userPos || [40.4168, -3.7038];
@@ -524,6 +541,8 @@ export default function Home() {
           customZoom={customZoom}
           onZoomChange={setCustomZoom}
           onMapClick={handleMapClick}
+          onChargerClick={handleChargerClick}
+          onGasStationClick={handleGasStationClick}
           routeSections={route?.sections}
           carColor={profile?.car_color}
         />
@@ -561,7 +580,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Menú contextual del mapa */}
+      {/* Menú contextual del mapa (clic derecho genérico) */}
       {contextMenu && (
         <MapContextMenu
           lat={contextMenu.lat}
@@ -577,6 +596,169 @@ export default function Home() {
           onClose={() => setContextMenu(null)}
         />
       )}
+
+      {/* Panel unificado de Cargador EV o Gasolinera */}
+      {selectedPOI && (() => {
+        const isCharger = selectedPOI.type === 'charger';
+        const poi = selectedPOI.data;
+        const lat = isCharger ? (poi as Charger).lat : (poi as GasStation).lat;
+        const lon = isCharger ? (poi as Charger).lon : (poi as GasStation).lon;
+        const accentColor = isCharger ? 'emerald' : 'orange';
+        const fuelLabels: Record<string, string> = { g95: 'G95', g98: 'G98', diesel: 'Diésel', glp: 'GLP' };
+
+        const handleNavigateToPOI = () => {
+          const origin: [number, number] = userPos || [40.4168, -3.7038];
+          calculateRoute(origin, [lat, lon]);
+          setSelectedPOI(null);
+        };
+        const handleAddStopBeforePOI = () => {
+          const origin: [number, number] = userPos || [40.4168, -3.7038];
+          addWaypointBefore(origin, [lat, lon]);
+          setSelectedPOI(null);
+        };
+        const handleAddStopAfterPOI = () => {
+          const origin: [number, number] = userPos || [40.4168, -3.7038];
+          addWaypointAfter(origin, [lat, lon]);
+          setSelectedPOI(null);
+        };
+        const handleSaveFavPOI = () => {
+          const name = isCharger ? (poi as Charger).title : (poi as GasStation).name;
+          saveFavorite(lat, lon, name);
+        };
+        const alreadyFav = isFavorite(lat, lon);
+
+        return (
+          <div className="fixed bottom-0 left-0 right-0 z-[700] flex justify-center px-4 pb-6 animate-in slide-in-from-bottom-4 duration-300">
+            <div className={`w-full max-w-lg bg-gray-950/95 backdrop-blur-xl rounded-3xl border border-white/10 shadow-[0_-20px_60px_rgba(0,0,0,0.6)] overflow-hidden`}>
+              
+              {/* Cabecera del POI */}
+              <div className={`flex items-center gap-3 p-4 border-b border-white/5 bg-gradient-to-r ${
+                isCharger ? 'from-emerald-950/60 to-transparent' : 'from-orange-950/60 to-transparent'
+              }`}>
+                <div className={`h-12 w-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg ${
+                  isCharger ? 'bg-emerald-600' : 'bg-orange-500'
+                }`}>
+                  <img
+                    src={isCharger ? '/cargadorEV.png' : '/gasolinera.png'}
+                    alt={isCharger ? 'Cargador EV' : 'Gasolinera'}
+                    className="h-6 w-6 object-contain"
+                    style={{ filter: 'brightness(0) invert(1)' }}
+                  />
+                </div>
+                <div className="flex flex-col flex-1 overflow-hidden">
+                  <span className={`text-[10px] font-black uppercase tracking-widest ${
+                    isCharger ? 'text-emerald-400' : 'text-orange-400'
+                  }`}>{isCharger ? 'Cargador Eléctrico' : 'Gasolinera'}</span>
+                  <h2 className="font-black text-white text-sm leading-tight truncate">
+                    {isCharger ? (poi as Charger).title : (poi as GasStation).name}
+                  </h2>
+                  <p className="text-[11px] text-gray-400 truncate">
+                    {isCharger ? (poi as Charger).operator : (poi as GasStation).city}
+                  </p>
+                </div>
+              </div>
+
+              {/* Detalles del POI */}
+              <div className="p-4 flex flex-col gap-3">
+                {isCharger && (() => {
+                  const c = poi as Charger;
+                  return (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex justify-between items-center bg-emerald-950/30 border border-emerald-500/20 rounded-xl px-3 py-2">
+                        <span className="text-xs text-gray-400">Potencia Máxima</span>
+                        <span className="font-black text-emerald-400 text-sm">{c.maxPower > 0 ? `${c.maxPower} kW` : 'N/D'}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[11px] text-gray-400">
+                        <div><span className="font-bold text-gray-500 uppercase tracking-widest text-[9px]">Coste</span><p className="text-white">{c.usageCost}</p></div>
+                        <div><span className="font-bold text-gray-500 uppercase tracking-widest text-[9px]">Dirección</span><p className="text-white truncate">{c.address}</p></div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {!isCharger && (() => {
+                  const s = poi as GasStation;
+                  return (
+                    <div className="flex flex-col gap-2">
+                      {s.cheapestFuelPrice && (
+                        <div className="flex justify-between items-center bg-orange-950/30 border border-orange-500/20 rounded-xl px-3 py-2">
+                          <span className="text-xs text-gray-400">Mejor precio encontrado</span>
+                          <span className="font-black text-orange-400 text-sm">{s.cheapestFuelPrice.toFixed(3)} €/L</span>
+                        </div>
+                      )}
+                      {(s.price_g95 || s.price_g98 || s.price_diesel || s.price_glp) && (
+                        <div className="grid grid-cols-4 gap-1.5">
+                          {[['G95', s.price_g95], ['G98', s.price_g98], ['Diésel', s.price_diesel], ['GLP', s.price_glp]]
+                            .filter(([, v]) => v)
+                            .map(([label, val]) => (
+                              <div key={label as string} className="flex flex-col items-center bg-white/5 border border-white/10 rounded-xl py-2">
+                                <span className="text-[9px] font-bold text-gray-500 uppercase">{label}</span>
+                                <span className="text-xs font-black text-white">{(val as number).toFixed(3)}€</span>
+                              </div>
+                            ))
+                          }
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-2 text-[11px] text-gray-400">
+                        <div><span className="font-bold text-gray-500 uppercase tracking-widest text-[9px]">Horario</span><p className="text-white">{s.schedule}</p></div>
+                        <div><span className="font-bold text-gray-500 uppercase tracking-widest text-[9px]">Dirección</span><p className="text-white truncate">{s.address}</p></div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Botones de acción */}
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <button
+                    onClick={handleNavigateToPOI}
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl font-black text-xs text-white transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                      isCharger ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-orange-500 hover:bg-orange-400'
+                    }`}
+                  >
+                    <img src="/navegacion.png" alt="" className="h-4 w-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+                    Ir aquí
+                  </button>
+                  <button
+                    onClick={handleSaveFavPOI}
+                    className={`flex items-center justify-center gap-2 py-3 rounded-xl font-black text-xs transition-all hover:scale-[1.02] active:scale-[0.98] border ${
+                      alreadyFav
+                        ? 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400'
+                        : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'
+                    }`}
+                  >
+                    <span>{alreadyFav ? '★' : '☆'}</span>
+                    {alreadyFav ? 'Guardado' : 'Guardar'}
+                  </button>
+                  {route && (
+                    <>
+                      <button
+                        onClick={handleAddStopBeforePOI}
+                        className="flex items-center justify-center gap-2 py-3 rounded-xl font-black text-xs text-gray-300 bg-white/5 border border-white/10 hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        ↑ Parada antes
+                      </button>
+                      <button
+                        onClick={handleAddStopAfterPOI}
+                        className="flex items-center justify-center gap-2 py-3 rounded-xl font-black text-xs text-gray-300 bg-white/5 border border-white/10 hover:bg-white/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        ↓ Parada después
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                {/* Botón Cerrar */}
+                <button
+                  onClick={() => setSelectedPOI(null)}
+                  className="w-full py-3.5 rounded-xl font-black text-sm text-gray-400 bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white transition-all mt-1"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
       {/* Panel de Favoritos */}
       {isFavoritesOpen && (
         <FavoritesPanel

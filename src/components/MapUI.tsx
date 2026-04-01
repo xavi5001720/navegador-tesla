@@ -243,6 +243,8 @@ interface MapUIProps {
    customZoom?: number | null;
    onZoomChange?: (zoom: number) => void;
    onMapClick?: (lat: number, lon: number, screenX: number, screenY: number) => void;
+   onChargerClick?: (charger: Charger) => void;
+   onGasStationClick?: (station: GasStation) => void;
    routeSections?: RouteSection[];
 }
 
@@ -407,6 +409,8 @@ export default function MapUI({
   customZoom, 
   onZoomChange, 
   onMapClick,
+  onChargerClick,
+  onGasStationClick,
   routeSections = []
 }: MapUIProps) {
   return (
@@ -560,35 +564,9 @@ export default function MapUI({
              icon={chargerIcon}
              zIndexOffset={80}
              eventHandlers={{
-               click: (e: L.LeafletMouseEvent) => {
-                 if (onMapClick) onMapClick(charger.lat, charger.lon, e.originalEvent.clientX, e.originalEvent.clientY);
-               }
+               click: () => { if (onChargerClick) onChargerClick(charger); }
              }}
-          >
-            <Popup className="custom-popup" closeButton={false}>
-              <div className="p-3 min-w-[200px] flex flex-col gap-2 bg-gradient-to-b from-gray-900 to-black rounded-lg text-white shadow-2xl border border-emerald-500/50">
-                <div className="flex items-center gap-2 pb-2 border-b border-emerald-500/30">
-                  <div className="h-6 w-6 rounded-full bg-emerald-600 flex items-center justify-center flex-shrink-0">
-                    <img src="/cargadorEV.png" alt="⚡" className="h-4 w-4 object-contain" />
-                  </div>
-                  <div className="flex flex-col flex-1 overflow-hidden">
-                    <h3 className="font-bold text-xs truncate break-all">{charger.title}</h3>
-                    <p className="text-[10px] text-gray-400 capitalize truncate">{charger.operator}</p>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center text-xs bg-emerald-950/40 p-1.5 rounded-md border border-emerald-500/20">
-                  <span className="text-gray-400">Potencia Máx</span>
-                  <span className="font-black text-emerald-400">{charger.maxPower > 0 ? `${charger.maxPower} kW` : 'N/D'}</span>
-                </div>
-                
-                <div className="text-[10px] text-gray-400 flex flex-col gap-1 mt-1">
-                   <p><span className="font-bold text-gray-500 uppercase tracking-widest">Coste:</span> {charger.usageCost}</p>
-                   <p className="truncate"><span className="font-bold text-gray-500 uppercase tracking-widest">Ubicación:</span> {charger.address}</p>
-                </div>
-              </div>
-            </Popup>
-          </Marker>
+          />
         ))}
 
         {gasStations.map(station => (
@@ -598,56 +576,9 @@ export default function MapUI({
              icon={gasStationIcon}
              zIndexOffset={85}
              eventHandlers={{
-               click: (e: L.LeafletMouseEvent) => {
-                 if (onMapClick) onMapClick(station.lat, station.lon, e.originalEvent.clientX, e.originalEvent.clientY);
-               }
+               click: () => { if (onGasStationClick) onGasStationClick(station); }
              }}
-          >
-            <Popup className="custom-popup" closeButton={false}>
-              <div className="p-3 min-w-[200px] flex flex-col gap-2 bg-gradient-to-b from-gray-900 to-black rounded-lg text-white shadow-2xl border border-orange-500/50">
-                <div className="flex items-center gap-2 pb-2 border-b border-orange-500/30">
-                  <div className="h-6 w-6 rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0">
-                    <img src="/gasolinera.png" alt="⛽" className="h-4 w-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
-                  </div>
-                  <div className="flex flex-col flex-1 overflow-hidden">
-                    <h3 className="font-bold text-xs truncate break-all">{station.name}</h3>
-                    <p className="text-[10px] text-gray-400 capitalize truncate">{station.city}</p>
-                  </div>
-                </div>
-                
-                {station.cheapestFuelPrice && (
-                  <div className="flex flex-col gap-1 bg-orange-950/40 p-1.5 rounded-md border border-orange-500/20">
-                    <div className="flex justify-between items-center text-xs">
-                       <span className="text-gray-400">Precio Búsqueda</span>
-                       <span className="font-black text-orange-400">{station.cheapestFuelPrice.toFixed(3)} €/L</span>
-                    </div>
-                    {station.targetFuels && station.targetFuels.length > 0 && (
-                      <div className="flex items-center gap-1.5 pt-1 border-t border-orange-500/10">
-                        <span className="text-[8px] font-bold text-orange-600 uppercase tracking-tighter">Mejor precio de:</span>
-                        <div className="flex gap-1">
-                          {station.targetFuels.map(f => (
-                            <span key={f} className="text-[8px] font-black text-white bg-orange-600 px-1 rounded-sm">{fuelLabels[f] || f}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-1 text-[9px] text-gray-400 bg-white/5 p-1.5 rounded border border-white/10">
-                   {station.price_g95 && <div className="flex justify-between"><span>G95</span><span className="font-bold text-white">{station.price_g95.toFixed(3)}€</span></div>}
-                   {station.price_g98 && <div className="flex justify-between"><span>G98</span><span className="font-bold text-white">{station.price_g98.toFixed(3)}€</span></div>}
-                   {station.price_diesel && <div className="flex justify-between"><span>Diésel</span><span className="font-bold text-white">{station.price_diesel.toFixed(3)}€</span></div>}
-                   {station.price_glp && <div className="flex justify-between"><span>GLP</span><span className="font-bold text-white">{station.price_glp.toFixed(3)}€</span></div>}
-                </div>
-
-                <div className="text-[10px] text-gray-400 flex flex-col gap-1 mt-1">
-                   <p className="truncate"><span className="font-bold text-gray-500 uppercase tracking-widest">Horario:</span> {station.schedule}</p>
-                   <p className="truncate"><span className="font-bold text-gray-500 uppercase tracking-widest">Dirección:</span> {station.address}</p>
-                </div>
-              </div>
-            </Popup>
-          </Marker>
+          />
         ))}
 
         {weatherPoints.map(wp => (
