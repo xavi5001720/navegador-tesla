@@ -121,7 +121,7 @@ export default function GarageModal({ isOpen, onClose, profile, sessionName, onU
                 
                 <div className="absolute top-0 right-0 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
                   <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest leading-none">VEHÍCULO ACTUAL</span>
-                  <p className="text-xl font-black text-white italic">{profile?.car_type || 'TESLA'}</p>
+                  <p className="text-xl font-black text-white italic">TESLA</p>
                 </div>
               </div>
 
