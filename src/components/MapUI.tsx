@@ -205,13 +205,23 @@ function MapEvents({
     const onClick = (e: L.LeafletMouseEvent) => {
       if (onMapClick) onMapClick(e.latlng.lat, e.latlng.lng, e.originalEvent.clientX, e.originalEvent.clientY);
     };
-    map.on('dragstart', switchToOverview);
-    map.on('zoomend', switchToOverview); // también captura el pinch-zoom manual
+    const container = map.getContainer();
+    const onWheel = () => switchToOverview();
+    const onTouchStart = (e: TouchEvent) => {
+      // Si son 2 o más dedos, es un pellizco (pinch-zoom manual)
+      if (e.touches.length >= 2) switchToOverview();
+    };
+
+    map.on('dragstart', switchToOverview); // drag manual
+    container.addEventListener('wheel', onWheel, { passive: true }); // scroll ratón zoom
+    container.addEventListener('touchstart', onTouchStart, { passive: true }); // pinch pantalla zoom
     map.on('click', onClick);
+
     return () => {
       map.off('dragstart', switchToOverview);
-      map.off('zoomend', switchToOverview);
       map.off('click', onClick);
+      container.removeEventListener('wheel', onWheel);
+      container.removeEventListener('touchstart', onTouchStart);
     };
   }, [map, viewMode, onViewModeChange, onMapClick]);
   return null;
