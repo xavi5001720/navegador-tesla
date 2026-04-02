@@ -69,8 +69,7 @@ export function usePegasus(
       if (!pos) return;
 
       setLoading(true);
-      const params = buildBboxParams(pos, pos[0], pos[1]);
-      console.log(`[usePegasus] → /api/aircrafts?${params}`);
+      console.log(`[usePegasus] → Supabase Edge Function 'pegasus'`);
 
       try {
         const { data, error } = await supabase.functions.invoke('pegasus', {
