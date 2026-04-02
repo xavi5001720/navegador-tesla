@@ -619,7 +619,7 @@ export default function Home() {
         <img 
           src="/logoprook.png" 
           alt="NavegaPRO Logo" 
-          className="h-20 w-auto object-contain drop-shadow-2xl" 
+          className="h-20 w-auto object-contain brightness-110 contrast-110 drop-shadow-[0_4px_20px_rgba(255,255,255,0.15)]" 
         />
         <AnimatePresence>
           {isSidebarOpen && (
