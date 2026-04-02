@@ -640,6 +640,7 @@ export default function Home() {
         currentWeather={currentWeather}
         loadingWeather={loadingWeather}
         onSavePreferences={handleSavePreferences}
+        isLoggedIn={!!session}
       />
 
       {/* Sección del Mapa (Fondo) */}

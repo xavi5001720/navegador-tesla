@@ -62,6 +62,7 @@ interface SidebarProps {
   liveDuration?: number | null;
   waypoints?: [number, number][];
   onSavePreferences?: () => void;
+  isLoggedIn?: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -116,7 +117,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   setIsWeatherEnabled,
   loadingWeather,
   currentWeather,
-  onSavePreferences
+  onSavePreferences,
+  isLoggedIn
 }) => {
   const [showRadarStats, setShowRadarStats] = useState(false);
   const [showChargerFilters, setShowChargerFilters] = useState(false);
@@ -777,7 +779,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Botón explícito para guardar preferencias en el perfil del usuario */}
-      {onSavePreferences && (
+      {isLoggedIn && onSavePreferences && (
         <div className="mt-8 mb-4">
           <button
             onClick={(e) => {
