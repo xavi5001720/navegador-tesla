@@ -10,6 +10,7 @@ interface GarageModalProps {
   profile: UserProfile | null;
   sessionName?: string;
   isLoggedIn: boolean;
+  onOpenAuth: () => void;
   onUpdate: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -21,7 +22,7 @@ const colors = [
   { name: 'Rojo', hex: '#FF0000', class: 'bg-red-600' },
 ];
 
-export default function GarageModal({ isOpen, onClose, profile, sessionName, isLoggedIn, onUpdate }: GarageModalProps) {
+export default function GarageModal({ isOpen, onClose, profile, sessionName, isLoggedIn, onOpenAuth, onUpdate }: GarageModalProps) {
   const [name, setName] = useState('');
   const [color, setColor] = useState('Blanco');
   const [saving, setSaving] = useState(false);
@@ -201,14 +202,17 @@ export default function GarageModal({ isOpen, onClose, profile, sessionName, isL
                   )}
                 </button>
               ) : (
-                <div className="w-full bg-blue-600/10 border border-blue-500/20 p-6 rounded-2xl text-center">
-                  <p className="text-blue-400 font-black italic text-lg leading-tight uppercase tracking-tight">
+                <button 
+                  onClick={onOpenAuth}
+                  className="w-full bg-blue-600/10 border border-blue-500/20 p-6 rounded-2xl text-center hover:bg-blue-600/20 active:scale-[0.98] transition-all group"
+                >
+                  <p className="text-blue-400 font-black italic text-lg leading-tight uppercase tracking-tight group-hover:text-blue-300 transition-colors">
                     Inicia sesión para editar tu Tesla
                   </p>
-                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-2">
-                    Tus cambios se guardarán en tu perfil de NavegaPRO
+                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-2 group-hover:text-gray-400 transition-colors">
+                    Haz clic aquí para identificarte en NavegaPRO
                   </p>
-                </div>
+                </button>
               )}
             </div>
           </motion.div>

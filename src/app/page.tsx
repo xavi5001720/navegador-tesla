@@ -961,6 +961,10 @@ export default function Home() {
         profile={profile}
         sessionName={session?.user?.user_metadata?.full_name || session?.user?.email || ''}
         isLoggedIn={!!session}
+        onOpenAuth={() => {
+          setIsGarageOpen(false);
+          setIsAuthModalOpen(true);
+        }}
         onUpdate={updateProfile}
       />
 
