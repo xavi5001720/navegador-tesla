@@ -163,9 +163,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 overflow-y-auto no-scrollbar ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-      {/* Espaciador para la marca NavegaPRO que está posicionada fixed fuera del sidebar */}
-      <div className="h-28 shrink-0 hidden md:block" />
+    <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 backdrop-blur-3xl shadow-2xl transition-transform duration-500 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      {/* Header Fijo (Espaciador para la marca NavegaPRO) */}
+      <div className="h-28 shrink-0 hidden md:block px-6 pt-6" />
+      
+      <div className="flex-1 overflow-y-auto no-scrollbar p-6 pt-0 md:pt-2">
 
       <div className="mb-4 flex items-center justify-end md:hidden">
         <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-gray-400">
@@ -812,6 +814,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <span className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">
           {hasLocation ? 'GPS Signal Locked' : 'Searching for Signal...'}
         </span>
+      </div>
       </div>
     </aside>
   );
