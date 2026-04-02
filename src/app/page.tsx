@@ -136,6 +136,10 @@ export default function Home() {
   }, []);
 
   const handleSignOut = async () => {
+    setIsUserMenuOpen(false);
+    setIsGarageOpen(false);
+    setIsSocialOpen(false);
+    setIsSettingsOpen(false);
     await supabase.auth.signOut();
   };
 
