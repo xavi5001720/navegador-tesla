@@ -9,8 +9,8 @@ export interface UserProfile {
   car_type: string;
   car_color: string;
   is_sharing_location: boolean;
-  avatar_url?: string;
   email: string;
+  preferences?: Record<string, any>;
 }
 
 export function useProfile(session: Session | null) {
@@ -26,7 +26,7 @@ export function useProfile(session: Session | null) {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('car_name, car_type, car_color, is_sharing_location, avatar_url, email')
+      .select('car_name, car_type, car_color, is_sharing_location, avatar_url, email, preferences')
       .eq('id', session.user.id)
       .single();
 
@@ -66,6 +66,7 @@ export function useProfile(session: Session | null) {
         car_type: 'Model 3',
         car_color: 'Blanco',
         is_sharing_location: false,
+        preferences: {},
         ...updates
       } as UserProfile;
     });

@@ -37,7 +37,7 @@ const endMarkerIcon = L.divIcon({
 
 const radarIcon = (speedLimit?: number) => L.divIcon({
   html: renderToStaticMarkup(
-    <div className="relative h-10 w-10 flex flex-col items-center">
+    <div className="relative h-10 w-10 flex flex-col items-center counter-rotate">
       <div className="h-8 w-8 flex items-center justify-center rounded-full bg-rose-600 border-2 border-white shadow-lg animate-pulse z-10">
          <Camera className="h-4 w-4 text-white" />
       </div>
@@ -55,7 +55,7 @@ const radarIcon = (speedLimit?: number) => L.divIcon({
 
 const chargerIcon = L.divIcon({
   html: renderToStaticMarkup(
-    <div className="h-8 w-8 flex items-center justify-center rounded-full bg-emerald-600 border-2 border-white shadow-[0_0_15px_rgba(5,150,105,0.8)]">
+    <div className="h-8 w-8 flex items-center justify-center rounded-full bg-emerald-600 border-2 border-white shadow-[0_0_15px_rgba(5,150,105,0.8)] counter-rotate">
        <img src="/cargadorEV.png" alt="C" className="h-4 w-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
     </div>
   ),
@@ -66,7 +66,7 @@ const chargerIcon = L.divIcon({
 
 const gasStationIcon = L.divIcon({
   html: renderToStaticMarkup(
-    <div className="h-8 w-8 flex items-center justify-center rounded-full bg-orange-500 border-2 border-white shadow-[0_0_15px_rgba(249,115,22,0.8)]">
+    <div className="h-8 w-8 flex items-center justify-center rounded-full bg-orange-500 border-2 border-white shadow-[0_0_15px_rgba(249,115,22,0.8)] counter-rotate">
        <img src="/gasolinera.png" alt="G" className="h-4 w-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
     </div>
   ),
@@ -143,7 +143,7 @@ const weatherEmojiMap: Record<string, string> = {
 const createWeatherIcon = (temp: number, condition: string) => {
   const emoji = weatherEmojiMap[condition] || '🌡️';
   const iconHtml = renderToStaticMarkup(
-    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-md border border-white/20 rounded-full shadow-[0_0_15px_rgba(0,0,0,0.5)] text-white font-bold whitespace-nowrap">
+    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-md border border-white/20 rounded-full shadow-[0_0_15px_rgba(0,0,0,0.5)] text-white font-bold whitespace-nowrap counter-rotate">
        <span className="text-lg drop-shadow-md leading-none">{emoji}</span>
        <span className="text-sm drop-shadow-md leading-none">{Math.round(temp)}º</span>
     </div>
@@ -289,7 +289,7 @@ const createCarIcon = (heading: number, color?: string) => {
 
 const createFriendIcon = (color?: string, name?: string) => {
   const iconHtml = renderToStaticMarkup(
-    <div className="relative flex flex-col items-center justify-center pointer-events-none">
+    <div className="relative flex flex-col items-center justify-center pointer-events-none counter-rotate">
       <div className="relative flex items-center justify-center h-20 w-20 group drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
         <div className={`absolute inset-0 rounded-full blur-2xl scale-125 transition-all duration-700 ${
              color === 'Rojo' ? 'bg-red-500/30' : 
@@ -346,9 +346,11 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
         smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, 0, 0.04);
         if (Math.abs(smoothedHeadingRef.current) > 0.1) {
           container.style.transform = `rotate(${-smoothedHeadingRef.current}deg) scale(1.42)`;
+          container.style.setProperty('--map-heading', `${smoothedHeadingRef.current}deg`);
           rafRef.current = requestAnimationFrame(animate);
         } else {
           container.style.transform = 'none';
+          container.style.setProperty('--map-heading', '0deg');
         }
         return;
       }
@@ -356,6 +358,7 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
       // Suavizado angular extralento para evitar sacudidas
       smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, targetHeadingRef.current, 0.04);
       container.style.transform = `rotate(${-smoothedHeadingRef.current}deg) scale(1.42)`;
+      container.style.setProperty('--map-heading', `${smoothedHeadingRef.current}deg`);
       rafRef.current = requestAnimationFrame(animate);
     };
 
@@ -484,6 +487,9 @@ export default function MapUI({
         @keyframes aircraft-pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.5; transform: scale(1.15); }
+        }
+        .counter-rotate {
+          transform: rotate(var(--map-heading, 0deg));
         }
       `}</style>
 

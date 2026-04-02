@@ -139,6 +139,63 @@ export default function Home() {
     await supabase.auth.signOut();
   };
 
+  const [prefsLoaded, setPrefsLoaded] = useState(false);
+
+  // 1. Cargar preferencias guardadas en el perfil al iniciar sesión
+  useEffect(() => {
+    if (profile && !prefsLoaded) {
+      const p = profile.preferences || {};
+      if (p.isRadarsEnabled !== undefined) setIsRadarsEnabled(p.isRadarsEnabled);
+      if (p.isAircraftsEnabled !== undefined) setIsAircraftsEnabled(p.isAircraftsEnabled);
+      if (p.isChargersEnabled !== undefined) setIsChargersEnabled(p.isChargersEnabled);
+      if (p.isGasStationsEnabled !== undefined) setIsGasStationsEnabled(p.isGasStationsEnabled);
+      if (p.isWeatherEnabled !== undefined) setIsWeatherEnabled(p.isWeatherEnabled);
+      if (p.isSoundEnabled !== undefined) setIsSoundEnabled(p.isSoundEnabled);
+      if (p.voiceType !== undefined) setVoiceType(p.voiceType);
+      
+      setPrefsLoaded(true);
+    }
+  }, [profile, prefsLoaded]);
+
+  // Resetear flag si el usuario cierra sesión
+  useEffect(() => {
+    if (!session) {
+      setPrefsLoaded(false);
+      isFirstRender.current = true;
+    }
+  }, [session]);
+
+  // 2. Guardar preferencias en Supabase cuando cambien
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (!prefsLoaded || !session) return;
+    
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      updateProfile({
+        preferences: {
+          isRadarsEnabled,
+          isAircraftsEnabled,
+          isChargersEnabled,
+          isGasStationsEnabled,
+          isWeatherEnabled,
+          isSoundEnabled,
+          voiceType
+        }
+      });
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [
+    prefsLoaded, session, updateProfile,
+    isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, 
+    isGasStationsEnabled, isWeatherEnabled, isSoundEnabled, voiceType
+  ]);
+
   // Lógica de Recalculado Automático
   useEffect(() => {
     if (!route || !destination || loadingRoute) return;
