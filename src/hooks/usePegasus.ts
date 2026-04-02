@@ -45,6 +45,7 @@ export function usePegasus(
   const [allAircrafts, setAllAircrafts] = useState<Aircraft[]>([]);
   const [loading,      setLoading     ] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
+  const [activeAccount, setActiveAccount] = useState<number>(1);
   // Timestamp del último batch real recibido — consume el simulador para saber cuándo aplicar corrección
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
@@ -82,9 +83,12 @@ export function usePegasus(
 
         const data = await res.json();
         setIsRateLimited(data?.rateLimited ?? false);
+        if (data?.accountIndex && data.accountIndex !== -1) {
+          setActiveAccount(data.accountIndex);
+        }
 
         const states: Aircraft[] = data?.states ?? [];
-        console.log(`[usePegasus] ✅ ${states.length} aeronaves | snapped bbox: ${JSON.stringify(data?.snappedBbox)}`);
+        console.log(`[usePegasus] ✅ ${states.length} aeronaves | account=${data?.accountIndex} | snapped bbox: ${JSON.stringify(data?.snappedBbox)}`);
         setAllAircrafts(states);
         setLastFetchTime(Date.now());
 
@@ -131,7 +135,7 @@ export function usePegasus(
     loading,
     isRateLimited,
     lastFetchTime,
-    activeAccount    : 1,
+    activeAccount,
   };
 
 }

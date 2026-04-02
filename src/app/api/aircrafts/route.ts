@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,8 +16,11 @@ const SNAP_SIZE = 0.5; // grados
 const CACHE_TTL_MS = 10_000;
 
 // ── Credenciales (solo en servidor — nunca llegan al navegador) ───────────────
-const CLIENT_ID     = 'luliloqui-api-client';
-const CLIENT_SECRET = 'YEXtTfBwCd5w2Kxhvp57W4C0s6f4Pb5n';
+const ACCOUNTS = [
+  { id: 'luliloqui-api-client', secret: 'YEXtTfBwCd5w2Kxhvp57W4C0s6f4Pb5n' },
+  { id: 'pepinperez-api-client', secret: 'K922tGbRbq0DsrudGDVKQOJv3tYtnO6A' },
+  { id: 'saracruzhortelana-api-client', secret: 'o7FsNtYuca4K6xSHBCb3x4zKo3yiwBS1' }
+];
 
 // ── Aerolíneas comerciales — se excluyen de las alertas sospechosas ───────────
 const COMMERCIAL_RE = /^(EAX|IBE|RYR|VLG|EZY|AFR|DLH|KLM|BAW)/i;
@@ -33,50 +37,62 @@ const AIRPORTS: [number, number][] = [
 const AIRPORT_RADIUS_M = 5_000;
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TOKEN MANAGER — renovación automática; token válido 30 min, refrescamos a 25
+// TOKEN MANAGER — gestión multicuenta con renovación automática
 // ─────────────────────────────────────────────────────────────────────────────
-let _token: string | null        = null;
-let _tokenExpiresAt: number      = 0;
-let _tokenInflight: Promise<string | null> | null = null;
+async function getToken(index: number): Promise<string | null> {
+  const account = ACCOUNTS[index];
+  if (!account) return null;
 
-async function getToken(): Promise<string | null> {
   const now = Date.now();
-  if (_token && _tokenExpiresAt > now) return _token;
 
-  // Deduplicamos: si ya hay una petición en vuelo, la compartimos
-  if (_tokenInflight) return _tokenInflight;
+  const { data: dbToken } = await supabase
+    .from('opensky_tokens')
+    .select('token, expires_at')
+    .eq('account_id', account.id)
+    .single();
 
-  _tokenInflight = (async () => {
-    try {
-      const res = await fetch(TOKEN_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type   : 'client_credentials',
-          client_id    : CLIENT_ID,
-          client_secret: CLIENT_SECRET,
-        }),
-        cache: 'no-store',
-      });
-      if (!res.ok) {
-        console.error('[aircrafts] Token HTTP error:', res.status);
-        return null;
-      }
-      const d = await res.json();
-      if (d.access_token) {
-        _token          = d.access_token;
-        // Renovamos 5 min antes de que expire (expire_in suele ser 1800 s)
-        _tokenExpiresAt = Date.now() + (d.expires_in ?? 1800) * 1_000 - 5 * 60_000;
-        console.log('[aircrafts] ✅ Token renovado, expira en', Math.round((d.expires_in ?? 1800) / 60), 'min');
-        return _token;
-      }
-    } catch (e) {
-      console.error('[aircrafts] Error obteniendo token:', e);
+  if (dbToken?.token && dbToken.expires_at > now) {
+    return dbToken.token;
+  }
+
+  try {
+    console.log(`[aircrafts] 🔑 Obteniendo token para cuenta ${index + 1} (${account.id})`);
+    const res = await fetch(TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type   : 'client_credentials',
+        client_id    : account.id,
+        client_secret: account.secret,
+      }),
+      cache: 'no-store',
+    });
+
+    if (!res.ok) {
+      console.error(`[aircrafts] Error token cuenta ${index + 1}:`, res.status);
+      return null;
     }
-    return null;
-  })().finally(() => { _tokenInflight = null; });
 
-  return _tokenInflight;
+    const d = await res.json();
+    if (d.access_token) {
+      const expiresAt = Date.now() + (d.expires_in ?? 1800) * 1_000 - 5 * 60_000;
+      console.log(`[aircrafts] ✅ Token cuenta ${index + 1} renovado`);
+
+      await supabase
+        .from('opensky_tokens')
+        .upsert({
+          account_id: account.id,
+          token: d.access_token,
+          expires_at: expiresAt,
+          updated_at: new Date().toISOString()
+        });
+
+      return d.access_token;
+    }
+  } catch (e) {
+    console.error(`[aircrafts] Error token cuenta ${index + 1}:`, e);
+  }
+  return null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -103,16 +119,14 @@ function snapBbox(lamin: number, lomin: number, lamax: number, lomax: number): S
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CACHÉ IN-MEMORY — una entrada por bbox snapped
+// RESULTADO CACHÉ — tipos para el helper
 // ─────────────────────────────────────────────────────────────────────────────
-interface CacheEntry {
-  states    : any[];
-  ts        : number;
-  rateLimited: boolean;
-  // Promesa en vuelo — evita que N clientes simultáneos abran N conexiones
-  inflight  : Promise<CacheEntry> | null;
+interface CacheResult {
+  states      : any[];
+  ts          : number;
+  rateLimited : boolean;
+  accountIndex: number;
 }
-const cache = new Map<string, CacheEntry>();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HAVERSINE & HELPERS
@@ -133,81 +147,108 @@ function isNearAirport(lat: number, lon: number): boolean {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FETCH RAW — petición única a OpenSky para un bbox snapped
+// FETCH RAW — petición única con rotación de cuentas
 // ─────────────────────────────────────────────────────────────────────────────
-async function fetchFromOpenSky(bbox: SnappedBbox): Promise<{ states: any[]; rateLimited: boolean }> {
+async function fetchFromOpenSkyWithRotation(bbox: SnappedBbox): Promise<{ states: any[]; rateLimited: boolean; accountIndex: number }> {
   const { lamin, lomin, lamax, lomax, sqDeg } = bbox;
   const url = `${OPENSKY_BASE}/states/all?lamin=${lamin}&lomin=${lomin}&lamax=${lamax}&lomax=${lomax}`;
+  const now = Date.now();
 
-  // Coste estimado de créditos
-  const creditCost = sqDeg <= 25 ? 1 : sqDeg <= 100 ? 2 : sqDeg <= 400 ? 3 : 4;
-  console.log(`[aircrafts] → OpenSky  bbox=${bbox.key}  área=${sqDeg.toFixed(1)}°²  coste≈${creditCost} crédito(s)`);
+  const { data: dbTokens } = await supabase
+    .from('opensky_tokens')
+    .select('account_id, cooldown_until');
 
-  const token = await getToken();
-  const headers: Record<string, string> = {};
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  for (let i = 0; i < ACCOUNTS.length; i++) {
+    const account = ACCOUNTS[i];
+    const accountState = dbTokens?.find(t => t.account_id === account.id);
 
-  const res = await fetch(url, { headers, cache: 'no-store' });
-  const remaining = res.headers.get('X-Rate-Limit-Remaining');
-  if (remaining) console.log(`[aircrafts]   créditos restantes: ${remaining}`);
+    if (accountState?.cooldown_until && accountState.cooldown_until > now) {
+      console.log(`[aircrafts] ⏳ Cuenta ${i + 1} en cooldown, probando siguiente...`);
+      continue;
+    }
 
-  if (res.status === 429) {
-    const retry = res.headers.get('X-Rate-Limit-Retry-After-Seconds') ?? '?';
-    console.warn(`[aircrafts] ⚠️  Rate limited — reintentar en ${retry}s`);
-    return { states: [], rateLimited: true };
+    const token = await getToken(i);
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    console.log(`[aircrafts] → OpenSky (Account ${i + 1}) bbox=${bbox.key} coste≈${sqDeg <= 25 ? 1 : 2}`);
+    
+    try {
+      const res = await fetch(url, { headers, cache: 'no-store' });
+      
+      if (res.status === 429) {
+        const retrySecs = parseInt(res.headers.get('X-Rate-Limit-Retry-After-Seconds') ?? '60');
+        const cooldownUntil = Date.now() + (retrySecs * 1000);
+        console.warn(`[aircrafts] ⚠️ Account ${i + 1} rate limited. Retry in ${retrySecs}s. Rotando...`);
+        
+        await supabase
+          .from('opensky_tokens')
+          .upsert({
+            account_id: account.id,
+            cooldown_until: cooldownUntil,
+            updated_at: new Date().toISOString()
+          });
+
+        continue;
+      }
+
+      if (!res.ok) {
+        console.error(`[aircrafts] HTTP Error ${res.status} en cuenta ${i + 1}`);
+        continue;
+      }
+
+      const data = await res.json();
+      return { 
+        states: data?.states ?? [], 
+        rateLimited: false, 
+        accountIndex: i + 1 
+      };
+
+    } catch (error) {
+      console.error(`[aircrafts] Fallo crítico cuenta ${i + 1}:`, error);
+      continue;
+    }
   }
-  if (!res.ok) {
-    console.error('[aircrafts] HTTP error:', res.status);
-    return { states: [], rateLimited: false };
-  }
 
-  const data = await res.json();
-  const states: any[] = data?.states ?? [];
-  console.log(`[aircrafts] ✅ ${states.length} aeronaves recibidas`);
-  return { states, rateLimited: false };
+  return { states: [], rateLimited: true, accountIndex: -1 };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GET FROM CACHE — sirve desde caché o lanza una petición deduplicada
+// GET FROM CACHE — sirve desde Supabase o lanza una petición deduplicada
 // ─────────────────────────────────────────────────────────────────────────────
-async function getCachedStates(bbox: SnappedBbox): Promise<CacheEntry> {
-  const now     = Date.now();
-  const existing = cache.get(bbox.key);
+async function getCachedStates(bbox: SnappedBbox): Promise<CacheResult> {
+  const now = Date.now();
+  
+  const { data: existing } = await supabase
+    .from('opensky_cache')
+    .select('states, rate_limited, account_index, ts')
+    .eq('bbox_key', bbox.key)
+    .single();
 
-  // Caché válida → devolvemos directamente
-  if (existing && (now - existing.ts) < CACHE_TTL_MS) {
-    console.log(`[aircrafts] CACHE HIT  ${bbox.key}  (${Math.round((now - existing.ts) / 1000)}s antiguo)`);
-    return existing;
-  }
-
-  // Ya hay una petición en vuelo para este bbox → nos unimos a ella
-  if (existing?.inflight) {
-    console.log(`[aircrafts] IN-FLIGHT  ${bbox.key} — esperando resultado compartido`);
-    return existing.inflight;
-  }
-
-  // Lanzamos una nueva petición y la registramos para deduplicar
-  console.log(`[aircrafts] CACHE MISS ${bbox.key} — consultando OpenSky`);
-
-  const inflight: Promise<CacheEntry> = fetchFromOpenSky(bbox).then(({ states, rateLimited }) => {
-    const entry: CacheEntry = { states, ts: Date.now(), rateLimited, inflight: null };
-    cache.set(bbox.key, entry);
-    return entry;
-  }).catch(err => {
-    console.error('[aircrafts] Error en fetch:', err);
-    const fallback: CacheEntry = {
-      states     : existing?.states ?? [],
-      ts         : existing?.ts ?? 0,
-      rateLimited: false,
-      inflight   : null,
+  if (existing && existing.ts && (now - existing.ts) < CACHE_TTL_MS) {
+    return {
+      states: existing.states ?? [],
+      ts: existing.ts,
+      rateLimited: existing.rate_limited ?? false,
+      accountIndex: existing.account_index ?? -1
     };
-    cache.set(bbox.key, fallback);
-    return fallback;
-  });
+  }
 
-  // Guardamos la promesa en la entrada para deduplicar clientes concurrentes
-  cache.set(bbox.key, { states: existing?.states ?? [], ts: existing?.ts ?? 0, rateLimited: false, inflight });
-  return inflight;
+  const result = await fetchFromOpenSkyWithRotation(bbox);
+  const ts = Date.now();
+
+  await supabase
+    .from('opensky_cache')
+    .upsert({
+      bbox_key: bbox.key,
+      states: result.states,
+      rate_limited: result.rateLimited,
+      account_index: result.accountIndex,
+      ts: ts,
+      updated_at: new Date().toISOString()
+    });
+
+  return { ...result, ts };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -276,8 +317,8 @@ export async function GET(request: NextRequest) {
   // ── 1. Alinear el bbox a la rejilla global ────────────────────────────────
   const bbox = snapBbox(lamin, lomin, lamax, lomax);
 
-  // ── 2. Obtener datos (caché o fetch deduplicado) ──────────────────────────
-  const { states: rawStates, rateLimited, ts } = await getCachedStates(bbox);
+  // ── 2. Obtener datos (caché con rotación o fetch deduplicado) ────────────
+  const { states: rawStates, rateLimited, ts, accountIndex } = await getCachedStates(bbox);
 
   // ── 3. Filtrar nulos de posición + enriquecer ─────────────────────────────
   const withPos  = rawStates.filter(s => s[6] != null && s[5] != null);
@@ -285,17 +326,17 @@ export async function GET(request: NextRequest) {
 
   const suspects = enriched.filter(a => a!.isSuspect && a!.altitude >= 100 && a!.altitude <= 2_000 && a!.velocity <= 83.33);
 
-  console.log(`[aircrafts] → cliente: ${enriched.length} aeronaves | ${suspects.length} sospechosas | rateLimited=${rateLimited}`);
+  console.log(`[aircrafts] → cliente: ${enriched.length} aeronaves | ${suspects.length} sospechosas | account=${accountIndex} | rateLimited=${rateLimited}`);
 
   return NextResponse.json({
     states     : enriched,       // todas (comerciales + sospechosas) para visualización en mapa
     totalRaw   : rawStates.length,
     rateLimited,
+    accountIndex,
     cachedAt   : ts,             // timestamp del dato (útil para debug en cliente)
     snappedBbox: { lamin: bbox.lamin, lomin: bbox.lomin, lamax: bbox.lamax, lomax: bbox.lomax },
   }, {
     headers: {
-      // Cache-Control para el propio proxy de Next.js
       'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=5',
     },
   });
