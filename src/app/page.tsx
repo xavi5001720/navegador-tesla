@@ -617,7 +617,7 @@ export default function Home() {
       {/* Branding NavegaPRO (Siempre visible en la misma posición) */}
       <div className="fixed top-8 left-8 z-[100] flex items-center gap-5 pointer-events-none select-none">
         <img 
-          src="/navegaproazul.png" 
+          src="/navegaproazul.png?v=2" 
           alt="NavegaPRO Logo" 
           className="h-20 w-auto object-contain drop-shadow-2xl" 
         />
