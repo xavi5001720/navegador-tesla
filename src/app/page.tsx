@@ -148,7 +148,9 @@ export default function Home() {
       if (p.isRadarsEnabled !== undefined) setIsRadarsEnabled(p.isRadarsEnabled);
       if (p.isAircraftsEnabled !== undefined) setIsAircraftsEnabled(p.isAircraftsEnabled);
       if (p.isChargersEnabled !== undefined) setIsChargersEnabled(p.isChargersEnabled);
+      if (p.chargerFilters !== undefined) setChargerFilters(p.chargerFilters);
       if (p.isGasStationsEnabled !== undefined) setIsGasStationsEnabled(p.isGasStationsEnabled);
+      if (p.gasStationFilters !== undefined) setGasStationFilters(p.gasStationFilters);
       if (p.isWeatherEnabled !== undefined) setIsWeatherEnabled(p.isWeatherEnabled);
       if (p.isSoundEnabled !== undefined) setIsSoundEnabled(p.isSoundEnabled);
       if (p.voiceType !== undefined) setVoiceType(p.voiceType);
@@ -181,7 +183,9 @@ export default function Home() {
           isRadarsEnabled,
           isAircraftsEnabled,
           isChargersEnabled,
+          chargerFilters,
           isGasStationsEnabled,
+          gasStationFilters,
           isWeatherEnabled,
           isSoundEnabled,
           voiceType
@@ -192,8 +196,8 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [
     prefsLoaded, session, updateProfile,
-    isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, 
-    isGasStationsEnabled, isWeatherEnabled, isSoundEnabled, voiceType
+    isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, chargerFilters,
+    isGasStationsEnabled, gasStationFilters, isWeatherEnabled, isSoundEnabled, voiceType
   ]);
 
   // Lógica de Recalculado Automático
