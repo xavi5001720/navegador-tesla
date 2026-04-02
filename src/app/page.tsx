@@ -960,6 +960,7 @@ export default function Home() {
         onClose={() => setIsGarageOpen(false)}
         profile={profile}
         sessionName={session?.user?.user_metadata?.full_name || session?.user?.email || ''}
+        isLoggedIn={!!session}
         onUpdate={updateProfile}
       />
 

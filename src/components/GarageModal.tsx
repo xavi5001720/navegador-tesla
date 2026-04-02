@@ -9,6 +9,7 @@ interface GarageModalProps {
   onClose: () => void;
   profile: UserProfile | null;
   sessionName?: string;
+  isLoggedIn: boolean;
   onUpdate: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>;
 }
 
@@ -20,7 +21,7 @@ const colors = [
   { name: 'Rojo', hex: '#FF0000', class: 'bg-red-600' },
 ];
 
-export default function GarageModal({ isOpen, onClose, profile, sessionName, onUpdate }: GarageModalProps) {
+export default function GarageModal({ isOpen, onClose, profile, sessionName, isLoggedIn, onUpdate }: GarageModalProps) {
   const [name, setName] = useState('');
   const [color, setColor] = useState('Blanco');
   const [saving, setSaving] = useState(false);
@@ -180,24 +181,35 @@ export default function GarageModal({ isOpen, onClose, profile, sessionName, onU
                 )}
               </AnimatePresence>
 
-              {/* Botón Guardar */}
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="w-full flex items-center justify-center gap-3 bg-white text-black p-5 rounded-2xl font-black text-lg hover:scale-[1.02] active:scale-95 transition-all shadow-2xl disabled:opacity-50"
-              >
-                {saving ? (
-                  <div className="flex items-center gap-2">
-                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-                    <span>ENVIANDO...</span>
-                  </div>
-                ) : (
-                  <>
-                    <Save className="h-6 w-6" />
-                    GUARDAR CAMBIOS
-                  </>
-                )}
-              </button>
+              {/* Botón Guardar o Mensaje de Login */}
+              {isLoggedIn ? (
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="w-full flex items-center justify-center gap-3 bg-white text-black p-5 rounded-2xl font-black text-lg hover:scale-[1.02] active:scale-95 transition-all shadow-2xl disabled:opacity-50"
+                >
+                  {saving ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                      <span>ENVIANDO...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <Save className="h-6 w-6" />
+                      GUARDAR CAMBIOS
+                    </>
+                  )}
+                </button>
+              ) : (
+                <div className="w-full bg-blue-600/10 border border-blue-500/20 p-6 rounded-2xl text-center">
+                  <p className="text-blue-400 font-black italic text-lg leading-tight uppercase tracking-tight">
+                    Inicia sesión para editar tu Tesla
+                  </p>
+                  <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-2">
+                    Tus cambios se guardarán en tu perfil de NavegaPRO
+                  </p>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>
