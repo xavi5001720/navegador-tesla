@@ -18,17 +18,24 @@ export interface Aircraft {
   distanceToUser: number;  // metros
 }
 
-// ── Bbox centrado en el usuario (~25 km de margen = 0.22°) ───────────────────
-// El backend alinea internamente estas coordenadas a una cuadrícula de 0.5°,
-// por lo que usuarios próximos comparten la misma caché.
-function buildBboxParams(userPos: [number, number], ulat: number, ulon: number): string {
-  const MARGIN = 0.22; // ≈ 25 km por lado
-  const lamin  = (userPos[0] - MARGIN).toFixed(4);
-  const lomin  = (userPos[1] - MARGIN).toFixed(4);
-  const lamax  = (userPos[0] + MARGIN).toFixed(4);
-  const lomax  = (userPos[1] + MARGIN).toFixed(4);
-  // ulat/ulon permiten que el backend precalcule distanceToUser
-  return `lamin=${lamin}&lomin=${lomin}&lamax=${lamax}&lomax=${lomax}&ulat=${ulat}&ulon=${ulon}`;
+// -- Helper parameters must match the edge function snap size
+const SNAP_SIZE = 0.5;
+function snapDown(v: number): number { return Math.floor(v / SNAP_SIZE) * SNAP_SIZE; }
+function snapUp  (v: number): number { return Math.ceil (v / SNAP_SIZE) * SNAP_SIZE; }
+
+// ── Bbox centrado en el usuario (~25 km de margen) ───────────────────────────
+function buildBboxKey(userPos: [number, number]): string {
+  const lamin = userPos[0] - 0.22;
+  const lomin = userPos[1] - 0.22;
+  const lamax = userPos[0] + 0.22;
+  const lomax = userPos[1] + 0.22;
+  
+  const sLamin = snapDown(lamin);
+  const sLomin = snapDown(lomin);
+  const sLamax = snapUp(lamax);
+  const sLomax = snapUp(lomax);
+  
+  return `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${sLamax.toFixed(1)}_${sLomax.toFixed(1)}`;
 }
 
 // Reducimos el intervalo a 60s. Es seguro porque rotamos cuentas y el feeder de casa ayuda.
@@ -69,7 +76,7 @@ export function usePegasus(
 
       setLoading(true);
       try {
-        const bboxKey = `${(pos[0] - 0.22).toFixed(1)}_${(pos[1] - 0.22).toFixed(1)}_${(pos[0] + 0.22).toFixed(1)}_${(pos[1] + 0.22).toFixed(1)}`;
+        const bboxKey = buildBboxKey(pos);
         
         console.log(`[usePegasus] 📡 Intentando avisar a casa para la zona: ${bboxKey}`);
         
