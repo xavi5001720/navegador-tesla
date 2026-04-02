@@ -285,7 +285,7 @@ const createCarIcon = (heading: number, color?: string) => {
       />
     </div>
   );
-  return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [110, 110], iconAnchor: [55, 55] });
+  return L.divIcon({ html: iconHtml, className: 'custom-car-icon pointer-events-auto', iconSize: [110, 110], iconAnchor: [55, 55] });
 };
 
 const createFriendIcon = (color?: string, name?: string) => {
@@ -692,8 +692,10 @@ export default function MapUI({
               position={pos} 
               icon={createCarIcon(carHeading, carColor)} 
               zIndexOffset={1000} 
+              interactive={true}
               eventHandlers={{
-                click: () => {
+                click: (e) => {
+                  L.DomEvent.stopPropagation(e as any);
                   if (onOpenGarage) onOpenGarage();
                 }
               }}
