@@ -276,12 +276,11 @@ const createCarIcon = (heading: number, color?: string) => {
            color === 'Azul' ? 'bg-blue-500/30' : 
            color === 'Negro' ? 'bg-gray-900/40' : 'bg-blue-500/20'}`}></div>
       
-      {/* Imagen del coche con filtro dinámico */}
       <img 
         src={getCarImage(color)} 
         alt="Coche" 
-        className="w-full h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] transition-all duration-700 rotate-180" 
-        style={{ filter: getCarFilter(color) }}
+        className="w-full h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] transition-all duration-700 rotate-180 pointer-events-auto" 
+        style={{ filter: getCarFilter(color), pointerEvents: 'auto' }} 
       />
     </div>
   );
@@ -689,13 +688,21 @@ export default function MapUI({
           
           return (
             <Marker 
+              key="user-car-marker"
               position={pos} 
               icon={createCarIcon(carHeading, carColor)} 
               zIndexOffset={1000} 
               interactive={true}
               eventHandlers={{
                 click: (e) => {
+                  console.log('[MapUI] User car click', pos);
                   L.DomEvent.stopPropagation(e as any);
+                  if (onOpenGarage) onOpenGarage();
+                },
+                mousedown: (e) => {
+                  console.log('[MapUI] User car mousedown', pos);
+                  L.DomEvent.stopPropagation(e as any);
+                  // En dispositivos táctiles/Tesla, mousedown es más fiable que click para objetos en movimiento
                   if (onOpenGarage) onOpenGarage();
                 }
               }}
