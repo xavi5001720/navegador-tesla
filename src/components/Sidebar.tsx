@@ -164,14 +164,11 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 overflow-y-auto no-scrollbar ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-      <div className="mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-5">
-          <img src="/logoprook.png" alt="NavegaPRO Logo" className="h-20 w-auto object-contain drop-shadow-2xl" />
-          <h1 className="text-4xl font-black italic tracking-tighter bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(59,130,246,0.3)] pr-4 pb-1">
-            NavegaPRO
-          </h1>
-        </div>
-        <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-2 text-gray-400">
+      {/* Espaciador para la marca NavegaPRO que está posicionada fixed fuera del sidebar */}
+      <div className="h-28 shrink-0 hidden md:block" />
+
+      <div className="mb-4 flex items-center justify-end md:hidden">
+        <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-gray-400">
           <X className="h-5 w-5" />
         </button>
       </div>

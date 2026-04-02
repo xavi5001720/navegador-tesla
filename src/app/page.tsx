@@ -176,9 +176,9 @@ export default function Home() {
   }, [session]);
 
   // 2. Guardar preferencias explícitamente cuando el usuario pulse el botón Guardar
-  const handleSavePreferences = () => {
+  const handleSavePreferences = useCallback(async () => {
     if (!session) return;
-    updateProfile({
+    const res = await updateProfile({
       preferences: {
         isRadarsEnabled,
         isAircraftsEnabled,
@@ -191,7 +191,32 @@ export default function Home() {
         voiceType
       }
     });
-  };
+    
+    if (res.success) {
+      console.log('[Prefs] Configuración guardada correctamente');
+    }
+  }, [
+    session, updateProfile, isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, 
+    chargerFilters, isGasStationsEnabled, gasStationFilters, isWeatherEnabled, 
+    isSoundEnabled, voiceType
+  ]);
+
+  // 2.1 Auto-save con debounce (2 segundos)
+  useEffect(() => {
+    if (!session || !prefsLoaded) return;
+
+    const timer = setTimeout(() => {
+      console.log('[Prefs] Auto-guardando cambios detectados...');
+      handleSavePreferences();
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [
+    isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, 
+    chargerFilters, isGasStationsEnabled, gasStationFilters, 
+    isWeatherEnabled, isSoundEnabled, voiceType,
+    session, prefsLoaded, handleSavePreferences
+  ]);
 
 
   // 3. Gestión de Sesión Única (Realtime)
@@ -588,6 +613,18 @@ export default function Home() {
       )}
 
       {/* Panel Izquierdo (Bloque de Control) */}
+      {/* Branding NavegaPRO (Siempre visible en la misma posición) */}
+      <div className="fixed top-8 left-8 z-[100] flex items-center gap-5 pointer-events-none select-none">
+        <img 
+          src="/logoprook.png" 
+          alt="NavegaPRO Logo" 
+          className="h-20 w-auto object-contain drop-shadow-2xl" 
+        />
+        <h1 className="text-4xl font-black italic tracking-tighter bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(59,130,246,0.3)] pr-4 pb-1">
+          NavegaPRO
+        </h1>
+      </div>
+
       <Sidebar 
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
