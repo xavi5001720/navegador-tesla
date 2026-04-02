@@ -628,7 +628,7 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
-              className="text-4xl font-black italic tracking-tighter bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(59,130,246,0.3)] pr-4 pb-1"
+              className="text-4xl font-black italic tracking-tighter bg-gradient-to-r from-blue-200 via-blue-500 to-blue-900 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(59,130,246,0.4)] pr-4 pb-1"
             >
               NavegaPRO
             </motion.h1>
