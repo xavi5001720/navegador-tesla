@@ -40,9 +40,12 @@ async function fulfillRequest(bboxKey, accountIndex) {
     });
     if (cacheCheck.ok) {
       const cached = await cacheCheck.json();
-      if (cached.length > 0 && (now - cached[0].ts) < CACHE_FRESH_MS) {
-        console.log(`   ⏭️ Zona ${bboxKey} ya tiene datos frescos (${Math.round((now - cached[0].ts)/1000)}s). Saltando...`);
-        return true;
+      if (cached.length > 0) {
+        const realTs = cached[0].ts - 300000;
+        if ((now - realTs) < CACHE_FRESH_MS) {
+          console.log(`   ⏭️ Zona ${bboxKey} ya tiene datos frescos (${Math.round((now - realTs)/1000)}s). Saltando...`);
+          return true;
+        }
       }
     }
   } catch (e) { console.warn(`   ⚠️ No se pudo consultar caché previa:`, e.message); }
