@@ -166,8 +166,8 @@ const Sidebar: React.FC<SidebarProps> = ({
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 p-6 backdrop-blur-3xl shadow-2xl transition-transform duration-500 overflow-y-auto no-scrollbar ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       <div className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <img src="/logopro.png" alt="NavegaPRO Logo" className="h-14 w-auto object-contain drop-shadow-xl" />
-          <h1 className="text-3xl font-black italic tracking-tighter bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(59,130,246,0.3)]">
+          <img src="/logopro.png" alt="NavegaPRO Logo" className="h-14 w-auto object-contain drop-shadow-xl [mix-blend-mode:multiply]" />
+          <h1 className="text-3xl font-black italic tracking-tighter bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(59,130,246,0.3)] pr-4 pb-1">
             NavegaPRO
           </h1>
         </div>
