@@ -31,9 +31,8 @@ function buildBboxParams(userPos: [number, number], ulat: number, ulon: number):
   return `lamin=${lamin}&lomin=${lomin}&lamax=${lamax}&lomax=${lomax}&ulat=${ulat}&ulon=${ulon}`;
 }
 
-// Con el simulador de posición, 120 s entre fetches es suficiente para evadir límites de API.
-// La animación fluida la aporta useAircraftSimulator (tick 1 s).
-const FETCH_INTERVAL_MS = 120_000;
+// Reducimos el intervalo a 60s. Es seguro porque rotamos cuentas y el feeder de casa ayuda.
+const FETCH_INTERVAL_MS = 60_000;
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -69,9 +68,24 @@ export function usePegasus(
       if (!pos) return;
 
       setLoading(true);
-      console.log(`[usePegasus] → Supabase Edge Function 'pegasus'`);
-
       try {
+        const bboxKey = `${parseFloat((pos[0] - 0.22).toFixed(1))}_${parseFloat((pos[1] - 0.22).toFixed(1))}_${parseFloat((pos[0] + 0.22).toFixed(1))}_${parseFloat((pos[1] + 0.22).toFixed(1))}`;
+        
+        console.log(`[usePegasus] 📡 Intentando avisar a casa para la zona: ${bboxKey}`);
+        
+        const signalRes = await supabase.from('opensky_requests').upsert({
+          bbox_key: bboxKey,
+          last_requested_at: Date.now(),
+          updated_at: new Date().toISOString()
+        });
+
+        if (signalRes.error) {
+          console.error('[usePegasus] ❌ Error enviando señal a Supabase:', signalRes.error);
+        } else {
+          console.log('[usePegasus] ✅ Señal enviada con éxito.');
+        }
+
+        // --- 1. Llamar a la función Pegasus ---
         const { data, error } = await supabase.functions.invoke('pegasus', {
           body: {
             lamin: parseFloat((pos[0] - 0.22).toFixed(4)),
