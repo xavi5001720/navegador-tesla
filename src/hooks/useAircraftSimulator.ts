@@ -66,6 +66,8 @@ interface SimState {
   // Datos cinéticos (sin cambio entre updates)
   velocity  : number;
   track     : number;
+  // Fantasma / Aterrizaje
+  lostTs?   : number;   // tiempo (ms) en que lo perdimos
   // Resto de campos Aircraft (se pasan tal cual)
   meta      : Omit<Aircraft, 'lat' | 'lon'>;
 }
@@ -109,17 +111,20 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
         existing.realTs   = now;
         existing.velocity = ac.velocity;
         existing.track    = ac.track;
+        existing.lostTs   = undefined; // Rescatado de ser fantasma
         existing.meta     = { icao24: ac.icao24, callsign: ac.callsign, origin_country: ac.origin_country, altitude: ac.altitude, velocity: ac.velocity, track: ac.track, isSuspect: ac.isSuspect, distanceToUser: ac.distanceToUser };
       }
     }
 
-    // Eliminar aeronaves que ya no están en la respuesta de la API
-    for (const id of map.keys()) {
-      if (!incomingIds.has(id)) map.delete(id);
+    // Identificar fantasmas (aeronaves que ya no están) en lugar de borrar inmediato
+    for (const [id, st] of map.entries()) {
+      if (!incomingIds.has(id)) {
+        if (!st.lostTs) st.lostTs = now; // empezamos cuenta atrás
+      }
     }
     
-    // Si dejamos de recibir aviones (ej. apagamos botón), limpiamos la vista
-    if (realAircrafts.length === 0) {
+    // Si dejamos de recibir aviones (ej. apagamos botón)
+    if (realAircrafts.length === 0 && map.size === 0) {
       setSimAircrafts([]);
     }
   }, [realAircrafts]);
@@ -136,11 +141,28 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
       // Preparamos el snapshot para el estado de React
       const next: Aircraft[] = [];
 
-      for (const [, st] of map) {
+      for (const [id, st] of map) {
+        // Si lleva fantasma > 30s, lo borramos de memoria por fin
+        if (st.lostTs && (now - st.lostTs > 30_000)) {
+          map.delete(id);
+          changed = true;
+          continue;
+        }
+
         const dtReal = (now - st.realTs) / 1_000; // segundos desde dato real
 
+        // Detección de aterrizaje confirmado (velocidad < 60 y baja altura)
+        const isLanding = st.meta.altitude < 500 && st.velocity < 60;
+        
+        let effectiveVelocity = st.velocity;
+        if (st.lostTs || isLanding) {
+          // Si lo perdimos o está aterrizando, anulamos la interpolación 
+          // dejándolo "aparcado"
+          effectiveVelocity = 0;
+        }
+
         // 1. Extrapolamos desde la posición REAL con el tiempo transcurrido
-        const proj = extrapolate(st.realLat, st.realLon, st.velocity, st.track, dtReal);
+        const proj = extrapolate(st.realLat, st.realLon, effectiveVelocity, st.track, dtReal);
 
         // 2. Calculamos drift entre posición simulada actual y proyección
         const drift = distDegreesApprox(st.simLat, st.simLon, proj.lat, proj.lon);
@@ -154,7 +176,8 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
           newLon = proj.lon;
         } else {
           // Interpolación exponencial suave hacia la proyección
-          const alpha = 1 - Math.exp(-SIM_TICK_MS / 1_000 / TAU_S);
+          // Si está aterrizando/fantasma, forzamos un imán inmediato al sitio donde aterrizó
+          const alpha = effectiveVelocity === 0 ? 0.2 : (1 - Math.exp(-SIM_TICK_MS / 1_000 / TAU_S));
           newLat = st.simLat + alpha * (proj.lat - st.simLat);
           newLon = st.simLon + alpha * (proj.lon - st.simLon);
         }
