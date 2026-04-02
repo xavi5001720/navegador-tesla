@@ -7,6 +7,8 @@ import { MapPin, Navigation, Menu, X, AlertTriangle, Power, Map } from 'lucide-r
 import Sidebar from '@/components/Sidebar';
 import AlertOverlay from '@/components/AlertOverlay';
 import Speedometer from '@/components/Speedometer';
+import SessionAlert from '@/components/SessionAlert';
+
 
 import { useRoute } from '@/hooks/useRoute';
 import { useRadars } from '@/hooks/useRadars';
@@ -45,7 +47,10 @@ const DynamicMap = dynamic(() => import('@/components/MapUI'), {
 });
 
 export default function Home() {
+  const sessionClientId = useRef(typeof window !== 'undefined' ? crypto.randomUUID() : '').current;
   const [viewMode, setViewMode] = useState<'navigation' | 'overview'>('overview');
+  const [isSessionDuplicated, setIsSessionDuplicated] = useState(false);
+
 
   const { 
     userPos, 
@@ -189,7 +194,42 @@ export default function Home() {
   };
 
 
+  // 3. Gestión de Sesión Única (Realtime)
+  useEffect(() => {
+    if (!session?.user) return;
+
+    // Registrar esta sesión como la activa
+    updateProfile({ last_session_id: sessionClientId });
+
+    // Escuchar si el last_session_id cambia en la DB (otro dispositivo entró)
+    const channel = supabase
+      .channel(`profile_session_${session.user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${session.user.id}`
+        },
+        (payload) => {
+          const newSessionId = payload.new.last_session_id;
+          if (newSessionId && newSessionId !== sessionClientId) {
+            console.warn('[Auth] Sesión iniciada en otro dispositivo');
+            setIsSessionDuplicated(true);
+            handleSignOut();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session?.user?.id, sessionClientId, updateProfile]);
+
   // Lógica de Recalculado Automático
+
   useEffect(() => {
     if (!route || !destination || loadingRoute) return;
 
