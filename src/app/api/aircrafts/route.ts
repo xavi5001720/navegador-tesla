@@ -176,10 +176,16 @@ async function fetchFromOpenSkyWithRotation(bbox: SnappedBbox): Promise<{ states
     try {
       const res = await fetch(url, { headers, cache: 'no-store' });
       
-      if (res.status === 429) {
-        const retrySecs = parseInt(res.headers.get('X-Rate-Limit-Retry-After-Seconds') ?? '60');
+      if (!res.ok) {
+        let retrySecs = 60;
+        if (res.status === 429) {
+          retrySecs = parseInt(res.headers.get('X-Rate-Limit-Retry-After-Seconds') ?? '60');
+          console.warn(`[aircrafts] ⚠️ Account ${i + 1} rate limited (429). Retry in ${retrySecs}s.`);
+        } else {
+          console.error(`[aircrafts] ⚠️ Account ${i + 1} HTTP Error ${res.status}. Cooldown 60s.`);
+        }
+        
         const cooldownUntil = Date.now() + (retrySecs * 1000);
-        console.warn(`[aircrafts] ⚠️ Account ${i + 1} rate limited. Retry in ${retrySecs}s. Rotando...`);
         
         await supabase
           .from('opensky_tokens')
@@ -189,11 +195,6 @@ async function fetchFromOpenSkyWithRotation(bbox: SnappedBbox): Promise<{ states
             updated_at: new Date().toISOString()
           });
 
-        continue;
-      }
-
-      if (!res.ok) {
-        console.error(`[aircrafts] HTTP Error ${res.status} en cuenta ${i + 1}`);
         continue;
       }
 
