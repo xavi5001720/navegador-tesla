@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 // Ahora los campos vienen ya procesados del backend (isSuspect, distanceToUser…)
@@ -72,16 +73,22 @@ export function usePegasus(
       console.log(`[usePegasus] → /api/aircrafts?${params}`);
 
       try {
-        const res = await fetch(`/api/aircrafts?${params}`);
+        const { data, error } = await supabase.functions.invoke('pegasus', {
+          body: {
+            lamin: parseFloat((pos[0] - 0.22).toFixed(4)),
+            lomin: parseFloat((pos[1] - 0.22).toFixed(4)),
+            lamax: parseFloat((pos[0] + 0.22).toFixed(4)),
+            lomax: parseFloat((pos[1] + 0.22).toFixed(4)),
+            ulat: pos[0],
+            ulon: pos[1]
+          }
+        });
 
-        if (res.status === 429) {
-          setIsRateLimited(true);
-          console.warn('[usePegasus] ⚠️  Rate limited (429) — esperando…');
-          return;
+        if (error) {
+          console.error('[usePegasus] Error calling Supabase Edge Function:', error);
+          throw new Error(error.message);
         }
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        const data = await res.json();
         setIsRateLimited(data?.rateLimited ?? false);
         if (data?.accountIndex && data.accountIndex !== -1) {
           setActiveAccount(data.accountIndex);
