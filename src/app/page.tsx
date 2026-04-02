@@ -663,7 +663,8 @@ export default function Home() {
           onZoomChange={setCustomZoom}
           onMapClick={handleMapClick}
           onChargerClick={handleChargerClick}
-          onGasStationClick={handleGasStationClick}
+          onGasStationClick={(s) => setSelectedPOI({ type: 'gasStation', data: s })}
+          onOpenGarage={() => setIsGarageOpen(true)}
           routeSections={route?.sections}
           carColor={profile?.car_color}
           friends={friends}

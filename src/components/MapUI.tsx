@@ -262,6 +262,7 @@ interface MapUIProps {
    onMapClick?: (lat: number, lon: number, screenX: number, screenY: number) => void;
    onChargerClick?: (charger: Charger) => void;
    onGasStationClick?: (station: GasStation) => void;
+   onOpenGarage?: () => void;
    routeSections?: RouteSection[];
    centerOverride?: [number, number] | null;
 }
@@ -474,6 +475,7 @@ export default function MapUI({
   onMapClick,
   onChargerClick,
   onGasStationClick,
+  onOpenGarage,
   routeSections = [],
   friends = [],
   centerOverride = null
@@ -685,7 +687,18 @@ export default function MapUI({
             }
           }
           
-          return <Marker position={pos} icon={createCarIcon(carHeading, carColor)} zIndexOffset={1000} />;
+          return (
+            <Marker 
+              position={pos} 
+              icon={createCarIcon(carHeading, carColor)} 
+              zIndexOffset={1000} 
+              eventHandlers={{
+                click: () => {
+                  if (onOpenGarage) onOpenGarage();
+                }
+              }}
+            />
+          );
         })()}
       </MapContainer>
     </div>
