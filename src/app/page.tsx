@@ -13,7 +13,9 @@ import { useRadars } from '@/hooks/useRadars';
 import { useAlerts } from '@/hooks/useAlerts';
 import { useSpeed } from '@/hooks/useSpeed';
 import { usePegasus } from '@/hooks/usePegasus';
+import { useAircraftSimulator } from '@/hooks/useAircraftSimulator';
 import { useGeolocation } from '@/hooks/useGeolocation';
+
 
 import { getDistance, distanceToPolyline, findClosestPointOnPolyline } from '@/utils/geo';
 import { playPegasusAlert, playWaypointAlert, playTrafficJamAlert, playWeatherAlert, unlockTeslaAudio, VoiceType } from '@/utils/sound';
@@ -219,6 +221,10 @@ export default function Home() {
 
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, voiceType, speed);
   const { allAircrafts, aircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
+
+  // Posiciones interpoladas cada 1 s — movimiento fluido sin llamadas extra a la API
+  const simulatedAircrafts = useAircraftSimulator(allAircrafts);
+
   const { chargers, loading: loadingChargers, progress: chargerProgress } = useChargers(userPos, route?.coordinates, isChargersEnabled, chargerFilters);
   const { stations: gasStations, loading: loadingGasStations, progress: gasProgress } = useGasStations(userPos, route?.coordinates, isGasStationsEnabled, gasStationFilters);
   const { weatherPoints, loadingWeather, currentWeather } = useWeather(userPos, route?.coordinates, isWeatherEnabled);
@@ -553,7 +559,7 @@ export default function Home() {
           hasLocation={hasLocation}
           routeCoordinates={route?.coordinates} 
           radars={radars}
-          aircrafts={allAircrafts}
+          aircrafts={simulatedAircrafts}
           chargers={chargers}
           gasStations={gasStations}
           weatherPoints={weatherPoints}

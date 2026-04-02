@@ -30,8 +30,10 @@ function buildBboxParams(userPos: [number, number], ulat: number, ulon: number):
   return `lamin=${lamin}&lomin=${lomin}&lamax=${lamax}&lomax=${lomax}&ulat=${ulat}&ulon=${ulon}`;
 }
 
-// Refresca cada 10 s (OpenSky actualiza cada 5-10 s para usuarios autenticados)
-const FETCH_INTERVAL_MS = 10_000;
+// Con el simulador de posición, 30 s entre fetches es suficiente.
+// La animación fluida la aporta useAircraftSimulator (tick 1 s).
+const FETCH_INTERVAL_MS = 30_000;
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 export function usePegasus(
@@ -43,6 +45,9 @@ export function usePegasus(
   const [allAircrafts, setAllAircrafts] = useState<Aircraft[]>([]);
   const [loading,      setLoading     ] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
+  // Timestamp del último batch real recibido — consume el simulador para saber cuándo aplicar corrección
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+
 
   const routeRef  = useRef(routeCoordinates);
   useEffect(() => { routeRef.current = routeCoordinates; }, [routeCoordinates]);
@@ -81,6 +86,8 @@ export function usePegasus(
         const states: Aircraft[] = data?.states ?? [];
         console.log(`[usePegasus] ✅ ${states.length} aeronaves | snapped bbox: ${JSON.stringify(data?.snappedBbox)}`);
         setAllAircrafts(states);
+        setLastFetchTime(Date.now());
+
 
       } catch (error) {
         console.error('[usePegasus] ❌ Error:', error);
@@ -123,6 +130,8 @@ export function usePegasus(
     isAnyPegasusNearby,
     loading,
     isRateLimited,
+    lastFetchTime,
     activeAccount    : 1,
   };
+
 }
