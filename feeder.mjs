@@ -79,7 +79,7 @@ async function fulfillRequest(bboxKey, accountIndex) {
       body: JSON.stringify({
         bbox_key: bboxKey, states: states, rate_limited: false,
         account_index: (accountIndex % ACCOUNTS.length) + 1,
-        ts: Date.now(), updated_at: new Date().toISOString()
+        ts: Date.now() + 300000, updated_at: new Date().toISOString()
       })
     });
 
