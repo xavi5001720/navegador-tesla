@@ -117,6 +117,11 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
     for (const id of map.keys()) {
       if (!incomingIds.has(id)) map.delete(id);
     }
+    
+    // Si dejamos de recibir aviones (ej. apagamos botón), limpiamos la vista
+    if (realAircrafts.length === 0) {
+      setSimAircrafts([]);
+    }
   }, [realAircrafts]);
 
   // ── Tick de simulación (1 s) ──────────────────────────────────────────────

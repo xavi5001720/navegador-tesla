@@ -66,7 +66,16 @@ export function usePegasus(
 
   useEffect(() => {
     if (!isEnabled || !userPos) {
-      if (!isEnabled) setAllAircrafts([]);
+      if (!isEnabled) {
+        setAllAircrafts([]);
+        
+        // Avisar a la DB que borre la request de la zona si cerramos, 
+        // para que el feeder pare completamente y no gaste API
+        if (userPosRef.current) {
+          const bboxKey = buildBboxKey(userPosRef.current);
+          supabase.from('opensky_requests').delete().eq('bbox_key', bboxKey).then(() => {});
+        }
+      }
       return;
     }
 
