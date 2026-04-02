@@ -31,7 +31,8 @@ export default function GarageModal({ isOpen, onClose, profile, sessionName, onU
       setName(profile?.car_name || sessionName || '');
       setColor(profile?.car_color || 'Blanco');
     }
-  }, [isOpen, profile, sessionName]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleSave = async () => {
     console.log('--- Intentando guardar garaje ---');
