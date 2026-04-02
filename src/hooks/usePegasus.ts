@@ -69,7 +69,7 @@ export function usePegasus(
 
       setLoading(true);
       try {
-        const bboxKey = `${parseFloat((pos[0] - 0.22).toFixed(1))}_${parseFloat((pos[1] - 0.22).toFixed(1))}_${parseFloat((pos[0] + 0.22).toFixed(1))}_${parseFloat((pos[1] + 0.22).toFixed(1))}`;
+        const bboxKey = `${(pos[0] - 0.22).toFixed(1)}_${(pos[1] - 0.22).toFixed(1)}_${(pos[0] + 0.22).toFixed(1)}_${(pos[1] + 0.22).toFixed(1)}`;
         
         console.log(`[usePegasus] 📡 Intentando avisar a casa para la zona: ${bboxKey}`);
         

@@ -1,8 +1,6 @@
 /**
- * OPEN SKY DYNAMIC HOME FEEDER — DETECTIVE DE CASA V2
- * Este script corre en tu ordenador local y vigila qué zonas necesita tu Tesla.
- * 
- * Ejecución: node feeder.mjs
+ * OPEN SKY DYNAMIC HOME FEEDER — DETECTIVE DE CASA V2.1
+ * Versión optimizada: Fiel al formato de coordenadas y con ahorro de llamadas.
  */
 
 const SUPABASE_URL = 'https://uhvwptagewswfiluqgmc.supabase.co';
@@ -17,29 +15,44 @@ const ACCOUNTS = [
 const OPENSKY_BASE = 'https://opensky-network.org/api';
 const TOKEN_URL = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
 
-const POLL_INTERVAL_MS = 10_000; // Mira si hay pedidos cada 10s
-const REQUEST_STALE_MS = 300_000; // Ignora pedidos de hace más de 5 min
+const POLL_INTERVAL_MS = 10_000;
+const REQUEST_STALE_MS = 300_000;
+const CACHE_FRESH_MS = 45_000; // Si el dato tiene menos de 45s, NO llamamos a la API
 
 async function getAccessToken(acc) {
   try {
     const res = await fetch(TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials', client_id: acc.id, client_secret: acc.secret,
-      })
+      body: new URLSearchParams({ grant_type: 'client_credentials', client_id: acc.id, client_secret: acc.secret })
     });
     return (await res.json()).access_token;
   } catch (e) { return null; }
 }
 
 async function fulfillRequest(bboxKey, accountIndex) {
-  // Parsing bbox_key: "40.0_-4.5_41.0_-3.0"
+  const now = Date.now();
+  
+  // 1. Verificar si ya tenemos datos frescos en caché
+  try {
+    const cacheCheck = await fetch(`${SUPABASE_URL}/rest/v1/opensky_cache?bbox_key=eq.${bboxKey}&select=ts`, {
+      headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }
+    });
+    if (cacheCheck.ok) {
+      const cached = await cacheCheck.json();
+      if (cached.length > 0 && (now - cached[0].ts) < CACHE_FRESH_MS) {
+        console.log(`   ⏭️ Zona ${bboxKey} ya tiene datos frescos (${Math.round((now - cached[0].ts)/1000)}s). Saltando...`);
+        return true;
+      }
+    }
+  } catch (e) { console.warn(`   ⚠️ No se pudo consultar caché previa:`, e.message); }
+
+  // 2. Si no hay caché o es vieja, consultar OpenSky
   const parts = bboxKey.split('_').map(Number);
   if (parts.length !== 4) return false;
   const [lamin, lomin, lamax, lomax] = parts;
 
-  console.log(`   → Consultando OpenSky para zona: ${bboxKey}...`);
+  console.log(`   🚀 Consultando OpenSky para zona: ${bboxKey}...`);
   
   const token = await getAccessToken(ACCOUNTS[accountIndex % ACCOUNTS.length]);
   if (!token) return false;
@@ -48,12 +61,15 @@ async function fulfillRequest(bboxKey, accountIndex) {
   
   try {
     const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
-    if (!res.ok) return false;
+    if (!res.ok) {
+      if (res.status === 429) console.warn(`   ⚠️ 429 Rate Limit en cuenta ${accountIndex+1}`);
+      return false;
+    }
 
     const data = await res.json();
     const states = data.states || [];
 
-    // Subir a caché
+    // 3. Subir a caché garantizando el formato de key
     await fetch(`${SUPABASE_URL}/rest/v1/opensky_cache`, {
       method: 'POST',
       headers: {
@@ -67,7 +83,7 @@ async function fulfillRequest(bboxKey, accountIndex) {
       })
     });
 
-    console.log(`   ✅ OK: ${states.length} aviones subidos.`);
+    console.log(`   ✅ OK: ${states.length} aviones subidos para ${bboxKey}`);
     return true;
   } catch (e) {
     console.error(`   ❌ Error: ${e.message}`);
@@ -77,10 +93,9 @@ async function fulfillRequest(bboxKey, accountIndex) {
 
 async function main() {
   const now = Date.now();
-  console.log(`[${new Date().toLocaleTimeString()}] Buscando pedidos de dispositivos...`);
+  console.log(`[${new Date().toLocaleTimeString()}] Buscando pedidos...`);
 
   try {
-    // 1. Obtener pedidos recientes (últimos 5 minutos)
     const res = await fetch(`${SUPABASE_URL}/rest/v1/opensky_requests?last_requested_at=gt.${now - REQUEST_STALE_MS}&select=*`, {
       headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }
     });
@@ -88,28 +103,20 @@ async function main() {
     if (!res.ok) throw new Error(await res.text());
     
     const requests = await res.json();
-    
-    if (requests.length === 0) {
-      console.log(`   No hay dispositivos activos pidiendo datos en este momento.`);
-      return;
-    }
+    if (requests.length === 0) return;
 
-    console.log(`   Hay ${requests.length} zona(s) activa(s) que necesitan datos.`);
-    
-    // 2. Atender cada pedido
     for (let i = 0; i < requests.length; i++) {
       await fulfillRequest(requests[i].bbox_key, i);
     }
 
   } catch (e) {
-    console.error(`[ERR] Error en el ciclo principal:`, e.message);
+    console.error(`[ERR] Error en el ciclo:`, e.message);
   }
 }
 
 console.log(`-----------------------------------------`);
-console.log(`DETECTIVE DINÁMICO ACTIVADO (V2)`);
-console.log(`Vigilando pedidos cada ${POLL_INTERVAL_MS/1000}s`);
-console.log(`Usa tu Tesla y este script te seguirá allá donde vayas.`);
+console.log(`DETECTIVE DINÁMICO OPTIMIZADO (V2.1)`);
+console.log(`Ahorro de API activado: Mínimo 45s entre llamadas.`);
 console.log(`-----------------------------------------`);
 
 main();
