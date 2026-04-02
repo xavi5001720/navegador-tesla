@@ -61,6 +61,7 @@ interface SidebarProps {
   liveDistance?: number | null;
   liveDuration?: number | null;
   waypoints?: [number, number][];
+  onSavePreferences?: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -114,7 +115,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   isWeatherEnabled,
   setIsWeatherEnabled,
   loadingWeather,
-  currentWeather
+  currentWeather,
+  onSavePreferences
 }) => {
   const [showRadarStats, setShowRadarStats] = useState(false);
   const [showChargerFilters, setShowChargerFilters] = useState(false);
@@ -773,6 +775,37 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
       </div>
+
+      {/* Botón explícito para guardar preferencias en el perfil del usuario */}
+      {onSavePreferences && (
+        <div className="mt-8 mb-4">
+          <button
+            onClick={(e) => {
+              const btn = e.currentTarget;
+              const originalText = btn.innerHTML;
+              btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Guardando...`;
+              
+              // Simular un poco de espera para mostrar el loading si es inmediato
+              setTimeout(() => {
+                onSavePreferences();
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check h-4 w-4 inline mr-2 text-green-400"><path d="M20 6 9 17l-5-5"/></svg> <span class="text-green-100">Guardado Correctamente</span>`;
+                btn.classList.add('bg-green-600', 'hover:bg-green-500', 'shadow-[0_0_15px_rgba(22,163,74,0.4)]');
+                btn.classList.remove('bg-blue-600', 'hover:bg-blue-500', 'shadow-[0_0_15px_rgba(37,99,235,0.4)]');
+                
+                setTimeout(() => {
+                  btn.innerHTML = originalText;
+                  btn.classList.remove('bg-green-600', 'hover:bg-green-500', 'shadow-[0_0_15px_rgba(22,163,74,0.4)]');
+                  btn.classList.add('bg-blue-600', 'hover:bg-blue-500', 'shadow-[0_0_15px_rgba(37,99,235,0.4)]');
+                }, 3000);
+              }, 400);
+            }}
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-white transition-all bg-blue-600 hover:bg-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.4)] hover:shadow-[0_0_25px_rgba(37,99,235,0.6)] active:scale-[0.98]"
+          >
+            <Database className="h-4 w-4" />
+            Guardar Configuración
+          </button>
+        </div>
+      )}
 
       {/* GPS Status Indicator */}
       <div className="mt-auto pt-4 flex items-center gap-3">

@@ -163,42 +163,27 @@ export default function Home() {
   useEffect(() => {
     if (!session) {
       setPrefsLoaded(false);
-      isFirstRender.current = true;
     }
   }, [session]);
 
-  // 2. Guardar preferencias en Supabase cuando cambien
-  const isFirstRender = useRef(true);
-  useEffect(() => {
-    if (!prefsLoaded || !session) return;
-    
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
+  // 2. Guardar preferencias explícitamente cuando el usuario pulse el botón Guardar
+  const handleSavePreferences = () => {
+    if (!session) return;
+    updateProfile({
+      preferences: {
+        isRadarsEnabled,
+        isAircraftsEnabled,
+        isChargersEnabled,
+        chargerFilters,
+        isGasStationsEnabled,
+        gasStationFilters,
+        isWeatherEnabled,
+        isSoundEnabled,
+        voiceType
+      }
+    });
+  };
 
-    const timer = setTimeout(() => {
-      updateProfile({
-        preferences: {
-          isRadarsEnabled,
-          isAircraftsEnabled,
-          isChargersEnabled,
-          chargerFilters,
-          isGasStationsEnabled,
-          gasStationFilters,
-          isWeatherEnabled,
-          isSoundEnabled,
-          voiceType
-        }
-      });
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, [
-    prefsLoaded, session, updateProfile,
-    isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, chargerFilters,
-    isGasStationsEnabled, gasStationFilters, isWeatherEnabled, isSoundEnabled, voiceType
-  ]);
 
   // Lógica de Recalculado Automático
   useEffect(() => {
@@ -610,6 +595,7 @@ export default function Home() {
         setIsWeatherEnabled={setIsWeatherEnabled}
         currentWeather={currentWeather}
         loadingWeather={loadingWeather}
+        onSavePreferences={handleSavePreferences}
       />
 
       {/* Sección del Mapa (Fondo) */}
