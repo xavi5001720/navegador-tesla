@@ -614,15 +614,12 @@ export default function Home() {
 
       {/* Panel Izquierdo (Bloque de Control) */}
       {/* Branding NavegaPRO (Siempre visible en la misma posición) */}
-      <div className="fixed top-8 left-8 z-[100] flex items-center gap-5 pointer-events-none select-none">
+      <div className="fixed top-8 left-8 z-[100] pointer-events-none select-none">
         <img 
           src="/logoprook.png" 
           alt="NavegaPRO Logo" 
           className="h-20 w-auto object-contain drop-shadow-2xl" 
         />
-        <h1 className="text-4xl font-black italic tracking-tighter bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent drop-shadow-[0_2px_10px_rgba(59,130,246,0.3)] pr-4 pb-1">
-          NavegaPRO
-        </h1>
       </div>
 
       <Sidebar 
