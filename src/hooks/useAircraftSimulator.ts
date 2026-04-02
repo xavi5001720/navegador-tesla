@@ -17,6 +17,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { Aircraft } from './usePegasus';
+import { SPANISH_AIRPORTS, AIRPORT_LANDING_RADIUS_M } from '@/utils/airports';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 const SIM_TICK_MS   = 1_000;   // tick de simulación (1 s)
@@ -142,22 +143,34 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
       const next: Aircraft[] = [];
 
       for (const [id, st] of map) {
-        // Si lleva fantasma > 30s, lo borramos de memoria por fin
-        if (st.lostTs && (now - st.lostTs > 30_000)) {
-          map.delete(id);
-          changed = true;
-          continue;
+        const isNearAirport = SPANISH_AIRPORTS.some(airport => 
+          distDegreesApprox(st.realLat, st.realLon, airport.lat, airport.lon) < AIRPORT_LANDING_RADIUS_M
+        );
+
+        // Si es fantasma, verificamos si le damos la gracia de 30s o lo borramos ya
+        if (st.lostTs) {
+          if (isNearAirport) {
+            if (now - st.lostTs > 30_000) {
+              map.delete(id);
+              changed = true;
+              continue;
+            }
+          } else {
+            // Si desapareció y no está cerca de un aeropuerto, lo borramos inmediatamente
+            map.delete(id);
+            changed = true;
+            continue;
+          }
         }
 
         const dtReal = (now - st.realTs) / 1_000; // segundos desde dato real
 
-        // Detección de aterrizaje confirmado (velocidad < 60 y baja altura)
-        const isLanding = st.meta.altitude < 500 && st.velocity < 60;
+        // Detección de aterrizaje activo (velocidad < 60, baja altura y en aeropuerto)
+        const isLanding = st.meta.altitude < 500 && st.velocity < 60 && isNearAirport;
         
         let effectiveVelocity = st.velocity;
         if (st.lostTs || isLanding) {
-          // Si lo perdimos o está aterrizando, anulamos la interpolación 
-          // dejándolo "aparcado"
+          // Si lo perdimos en aeropuerto o está aterrizando activamente, lo dejamos aparcado
           effectiveVelocity = 0;
         }
 
