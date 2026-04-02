@@ -165,8 +165,8 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
 
         const dtReal = (now - st.realTs) / 1_000; // segundos desde dato real
 
-        // Detección de aterrizaje activo (velocidad < 60, baja altura y en aeropuerto)
-        const isLanding = st.meta.altitude < 500 && st.velocity < 60 && isNearAirport;
+        // Detección de aterrizaje activo (aterrizando sobre la pista: baja altura < 50m y en aeropuerto)
+        const isLanding = st.meta.altitude < 50 && isNearAirport;
         
         let effectiveVelocity = st.velocity;
         if (st.lostTs || isLanding) {
