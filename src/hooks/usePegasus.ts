@@ -30,9 +30,9 @@ function buildBboxParams(userPos: [number, number], ulat: number, ulon: number):
   return `lamin=${lamin}&lomin=${lomin}&lamax=${lamax}&lomax=${lomax}&ulat=${ulat}&ulon=${ulon}`;
 }
 
-// Con el simulador de posición, 30 s entre fetches es suficiente.
+// Con el simulador de posición, 120 s entre fetches es suficiente para evadir límites de API.
 // La animación fluida la aporta useAircraftSimulator (tick 1 s).
-const FETCH_INTERVAL_MS = 30_000;
+const FETCH_INTERVAL_MS = 120_000;
 
 
 // ─────────────────────────────────────────────────────────────────────────────
