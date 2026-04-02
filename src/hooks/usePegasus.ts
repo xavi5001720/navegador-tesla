@@ -25,10 +25,10 @@ function snapUp  (v: number): number { return Math.ceil (v / SNAP_SIZE) * SNAP_S
 
 // ── Bbox centrado en el usuario (~25 km de margen) ───────────────────────────
 function buildBboxKey(userPos: [number, number]): string {
-  const lamin = userPos[0] - 0.22;
-  const lomin = userPos[1] - 0.22;
-  const lamax = userPos[0] + 0.22;
-  const lomax = userPos[1] + 0.22;
+  const lamin = userPos[0] - 0.44;
+  const lomin = userPos[1] - 0.44;
+  const lamax = userPos[0] + 0.44;
+  const lomax = userPos[1] + 0.44;
   
   const sLamin = snapDown(lamin);
   const sLomin = snapDown(lomin);
@@ -95,10 +95,10 @@ export function usePegasus(
         // --- 1. Llamar a la función Pegasus ---
         const { data, error } = await supabase.functions.invoke('pegasus', {
           body: {
-            lamin: parseFloat((pos[0] - 0.22).toFixed(4)),
-            lomin: parseFloat((pos[1] - 0.22).toFixed(4)),
-            lamax: parseFloat((pos[0] + 0.22).toFixed(4)),
-            lomax: parseFloat((pos[1] + 0.22).toFixed(4)),
+            lamin: parseFloat((pos[0] - 0.44).toFixed(4)),
+            lomin: parseFloat((pos[1] - 0.44).toFixed(4)),
+            lamax: parseFloat((pos[0] + 0.44).toFixed(4)),
+            lomax: parseFloat((pos[1] + 0.44).toFixed(4)),
             ulat: pos[0],
             ulon: pos[1]
           }
