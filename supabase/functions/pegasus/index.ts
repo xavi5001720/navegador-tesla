@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const OPENSKY_BASE = 'https://opensky-network.org/api';
 const TOKEN_URL    = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
-const SNAP_SIZE    = 0.5;
+const SNAP_SIZE    = 4.0;
 const CACHE_TTL_MS = 10_000;
 const FETCH_TIMEOUT_MS = 12_000; // 12 segundos — si no responde, está bloqueado
 const CACHE_STALE_MS = 180_000; // 3 minutos — si el feeder de casa está activo, esto es suficiente
@@ -85,6 +85,13 @@ function enrichState(s: any, userLat?: number, userLon?: number) {
 
   const isSuspect = !isCommercial && (hasWatchCallsign || isDGT || ((isLow && isSlow) && !nearAirport));
 
+  const distanceToUser = (userLat != null && userLon != null)
+      ? haversine([userLat, userLon], [lat, lon]) : null;
+
+  if (distanceToUser !== null && distanceToUser > 25000) {
+    return null; // Filtro de ancho de banda: Ignorar aviones a >25km de este coche local
+  }
+
   return {
     icao24,
     callsign       : callsign || 'N/A',
@@ -92,8 +99,7 @@ function enrichState(s: any, userLat?: number, userLon?: number) {
     lon, lat, altitude, velocity,
     track          : s[10] ?? 0,
     isSuspect,
-    distanceToUser : (userLat != null && userLon != null)
-      ? haversine([userLat, userLon], [lat, lon]) : null,
+    distanceToUser,
   };
 }
 

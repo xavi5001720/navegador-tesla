@@ -19,23 +19,25 @@ export interface Aircraft {
 }
 
 // -- Helper parameters must match the edge function snap size
-const SNAP_SIZE = 0.5;
+const SNAP_SIZE = 4.0;
 function snapDown(v: number): number { return Math.floor(v / SNAP_SIZE) * SNAP_SIZE; }
 function snapUp  (v: number): number { return Math.ceil (v / SNAP_SIZE) * SNAP_SIZE; }
 
 // ── Bbox centrado en el usuario (~25 km de margen) ───────────────────────────
 function buildBboxKey(userPos: [number, number]): string {
-  const lamin = userPos[0] - 0.22;
-  const lomin = userPos[1] - 0.22;
-  const lamax = userPos[0] + 0.22;
-  const lomax = userPos[1] + 0.22;
+  const sLamin = snapDown(userPos[0]);
+  const sLomin = snapDown(userPos[1]);
+  const sLamax = snapUp(userPos[0] || sLamin + SNAP_SIZE); // Si userPos cae exacto, snapUp no sube. Por seguridad sumamos o usamos logica.
   
-  const sLamin = snapDown(lamin);
-  const sLomin = snapDown(lomin);
-  const sLamax = snapUp(lamax);
-  const sLomax = snapUp(lomax);
+  // Para clavar lo que hace el backend (snapUp siempre hacia arriba):
+  const upLat = Math.ceil(userPos[0] / SNAP_SIZE) * SNAP_SIZE;
+  const upLon = Math.ceil(userPos[1] / SNAP_SIZE) * SNAP_SIZE;
   
-  return `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${sLamax.toFixed(1)}_${sLomax.toFixed(1)}`;
+  // Prevención por si el Math.ceil devuelve lo mismo en bordes exactos
+  const sLamaxVal = upLat === sLamin ? sLamin + SNAP_SIZE : upLat;
+  const sLomaxVal = upLon === sLomin ? sLomin + SNAP_SIZE : upLon;
+
+  return `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${sLamaxVal.toFixed(1)}_${sLomaxVal.toFixed(1)}`;
 }
 
 // Reducimos el intervalo a 60s. Es seguro porque rotamos cuentas y el feeder de casa ayuda.
@@ -104,10 +106,10 @@ export function usePegasus(
         // --- 1. Llamar a la función Pegasus ---
         const { data, error } = await supabase.functions.invoke('pegasus', {
           body: {
-            lamin: parseFloat((pos[0] - 0.22).toFixed(4)),
-            lomin: parseFloat((pos[1] - 0.22).toFixed(4)),
-            lamax: parseFloat((pos[0] + 0.22).toFixed(4)),
-            lomax: parseFloat((pos[1] + 0.22).toFixed(4)),
+            lamin: pos[0],
+            lomin: pos[1],
+            lamax: pos[0],
+            lomax: pos[1],
             ulat: pos[0],
             ulon: pos[1]
           }
