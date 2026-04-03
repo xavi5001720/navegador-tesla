@@ -73,11 +73,15 @@ export function usePegasus(
 
       setLoading(true);
       try {
-        const bboxKey = buildBboxKey(pos);
+        const sLamin = snapDown(pos[0]);
+        const sLomin = snapDown(pos[1]);
+        const sLamax = sLamin + SNAP_SIZE;
+        const sLomax = sLomin + SNAP_SIZE;
+        const bboxKey = `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${sLamax.toFixed(1)}_${sLomax.toFixed(1)}`;
+
+        console.log(`[usePegasus V5] 📡 Sincronizando zona: ${bboxKey}`);
         
-        console.log(`[usePegasus] 📡 Avisando a casa para la zona: ${bboxKey}`);
-        
-        // Enviamos señal de vida al feeder
+        // 1. Avisar al feeder (mismo key)
         await supabase.from('opensky_requests').upsert({
           bbox_key: bboxKey,
           last_requested_at: Date.now(),
@@ -86,14 +90,13 @@ export function usePegasus(
           ulon: pos[1]
         });
 
-        // --- Llamar a la función Pegasus ---
-        // Usamos ±0.001 de margen para evitar el bug de celda cero en bordes
+        // 2. Pedir al servidor (mismos parámetros para que genere el mismo key)
         const { data, error } = await supabase.functions.invoke('pegasus', {
           body: {
-            lamin: pos[0] - 0.44,
-            lomin: pos[1] - 0.44,
-            lamax: pos[0] + 0.44,
-            lomax: pos[1] + 0.44,
+            lamin: sLamin,
+            lomin: sLomin,
+            lamax: sLamax,
+            lomax: sLomax,
             ulat: pos[0],
             ulon: pos[1]
           }
