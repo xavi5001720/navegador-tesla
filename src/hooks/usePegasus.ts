@@ -157,10 +157,8 @@ export function usePegasus(
       // 3. Velocidad máxima alerta (300 km/h = 83.33 m/s)
       if (a.velocity > 83.33) return false;
 
-      // 4. Si hay ruta activa, filtrar por distancia (50km)
-      if (routeRef.current && routeRef.current.length > 0) {
-        if (a.distanceToUser > 50000) return false;
-      }
+      // 4. Si hay ruta activa o estamos en zona libre, filtrar por distancia (100km)
+      if (a.distanceToUser > 100000) return false;
 
       return true;
     });

@@ -96,8 +96,8 @@ function enrichState(s: any, userLat?: number, userLon?: number) {
   
   const distanceToUser = (userLat != null && userLon != null) ? haversine([userLat, userLon], [lat, lon]) : null;
 
-  // Filtrado por distancia máxima (Backend: 25km para optimizar ancho de banda)
-  if (distanceToUser !== null && distanceToUser > 25000) return null;
+  // Filtrado por distancia máxima (Backend: 100km para mayor cobertura en macro-zonas)
+  if (distanceToUser !== null && distanceToUser > 100000) return null;
 
   return {
     icao24,
