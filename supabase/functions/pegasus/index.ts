@@ -85,12 +85,9 @@ function enrichState(s: any, userLat?: number, userLon?: number) {
 
   const isSuspect = !isCommercial && (hasWatchCallsign || isDGT || ((isLow && isSlow) && !nearAirport));
 
-  const distanceToUser = (userLat != null && userLon != null)
-      ? haversine([userLat, userLon], [lat, lon]) : null;
-
-  if (distanceToUser !== null && distanceToUser > 25000) {
-    return null; // Filtro de ancho de banda: Ignorar aviones a >25km de este coche local
-  }
+  // Filtro de distancia desactivado: enviamos todos los aviones de la Macro-Zona al cliente.
+  // El cliente ya filtra por ruta y vista actual.
+  const distanceToUser = (userLat != null && userLon != null) ? haversine([userLat, userLon], [lat, lon]) : null;
 
   return {
     icao24,
