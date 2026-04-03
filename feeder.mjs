@@ -17,7 +17,56 @@ const TOKEN_URL = 'https://auth.opensky-network.org/auth/realms/opensky-network/
 
 const POLL_INTERVAL_MS = 10_000;
 const REQUEST_STALE_MS = 300_000;
-const CACHE_FRESH_MS   = 45_000; 
+
+// Distancia entre dos puntos (lat, lon) en metros
+function haversine(p1, p2) {
+  const R = 6371e3;
+  const dLat = (p2[0] - p1[0]) * Math.PI / 180;
+  const dLon = (p2[1] - p1[1]) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(p1[0] * Math.PI / 180) * Math.cos(p2[0] * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+function calculateDynamicInterval(planes = [], userPositions = []) {
+    if (planes.length === 0) return 300_000; // 5 min si no hay nada
+    if (userPositions.length === 0) return 300_000;
+
+    let minDistance = Infinity;
+    let closestVelocity = 100; // m/s por defecto
+
+    for (const user of userPositions) {
+        for (const plane of planes) {
+            // Un plane en caché tiene formato: [icao24, callsign, country, ts, last_contact, lon, lat, alt, on_ground, velocity, track, ...]
+            // (Ajustar según formato real guardado en opensky_cache.data.states)
+            const pLat = plane[6];
+            const pLon = plane[5];
+            const pVel = plane[9] || 10;
+            
+            if (pLat != null && pLon != null) {
+                const dist = haversine([user.lat, user.lon], [pLat, pLon]);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    closestVelocity = Math.max(pVel, 10);
+                }
+            }
+        }
+    }
+
+    const distKm = minDistance / 1000;
+    
+    // Reglas solicitadas
+    if (distKm < 50) return 45_000; 
+    if (distKm < 150) return 60_000 + Math.random() * 60_000; // 60-120s
+
+    // > 150 km: usar ETI / 2 (tiempo estimado de llegada)
+    const etiSeconds = minDistance / closestVelocity;
+    const intervalMs = (etiSeconds / 2) * 1000;
+    
+    return Math.max(120_000, Math.min(300_000, intervalMs));
+}
 
 // ── Estadísticas Globales ───────────────────────────────────────────────────
 let sessionStartTime = Date.now();
@@ -81,36 +130,43 @@ async function getAccessToken(acc) {
   } catch (e) { return null; }
 }
 
-async function fulfillRequest(bboxKey, accountIndex) {
+async function fulfillRequest(bboxKey, userPositions, accountIndex) {
   const now = Date.now();
+  const acc = ACCOUNTS[accountIndex % ACCOUNTS.length];
   
-  // 1. Verificar si ya tenemos datos frescos en caché
+  // 1. Verificar si ya tenemos datos frescos en caché (DINÁMICO)
   try {
-    const cacheCheck = await fetch(`${SUPABASE_URL}/rest/v1/opensky_cache?bbox_key=eq.${bboxKey}&select=ts`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/opensky_cache?bbox_key=eq.${bboxKey}&select=created_at,data&order=created_at.desc&limit=1`, {
       headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }
     });
-    if (cacheCheck.ok) {
-      const cached = await cacheCheck.json();
+
+    if (res.ok) {
+      const cached = await res.json();
       if (cached.length > 0) {
-        // En la base de datos, ts tiene un offset de +5min para sincronización
-        const realTs = cached[0].ts - 300000;
-        if ((now - realTs) < CACHE_FRESH_MS) {
-          console.log(`   ⏭️ Zona ${bboxKey} ya tiene datos frescos (${Math.round((now - realTs)/1000)}s). Saltando...`);
+        const lastCreatedAt = new Date(cached[0].created_at).getTime();
+        const planes = cached[0].data?.states || [];
+        
+        // Calculamos cuánto debería durar la "frescura" de esta zona ahora
+        const dynamicFreshness = calculateDynamicInterval(planes, userPositions);
+        const elapsed = now - lastCreatedAt;
+
+        if (elapsed < dynamicFreshness) {
+          console.log(`   ⏳ [${bboxKey}]: Esperando (${Math.round((dynamicFreshness - elapsed)/1000)}s). Intervalo: ${Math.round(dynamicFreshness/1000)}s.`);
           return true;
         }
+        console.log(`   🚀 [${bboxKey}]: Refrescando (Pasaron ${Math.round(elapsed/1000)}s > ${Math.round(dynamicFreshness/1000)}s).`);
       }
     }
-  } catch (e) { console.warn(`   ⚠️ No se pudo consultar caché previa:`, e.message); }
+  } catch (e) { console.warn(`   ⚠️ Error consultando SmartPoll:`, e.message); }
 
   // 2. Si no hay caché o es vieja, consultar OpenSky
   const parts = bboxKey.split('_').map(Number);
   if (parts.length < 4) return false;
-  // Bbox de la macro-zona
   const [lamin, lomin, lamax, lomax] = parts;
 
-  console.log(`   🚀 Consultando OpenSky para zona: ${bboxKey}...`);
+  console.log(`   📡 Llamando a OpenSky [Cuenta ${accountIndex+1}] para ${bboxKey}...`);
   
-  const token = await getAccessToken(ACCOUNTS[accountIndex % ACCOUNTS.length]);
+  const token = await getAccessToken(acc);
   if (!token) return false;
 
   const url = `${OPENSKY_BASE}/states/all?lamin=${lamin}&lomin=${lomin}&lamax=${lamax}&lomax=${lomax}`;
@@ -162,15 +218,24 @@ async function main() {
     if (!res.ok) throw new Error(await res.text());
     
     const requests = await res.json();
-    currentActiveZones = requests.length;
-    currentActiveUsers = new Set(requests.map(r => `${r.ulat?.toFixed(2)}_${r.ulon?.toFixed(2)}`)).size;
+    const currentActiveUsers = new Set(requests.map(r => `${r.ulat?.toFixed(2)}_${r.ulon?.toFixed(2)}`)).size;
+    currentActiveZones = new Set(requests.map(r => r.bbox_key)).size;
 
     // Actualizar picos en silencio
     if (currentActiveUsers > maxActiveUsers) maxActiveUsers = currentActiveUsers;
     if (currentActiveZones > maxActiveZones) maxActiveZones = currentActiveZones;
 
-    for (let i = 0; i < requests.length; i++) {
-        await fulfillRequest(requests[i].bbox_key, i);
+    // Agrupar peticiones por zona
+    const zones = {};
+    for (const r of requests) {
+        if (!zones[r.bbox_key]) zones[r.bbox_key] = [];
+        zones[r.bbox_key].push({ lat: r.ulat, lon: r.ulon });
+    }
+
+    const zoneKeys = Object.keys(zones);
+    for (let i = 0; i < zoneKeys.length; i++) {
+        const bboxKey = zoneKeys[i];
+        await fulfillRequest(bboxKey, zones[bboxKey], i);
     }
 
   } catch (e) {
