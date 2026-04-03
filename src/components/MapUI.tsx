@@ -670,17 +670,24 @@ export default function MapUI({
 
         {(() => {
           let pos = userPos;
-          let carHeading = heading;
-          
-          if (viewMode === 'navigation' && routeCoordinates && routeCoordinates.length > 0) {
-            const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
-            if (snapped.distance < 25) {
-              pos = snapped.point;
-              const p1 = routeCoordinates[snapped.segmentIndex];
-              const p2 = routeCoordinates[snapped.segmentIndex + 1];
-              if (p1 && p2) {
-                carHeading = getBearing(p1, p2);
+          let carHeading = heading; // Fuera de navegación: usa heading GPS raw
+
+          if (viewMode === 'navigation') {
+            if (routeCoordinates && routeCoordinates.length > 0) {
+              // CON RUTA: alineamos el coche con el segmento de carretera más cercano
+              const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
+              if (snapped.distance < 25) {
+                pos = snapped.point;
+                const p1 = routeCoordinates[snapped.segmentIndex];
+                const p2 = routeCoordinates[snapped.segmentIndex + 1];
+                if (p1 && p2) {
+                  carHeading = getBearing(p1, p2);
+                }
               }
+            } else {
+              // SIN RUTA: el MapRotator ya rota el mapa para que "arriba = dirección de viaje".
+              // El icono debe quedar siempre apuntando hacia arriba en pantalla (heading=0 relativo al mapa rotado).
+              carHeading = 0;
             }
           }
           
