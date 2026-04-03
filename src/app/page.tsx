@@ -122,10 +122,15 @@ export default function Home() {
   const isManualOverviewRef = useRef(false);
   const [mapCenterOverride, setMapCenterOverride] = useState<[number, number] | null>(null);
 
+  const [overviewFitTrigger, setOverviewFitTrigger] = useState(0);
+
   const handleManualViewModeChange = useCallback((mode: 'navigation' | 'overview') => {
     isManualOverviewRef.current = mode === 'overview';
     setViewMode(mode);
     setCustomZoom(null);
+    if (mode === 'overview') {
+      setOverviewFitTrigger(prev => prev + 1);
+    }
   }, []);
 
   // Escuchar cambios de autenticación
@@ -717,6 +722,7 @@ export default function Home() {
           carColor={profile?.car_color}
           friends={friends}
           centerOverride={mapCenterOverride}
+          overviewFitTrigger={overviewFitTrigger}
         />
 
         {/* Panel de Avisos Rápidos y Velocímetro */}
@@ -736,16 +742,25 @@ export default function Home() {
               </button>
             )}
             {viewMode === 'overview' && (
-              <button 
-                onClick={() => {
-                  if (!hasLocation) requestGPS();
-                  handleManualViewModeChange('navigation');
-                }}
-                className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-blue-600/80 hover:bg-blue-500 border-blue-400/50"
-              >
-                <img src="/volante.png" alt="Modo Navegación" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
-                <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Modo Navegación</span>
-              </button>
+              <>
+                <button 
+                  onClick={() => setOverviewFitTrigger(prev => prev + 1)}
+                  className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-gray-800 hover:bg-gray-700"
+                >
+                  <Map className="h-6 w-6 md:h-8 md:w-8 text-white drop-shadow-md" />
+                  <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Centrar Mapa Global</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    if (!hasLocation) requestGPS();
+                    handleManualViewModeChange('navigation');
+                  }}
+                  className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-blue-600/80 hover:bg-blue-500 border-blue-400/50"
+                >
+                  <img src="/volante.png" alt="Modo Navegación" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
+                  <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Modo Navegación</span>
+                </button>
+              </>
             )}
           </div>
         </div>

@@ -265,6 +265,7 @@ interface MapUIProps {
    onOpenGarage?: () => void;
    routeSections?: RouteSection[];
    centerOverride?: [number, number] | null;
+   overviewFitTrigger?: number;
 }
 
 const createCarIcon = (heading: number, color?: string) => {
@@ -372,10 +373,18 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
   return null;
 }
 
-function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordinates, customZoom, hasLocation, centerOverride }: { position: L.LatLngExpression, viewMode: string, hasRoute: boolean, speed?: number, routeCoordinates?: [number, number][], customZoom?: number | null, hasLocation?: boolean, centerOverride?: [number, number] | null }) {
+function LocationTracker({ 
+  position, viewMode, hasRoute, speed = 0, routeCoordinates, customZoom, hasLocation, centerOverride,
+  overviewFitTrigger, radars, aircrafts, chargers, gasStations, weatherPoints, friends
+}: { 
+  position: [number, number], viewMode: string, hasRoute: boolean, speed?: number, 
+  routeCoordinates?: [number, number][], customZoom?: number | null, hasLocation?: boolean, 
+  centerOverride?: [number, number] | null,
+  overviewFitTrigger?: number, radars?: Radar[], aircrafts?: Aircraft[], chargers?: Charger[],
+  gasStations?: GasStation[], weatherPoints?: WeatherPoint[], friends?: Friend[]
+}) {
   const map = useMap();
-  const lastOverviewRouteRef = useRef<string>('');
-  const lastViewModeRef = useRef<string>(viewMode);
+  const lastFitTriggerRef = useRef<number>(-1);
   const firstLocationReceivedRef = useRef(false);
 
   // VISTA GENERAL: override center si clicn en amigo u otro
@@ -393,36 +402,31 @@ function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordin
     }
   }, [hasLocation, viewMode, position, hasRoute, map]);
 
-  // VISTA GENERAL: centrado inicial cuando se entra al modo o cambia la ruta.
-  // Después de eso el mapa es completamente libre: el usuario puede mover y hacer zoom sin restricciones.
+  // VISTA GENERAL: centrado global inicial y controlado por usuario
   useEffect(() => {
-    if (viewMode !== 'overview') {
-      lastOverviewRouteRef.current = '';
-      lastViewModeRef.current = viewMode;
-      return;
-    }
+    if (viewMode !== 'overview') return;
+    if (overviewFitTrigger === undefined || lastFitTriggerRef.current === overviewFitTrigger) return;
+    
+    lastFitTriggerRef.current = overviewFitTrigger;
 
-    const routeKey = JSON.stringify(routeCoordinates);
-    const modeJustChanged = lastViewModeRef.current !== 'overview';
-    lastViewModeRef.current = 'overview';
+    const allPoints: [number, number][] = [];
+    allPoints.push([position[0], position[1]]);
 
-    // Solo centramos si acabamos de entrar al modo o si llegó una ruta nueva
-    if (!modeJustChanged && lastOverviewRouteRef.current === routeKey) return;
+    if (hasRoute && routeCoordinates) allPoints.push(...routeCoordinates);
+    if (radars) radars.forEach(r => allPoints.push([r.lat, r.lon]));
+    if (aircrafts) aircrafts.forEach(a => allPoints.push([a.lat, a.lon]));
+    if (chargers) chargers.forEach(c => allPoints.push([c.lat, c.lon]));
+    if (gasStations) gasStations.forEach(g => allPoints.push([g.lat, g.lon]));
+    if (weatherPoints) weatherPoints.forEach(w => allPoints.push([w.lat, w.lon]));
+    if (friends) friends.forEach(f => { if(f.last_lat && f.last_lon) allPoints.push([f.last_lat, f.last_lon]) });
 
-    lastOverviewRouteRef.current = routeKey;
-
-    if (hasRoute && routeCoordinates && routeCoordinates.length > 0) {
-      try {
-        const bounds = L.latLngBounds(routeCoordinates);
-        map.fitBounds(bounds, { padding: [80, 80], animate: true, duration: 1.5 });
-      } catch (e) {
-        map.setView(position, 13, { animate: true, duration: 1.5 });
-      }
-    } else {
-      // Sin ruta: zoom de ciudad centrado en el usuario
+    try {
+      const bounds = L.latLngBounds(allPoints);
+      map.fitBounds(bounds, { padding: [100, 100], animate: true, maxZoom: 16, duration: 1.5 });
+    } catch (e) {
       map.setView(position, 13, { animate: true, duration: 1.5 });
     }
-  }, [viewMode, hasRoute, routeCoordinates, map, position]);
+  }, [viewMode, overviewFitTrigger, routeCoordinates, hasRoute, map, position, radars, aircrafts, chargers, gasStations, weatherPoints, friends]);
 
   // MODO NAVEGACIÓN: sigue al coche con zoom dinámico.
   useEffect(() => {
@@ -475,7 +479,8 @@ export default function MapUI({
   onOpenGarage,
   routeSections = [],
   friends = [],
-  centerOverride = null
+  centerOverride = null,
+  overviewFitTrigger = 0
 }: MapUIProps) {
   return (
     <div className="relative h-full w-full bg-gray-900 overflow-hidden">
@@ -516,7 +521,23 @@ export default function MapUI({
         
         <RouteFitter routeCoordinates={routeCoordinates} />
         
-        <LocationTracker position={userPos} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} customZoom={customZoom} hasLocation={hasLocation} centerOverride={centerOverride} />
+        <LocationTracker 
+          position={userPos} 
+          viewMode={viewMode} 
+          hasRoute={!!routeCoordinates} 
+          speed={speed} 
+          routeCoordinates={routeCoordinates} 
+          customZoom={customZoom} 
+          hasLocation={hasLocation} 
+          centerOverride={centerOverride}
+          overviewFitTrigger={overviewFitTrigger}
+          radars={radars}
+          aircrafts={aircrafts}
+          chargers={chargers}
+          gasStations={gasStations}
+          weatherPoints={weatherPoints}
+          friends={friends}
+        />
         
         {(() => {
           if (!routeCoordinates || routeCoordinates.length === 0) return null;
