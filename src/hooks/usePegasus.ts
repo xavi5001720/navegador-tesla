@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
-// Ahora los campos vienen ya procesados del backend (isSuspect, distanceToUser…)
 export interface Aircraft {
   icao24        : string;
   callsign      : string;
@@ -23,25 +22,21 @@ const SNAP_SIZE = 4.0;
 function snapDown(v: number): number { return Math.floor(v / SNAP_SIZE) * SNAP_SIZE; }
 function snapUp  (v: number): number { return Math.ceil (v / SNAP_SIZE) * SNAP_SIZE; }
 
-// ── Bbox centrado en el usuario (~25 km de margen) ───────────────────────────
+// ── Bbox centrado en el usuario (Macro-Zona de 4x4°) ─────────────────────────
 function buildBboxKey(userPos: [number, number]): string {
   const sLamin = snapDown(userPos[0]);
   const sLomin = snapDown(userPos[1]);
-  const sLamax = snapUp(userPos[0] || sLamin + SNAP_SIZE); // Si userPos cae exacto, snapUp no sube. Por seguridad sumamos o usamos logica.
-  
-  // Para clavar lo que hace el backend (snapUp siempre hacia arriba):
-  const upLat = Math.ceil(userPos[0] / SNAP_SIZE) * SNAP_SIZE;
-  const upLon = Math.ceil(userPos[1] / SNAP_SIZE) * SNAP_SIZE;
-  
-  // Prevención por si el Math.ceil devuelve lo mismo en bordes exactos
+  const upLat  = Math.ceil(userPos[0] / SNAP_SIZE) * SNAP_SIZE;
+  const upLon  = Math.ceil(userPos[1] / SNAP_SIZE) * SNAP_SIZE;
   const sLamaxVal = upLat === sLamin ? sLamin + SNAP_SIZE : upLat;
   const sLomaxVal = upLon === sLomin ? sLomin + SNAP_SIZE : upLon;
-
   return `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${sLamaxVal.toFixed(1)}_${sLomaxVal.toFixed(1)}`;
 }
 
-// Comprobamos cada 15s pero solo actualizamos el UI cuando el feeder sube datos nuevos (cachedAt cambia)
-const FETCH_INTERVAL_MS = 15_000;
+// Señal de "estoy vivo" al feeder — cada 60s es suficiente
+const SIGNAL_INTERVAL_MS = 60_000;
+// Fallback: si Realtime cae, hacemos una consulta manual cada 5 min
+const FALLBACK_INTERVAL_MS = 300_000;
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -50,31 +45,74 @@ export function usePegasus(
   isEnabled        : boolean = false,
   routeCoordinates?: [number, number][]
 ) {
-  // El backend ya devuelve objetos Aircraft listos — guardamos directamente
   const [allAircrafts, setAllAircrafts] = useState<Aircraft[]>([]);
   const [loading,      setLoading     ] = useState(false);
   const [isRateLimited, setIsRateLimited] = useState(false);
   const [activeAccount, setActiveAccount] = useState<number>(1);
-  // Timestamp del último batch real recibido — consume el simulador para saber cuándo aplicar corrección
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
-  // Timestamp del último cachedAt recibido — solo actualizamos el UI cuando cambia (feeder subió datos nuevos)
-  const lastCachedAtRef = useRef<number>(0);
 
-
-  const routeRef  = useRef(routeCoordinates);
+  const routeRef   = useRef(routeCoordinates);
   useEffect(() => { routeRef.current = routeCoordinates; }, [routeCoordinates]);
 
-  // Ref a la última posición del usuario para no recrear el intervalo ante cada GPS update
   const userPosRef = useRef(userPos);
   useEffect(() => { userPosRef.current = userPos; }, [userPos]);
 
+  // ── Función central: llama a la Edge Function y actualiza el UI ─────────────
+  const fetchAndUpdate = async () => {
+    const pos = userPosRef.current;
+    if (!pos) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('pegasus', {
+        body: {
+          lamin: pos[0] - 0.001,
+          lomin: pos[1] - 0.001,
+          lamax: pos[0] + 0.001,
+          lomax: pos[1] + 0.001,
+          ulat: pos[0],
+          ulon: pos[1]
+        }
+      });
+
+      if (error) throw new Error(error.message);
+
+      setIsRateLimited(data?.rateLimited ?? false);
+      if (data?.accountIndex && data.accountIndex !== -1) {
+        setActiveAccount(data.accountIndex);
+      }
+
+      const states: Aircraft[] = data?.states ?? [];
+      console.log(`[usePegasus] 🆕 Datos frescos del feeder | ${states.length} aeronaves`);
+      setAllAircrafts(states);
+      setLastFetchTime(Date.now());
+
+    } catch (err) {
+      console.error('[usePegasus] ❌ Error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ── Señal periódica al feeder (independiente del Realtime) ─────────────────
+  const sendSignal = async () => {
+    const pos = userPosRef.current;
+    if (!pos || !isEnabled) return;
+    const bboxKey = buildBboxKey(pos);
+    await supabase.from('opensky_requests').upsert({
+      bbox_key: bboxKey,
+      last_requested_at: Date.now(),
+      updated_at: new Date().toISOString(),
+      ulat: pos[0],
+      ulon: pos[1],
+    });
+    console.log(`[usePegasus] 📡 Señal enviada a casa: ${bboxKey}`);
+  };
+
+  // ── Efecto principal: Realtime + señal periódica ───────────────────────────
   useEffect(() => {
     if (!isEnabled || !userPos) {
       if (!isEnabled) {
         setAllAircrafts([]);
-        
-        // Avisar a la DB que borre la request de la zona si cerramos, 
-        // para que el feeder pare completamente y no gaste API
         if (userPosRef.current) {
           const bboxKey = buildBboxKey(userPosRef.current);
           supabase.from('opensky_requests').delete().eq('bbox_key', bboxKey).then(() => {});
@@ -83,92 +121,55 @@ export function usePegasus(
       return;
     }
 
-    const fetchAircrafts = async (): Promise<void> => {
-      const pos = userPosRef.current;
-      if (!pos) return;
+    const bboxKey = buildBboxKey(userPos);
 
-      setLoading(true);
-      try {
-        const bboxKey = buildBboxKey(pos);
-        
-        console.log(`[usePegasus] 📡 Intentando avisar a casa para la zona: ${bboxKey}`);
-        
-        const signalRes = await supabase.from('opensky_requests').upsert({
-          bbox_key: bboxKey,
-          last_requested_at: Date.now(),
-          updated_at: new Date().toISOString(),
-          ulat: pos[0],  // posición exacta del usuario para polling adaptativo
-          ulon: pos[1],
-        });
+    // 1. Fetch inicial inmediato
+    sendSignal();
+    fetchAndUpdate();
 
-        if (signalRes.error) {
-          console.error('[usePegasus] ❌ Error enviando señal a Supabase:', signalRes.error);
-        } else {
-          console.log('[usePegasus] ✅ Señal enviada con éxito.');
+    // 2. Suscripción Realtime a opensky_cache para esta zona
+    //    Cuando el feeder sube datos nuevos, Supabase avisa por WebSocket → UI se actualiza
+    const channel = supabase
+      .channel(`pegasus-cache-${bboxKey}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',               // INSERT o UPDATE
+          schema: 'public',
+          table: 'opensky_cache',
+          filter: `bbox_key=eq.${bboxKey}`,
+        },
+        (payload) => {
+          console.log(`[usePegasus] 🔔 Realtime: feeder actualizó ${bboxKey}`);
+          fetchAndUpdate(); // datos nuevos → llamada a la Edge Function
         }
+      )
+      .subscribe((status) => {
+        console.log(`[usePegasus] 📶 Realtime ${bboxKey}: ${status}`);
+      });
 
-        // --- 1. Llamar a la función Pegasus ---
-        // Enviamos un offset mínimo (±0.001°) para evitar el bug de celda cero
-        // cuando la posición del usuario cae exactamente en el borde de una Macro-Zona (múltiplo de 4.0°)
-        const { data, error } = await supabase.functions.invoke('pegasus', {
-          body: {
-            lamin: pos[0] - 0.001,
-            lomin: pos[1] - 0.001,
-            lamax: pos[0] + 0.001,
-            lomax: pos[1] + 0.001,
-            ulat: pos[0],
-            ulon: pos[1]
-          }
-        });
+    // 3. Señal de "alive" cada 60s para que el feeder no expire la zona
+    const signalInterval = setInterval(sendSignal, SIGNAL_INTERVAL_MS);
 
-        if (error) {
-          console.error('[usePegasus] Error calling Supabase Edge Function:', error);
-          throw new Error(error.message);
-        }
+    // 4. Fallback: si Realtime cae, consultamos igualmente cada 5 min
+    const fallbackInterval = setInterval(fetchAndUpdate, FALLBACK_INTERVAL_MS);
 
-        setIsRateLimited(data?.rateLimited ?? false);
-        if (data?.accountIndex && data.accountIndex !== -1) {
-          setActiveAccount(data.accountIndex);
-        }
-
-        const incomingCachedAt: number = data?.cachedAt ?? 0;
-        const states: Aircraft[] = data?.states ?? [];
-
-        if (incomingCachedAt > lastCachedAtRef.current) {
-          // El feeder ha subido datos nuevos desde la última comprobación → actualizar UI
-          lastCachedAtRef.current = incomingCachedAt;
-          console.log(`[usePegasus] 🆕 Datos nuevos del feeder (cachedAt=${new Date(incomingCachedAt).toLocaleTimeString()}) | ${states.length} aeronaves`);
-          setAllAircrafts(states);
-          setLastFetchTime(Date.now());
-        } else {
-          console.log(`[usePegasus] ⏸️ Sin cambios en caché (cachedAt sin cambiar) — UI intacto`);
-        }
-
-
-      } catch (error) {
-        console.error('[usePegasus] ❌ Error:', error);
-      } finally {
-        setLoading(false);
-      }
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(signalInterval);
+      clearInterval(fallbackInterval);
     };
 
-    fetchAircrafts();
-    const interval = setInterval(fetchAircrafts, FETCH_INTERVAL_MS);
-    return () => clearInterval(interval);
-
-  // Solo recreamos el efecto al activar/desactivar, no ante cada movimiento GPS
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEnabled, !!userPos]);
 
-  // ── Filtros locales simples (no requieren recalcular nada pesado) ──────────
+  // ── Filtros locales ──────────────────────────────────────────────────────────
   const aircrafts = useMemo(() => {
     const hasRoute = (routeCoordinates?.length ?? 0) > 0;
     return allAircrafts.filter(a => {
-      // Sospechosas dentro del rango útil de alerta
       if (!a.isSuspect)        return false;
       if (a.altitude < 100 || a.altitude > 2_000) return false;
       if (a.velocity > 83.33)  return false;
-      // Con ruta activa, descartamos las que estén muy lejos
       if (hasRoute && a.distanceToUser > 50_000) return false;
       return true;
     });
