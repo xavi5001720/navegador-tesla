@@ -213,13 +213,7 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
         });
       }
 
-      // Solo hacemos setSimAircrafts si algo cambió (evita re-renders inútiles)
-      setSimAircrafts(prev => {
-        if (changed || next.length !== prev.length) {
-          return [...next];
-        }
-        return prev;
-      });
+      setSimAircrafts(next);
     };
 
     const id = setInterval(tick, SIM_TICK_MS);
