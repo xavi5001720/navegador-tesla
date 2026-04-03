@@ -704,7 +704,7 @@ export default function Home() {
           hasLocation={hasLocation}
           routeCoordinates={route?.coordinates} 
           radars={radars}
-          aircrafts={aircrafts}
+          aircrafts={simulatedAircrafts}
           chargers={chargers}
           gasStations={gasStations}
           weatherPoints={weatherPoints}
