@@ -113,7 +113,7 @@ export function usePegasus(
         }
 
         const states: Aircraft[] = data?.states ?? [];
-        console.log(`[usePegasus] ✅ ${states.length} aeronaves recibidas para zona ${bboxKey}`);
+        console.log(`[usePegasus V7] ✅ RECIBIDOS ${states.length} AVIONES para zona ${bboxKey}`);
         setAllAircrafts(states);
         setLastFetchTime(Date.now());
 
