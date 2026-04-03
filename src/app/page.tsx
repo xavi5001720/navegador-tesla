@@ -344,7 +344,7 @@ export default function Home() {
   const { allAircrafts, aircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
 
   // Posiciones interpoladas cada 1 s — movimiento fluido sin llamadas extra a la API
-  const simulatedAircrafts = useAircraftSimulator(allAircrafts);
+  const simulatedAircrafts = useAircraftSimulator(aircrafts);
 
   const { chargers, loading: loadingChargers, progress: chargerProgress } = useChargers(userPos, route?.coordinates, isChargersEnabled, chargerFilters);
   const { stations: gasStations, loading: loadingGasStations, progress: gasProgress } = useGasStations(userPos, route?.coordinates, isGasStationsEnabled, gasStationFilters);
