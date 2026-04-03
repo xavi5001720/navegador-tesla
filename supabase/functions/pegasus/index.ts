@@ -8,9 +8,22 @@ const corsHeaders = {
 
 const OPENSKY_BASE = 'https://opensky-network.org/api';
 const TOKEN_URL    = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
-const SNAP_SIZE    = 0.5;
+const SNAP_SIZE    = 4.0;
 const FETCH_TIMEOUT_MS = 12_000;
 const CACHE_STALE_MS = 360_000;
+const AIRPORT_RADIUS_M = 5_000;
+
+const COMMERCIAL_RE = /^(EAX|IBE|RYR|VLG|EZY|AFR|DLH|KLM|BAW)/i;
+const WATCH_RE = /DGT|PESG|SAER|POLIC|GUARDIA|GC|POL/i;
+
+const AIRPORTS = [
+  [40.4936, -3.5668], [41.2971, 2.0785], [37.4274, -5.8931],
+  [36.6749, -4.4990], [39.5526, 2.7388], [28.4527, -13.8655],
+  [27.9319, -15.3866],[28.0445, -16.5725],[28.4827, -16.3415],
+  [38.8722,  1.3731], [43.3011, -8.3777], [43.3565, -5.8603],
+  [43.3010, -1.7921], [43.3011, -3.8257], [39.4926, -0.4815],
+  [38.1814, -1.0014], [38.2816, -0.5582], [36.7878, -2.3696],
+];
 
 const ACCOUNTS = [
   { id: 'luliloqui-api-client',         secret: 'YEXtTfBwCd5w2Kxhvp57W4C0s6f4Pb5n' },
@@ -35,12 +48,17 @@ function snapDown(v: number): number { return Math.floor(v / SNAP_SIZE) * SNAP_S
 function snapUp  (v: number): number { return Math.ceil (v / SNAP_SIZE) * SNAP_SIZE; }
 
 function snapBbox(lamin: number, lomin: number, lamax: number, lomax: number) {
-  const sLamin = snapDown(lamin);
-  const sLomin = snapDown(lomin);
-  const sLamax = snapUp(lamax);
-  const sLomax = snapUp(lomax);
-  const key = `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${sLamax.toFixed(1)}_${sLomax.toFixed(1)}`;
-  return { lamin: sLamin, lomin: sLomin, lamax: sLamax, lomax: sLomax, key };
+  const sLamin = Math.floor(lamin / SNAP_SIZE) * SNAP_SIZE;
+  const sLomin = Math.floor(lomin / SNAP_SIZE) * SNAP_SIZE;
+  const sLamax = Math.ceil(lamax / SNAP_SIZE) * SNAP_SIZE;
+  const sLomax = Math.ceil(lomax / SNAP_SIZE) * SNAP_SIZE;
+
+  // Garantizar que la caja tenga al menos el tamaño del SNAP_SIZE
+  const finalLamax = sLamax === sLamin ? sLamin + SNAP_SIZE : sLamax;
+  const finalLomax = sLomax === sLomin ? sLomin + SNAP_SIZE : sLomax;
+
+  const key = `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${finalLamax.toFixed(1)}_${finalLomax.toFixed(1)}`;
+  return { lamin: sLamin, lomin: sLomin, lamax: finalLamax, lomax: finalLomax, key };
 }
 
 function haversine(p1: [number, number], p2: [number, number]): number {
@@ -50,6 +68,10 @@ function haversine(p1: [number, number], p2: [number, number]): number {
   const a    = Math.sin(dLat / 2) ** 2
     + Math.cos(p1[0] * Math.PI / 180) * Math.cos(p2[0] * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function isNearAirport(lat: number, lon: number): boolean {
+  return AIRPORTS.some(ap => haversine([lat, lon], [ap[0], ap[1]]) < AIRPORT_RADIUS_M);
 }
 
 function enrichState(s: any, userLat?: number, userLon?: number) {
@@ -62,9 +84,20 @@ function enrichState(s: any, userLat?: number, userLon?: number) {
 
   if (onGround) return null;
 
-  // SIMPLIFICACIÓN TOTAL: Todo es sospechoso para que se vea en el mapa
-  const isSuspect = true;
+  // --- Lógica Pegasus Restaurada ---
+  const isCommercial = COMMERCIAL_RE.test(callsign);
+  const hasWatchPattern = WATCH_RE.test(callsign);
+  const isDGT = icao24.startsWith('34');
+  const isLow = altitude < 1000;
+  const isSlow = velocity < 60;
+  const nearApt = isNearAirport(lat, lon);
+
+  const isSuspect = !isCommercial && (hasWatchPattern || isDGT || ((isLow && isSlow) && !nearApt));
+  
   const distanceToUser = (userLat != null && userLon != null) ? haversine([userLat, userLon], [lat, lon]) : null;
+
+  // Filtrado por distancia máxima (Backend: 25km para optimizar ancho de banda)
+  if (distanceToUser !== null && distanceToUser > 25000) return null;
 
   return {
     icao24,

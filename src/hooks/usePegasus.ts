@@ -18,7 +18,7 @@ export interface Aircraft {
 }
 
 // -- Helper parameters must match the edge function snap size
-const SNAP_SIZE = 0.5;
+const SNAP_SIZE = 4.0;
 function snapDown(v: number): number { return Math.floor(v / SNAP_SIZE) * SNAP_SIZE; }
 function snapUp  (v: number): number { return Math.ceil (v / SNAP_SIZE) * SNAP_SIZE; }
 
@@ -26,11 +26,9 @@ function snapUp  (v: number): number { return Math.ceil (v / SNAP_SIZE) * SNAP_S
 function buildBboxKey(userPos: [number, number]): string {
   const sLamin = snapDown(userPos[0]);
   const sLomin = snapDown(userPos[1]);
-  const upLat  = Math.ceil(userPos[0] / SNAP_SIZE) * SNAP_SIZE;
-  const upLon  = Math.ceil(userPos[1] / SNAP_SIZE) * SNAP_SIZE;
-  const sLamaxVal = upLat === sLamin ? sLamin + SNAP_SIZE : upLat;
-  const sLomaxVal = upLon === sLomin ? sLomin + SNAP_SIZE : upLon;
-  return `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${sLamaxVal.toFixed(1)}_${sLomaxVal.toFixed(1)}`;
+  const sLamax = sLamin + SNAP_SIZE;
+  const sLomax = sLomin + SNAP_SIZE;
+  return `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${sLamax.toFixed(1)}_${sLomax.toFixed(1)}`;
 }
 
 // Intervalo de consulta periódica (60s) — Este es el modo estable que funcionaba ayer
@@ -87,9 +85,9 @@ export function usePegasus(
         const sLomax = sLomin + SNAP_SIZE;
         const bboxKey = `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${sLamax.toFixed(1)}_${sLomax.toFixed(1)}`;
 
-        console.log(`[usePegasus V10] 📡 Sincronizando zona: ${bboxKey}`);
+        console.log(`[usePegasus V11] 📡 Macro-Zona (4.0°): ${bboxKey}`);
         
-        // 1. Avisar al feeder (mismo key)
+        // 1. Avisar al feeder (Macro-Zona)
         await supabase.from('opensky_requests').upsert({
           bbox_key: bboxKey,
           last_requested_at: Date.now(),
@@ -98,7 +96,7 @@ export function usePegasus(
           ulon: pos[1]
         });
 
-        // 2. Pedir al servidor con FETCH estándar (V10) para evitar problemas de cabeceras
+        // 2. Pedir al servidor con FETCH estándar (V10+) para evitar problemas de cabeceras
         const response = await fetch(`${SUPABASE_URL}/functions/v1/pegasus`, {
           method: 'POST',
           headers: {
@@ -147,10 +145,25 @@ export function usePegasus(
 
   }, [isEnabled, userPos ? buildBboxKey(userPos) : '']);
 
-  // ── Filtros locales ──────────────────────────────────────────────────────────
+  // ── Filtros locales (V11 Restaurada) ──────────────────────────────────────────
   const aircrafts = useMemo(() => {
-    // MÁXIMA SIMPLIFICACIÓN: Retornamos todo lo que venga de la base de datos
-    return allAircrafts;
+    return allAircrafts.filter(a => {
+      // 1. Debe ser sospechoso (DGT, Policía, bajo/lento no-comercial)
+      if (!a.isSuspect) return false;
+
+      // 2. Rango de altitud alerta (100m - 2000m)
+      if (a.altitude < 100 || a.altitude > 2000) return false;
+
+      // 3. Velocidad máxima alerta (300 km/h = 83.33 m/s)
+      if (a.velocity > 83.33) return false;
+
+      // 4. Si hay ruta activa, filtrar por distancia (50km)
+      if (routeRef.current && routeRef.current.length > 0) {
+        if (a.distanceToUser > 50000) return false;
+      }
+
+      return true;
+    });
   }, [allAircrafts]);
 
   const isAnyPegasusNearby = useMemo(
