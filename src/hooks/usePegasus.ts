@@ -23,14 +23,19 @@ function snapDown(v: number): number { return Math.floor(v / SNAP_SIZE) * SNAP_S
 function snapUp  (v: number): number { return Math.ceil (v / SNAP_SIZE) * SNAP_SIZE; }
 
 // ── Bbox centrado en el usuario (Macro-Zona de 4x4°) ─────────────────────────
-function buildBboxKey(userPos: [number, number]): string {
+function getBbox(userPos: [number, number]) {
   const sLamin = snapDown(userPos[0]);
   const sLomin = snapDown(userPos[1]);
   const upLat  = Math.ceil(userPos[0] / SNAP_SIZE) * SNAP_SIZE;
   const upLon  = Math.ceil(userPos[1] / SNAP_SIZE) * SNAP_SIZE;
   const sLamaxVal = upLat === sLamin ? sLamin + SNAP_SIZE : upLat;
   const sLomaxVal = upLon === sLomin ? sLomin + SNAP_SIZE : upLon;
-  return `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${sLamaxVal.toFixed(1)}_${sLomaxVal.toFixed(1)}`;
+  const key = `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${sLamaxVal.toFixed(1)}_${sLomaxVal.toFixed(1)}`;
+  return { lamin: sLamin, lomin: sLomin, lamax: sLamaxVal, lomax: sLomaxVal, key };
+}
+
+function buildBboxKey(userPos: [number, number]): string {
+  return getBbox(userPos).key;
 }
 
 // Señal de "estoy vivo" al feeder — cada 60s es suficiente
@@ -63,12 +68,13 @@ export function usePegasus(
     if (!pos) return;
     setLoading(true);
     try {
+      const bbox = getBbox(pos);
       const { data, error } = await supabase.functions.invoke('pegasus', {
         body: {
-          lamin: pos[0] - 0.001,
-          lomin: pos[1] - 0.001,
-          lamax: pos[0] + 0.001,
-          lomax: pos[1] + 0.001,
+          lamin: bbox.lamin,
+          lomin: bbox.lomin,
+          lamax: bbox.lamax,
+          lomax: bbox.lomax,
           ulat: pos[0],
           ulon: pos[1]
         }
