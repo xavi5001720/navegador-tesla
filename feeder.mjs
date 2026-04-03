@@ -17,7 +17,58 @@ const TOKEN_URL = 'https://auth.opensky-network.org/auth/realms/opensky-network/
 
 const POLL_INTERVAL_MS = 10_000;
 const REQUEST_STALE_MS = 300_000;
-const CACHE_FRESH_MS   = 45_000; // Si el dato tiene menos de 45s, NO llamamos a la API
+const CACHE_FRESH_MS   = 45_000; 
+
+// ── Estadísticas Globales ───────────────────────────────────────────────────
+let sessionStartTime = Date.now();
+let totalCreditsSession = 0;
+let creditsLastHour = 0;
+let lastHourResetTime = Date.now();
+let maxActiveUsers = 0;
+let maxActiveZones = 0;
+let currentActiveUsers = 0;
+let currentActiveZones = 0;
+
+function printLiveStatus(activeUsers = null, activeZones = null) {
+  // Si no se pasan valores, usamos los últimos detectados en el ciclo
+  const users = activeUsers !== null ? activeUsers : currentActiveUsers;
+  const zones = activeZones !== null ? activeZones : currentActiveZones;
+
+  const now = Date.now();
+  const uptimeMs = now - sessionStartTime;
+  
+  // Actualizar récords
+  if (users > maxActiveUsers) maxActiveUsers = users;
+  if (zones > maxActiveZones) maxActiveZones = zones;
+  const hoursUptime = uptimeMs / (1000 * 60 * 60);
+  const timeStr = new Date().toLocaleTimeString();
+  
+  // Limpiar contador de hora si ha pasado 1 hora
+  if (now - lastHourResetTime > 3600000) {
+    creditsLastHour = 0;
+    lastHourResetTime = now;
+  }
+
+  // Estimación diaria
+  const estDaily = hoursUptime > 0 ? Math.round((totalCreditsSession / hoursUptime) * 24) : 0;
+  const limitTotal = ACCOUNTS.length * 4000;
+  const percentLimit = limitTotal > 0 ? Math.round((estDaily / limitTotal) * 100) : 0;
+  
+  const h = Math.floor(hoursUptime);
+  const m = Math.floor((hoursUptime - h) * 60);
+
+  console.log(`\n  🛰️ PEGASUS LIVE STATUS — ${timeStr}`);
+  console.log(`  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
+  console.log(`  👥 Usuarios activos:             ${users}  (Máx: ${maxActiveUsers})`);
+  console.log(`  🗺️ Zonas activas:                ${zones}  (Máx: ${maxActiveZones})`);
+  console.log(``);
+  console.log(`  💳 Créditos (API OpenSky):`);
+  console.log(`     Última hora:                  ${creditsLastHour} créditos`);
+  console.log(`     Sesión (${h}h ${m}m):              ${totalCreditsSession} créditos`);
+  console.log(`     Estimación día completo:    ${estDaily} créditos (${percentLimit}% del límite)`);
+  console.log(`     Límite total:              ${limitTotal} créditos (${ACCOUNTS.length} cuentas × 4.000)`);
+  console.log(`  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`);
+}
 
 async function getAccessToken(acc) {
   try {
@@ -89,6 +140,8 @@ async function fulfillRequest(bboxKey, accountIndex) {
     });
 
     console.log(`   ✅ OK: ${states.length} aviones subidos para ${bboxKey}`);
+    totalCreditsSession++;
+    creditsLastHour++;
     return true;
   } catch (e) {
     console.error(`   ❌ Error: ${e.message}`);
@@ -109,13 +162,15 @@ async function main() {
     if (!res.ok) throw new Error(await res.text());
     
     const requests = await res.json();
-    if (requests.length === 0) {
-        console.log(`   😴 Sin pedidos activos.`);
-        return;
-    }
+    currentActiveZones = requests.length;
+    currentActiveUsers = new Set(requests.map(r => `${r.ulat?.toFixed(2)}_${r.ulon?.toFixed(2)}`)).size;
+
+    // Actualizar picos en silencio
+    if (currentActiveUsers > maxActiveUsers) maxActiveUsers = currentActiveUsers;
+    if (currentActiveZones > maxActiveZones) maxActiveZones = currentActiveZones;
 
     for (let i = 0; i < requests.length; i++) {
-      await fulfillRequest(requests[i].bbox_key, i);
+        await fulfillRequest(requests[i].bbox_key, i);
     }
 
   } catch (e) {
@@ -130,3 +185,8 @@ console.log(`-----------------------------------------`);
 
 main();
 setInterval(main, POLL_INTERVAL_MS);
+
+// Informe de estado cada 1 hora (automático)
+setInterval(() => {
+  printLiveStatus();
+}, 3600000);
