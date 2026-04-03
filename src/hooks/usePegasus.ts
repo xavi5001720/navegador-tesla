@@ -94,7 +94,9 @@ export function usePegasus(
         const signalRes = await supabase.from('opensky_requests').upsert({
           bbox_key: bboxKey,
           last_requested_at: Date.now(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          ulat: pos[0],  // posición exacta del usuario para polling adaptativo
+          ulon: pos[1],
         });
 
         if (signalRes.error) {
