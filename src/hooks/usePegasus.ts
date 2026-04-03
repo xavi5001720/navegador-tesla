@@ -169,10 +169,20 @@ export function usePegasus(
     [aircrafts]
   );
 
+  // ── Filtro de visibilidad diferencial (11.3) ──────────────────────────────────
+  // Sospechosos: 100km | Comerciales: 50km
+  const visibleAircrafts = useMemo(() => {
+    return allAircrafts.filter(a => {
+      if (a.isSuspect) return a.distanceToUser <= 100000;
+      return a.distanceToUser <= 50000;
+    });
+  }, [allAircrafts]);
+
   return {
     allAircrafts,
     aircrafts,
-    totalCount       : allAircrafts.length,
+    visibleAircrafts,
+    totalCount       : visibleAircrafts.length,
     isAnyPegasusNearby,
     loading,
     isRateLimited,
