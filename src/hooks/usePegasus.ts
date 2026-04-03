@@ -40,8 +40,8 @@ function buildBboxKey(userPos: [number, number]): string {
 
 // Señal de "estoy vivo" al feeder — cada 60s es suficiente
 const SIGNAL_INTERVAL_MS = 60_000;
-// Fallback: si Realtime cae, hacemos una consulta manual cada 5 min
-const FALLBACK_INTERVAL_MS = 300_000;
+// Fallback: si Realtime cae, hacemos una consulta manual cada 15s
+const FALLBACK_INTERVAL_MS = 15_000;
 
 
 // ─────────────────────────────────────────────────────────────────────────────
