@@ -130,14 +130,9 @@ export function usePegasus(
 
   // ── Filtros locales ──────────────────────────────────────────────────────────
   const aircrafts = useMemo(() => {
-    const hasRoute = (routeCoordinates?.length ?? 0) > 0;
-    return allAircrafts.filter(a => {
-      // Con ruta activa, descartamos las que estén muy lejos. 
-      // Por defecto, mostramos todo en la macro-zona.
-      if (hasRoute && a.distanceToUser > 50_000) return false;
-      return true;
-    });
-  }, [allAircrafts, routeCoordinates]);
+    // MÁXIMA SIMPLIFICACIÓN: Retornamos todo lo que venga de la base de datos
+    return allAircrafts;
+  }, [allAircrafts]);
 
   const isAnyPegasusNearby = useMemo(
     () => aircrafts.some(a => a.distanceToUser < 10_000),

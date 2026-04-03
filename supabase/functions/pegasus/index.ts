@@ -9,8 +9,8 @@ const corsHeaders = {
 const OPENSKY_BASE = 'https://opensky-network.org/api';
 const TOKEN_URL    = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
 const SNAP_SIZE    = 0.5;
-const FETCH_TIMEOUT_MS = 12_000; // 12 segundos — si no responde, está bloqueado
-const CACHE_STALE_MS = 360_000; // 6 minutos para evitar borrados entre polls largos del feeder
+const FETCH_TIMEOUT_MS = 12_000;
+const CACHE_STALE_MS = 360_000;
 
 const ACCOUNTS = [
   { id: 'luliloqui-api-client',         secret: 'YEXtTfBwCd5w2Kxhvp57W4C0s6f4Pb5n' },
@@ -18,16 +18,7 @@ const ACCOUNTS = [
   { id: 'saracruzhortelana-api-client',  secret: 'o7FsNtYuca4K6xSHBCb3x4zKo3yiwBS1' }
 ];
 
-const COMMERCIAL_RE = /^(EAX|IBE|RYR|VLG|EZY|AFR|DLH|KLM|BAW)/i;
-const AIRPORTS = [
-  [40.4936, -3.5668], [41.2971, 2.0785], [37.4274, -5.8931],
-  [36.6749, -4.4990], [39.5526, 2.7388], [28.4527, -13.8655],
-  [27.9319, -15.3866],[28.0445, -16.5725],[28.4827, -16.3415],
-  [38.8722,  1.3731], [43.3011, -8.3777], [43.3565, -5.8603],
-  [43.3010, -1.7921], [43.3011, -3.8257], [39.4926, -0.4815],
-  [38.1814, -1.0014], [38.2816, -0.5582], [36.7878, -2.3696],
-];
-const AIRPORT_RADIUS_M = 2_000;
+// MÁXIMA SIMPLIFICACIÓN: Eliminamos filtros de aeropuertos y comerciales
 
 // ── Helper: fetch con timeout ─────────────────────────────────────────────────
 async function fetchWithTimeout(url: string, opts: RequestInit = {}, ms = FETCH_TIMEOUT_MS): Promise<Response> {
@@ -61,13 +52,8 @@ function haversine(p1: [number, number], p2: [number, number]): number {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-function isNearAirport(lat: number, lon: number): boolean {
-  return AIRPORTS.some(ap => haversine([lat, lon], [ap[0], ap[1]]) < AIRPORT_RADIUS_M);
-}
-
 function enrichState(s: any, userLat?: number, userLon?: number) {
   const callsign     = (s[1] || '').trim();
-  const isCommercial = COMMERCIAL_RE.test(callsign);
   const altitude     = s[7] ?? s[13] ?? 0;
   const velocity     = s[9] ?? 0;
   const lat = s[6], lon = s[5];
@@ -76,16 +62,8 @@ function enrichState(s: any, userLat?: number, userLon?: number) {
 
   if (onGround) return null;
 
-  const hasWatchCallsign = /DGT|PESG|SAER|POLIC|GUARDIA|GC|POL/i.test(callsign);
-  const isDGT            = icao24.startsWith('34');
-  const isLow            = altitude < 1000;
-  const isSlow           = velocity < 60;
-  const nearAirport      = isNearAirport(lat, lon);
-
-  const isSuspect = !isCommercial && (hasWatchCallsign || isDGT || ((isLow && isSlow) && !nearAirport));
-
-  // Filtro de distancia desactivado: enviamos todos los aviones de la Macro-Zona al cliente.
-  // El cliente ya filtra por ruta y vista actual.
+  // SIMPLIFICACIÓN TOTAL: Todo es sospechoso para que se vea en el mapa
+  const isSuspect = true;
   const distanceToUser = (userLat != null && userLon != null) ? haversine([userLat, userLon], [lat, lon]) : null;
 
   return {
