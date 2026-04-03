@@ -200,10 +200,17 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
         st.simLat = newLat;
         st.simLon = newLon;
 
+        // Solo forzamos 0/0 si realmente estamos tocando tierra o aterrizando en aeropuerto
+        const isActuallyAtGround = st.meta.altitude < 50;
+        const finalAltitude = (isLanding || (st.lostTs && isActuallyAtGround)) ? 0 : Math.max(0, st.meta.altitude);
+        const finalVelocity = (isLanding || (st.lostTs && isActuallyAtGround)) ? 0 : st.meta.velocity;
+
         next.push({
           ...st.meta,
           lat: newLat,
           lon: newLon,
+          altitude: finalAltitude,
+          velocity: finalVelocity,
         });
       }
 
