@@ -147,16 +147,10 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
           distDegreesApprox(st.realLat, st.realLon, airport.lat, airport.lon) < AIRPORT_LANDING_RADIUS_M
         );
 
-        // Si es fantasma, verificamos si le damos la gracia de 30s o lo borramos ya
+        // Si es fantasma (lo perdimos de vista), le damos 60s de gracia antes de borrarlo
+        // para absorber huecos en la señal de OpenSky o lag de red.
         if (st.lostTs) {
-          if (isNearAirport) {
-            if (now - st.lostTs > 30_000) {
-              map.delete(id);
-              changed = true;
-              continue;
-            }
-          } else {
-            // Si desapareció y no está cerca de un aeropuerto, lo borramos inmediatamente
+          if (now - st.lostTs > 60_000) {
             map.delete(id);
             changed = true;
             continue;
