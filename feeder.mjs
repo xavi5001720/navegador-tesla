@@ -136,28 +136,30 @@ async function fulfillRequest(bboxKey, userPositions, accountIndex) {
   
   // 1. Verificar si ya tenemos datos frescos en caché (DINÁMICO)
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/opensky_cache?bbox_key=eq.${bboxKey}&select=created_at,data&order=created_at.desc&limit=1`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/opensky_cache?bbox_key=eq.${bboxKey}&select=updated_at,states&order=updated_at.desc&limit=1`, {
       headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }
     });
 
     if (res.ok) {
       const cached = await res.json();
-      if (cached.length > 0) {
-        const lastCreatedAt = new Date(cached[0].created_at).getTime();
-        const planes = cached[0].data?.states || [];
+      if (cached && cached.length > 0) {
+        const lastUpdate = new Date(cached[0].updated_at || Date.now()).getTime();
+        const planes = cached[0].states || [];
         
         // Calculamos cuánto debería durar la "frescura" de esta zona ahora
         const dynamicFreshness = calculateDynamicInterval(planes, userPositions);
-        const elapsed = now - lastCreatedAt;
+        const elapsed = now - lastUpdate;
 
         if (elapsed < dynamicFreshness) {
-          console.log(`   ⏳ [${bboxKey}]: Esperando (${Math.round((dynamicFreshness - elapsed)/1000)}s). Intervalo: ${Math.round(dynamicFreshness/1000)}s.`);
+          console.log(`   ⏳ [${bboxKey}]: PAUSA INTELIGENTE (${Math.round((dynamicFreshness - elapsed)/1000)}s restantes). Intervalo: ${Math.round(dynamicFreshness/1000)}s.`);
           return true;
         }
-        console.log(`   🚀 [${bboxKey}]: Refrescando (Pasaron ${Math.round(elapsed/1000)}s > ${Math.round(dynamicFreshness/1000)}s).`);
+        console.log(`   🚀 [${bboxKey}]: REFRESCO NECESARIO (Pasaron ${Math.round(elapsed/1000)}s > ${Math.round(dynamicFreshness/1000)}s).`);
       }
     }
-  } catch (e) { console.warn(`   ⚠️ Error consultando SmartPoll:`, e.message); }
+  } catch (e) { 
+    console.warn(`   ⚠️ Error consultando SmartPoll para ${bboxKey}:`, e.message); 
+  }
 
   // 2. Si no hay caché o es vieja, consultar OpenSky
   const parts = bboxKey.split('_').map(Number);
