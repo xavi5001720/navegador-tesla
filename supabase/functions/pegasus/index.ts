@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const OPENSKY_BASE = 'https://opensky-network.org/api';
 const TOKEN_URL    = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
-const SNAP_SIZE    = 4.0;
+const SNAP_SIZE    = 0.5;
 const FETCH_TIMEOUT_MS = 12_000; // 12 segundos — si no responde, está bloqueado
 const CACHE_STALE_MS = 360_000; // 6 minutos para evitar borrados entre polls largos del feeder
 
@@ -27,7 +27,7 @@ const AIRPORTS = [
   [43.3010, -1.7921], [43.3011, -3.8257], [39.4926, -0.4815],
   [38.1814, -1.0014], [38.2816, -0.5582], [36.7878, -2.3696],
 ];
-const AIRPORT_RADIUS_M = 5_000;
+const AIRPORT_RADIUS_M = 2_000;
 
 // ── Helper: fetch con timeout ─────────────────────────────────────────────────
 async function fetchWithTimeout(url: string, opts: RequestInit = {}, ms = FETCH_TIMEOUT_MS): Promise<Response> {

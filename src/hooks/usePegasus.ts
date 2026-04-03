@@ -18,7 +18,7 @@ export interface Aircraft {
 }
 
 // -- Helper parameters must match the edge function snap size
-const SNAP_SIZE = 4.0;
+const SNAP_SIZE = 0.5;
 function snapDown(v: number): number { return Math.floor(v / SNAP_SIZE) * SNAP_SIZE; }
 function snapUp  (v: number): number { return Math.ceil (v / SNAP_SIZE) * SNAP_SIZE; }
 
@@ -90,10 +90,10 @@ export function usePegasus(
         // Usamos ±0.001 de margen para evitar el bug de celda cero en bordes
         const { data, error } = await supabase.functions.invoke('pegasus', {
           body: {
-            lamin: pos[0] - 0.001,
-            lomin: pos[1] - 0.001,
-            lamax: pos[0] + 0.001,
-            lomax: pos[1] + 0.001,
+            lamin: pos[0] - 0.44,
+            lomin: pos[1] - 0.44,
+            lamax: pos[0] + 0.44,
+            lomax: pos[1] + 0.44,
             ulat: pos[0],
             ulon: pos[1]
           }
@@ -131,9 +131,8 @@ export function usePegasus(
   const aircrafts = useMemo(() => {
     const hasRoute = (routeCoordinates?.length ?? 0) > 0;
     return allAircrafts.filter(a => {
-      if (!a.isSuspect)        return false;
-      if (a.altitude < 100 || a.altitude > 2_000) return false;
-      if (a.velocity > 83.33)  return false;
+      // Con ruta activa, descartamos las que estén muy lejos. 
+      // Por defecto, mostramos todo en la macro-zona.
       if (hasRoute && a.distanceToUser > 50_000) return false;
       return true;
     });
