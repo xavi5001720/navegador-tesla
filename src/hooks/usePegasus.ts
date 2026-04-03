@@ -169,12 +169,11 @@ export function usePegasus(
     [aircrafts]
   );
 
-  // ── Filtro de visibilidad diferencial (11.5) ──────────────────────────────────
-  // Sospechosos: ILIMITADOS | Comerciales: 100km
+  // ── Filtro de visibilidad diferencial (11.6 ESTABLE) ──────────────────────────
+  // Todos los aviones: 100km (Máxima estabilidad)
   const visibleAircrafts = useMemo(() => {
     return allAircrafts.filter(a => {
-      if (a.isSuspect) return true; // Mostrar TODOS (sin límite de km en macro-zona)
-      return a.distanceToUser <= 100000; // Comerciales vuelven a 100km
+      return a.distanceToUser <= 100000;
     });
   }, [allAircrafts]);
 

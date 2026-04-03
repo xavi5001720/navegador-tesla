@@ -96,9 +96,8 @@ function enrichState(s: any, userLat?: number, userLon?: number) {
   
   const distanceToUser = (userLat != null && userLon != null) ? haversine([userLat, userLon], [lat, lon]) : null;
 
-  // Filtrado por distancia diferencial
-  // Sospechosos: Todos (sin límite en backend) | Comerciales: Máx 100km
-  if (!isSuspect && distanceToUser !== null && distanceToUser > 100000) return null;
+  // Filtrado por distancia máxima (100km para estabilidad total)
+  if (distanceToUser !== null && distanceToUser > 100000) return null;
 
   return {
     icao24,
