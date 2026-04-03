@@ -38,6 +38,14 @@ const FETCH_INTERVAL_MS = 60_000;
 
 
 // ─────────────────────────────────────────────────────────────────────────────
+import { createClient } from '@supabase/supabase-js';
+
+// Llaves maestras forzadas para evitar errores de caché
+const SUPABASE_URL = 'https://uhvwptagewswfiluqgmc.supabase.co';
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVodndwdGFnZXdzd2ZpbHVxZ21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDI4NTEsImV4cCI6MjA5MDM3ODg1MX0.LEygUxMX0zzrkRVv8MJivhPDmy6yp2KIlaU3oICjyAk';
+
+const localSupabase = createClient(SUPABASE_URL, ANON_KEY);
+
 export function usePegasus(
   userPos          : [number, number] | null,
   isEnabled        : boolean = false,
@@ -90,8 +98,8 @@ export function usePegasus(
           ulon: pos[1]
         });
 
-        // 2. Pedir al servidor (mismos parámetros para que genere el mismo key)
-        const { data, error } = await supabase.functions.invoke('pegasus', {
+        // 2. Pedir al servidor con cliente local forzado (V9)
+        const { data, error } = await localSupabase.functions.invoke('pegasus', {
           body: {
             lamin: sLamin,
             lomin: sLomin,
@@ -113,7 +121,7 @@ export function usePegasus(
         }
 
         const states: Aircraft[] = data?.states ?? [];
-        console.log(`[usePegasus V8] ✅ RECIBIDOS ${states.length} AVIONES para zona ${bboxKey}`);
+        console.log(`[usePegasus V9] ✅ RECIBIDOS ${states.length} AVIONES para zona ${bboxKey}`);
         setAllAircrafts(states);
         setLastFetchTime(Date.now());
 
