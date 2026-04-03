@@ -104,12 +104,14 @@ export function usePegasus(
         }
 
         // --- 1. Llamar a la función Pegasus ---
+        // Enviamos un offset mínimo (±0.001°) para evitar el bug de celda cero
+        // cuando la posición del usuario cae exactamente en el borde de una Macro-Zona (múltiplo de 4.0°)
         const { data, error } = await supabase.functions.invoke('pegasus', {
           body: {
-            lamin: pos[0],
-            lomin: pos[1],
-            lamax: pos[0],
-            lomax: pos[1],
+            lamin: pos[0] - 0.001,
+            lomin: pos[1] - 0.001,
+            lamax: pos[0] + 0.001,
+            lomax: pos[1] + 0.001,
             ulat: pos[0],
             ulon: pos[1]
           }

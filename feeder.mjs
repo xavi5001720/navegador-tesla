@@ -1,6 +1,6 @@
 /**
- * OPEN SKY DYNAMIC HOME FEEDER — DETECTIVE DE CASA V2.1
- * Versión optimizada: Fiel al formato de coordenadas y con ahorro de llamadas.
+ * OPEN SKY DYNAMIC HOME FEEDER — DETECTIVE DE CASA V2.2
+ * Versión optimizada: Ahorro de API activado + Informe horario de estado.
  */
 
 const SUPABASE_URL = 'https://uhvwptagewswfiluqgmc.supabase.co';
@@ -15,9 +15,18 @@ const ACCOUNTS = [
 const OPENSKY_BASE = 'https://opensky-network.org/api';
 const TOKEN_URL = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
 
-const POLL_INTERVAL_MS = 10_000;
-const REQUEST_STALE_MS = 300_000;
-const CACHE_FRESH_MS = 45_000; // Si el dato tiene menos de 45s, NO llamamos a la API
+const POLL_INTERVAL_MS  = 10_000;
+const REPORT_INTERVAL_MS = 3_600_000; // 1 hora
+const REQUEST_STALE_MS  = 300_000;
+const CACHE_FRESH_MS    = 45_000;
+const CREDITS_PER_CALL  = 1; // bbox < 25 sq° siempre cuesta 1 crédito
+const DAILY_CREDIT_LIMIT = ACCOUNTS.length * 4_000; // 4000/día/cuenta
+
+// ── Contadores de sesión ───────────────────────────────────────────────────────
+const sessionStart = Date.now();
+let callsThisHour  = 0;   // llamadas reales a OpenSky en la última hora
+let callsToday     = 0;   // llamadas reales a OpenSky desde que arrancó
+let lastHourReset  = Date.now();
 
 async function getAccessToken(acc) {
   try {
@@ -72,7 +81,11 @@ async function fulfillRequest(bboxKey, accountIndex) {
     const data = await res.json();
     const states = data.states || [];
 
-    // 3. Subir a caché garantizando el formato de key
+    // Contadores
+    callsThisHour++;
+    callsToday++;
+
+    // 3. Subir a caché
     await fetch(`${SUPABASE_URL}/rest/v1/opensky_cache`, {
       method: 'POST',
       headers: {
@@ -92,6 +105,68 @@ async function fulfillRequest(bboxKey, accountIndex) {
     console.error(`   ❌ Error: ${e.message}`);
     return false;
   }
+}
+
+async function getActiveStats() {
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/opensky_requests?last_requested_at=gt.${Date.now() - REQUEST_STALE_MS}&select=bbox_key`,
+      { headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` } }
+    );
+    if (!res.ok) return { users: '?', zones: [] };
+    const rows = await res.json();
+    return {
+      zones: rows.map(r => r.bbox_key),
+      users: rows.length  // cada zona activa = al menos 1 usuario activo en ella
+    };
+  } catch (e) {
+    return { users: '?', zones: [] };
+  }
+}
+
+function fmtDuration(ms) {
+  const h = Math.floor(ms / 3_600_000);
+  const m = Math.floor((ms % 3_600_000) / 60_000);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+async function printReport() {
+  const { users, zones } = await getActiveStats();
+  const uptime = Date.now() - sessionStart;
+  const creditsHour = callsThisHour * CREDITS_PER_CALL;
+  const creditsTotal = callsToday * CREDITS_PER_CALL;
+
+  // Proyección al día completo basada en el tiempo corrido
+  const hoursRunning = uptime / 3_600_000;
+  const projectedDaily = hoursRunning > 0
+    ? Math.round((creditsTotal / hoursRunning) * 24)
+    : 0;
+  const pctDailyLimit = Math.round((projectedDaily / DAILY_CREDIT_LIMIT) * 100);
+
+  const now = new Date().toLocaleTimeString('es-ES');
+
+  console.log('');
+  console.log('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('  🛰️  PEGASUS LIVE STATUS  —  ' + now);
+  console.log('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log(`  👥 Usuarios activos:          ${String(users).padStart(4)}`);
+  console.log(`  🗺️  Zonas activas:             ${String(zones.length).padStart(4)}`);
+  if (zones.length > 0) {
+    zones.forEach(z => console.log(`        • ${z}`));
+  }
+  console.log('');
+  console.log('  💳 Créditos (API OpenSky):');
+  console.log(`     Última hora:               ${String(creditsHour).padStart(4)}  créditos`);
+  console.log(`     Sesión (${fmtDuration(uptime).padEnd(6)}):         ${String(creditsTotal).padStart(4)}  créditos`);
+  console.log(`     Estimación día completo:   ${String(projectedDaily).padStart(4)}  créditos  (${pctDailyLimit}% del límite)`);
+  console.log(`     Límite diario total:       ${String(DAILY_CREDIT_LIMIT).padStart(4)}  créditos  (${ACCOUNTS.length} cuentas × 4.000)`);
+  console.log('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('');
+
+  // Reset contador de hora
+  callsThisHour = 0;
+  lastHourReset = Date.now();
 }
 
 async function main() {
@@ -117,10 +192,18 @@ async function main() {
   }
 }
 
-console.log(`-----------------------------------------`);
-console.log(`DETECTIVE DINÁMICO OPTIMIZADO (V2.1)`);
-console.log(`Ahorro de API activado: Mínimo 45s entre llamadas.`);
-console.log(`-----------------------------------------`);
+// ── Arranque ───────────────────────────────────────────────────────────────────
+console.log('');
+console.log('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+console.log('  🛰️  PEGASUS HOME FEEDER  V2.2');
+console.log('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+console.log(`  ⏱️  Mínimo 45s entre llamadas a la API de OpenSky`);
+console.log(`  📊  Informe de estado cada 1 hora`);
+console.log(`  💳  Créditos cada llamada: 1 (bbox < 25 sq°)`);
+console.log(`  💰  Límite total: ${DAILY_CREDIT_LIMIT} créditos/día (${ACCOUNTS.length} cuentas)`);
+console.log('  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+console.log('');
 
 main();
 setInterval(main, POLL_INTERVAL_MS);
+setInterval(printReport, REPORT_INTERVAL_MS);
