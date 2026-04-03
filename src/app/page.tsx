@@ -343,8 +343,8 @@ export default function Home() {
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, voiceType, speed);
   const { allAircrafts, aircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
 
-  // Posiciones interpoladas cada 1 s — movimiento fluido sin llamadas extra a la API
-  const simulatedAircrafts = useAircraftSimulator(aircrafts);
+  // Posiciones interpoladas cada 1 s — movimiento fluido para TODOS los aviones detectados
+  const simulatedAircrafts = useAircraftSimulator(allAircrafts);
 
   const { chargers, loading: loadingChargers, progress: chargerProgress } = useChargers(userPos, route?.coordinates, isChargersEnabled, chargerFilters);
   const { stations: gasStations, loading: loadingGasStations, progress: gasProgress } = useGasStations(userPos, route?.coordinates, isGasStationsEnabled, gasStationFilters);
