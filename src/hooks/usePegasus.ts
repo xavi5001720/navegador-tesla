@@ -110,7 +110,7 @@ export function usePegasus(
         }
 
         const states: Aircraft[] = data?.states ?? [];
-        console.log(`[usePegasus] ✅ ${states.length} aeronaves recibidas`);
+        console.log(`[usePegasus] ✅ ${states.length} aeronaves recibidas para zona ${bboxKey}`);
         setAllAircrafts(states);
         setLastFetchTime(Date.now());
 
@@ -121,11 +121,12 @@ export function usePegasus(
       }
     };
 
+    const initialBbox = userPos ? buildBboxKey(userPos) : '';
     fetchAircrafts();
     const interval = setInterval(fetchAircrafts, FETCH_INTERVAL_MS);
     return () => clearInterval(interval);
 
-  }, [isEnabled, !!userPos]);
+  }, [isEnabled, userPos ? buildBboxKey(userPos) : '']);
 
   // ── Filtros locales ──────────────────────────────────────────────────────────
   const aircrafts = useMemo(() => {
