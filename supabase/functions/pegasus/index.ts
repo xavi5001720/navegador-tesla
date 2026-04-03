@@ -9,9 +9,8 @@ const corsHeaders = {
 const OPENSKY_BASE = 'https://opensky-network.org/api';
 const TOKEN_URL    = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
 const SNAP_SIZE    = 4.0;
-const CACHE_TTL_MS = 360_000;
 const FETCH_TIMEOUT_MS = 12_000; // 12 segundos — si no responde, está bloqueado
-const CACHE_STALE_MS = 180_000; // 3 minutos — si el feeder de casa está activo, esto es suficiente
+const CACHE_STALE_MS = 360_000; // 6 minutos para evitar borrados entre polls largos del feeder
 
 const ACCOUNTS = [
   { id: 'luliloqui-api-client',         secret: 'YEXtTfBwCd5w2Kxhvp57W4C0s6f4Pb5n' },
