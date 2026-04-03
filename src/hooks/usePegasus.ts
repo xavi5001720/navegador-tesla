@@ -169,16 +169,32 @@ export function usePegasus(
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEnabled, !!userPos]);
 
-  // ── Filtros locales ──────────────────────────────────────────────────────────
+  // ── Filtros locales ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   const aircrafts = useMemo(() => {
     const hasRoute = (routeCoordinates?.length ?? 0) > 0;
-    return allAircrafts.filter(a => {
+    const real = allAircrafts.filter(a => {
       // Mostrar todos los aviones en vuelo con posición válida
-      if (a.altitude <= 0 && a.velocity <= 0) return false;         // descartamos los que están parados en tierra (no filtrados en backend)
-      if (hasRoute && a.distanceToUser > 100_000) return false;     // con ruta activa, solo los de 100km
+      if (a.altitude <= 0 && a.velocity <= 0) return false;
+      if (hasRoute && a.distanceToUser > 100_000) return false;
       return true;
     });
-  }, [allAircrafts, routeCoordinates]);
+
+    // 🧪 AVIÓN DE PRUEBA — eliminar cuando funcione todo
+    const testAircraft: Aircraft = {
+      icao24: 'TEST01',
+      callsign: 'TEST VUELING',
+      origin_country: 'Spain',
+      lat: (userPos ? userPos[0] + 0.045 : 41.42),  // ~5km al norte del coche
+      lon: (userPos ? userPos[1] : 2.17),
+      altitude: 850,
+      velocity: 55,
+      track: 180,
+      isSuspect: false,
+      distanceToUser: 5000,
+    };
+
+    return [testAircraft, ...real];
+  }, [allAircrafts, routeCoordinates, userPos]);
 
   const isAnyPegasusNearby = useMemo(
     () => aircrafts.some(a => a.distanceToUser < 10_000),
