@@ -173,10 +173,9 @@ export function usePegasus(
   const aircrafts = useMemo(() => {
     const hasRoute = (routeCoordinates?.length ?? 0) > 0;
     return allAircrafts.filter(a => {
-      if (!a.isSuspect)        return false;
-      if (a.altitude < 100 || a.altitude > 2_000) return false;
-      if (a.velocity > 83.33)  return false;
-      if (hasRoute && a.distanceToUser > 50_000) return false;
+      // Mostrar todos los aviones en vuelo con posición válida
+      if (a.altitude <= 0 && a.velocity <= 0) return false;         // descartamos los que están parados en tierra (no filtrados en backend)
+      if (hasRoute && a.distanceToUser > 100_000) return false;     // con ruta activa, solo los de 100km
       return true;
     });
   }, [allAircrafts, routeCoordinates]);
