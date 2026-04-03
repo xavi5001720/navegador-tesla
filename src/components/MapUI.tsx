@@ -433,10 +433,8 @@ function LocationTracker({ position, viewMode, hasRoute, speed = 0, routeCoordin
     let targetZoom: number;
     if (customZoom != null) {
       targetZoom = customZoom;
-    } else if (speedKmh < 10) {
-      targetZoom = 19; // Muy lento / parado: máximo detalle
-    } else if (speedKmh < 40) {
-      targetZoom = 18; // Ciudad
+    } else if (speedKmh < 50) {
+      targetZoom = 19; // Parado / ciudad / hasta 50 km/h: máximo detalle
     } else if (speedKmh < 80) {
       targetZoom = 17; // Carretera secundaria
     } else if (speedKmh < 120) {
