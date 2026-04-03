@@ -40,8 +40,8 @@ function buildBboxKey(userPos: [number, number]): string {
   return `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${sLamaxVal.toFixed(1)}_${sLomaxVal.toFixed(1)}`;
 }
 
-// Reducimos el intervalo a 60s. Es seguro porque rotamos cuentas y el feeder de casa ayuda.
-const FETCH_INTERVAL_MS = 60_000;
+// Comprobamos cada 15s pero solo actualizamos el UI cuando el feeder sube datos nuevos (cachedAt cambia)
+const FETCH_INTERVAL_MS = 15_000;
 
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -57,6 +57,8 @@ export function usePegasus(
   const [activeAccount, setActiveAccount] = useState<number>(1);
   // Timestamp del último batch real recibido — consume el simulador para saber cuándo aplicar corrección
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  // Timestamp del último cachedAt recibido — solo actualizamos el UI cuando cambia (feeder subió datos nuevos)
+  const lastCachedAtRef = useRef<number>(0);
 
 
   const routeRef  = useRef(routeCoordinates);
@@ -129,10 +131,18 @@ export function usePegasus(
           setActiveAccount(data.accountIndex);
         }
 
+        const incomingCachedAt: number = data?.cachedAt ?? 0;
         const states: Aircraft[] = data?.states ?? [];
-        console.log(`[usePegasus] ✅ ${states.length} aeronaves | account=${data?.accountIndex} | snapped bbox: ${JSON.stringify(data?.snappedBbox)}`);
-        setAllAircrafts(states);
-        setLastFetchTime(Date.now());
+
+        if (incomingCachedAt > lastCachedAtRef.current) {
+          // El feeder ha subido datos nuevos desde la última comprobación → actualizar UI
+          lastCachedAtRef.current = incomingCachedAt;
+          console.log(`[usePegasus] 🆕 Datos nuevos del feeder (cachedAt=${new Date(incomingCachedAt).toLocaleTimeString()}) | ${states.length} aeronaves`);
+          setAllAircrafts(states);
+          setLastFetchTime(Date.now());
+        } else {
+          console.log(`[usePegasus] ⏸️ Sin cambios en caché (cachedAt sin cambiar) — UI intacto`);
+        }
 
 
       } catch (error) {
