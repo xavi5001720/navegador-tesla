@@ -87,7 +87,7 @@ export function usePegasus(
         const sLomax = sLomin + SNAP_SIZE;
         const bboxKey = `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${sLamax.toFixed(1)}_${sLomax.toFixed(1)}`;
 
-        console.log(`[usePegasus V5] 📡 Sincronizando zona: ${bboxKey}`);
+        console.log(`[usePegasus V10] 📡 Sincronizando zona: ${bboxKey}`);
         
         // 1. Avisar al feeder (mismo key)
         await supabase.from('opensky_requests').upsert({
@@ -98,22 +98,30 @@ export function usePegasus(
           ulon: pos[1]
         });
 
-        // 2. Pedir al servidor con cliente local forzado (V9)
-        const { data, error } = await localSupabase.functions.invoke('pegasus', {
-          body: {
+        // 2. Pedir al servidor con FETCH estándar (V10) para evitar problemas de cabeceras
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/pegasus`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': ANON_KEY,
+            'Authorization': `Bearer ${ANON_KEY}`
+          },
+          body: JSON.stringify({
             lamin: sLamin,
             lomin: sLomin,
             lamax: sLamax,
             lomax: sLomax,
             ulat: pos[0],
             ulon: pos[1]
-          }
+          })
         });
 
-        if (error) {
-          console.error('[usePegasus] Error calling Supabase Edge Function:', error);
-          throw new Error(error.message);
+        if (!response.ok) {
+          console.error(`[usePegasus] Error HTTP ${response.status}:`, await response.text());
+          throw new Error(`Edge Function returned ${response.status}`);
         }
+
+        const data = await response.json();
 
         setIsRateLimited(data?.rateLimited ?? false);
         if (data?.accountIndex && data.accountIndex !== -1) {
@@ -121,7 +129,7 @@ export function usePegasus(
         }
 
         const states: Aircraft[] = data?.states ?? [];
-        console.log(`[usePegasus V9] ✅ RECIBIDOS ${states.length} AVIONES para zona ${bboxKey}`);
+        console.log(`[usePegasus V10] ✅ RECIBIDOS ${states.length} AVIONES para zona ${bboxKey}`);
         setAllAircrafts(states);
         setLastFetchTime(Date.now());
 
