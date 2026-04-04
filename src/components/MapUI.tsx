@@ -270,7 +270,7 @@ interface MapUIProps {
 
 const createCarIcon = (heading: number, color?: string) => {
   const iconHtml = renderToStaticMarkup(
-    <div className="relative flex items-center justify-center h-28 w-28 group" style={{ transform: `rotate(${heading}deg)` }}>
+    <div className="relative flex items-center justify-center h-20 w-20 group" style={{ transform: `rotate(${heading}deg)` }}>
       {/* Sombra direccional base azulada bajo el vehículo */}
       <div className={`absolute inset-0 rounded-full blur-2xl scale-125 transition-all duration-700 ${
            color === 'Rojo' ? 'bg-red-500/30' : 
@@ -285,7 +285,7 @@ const createCarIcon = (heading: number, color?: string) => {
       />
     </div>
   );
-  return L.divIcon({ html: iconHtml, className: 'custom-car-icon pointer-events-auto', iconSize: [110, 110], iconAnchor: [55, 55] });
+  return L.divIcon({ html: iconHtml, className: 'custom-car-icon pointer-events-auto', iconSize: [80, 80], iconAnchor: [40, 40] });
 };
 
 const createFriendIcon = (color?: string, name?: string) => {

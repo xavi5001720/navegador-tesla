@@ -726,22 +726,23 @@ export default function Home() {
           overviewFitTrigger={overviewFitTrigger}
         />
 
+        {/* Nuevo Dashboard de Ruta Compacto (Solo en Pantalla Completa + Ruta Activa) */}
+        <AnimatePresence>
+          {!isSidebarOpen && route && (
+            <RouteDashboard 
+              totalDistance={route.distance}
+              totalDuration={route.duration}
+              remainingDistance={liveDistance ?? route.distance}
+              remainingDuration={liveDuration ?? route.duration}
+              remainingRadarsCount={remainingRadars}
+              onEndRoute={clearRoute}
+            />
+          )}
+        </AnimatePresence>
+
         {/* Panel de Avisos Rápidos y Velocímetro */}
         <div className="absolute bottom-6 right-6 z-[500] flex flex-col items-end gap-3 md:flex-row md:items-center md:gap-4 md:bottom-8 md:right-8">
 
-          {/* Nuevo Dashboard de Ruta Compacto (Solo en Pantalla Completa + Ruta Activa) */}
-          <AnimatePresence>
-            {!isSidebarOpen && route && liveDistance !== null && liveDuration !== null && (
-              <RouteDashboard 
-                totalDistance={route.distance}
-                totalDuration={route.duration}
-                remainingDistance={liveDistance}
-                remainingDuration={liveDuration}
-                remainingRadarsCount={remainingRadars.length}
-                onEndRoute={clearRoute}
-              />
-            )}
-          </AnimatePresence>
 
           <Speedometer speed={speed} />
           
