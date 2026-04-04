@@ -157,8 +157,8 @@ export function usePegasus(
       // 3. Velocidad máxima alerta (300 km/h = 83.33 m/s)
       if (a.velocity > 83.33) return false;
 
-      // 4. Si hay ruta activa o estamos en zona libre, filtrar por distancia (100km)
-      if (a.distanceToUser > 100000) return false;
+      // 4. Si hay ruta activa o estamos en zona libre, filtrar por distancia (25km)
+      if (a.distanceToUser > 25000) return false;
 
       return true;
     });
@@ -170,10 +170,10 @@ export function usePegasus(
   );
 
   // ── Filtro de visibilidad diferencial (11.6 ESTABLE) ──────────────────────────
-  // Todos los aviones: 100km (Máxima estabilidad)
+  // Todos los aviones: 25km (Reducido de 100km por petición del usuario)
   const visibleAircrafts = useMemo(() => {
     return allAircrafts.filter(a => {
-      return a.distanceToUser <= 100000;
+      return a.distanceToUser <= 25000;
     });
   }, [allAircrafts]);
 
