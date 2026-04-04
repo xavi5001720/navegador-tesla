@@ -191,6 +191,7 @@ interface MapUIProps {
    centerOverride?: [number, number] | null;
    overviewFitTrigger?: number;
    distanceToNextInstruction?: number | null;
+   isSimulating?: boolean;
 }
 
 const createCarIcon = (heading: number, color?: string) => {
@@ -260,18 +261,22 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
 
 function LocationTracker({ 
   position, viewMode, hasRoute, speed = 0, routeCoordinates, customZoom, hasLocation, centerOverride,
-  overviewFitTrigger, radars, aircrafts, chargers, gasStations, weatherPoints, friends, distanceToNextInstruction
+  overviewFitTrigger, radars, aircrafts, chargers, gasStations, weatherPoints, friends, distanceToNextInstruction,
+  isSimulating
 }: { 
   position: [number, number], viewMode: string, hasRoute: boolean, speed?: number, 
   routeCoordinates?: [number, number][], customZoom?: number | null, hasLocation?: boolean, 
   centerOverride?: [number, number] | null,
   overviewFitTrigger?: number, radars?: Radar[], aircrafts?: Aircraft[], chargers?: Charger[],
   gasStations?: GasStation[], weatherPoints?: WeatherPoint[], friends?: Friend[],
-  distanceToNextInstruction?: number | null
+  distanceToNextInstruction?: number | null,
+  isSimulating?: boolean
 }) {
   const map = useMap();
   const lastFitTriggerRef = useRef<number>(-1);
   const firstLocationReceivedRef = useRef(false);
+  const currentZoomRef = useRef<number>(15);
+  const targetZoomRef = useRef<number>(15);
 
   useEffect(() => { if (centerOverride) map.flyTo(centerOverride, 16, { animate: true, duration: 2 }); }, [centerOverride, map]);
 
@@ -304,21 +309,41 @@ function LocationTracker({
 
   useEffect(() => {
     if (viewMode !== 'navigation') return;
-    const speedKmh = speed * 3.6;
-    let targetZoom: number;
-    if (customZoom != null) targetZoom = customZoom;
-    else if (speedKmh < 30) targetZoom = 20;
-    else if (speedKmh < 60) targetZoom = 18.5;
-    else if (speedKmh < 90) targetZoom = 17;
-    else if (speedKmh < 120) targetZoom = 16;
-    else targetZoom = 15;
+    
+    const speedKmh = speed;
+    let newTargetZoom: number;
 
-    if (hasRoute && typeof distanceToNextInstruction === 'number' && distanceToNextInstruction < 300) {
-       targetZoom = Math.max(targetZoom, 19.5);
+    if (customZoom != null) {
+      newTargetZoom = customZoom;
+    } else {
+      if (speedKmh < 45) newTargetZoom = 20; 
+      else if (speedKmh < 75) newTargetZoom = 18.5;
+      else if (speedKmh < 105) newTargetZoom = 17;
+      else newTargetZoom = 16;
+
+      if (hasRoute && typeof distanceToNextInstruction === 'number' && distanceToNextInstruction < 350) {
+        newTargetZoom = Math.max(newTargetZoom, 19.5);
+      }
     }
 
-    map.setView(position, targetZoom, { animate: true, duration: 1.2 });
-  }, [position, viewMode, speed, map, customZoom, hasRoute, distanceToNextInstruction]);
+    const zoomDiff = Math.abs(newTargetZoom - currentZoomRef.current);
+    const shouldAnimateZoom = zoomDiff > 0.2;
+
+    if (shouldAnimateZoom) {
+      targetZoomRef.current = newTargetZoom;
+      currentZoomRef.current = newTargetZoom;
+      map.setView(position, newTargetZoom, { 
+        animate: !isSimulating, // Desactivamos animaciones Leaflet si estamos simulando para evitar jitter
+        duration: isSimulating ? 0 : 2, 
+        easeLinearity: 0.1 
+      });
+    } else {
+      map.setView(position, currentZoomRef.current, { 
+        animate: false 
+      });
+    }
+
+  }, [position, viewMode, speed, map, customZoom, hasRoute, distanceToNextInstruction, isSimulating]);
 
   return null;
 }
@@ -328,7 +353,7 @@ export default function MapUI({
   gasStations = [], weatherPoints = [], waypoints = [], speed = 0, hasLocation = false,
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
   onGasStationClick, onOpenGarage, routeSections = [], friends = [], centerOverride = null, 
-  overviewFitTrigger = 0, distanceToNextInstruction = null
+  overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false
 }: MapUIProps) {
   return (
     <div className="relative h-full w-full bg-gray-900 overflow-hidden">
@@ -343,14 +368,30 @@ export default function MapUI({
         <TileLayer attribution="&copy; Google Maps" url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" />
         <TileLayer attribution="&copy; OSM contributors &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png" opacity={0.8} />
         <RouteFitter routeCoordinates={routeCoordinates} />
-        <LocationTracker position={userPos} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} customZoom={customZoom} hasLocation={hasLocation} centerOverride={centerOverride} overviewFitTrigger={overviewFitTrigger} radars={radars} aircrafts={aircrafts} chargers={chargers} gasStations={gasStations} weatherPoints={weatherPoints} friends={friends} distanceToNextInstruction={distanceToNextInstruction} />
+        <LocationTracker position={userPos} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} customZoom={customZoom} hasLocation={hasLocation} centerOverride={centerOverride} overviewFitTrigger={overviewFitTrigger} radars={radars} aircrafts={aircrafts} chargers={chargers} gasStations={gasStations} weatherPoints={weatherPoints} friends={friends} distanceToNextInstruction={distanceToNextInstruction} isSimulating={isSimulating} />
+
         
         {(() => {
           if (!routeCoordinates || routeCoordinates.length === 0) return null;
-          const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
-          const currentIndex = snapped.segmentIndex;
+          
+          let currentIndex = 0;
+          let currentSnappedPoint = userPos;
+
+          if (isSimulating) {
+            // En simulación, el index se puede aproximar mejor pero para la linea azul
+            // simplemente buscamos el punto más cercano para "comerse" la línea
+            const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
+            currentIndex = snapped.segmentIndex;
+            currentSnappedPoint = userPos; 
+          } else {
+            const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
+            currentIndex = snapped.segmentIndex;
+            if (snapped.distance < 30) currentSnappedPoint = snapped.point;
+          }
+
           const remainingCoords = routeCoordinates.slice(currentIndex);
-          if (remainingCoords.length > 0 && snapped.distance < 30) remainingCoords[0] = snapped.point;
+          if (remainingCoords.length > 0) remainingCoords[0] = currentSnappedPoint;
+
           const polylines = [];
           let lastIndex = currentIndex;
           const sortedSections = [...routeSections].sort((a, b) => a.start - b.start);
@@ -395,7 +436,7 @@ export default function MapUI({
         {(() => {
           let pos = userPos;
           let carHeading = heading;
-          if (viewMode === 'navigation') {
+          if (viewMode === 'navigation' && !isSimulating) {
             if (routeCoordinates && routeCoordinates.length > 0) {
               const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
               if (snapped.distance < 30) {
@@ -412,3 +453,4 @@ export default function MapUI({
     </div>
   );
 }
+

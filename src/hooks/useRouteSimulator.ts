@@ -20,9 +20,12 @@ export function useRouteSimulator({
   setSpeed
 }: useRouteSimulatorProps) {
   const [isSimulating, setIsSimulating] = useState(false);
-  const [distanceTraveled, setDistanceTraveled] = useState(0); // metros
+  const [progress, setProgress] = useState(0); 
+  
+  const distanceTraveledRef = useRef(0); // metros - Usamos Ref para física fluida
   const animationFrameRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number | null>(null);
+  const lastProgressUpdateRef = useRef(0);
 
   // Pre-calculamos las distancias acumuladas de cada punto de la ruta
   const cumulativeDistances = useMemo(() => {
@@ -43,12 +46,15 @@ export function useRouteSimulator({
     if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     setSpeed(0);
     lastTimeRef.current = null;
+    distanceTraveledRef.current = 0;
+    setProgress(0);
   }, [setSpeed]);
 
   const startSimulation = useCallback(() => {
     if (!routeCoordinates || routeCoordinates.length < 2) return;
     setIsSimulating(true);
-    setDistanceTraveled(0);
+    distanceTraveledRef.current = 0;
+    setProgress(0);
     lastTimeRef.current = performance.now();
   }, [routeCoordinates]);
 
@@ -62,52 +68,63 @@ export function useRouteSimulator({
         return;
       }
 
-      const deltaTime = (time - lastTimeRef.current) / 1000; // segundos
+      let deltaTime = (time - lastTimeRef.current) / 1000; 
+      if (deltaTime > 0.1) deltaTime = 0.1; 
       lastTimeRef.current = time;
 
-      setDistanceTraveled((prevDist) => {
-        // 1. Encontrar el índice del segmento actual
-        const idx = cumulativeDistances.findIndex((d, i) => d > prevDist) - 1;
-        const currentIdx = idx < 0 ? 0 : idx;
-        
-        if (currentIdx >= routeCoordinates.length - 1) {
-          stopSimulation();
-          return prevDist;
-        }
+      const currentDist = distanceTraveledRef.current;
+      
+      // 1. Determinar el límite de velocidad del tramo actual
+      // Usamos findIndex de forma robusta
+      let currentIdx = cumulativeDistances.findIndex((d) => d > currentDist) - 1;
+      if (currentIdx < 0) currentIdx = 0;
+      
+      if (currentIdx >= routeCoordinates.length - 1) {
+        stopSimulation();
+        return;
+      }
 
-        // 2. Determinar el límite de velocidad del tramo
-        // Buscamos en 'sections' si hay un limite definido para este indice
-        const speedSection = sections?.find(s => s.speedLimit && currentIdx >= s.start && currentIdx < s.end);
-        const limitKmh = speedSection?.speedLimit || 90; // Default 90 si no hay dato
-        
-        // 3. Avanzar distancia
-        const speedMps = limitKmh / 3.6;
-        let newDist = prevDist + speedMps * deltaTime;
+      const speedSection = sections?.find(s => s.speedLimit && currentIdx >= s.start && currentIdx < s.end);
+      const limitKmh = speedSection?.speedLimit || 90;
+      
+      // 2. Avanzar distancia
+      const speedMps = limitKmh / 3.6;
+      let newDist = currentDist + speedMps * deltaTime;
 
-        if (newDist >= totalRouteDistance) {
-          stopSimulation();
-          return totalRouteDistance;
-        }
+      if (newDist >= totalRouteDistance) {
+        stopSimulation();
+        return;
+      }
 
-        // 4. Calcular posición exacta por interpolación
-        const p1Idx = cumulativeDistances.findIndex((d) => d > newDist) - 1;
-        const p1 = routeCoordinates[p1Idx];
-        const p2 = routeCoordinates[p1Idx + 1];
-        
+      // 3. ACTUALIZAR REFERENCIA (Solo hacia adelante)
+      distanceTraveledRef.current = Math.max(distanceTraveledRef.current, newDist);
+
+      // 4. Calcular posición exacta por interpolación (usando newDist)
+      const p1Idx = Math.max(0, cumulativeDistances.findIndex((d) => d > newDist) - 1);
+      const p1 = routeCoordinates[p1Idx];
+      const p2 = routeCoordinates[p1Idx + 1];
+      
+      if (p1 && p2) {
         const segmentDist = cumulativeDistances[p1Idx + 1] - cumulativeDistances[p1Idx];
         const distInSegment = newDist - cumulativeDistances[p1Idx];
-        const fraction = segmentDist > 0 ? distInSegment / segmentDist : 0;
+        const fraction = segmentDist > 0 ? Math.min(1, Math.max(0, distInSegment / segmentDist)) : 0;
 
         const pos = interpolatePoint(p1, p2, fraction);
+        
         setUserPos(pos);
         setHeading(getBearing(p1, p2));
         setSpeed(limitKmh);
+      }
 
-        return newDist;
-      });
+      // 5. Actualizar el estado de progreso solo de vez en cuando
+      if (time - lastProgressUpdateRef.current > 500) {
+        setProgress((newDist / totalRouteDistance) * 100);
+        lastProgressUpdateRef.current = time;
+      }
 
       animationFrameRef.current = requestAnimationFrame(animate);
     };
+
 
     animationFrameRef.current = requestAnimationFrame(animate);
 
@@ -120,7 +137,8 @@ export function useRouteSimulator({
     isSimulating,
     startSimulation,
     stopSimulation,
-    progress: totalRouteDistance > 0 ? (distanceTraveled / totalRouteDistance) * 100 : 0
+    progress
   };
 }
+
 

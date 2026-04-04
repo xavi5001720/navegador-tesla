@@ -307,13 +307,21 @@ export default function Home() {
     }
   }, [userPos, speed, route, destination, waypoints, loadingRoute, lastRecalculationTime, calculateRoute]);
 
-  // Refresco de tráfico cada 20km
+  const lastMetricsUpdateRef = useRef(0);
+
+  // Refresco de tráfico cada 20km y métricas en vivo
   useEffect(() => {
     if (userPos) {
       checkTrafficRefresh(userPos);
-      updateLiveMetrics(userPos);
+      
+      const now = performance.now();
+      if (now - lastMetricsUpdateRef.current > 500) { // Cada 500ms es suficiente para la UI
+        updateLiveMetrics(userPos);
+        lastMetricsUpdateRef.current = now;
+      }
     }
   }, [userPos, checkTrafficRefresh, updateLiveMetrics]);
+
 
   // Unlock audio on first interaction
   useEffect(() => {
@@ -766,6 +774,7 @@ export default function Home() {
           centerOverride={mapCenterOverride}
           overviewFitTrigger={overviewFitTrigger}
           distanceToNextInstruction={distanceToNextInstruction}
+          isSimulating={isSimulating}
         />
 
 
