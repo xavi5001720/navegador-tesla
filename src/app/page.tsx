@@ -38,6 +38,7 @@ import { Session } from '@supabase/supabase-js';
 import { useProfile } from '@/hooks/useProfile';
 import { useSocial } from '@/hooks/useSocial';
 import RouteDashboard from '@/components/RouteDashboard';
+import NavigationPanel from '@/components/NavigationPanel';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -77,6 +78,8 @@ export default function Home() {
     isTrafficEnabled,
     liveDistance,
     liveDuration,
+    nextInstruction,
+    distanceToNextInstruction,
     updateLiveMetrics
   } = useRoute();
   
@@ -620,27 +623,42 @@ export default function Home() {
       )}
 
       {/* Panel Izquierdo (Bloque de Control) */}
-      {/* Branding NavegaPRO (Siempre visible en la misma posición) */}
-      <div className="fixed top-8 left-8 z-[100] flex items-center gap-5 pointer-events-none select-none">
-        <img 
-          src="/pro-logo.png?v=5" 
-          alt="NavegaPRO Logo" 
-          className="h-20 w-auto object-contain drop-shadow-2xl" 
-        />
-        <AnimatePresence>
-          {isSidebarOpen && (
-            <motion.h1
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -10 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-              className="text-4xl font-black italic tracking-tighter bg-gradient-to-r from-blue-200 via-blue-500 to-blue-900 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(59,130,246,0.4)] pr-4 pb-1"
-            >
-              NavegaPRO
-            </motion.h1>
-          )}
-        </AnimatePresence>
-      </div>
+      {/* Branding NavegaPRO (Oculto si hay instrucciones de navegación activas en modo pantalla completa) */}
+      <AnimatePresence>
+        {(!route || isSidebarOpen) && (
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="fixed top-8 left-8 z-[100] flex items-center gap-5 pointer-events-none select-none"
+          >
+            <img 
+              src="/pro-logo.png?v=5" 
+              alt="NavegaPRO Logo" 
+              className="h-20 w-auto object-contain drop-shadow-2xl" 
+            />
+            <AnimatePresence>
+              {isSidebarOpen && (
+                <motion.h1
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="text-4xl font-black italic tracking-tighter bg-gradient-to-r from-blue-200 via-blue-500 to-blue-900 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(59,130,246,0.4)] pr-4 pb-1"
+                >
+                  NavegaPRO
+                </motion.h1>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <NavigationPanel 
+        isVisible={!isSidebarOpen && viewMode === 'navigation' && !!route}
+        instruction={nextInstruction}
+        distance={distanceToNextInstruction}
+      />
 
       <Sidebar 
         isSidebarOpen={isSidebarOpen}

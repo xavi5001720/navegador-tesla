@@ -11,11 +11,23 @@ export interface RouteSection {
   magnitude: number;
 }
 
+export interface RouteInstruction {
+  message: string;
+  instructionType: string;
+  maneuver: string;
+  routeOffsetInMeters: number;
+  point: Coordinates;
+  street?: string;
+  signpostText?: string;
+  distanceAlongRouteInMeters?: number;
+}
+
 interface RouteResult {
   coordinates: Coordinates[];
   distance: number; // en metros
   duration: number; // en segundos
   sections: RouteSection[];
+  instructions: RouteInstruction[];
 }
 
 const TOMTOM_KEY = process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
@@ -39,7 +51,7 @@ const geocodeAddress = async (query: string): Promise<Coordinates | null> => {
 const fetchRouteTomTom = async (allPoints: Coordinates[], key: string): Promise<RouteResult> => {
   // TomTom espera lat,lon en la URL (al contrario que OSRM que espera lon,lat)
   const coordStr = allPoints.map(p => `${p[0]},${p[1]}`).join(':');
-  const url = `https://api.tomtom.com/routing/1/calculateRoute/${coordStr}/json?key=${key}&traffic=true&sectionType=traffic&report=effectiveSettings`;
+  const url = `https://api.tomtom.com/routing/1/calculateRoute/${coordStr}/json?key=${key}&traffic=true&sectionType=traffic&report=effectiveSettings&instructionsType=text&language=es-ES`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`TomTom API error: ${res.status}`);
   const data = await res.json();
@@ -69,11 +81,24 @@ const fetchRouteTomTom = async (allPoints: Coordinates[], key: string): Promise<
       magnitude: s.magnitudeOfDelay ?? 0,
     }));
 
+  const instructions: RouteInstruction[] = (mainRoute.guidance?.instructions || [])
+    .map((ins: any) => ({
+      message: ins.message,
+      instructionType: ins.instructionType,
+      maneuver: ins.maneuver,
+      routeOffsetInMeters: ins.routeOffsetInMeters,
+      point: [ins.point.latitude, ins.point.longitude] as Coordinates,
+      street: ins.street,
+      signpostText: ins.signpostText,
+      distanceAlongRouteInMeters: ins.routeOffsetInMeters
+    }));
+
   return {
     coordinates: latLngs,
     distance: mainRoute.summary.lengthInMeters,
     duration: mainRoute.summary.travelTimeInSeconds,
     sections,
+    instructions,
   };
 };
 
@@ -93,6 +118,7 @@ const fetchRouteOSRM = async (allPoints: Coordinates[]): Promise<RouteResult> =>
     distance: mainRoute.distance,
     duration: mainRoute.duration,
     sections: [], // Sin tráfico
+    instructions: [], // Sin instrucciones detalladas en OSRM por ahora
   };
 };
 
@@ -105,6 +131,8 @@ export function useRoute() {
   const [isTrafficEnabled, setIsTrafficEnabled] = useState<boolean>(false);
   const [liveDistance, setLiveDistance] = useState<number | null>(null);
   const [liveDuration, setLiveDuration] = useState<number | null>(null);
+  const [nextInstruction, setNextInstruction] = useState<RouteInstruction | null>(null);
+  const [distanceToNextInstruction, setDistanceToNextInstruction] = useState<number | null>(null);
 
   const lastTrafficPosRef = useRef<Coordinates | null>(null);
 
@@ -188,6 +216,8 @@ export function useRoute() {
     lastTrafficPosRef.current = null;
     setLiveDistance(null);
     setLiveDuration(null);
+    setNextInstruction(null);
+    setDistanceToNextInstruction(null);
   }, []);
 
   // Refresco automático de tráfico cada 20km
@@ -226,6 +256,24 @@ export function useRoute() {
       const ratio = remainingDist / route.distance;
       setLiveDuration(Math.round(route.duration * ratio));
     }
+
+    // 4. Encontrar la próxima instrucción
+    // Calculamos el offset actual del usuario en la ruta (distancia acumulada hasta 'snapped')
+    let currentOffset = 0;
+    for (let i = 0; i < idx; i++) {
+       currentOffset += getDistance(route.coordinates[i], route.coordinates[i+1]);
+    }
+    // Sumamos el tramo fraccional desde el último vértice hasta el 'snapped'
+    currentOffset += getDistance(route.coordinates[idx], snapped.point);
+
+    const next = route.instructions.find(ins => ins.routeOffsetInMeters > currentOffset + 10); // +10m de margen
+    if (next) {
+      setNextInstruction(next);
+      setDistanceToNextInstruction(next.routeOffsetInMeters - currentOffset);
+    } else {
+      setNextInstruction(null);
+      setDistanceToNextInstruction(null);
+    }
   }, [route]);
 
   return {
@@ -237,6 +285,8 @@ export function useRoute() {
     isTrafficEnabled,
     liveDistance,
     liveDuration,
+    nextInstruction,
+    distanceToNextInstruction,
     calculateRoute,
     findAndTraceRoute,
     addWaypointBefore,
