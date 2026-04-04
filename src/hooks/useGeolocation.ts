@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 
-export function useGeolocation() {
+export function useGeolocation(isPaused?: boolean) {
   const [userPos, setUserPos] = useState<[number, number]>([40.4168, -3.7038]); 
   const [heading, setHeading] = useState<number>(0);
   const [hasLocation, setHasLocation] = useState(false);
@@ -52,10 +52,12 @@ export function useGeolocation() {
         { enableHighAccuracy: true }
       );
     }
-  }, []);
+  }, [updatePosition]);
 
   // Geolocation Tracking
   useEffect(() => {
+    if (isPaused) return;
+
     if ('geolocation' in navigator) {
       const watchId = navigator.geolocation.watchPosition(
         (pos) => {
@@ -68,7 +70,7 @@ export function useGeolocation() {
       );
       return () => navigator.geolocation.clearWatch(watchId);
     }
-  }, [updatePosition]);
+  }, [updatePosition, isPaused]);
 
   return {
     userPos,

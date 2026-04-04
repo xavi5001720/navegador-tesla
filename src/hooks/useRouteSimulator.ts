@@ -10,6 +10,7 @@ interface useRouteSimulatorProps {
   setUserPos: (pos: [number, number]) => void;
   setHeading: (heading: number) => void;
   setSpeed: (speed: number) => void;
+  setIsSimulating?: (val: boolean) => void;
 }
 
 export function useRouteSimulator({
@@ -17,9 +18,11 @@ export function useRouteSimulator({
   sections,
   setUserPos,
   setHeading,
-  setSpeed
+  setSpeed,
+  setIsSimulating: setIsSimulatingExt
 }: useRouteSimulatorProps) {
   const [isSimulating, setIsSimulating] = useState(false);
+
   const [progress, setProgress] = useState(0); 
   
   const distanceTraveledRef = useRef(0); // metros - Usamos Ref para física fluida
@@ -43,20 +46,23 @@ export function useRouteSimulator({
 
   const stopSimulation = useCallback(() => {
     setIsSimulating(false);
+    if (setIsSimulatingExt) setIsSimulatingExt(false);
     if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     setSpeed(0);
     lastTimeRef.current = null;
     distanceTraveledRef.current = 0;
     setProgress(0);
-  }, [setSpeed]);
+  }, [setSpeed, setIsSimulatingExt]);
 
   const startSimulation = useCallback(() => {
     if (!routeCoordinates || routeCoordinates.length < 2) return;
     setIsSimulating(true);
+    if (setIsSimulatingExt) setIsSimulatingExt(true);
     distanceTraveledRef.current = 0;
     setProgress(0);
     lastTimeRef.current = performance.now();
-  }, [routeCoordinates]);
+  }, [routeCoordinates, setIsSimulatingExt]);
+
 
   useEffect(() => {
     if (!isSimulating || !routeCoordinates || cumulativeDistances.length === 0) return;

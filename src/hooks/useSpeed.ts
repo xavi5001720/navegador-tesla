@@ -2,27 +2,25 @@
 
 import { useState, useEffect } from 'react';
 
-export function useSpeed() {
+export function useSpeed(isPaused?: boolean) {
   const [speed, setSpeed] = useState<number>(0);
 
   useEffect(() => {
+    if (isPaused) return; // Detener hardware si está pausado
+
     if ('geolocation' in navigator) {
       const watchId = navigator.geolocation.watchPosition(
         (pos) => {
-          // Si no hay un setSpeed externo (simulación), usamos el GPS
-          // El speed viene en m/s, lo pasamos a km/h
           const speedKmh = pos.coords.speed ? Math.round(pos.coords.speed * 3.6) : 0;
-          setSpeed(prev => {
-             // Lógica simple: si la diferencia es pequeña, la ignoramos para evitar parpadeos
-             return speedKmh;
-          });
+          setSpeed(speedKmh);
         },
         (err) => console.warn('Speed Error:', err),
         { enableHighAccuracy: true }
       );
       return () => navigator.geolocation.clearWatch(watchId);
     }
-  }, []);
+  }, [isPaused]);
+
 
   return { speed, setSpeed };
 }

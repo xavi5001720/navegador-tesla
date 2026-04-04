@@ -57,6 +57,8 @@ export default function Home() {
   const [isSessionDuplicated, setIsSessionDuplicated] = useState(false);
 
 
+  const [isSimulatingState, setIsSimulatingState] = useState(false);
+
   const { 
     userPos, 
     setUserPos, 
@@ -64,9 +66,9 @@ export default function Home() {
     setHeading,
     hasLocation, 
     requestGPS 
-  } = useGeolocation();
+  } = useGeolocation(isSimulatingState);
 
-  const { speed, setSpeed } = useSpeed();
+  const { speed, setSpeed } = useSpeed(isSimulatingState);
 
   const {
     route, 
@@ -134,8 +136,10 @@ export default function Home() {
     sections: route?.sections,
     setUserPos,
     setHeading,
-    setSpeed
+    setSpeed,
+    setIsSimulating: setIsSimulatingState
   });
+
 
 
   
