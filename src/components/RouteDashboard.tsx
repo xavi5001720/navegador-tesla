@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, MapPin, Navigation, XCircle, Camera } from 'lucide-react';
+import { Clock, MapPin, Navigation, XCircle, Camera, Play, Square } from 'lucide-react';
 
 interface RouteDashboardProps {
   totalDistance: number;    // metros
@@ -11,7 +11,11 @@ interface RouteDashboardProps {
   remainingDuration: number; // segundos
   remainingRadarsCount: number;
   onEndRoute: () => void;
+  isSimulating?: boolean;
+  onStartSimulation?: () => void;
+  onStopSimulation?: () => void;
 }
+
 
 export default function RouteDashboard({
   totalDistance,
@@ -19,8 +23,12 @@ export default function RouteDashboard({
   remainingDistance,
   remainingDuration,
   remainingRadarsCount,
-  onEndRoute
+  onEndRoute,
+  isSimulating = false,
+  onStartSimulation,
+  onStopSimulation
 }: RouteDashboardProps) {
+
   
   // Cálculo de progreso
   const progress = useMemo(() => {
@@ -117,17 +125,43 @@ export default function RouteDashboard({
 
           <div className="h-10 w-[1px] bg-white/10" />
 
+          <div className="h-10 w-[1px] bg-white/10" />
+
+          {/* Botón Simulación */}
+          <button
+            onClick={isSimulating ? onStopSimulation : onStartSimulation}
+            className={`flex flex-col items-center group transition-all ${isSimulating ? 'text-amber-500' : 'text-blue-500'}`}
+          >
+            <span className="text-[9px] font-black uppercase tracking-tighter mb-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
+              {isSimulating ? 'DETENER' : 'SIMULAR'}
+            </span>
+            <div className={`h-10 w-10 flex items-center justify-center rounded-2xl border transition-all shadow-xl ${
+              isSimulating 
+                ? 'bg-amber-500/10 border-amber-500/20 group-hover:bg-amber-500 group-hover:border-amber-500' 
+                : 'bg-blue-500/10 border-blue-500/20 group-hover:bg-blue-500 group-hover:border-blue-500'
+            }`}>
+              {isSimulating ? (
+                <Square className={`h-5 w-5 ${isSimulating ? 'text-amber-500 group-hover:text-white' : ''}`} />
+              ) : (
+                <Play className="h-5 w-5 text-blue-500 group-hover:text-white" />
+              )}
+            </div>
+          </button>
+
+          <div className="h-10 w-[1px] bg-white/10" />
+
           {/* Botón Finalizar */}
           <button
             onClick={onEndRoute}
-            className="flex flex-col items-center group transition-all"
+            className="flex flex-col items-center group transition-all text-rose-500"
           >
-            <span className="text-[9px] font-black text-rose-500/60 uppercase tracking-tighter mb-1.5 group-hover:text-rose-500 transition-colors">CANCELAR</span>
+            <span className="text-[9px] font-black uppercase tracking-tighter mb-1.5 opacity-60 group-hover:opacity-100 transition-colors">CANCELAR</span>
             <div className="h-10 w-10 flex items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/20 group-hover:bg-rose-500 group-hover:border-rose-500 transition-all shadow-xl">
-              <XCircle className="h-6 w-6 text-rose-500 group-hover:text-white transition-colors" />
+              <XCircle className="h-6 w-6 group-hover:text-white transition-colors" />
             </div>
           </button>
         </div>
+
 
       </div>
     </motion.div>

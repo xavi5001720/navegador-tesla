@@ -18,6 +18,8 @@ import { useSpeed } from '@/hooks/useSpeed';
 import { usePegasus } from '@/hooks/usePegasus';
 import { useAircraftSimulator } from '@/hooks/useAircraftSimulator';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { useRouteSimulator } from '@/hooks/useRouteSimulator';
+
 
 
 import { getDistance, distanceToPolyline, findClosestPointOnPolyline } from '@/utils/geo';
@@ -59,9 +61,12 @@ export default function Home() {
     userPos, 
     setUserPos, 
     heading,
+    setHeading,
     hasLocation, 
     requestGPS 
   } = useGeolocation();
+
+  const { speed, setSpeed } = useSpeed();
 
   const {
     route, 
@@ -79,25 +84,26 @@ export default function Home() {
     liveDistance,
     liveDuration,
     nextInstruction,
+    activeLaneGuidance,
     distanceToNextInstruction,
     updateLiveMetrics
   } = useRoute();
-  
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isRadarsEnabled, setIsRadarsEnabled] = useState(false);
   const [isAircraftsEnabled, setIsAircraftsEnabled] = useState(false);
   const [isChargersEnabled, setIsChargersEnabled] = useState(false);
   const [isWeatherEnabled, setIsWeatherEnabled] = useState(false);
+  
   const [chargerFilters, setChargerFilters] = useState<ChargerFilters>({
-    isFree: false,
-    connectors: [],
-    minPower: 0
+    isFree: false, connectors: [], minPower: 0
   });
+
   const [isGasStationsEnabled, setIsGasStationsEnabled] = useState(false);
   const [gasStationFilters, setGasStationFilters] = useState<GasStationFilters>({
-    fuels: [],
-    maxPrice: null
+    fuels: [], maxPrice: null
   });
+
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [voiceType, setVoiceType] = useState<VoiceType>('mujer');
   const [lastRecalculationTime, setLastRecalculationTime] = useState(0);
@@ -108,6 +114,7 @@ export default function Home() {
     | { type: 'gasStation'; data: GasStation }
     | null
   >(null);
+
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -117,7 +124,20 @@ export default function Home() {
   const [session, setSession] = useState<Session | null>(null);
 
   const { favorites, saveFavorite, removeFavorite, isFavorite } = useFavorites();
-  const speed = useSpeed(); // declarado aquí para usarlo en el recalculado automático
+
+  const { 
+    isSimulating, 
+    startSimulation, 
+    stopSimulation 
+  } = useRouteSimulator({
+    routeCoordinates: route?.coordinates,
+    sections: route?.sections,
+    setUserPos,
+    setHeading,
+    setSpeed
+  });
+
+
   
   const { profile, updateProfile } = useProfile(session);
   const { friends, addFriend } = useSocial(session, userPos);
@@ -658,7 +678,10 @@ export default function Home() {
         isVisible={!isSidebarOpen && viewMode === 'navigation' && !!route}
         instruction={nextInstruction}
         distance={distanceToNextInstruction}
+        activeLaneGuidance={activeLaneGuidance}
+        isSimulating={isSimulating}
       />
+
 
       <Sidebar 
         isSidebarOpen={isSidebarOpen}
@@ -742,7 +765,9 @@ export default function Home() {
           friends={friends}
           centerOverride={mapCenterOverride}
           overviewFitTrigger={overviewFitTrigger}
+          distanceToNextInstruction={distanceToNextInstruction}
         />
+
 
         {/* Nuevo Dashboard de Ruta Compacto (Solo en Pantalla Completa + Ruta Activa) */}
         <AnimatePresence>
@@ -754,6 +779,9 @@ export default function Home() {
               remainingDuration={liveDuration ?? route.duration}
               remainingRadarsCount={remainingRadars}
               onEndRoute={clearRoute}
+              isSimulating={isSimulating}
+              onStartSimulation={startSimulation}
+              onStopSimulation={stopSimulation}
             />
           )}
         </AnimatePresence>

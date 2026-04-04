@@ -74,8 +74,10 @@ export function useGeolocation() {
     userPos,
     setUserPos,
     heading,
+    setHeading,
     hasLocation,
     locationSource,
     requestGPS
   };
 }
+

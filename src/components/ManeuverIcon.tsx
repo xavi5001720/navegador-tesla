@@ -18,9 +18,10 @@ import {
 interface ManeuverIconProps {
   maneuver: string;
   className?: string;
+  exitNumber?: number;
 }
 
-export default function ManeuverIcon({ maneuver, className = "h-8 w-8" }: ManeuverIconProps) {
+export default function ManeuverIcon({ maneuver, className = "h-8 w-8", exitNumber }: ManeuverIconProps) {
   // Normalizar el string de maniobra
   const m = maneuver?.toUpperCase() || '';
 
@@ -37,8 +38,16 @@ export default function ManeuverIcon({ maneuver, className = "h-8 w-8" }: Maneuv
   if (m.includes('ROUNDABOUT')) {
     return (
       <div className="relative flex items-center justify-center">
-        <RotateCcw className={`${className} text-blue-400 animate-spin-slow`} />
-        <span className="absolute text-[10px] font-black text-white">i</span>
+        <div className="absolute inset-0 bg-blue-500/10 blur-xl rounded-full scale-110" />
+        <RotateCcw className={`${className} text-blue-400 opacity-80`} />
+        {exitNumber && (
+          <span className="absolute text-lg font-black text-white italic drop-shadow-md">
+            {exitNumber}
+          </span>
+        )}
+        {!exitNumber && (
+          <span className="absolute text-[10px] font-black text-white">R</span>
+        )}
       </div>
     );
   }
@@ -54,3 +63,4 @@ export default function ManeuverIcon({ maneuver, className = "h-8 w-8" }: Maneuv
   // Default
   return <Navigation className={`${className} text-blue-400 transform rotate-45`} />;
 }
+

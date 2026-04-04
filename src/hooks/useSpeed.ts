@@ -9,9 +9,13 @@ export function useSpeed() {
     if ('geolocation' in navigator) {
       const watchId = navigator.geolocation.watchPosition(
         (pos) => {
-          // speed viene en m/s, lo pasamos a km/h
+          // Si no hay un setSpeed externo (simulación), usamos el GPS
+          // El speed viene en m/s, lo pasamos a km/h
           const speedKmh = pos.coords.speed ? Math.round(pos.coords.speed * 3.6) : 0;
-          setSpeed(speedKmh);
+          setSpeed(prev => {
+             // Lógica simple: si la diferencia es pequeña, la ignoramos para evitar parpadeos
+             return speedKmh;
+          });
         },
         (err) => console.warn('Speed Error:', err),
         { enableHighAccuracy: true }
@@ -20,5 +24,6 @@ export function useSpeed() {
     }
   }, []);
 
-  return speed;
+  return { speed, setSpeed };
 }
+

@@ -91,3 +91,11 @@ export function findClosestPointOnPolyline(p: [number, number], polyline: [numbe
   }
   return { point: closestPoint, distance: minD, segmentIndex };
 }
+
+export function interpolatePoint(p1: [number, number], p2: [number, number], fraction: number): [number, number] {
+
+  return [
+    p1[0] + (p2[0] - p1[0]) * fraction,
+    p1[1] + (p2[1] - p1[1]) * fraction
+  ];
+}

@@ -9,6 +9,17 @@ export interface RouteSection {
   color: string;
   delay: number;
   magnitude: number;
+  speedLimit?: number; // km/h
+}
+
+
+export interface Lane {
+  directions: string[];
+  recommended: boolean;
+}
+
+export interface LaneGuidance {
+  lanes: Lane[];
 }
 
 export interface RouteInstruction {
@@ -20,6 +31,9 @@ export interface RouteInstruction {
   street?: string;
   signpostText?: string;
   distanceAlongRouteInMeters?: number;
+  laneGuidance?: LaneGuidance;
+  exitNumber?: number;
+  isRoundabout?: boolean;
 }
 
 interface RouteResult {
@@ -29,6 +43,7 @@ interface RouteResult {
   sections: RouteSection[];
   instructions: RouteInstruction[];
 }
+
 
 const TOMTOM_KEY = process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
 
@@ -49,9 +64,9 @@ const geocodeAddress = async (query: string): Promise<Coordinates | null> => {
 
 // Ruta con TomTom (tráfico en tiempo real)
 const fetchRouteTomTom = async (allPoints: Coordinates[], key: string): Promise<RouteResult> => {
-  // TomTom espera lat,lon en la URL (al contrario que OSRM que espera lon,lat)
   const coordStr = allPoints.map(p => `${p[0]},${p[1]}`).join(':');
-  const url = `https://api.tomtom.com/routing/1/calculateRoute/${coordStr}/json?key=${key}&traffic=true&sectionType=traffic&report=effectiveSettings&instructionsType=text&language=es-ES`;
+  // Añadimos sectionType=lanes, sectionType=traffic y sectionType=speedLimit
+  const url = `https://api.tomtom.com/routing/1/calculateRoute/${coordStr}/json?key=${key}&traffic=true&sectionType=traffic&sectionType=lanes&sectionType=speedLimit&report=effectiveSettings&instructionsType=text&language=es-ES&laneGuidance=true`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`TomTom API error: ${res.status}`);
   const data = await res.json();
@@ -62,36 +77,62 @@ const fetchRouteTomTom = async (allPoints: Coordinates[], key: string): Promise<
     leg.points.map((p: any) => [p.latitude, p.longitude] as Coordinates)
   );
 
-  // Colores según magnitudeOfDelay (0-4)
   const TRAFFIC_COLORS: Record<number, string> = {
-    0: '#3b82f6', // Fluido — Azul
-    1: '#22c55e', // Muy lento — Verde
-    2: '#f59e0b', // Lento — Naranja
-    3: '#ef4444', // Congestión — Rojo
-    4: '#7f1d1d', // Atasco total — Granate
+    0: '#3b82f6',
+    1: '#22c55e',
+    2: '#f59e0b',
+    3: '#ef4444',
+    4: '#7f1d1d',
   };
 
   const sections: RouteSection[] = (mainRoute.sections || [])
-    .filter((s: any) => s.sectionType === 'TRAFFIC')
-    .map((s: any) => ({
-      start: s.startPointIndex,
-      end: s.endPointIndex,
-      color: TRAFFIC_COLORS[s.magnitudeOfDelay ?? 0] ?? '#3b82f6',
-      delay: s.delayInSeconds || 0,
-      magnitude: s.magnitudeOfDelay ?? 0,
-    }));
+    .map((s: any) => {
+      const baseSection = {
+        start: s.startPointIndex,
+        end: s.endPointIndex,
+        color: '#3b82f6', // Color por defecto
+        delay: s.delayInSeconds || 0,
+        magnitude: s.magnitudeOfDelay ?? 0,
+      };
+
+      if (s.sectionType === 'TRAFFIC') {
+        return {
+          ...baseSection,
+          color: TRAFFIC_COLORS[s.magnitudeOfDelay ?? 0] ?? '#3b82f6',
+        };
+      } else if (s.sectionType === 'SPEED_LIMIT') {
+        return {
+          ...baseSection,
+          speedLimit: s.speedLimit?.speed, // km/h (o mph si el locale cambiara, pero TomTom suele dar km/h)
+        };
+      }
+      return null;
+    })
+    .filter(Boolean) as RouteSection[];
+
 
   const instructions: RouteInstruction[] = (mainRoute.guidance?.instructions || [])
-    .map((ins: any) => ({
-      message: ins.message,
-      instructionType: ins.instructionType,
-      maneuver: ins.maneuver,
-      routeOffsetInMeters: ins.routeOffsetInMeters,
-      point: [ins.point.latitude, ins.point.longitude] as Coordinates,
-      street: ins.street,
-      signpostText: ins.signpostText,
-      distanceAlongRouteInMeters: ins.routeOffsetInMeters
-    }));
+    .map((ins: any) => {
+      const isRoundabout = ins.maneuver?.includes('ROUNDABOUT');
+      return {
+        message: ins.message,
+        instructionType: ins.instructionType,
+        maneuver: ins.maneuver,
+        routeOffsetInMeters: ins.routeOffsetInMeters,
+        point: [ins.point.latitude, ins.point.longitude] as Coordinates,
+        street: ins.street,
+        signpostText: ins.signpostText,
+        distanceAlongRouteInMeters: ins.routeOffsetInMeters,
+        isRoundabout,
+        exitNumber: ins.exitNumber,
+        laneGuidance: ins.laneGuidance ? {
+          lanes: ins.laneGuidance.lanes.map((l: any) => ({
+            directions: l.directions,
+            recommended: l.recommended
+          }))
+        } : undefined
+      };
+    });
 
   return {
     coordinates: latLngs,
@@ -101,6 +142,7 @@ const fetchRouteTomTom = async (allPoints: Coordinates[], key: string): Promise<
     instructions,
   };
 };
+
 
 // Ruta con OSRM (sin tráfico — fallback gratuito)
 const fetchRouteOSRM = async (allPoints: Coordinates[]): Promise<RouteResult> => {
@@ -132,6 +174,7 @@ export function useRoute() {
   const [liveDistance, setLiveDistance] = useState<number | null>(null);
   const [liveDuration, setLiveDuration] = useState<number | null>(null);
   const [nextInstruction, setNextInstruction] = useState<RouteInstruction | null>(null);
+  const [activeLaneGuidance, setActiveLaneGuidance] = useState<LaneGuidance | null>(null);
   const [distanceToNextInstruction, setDistanceToNextInstruction] = useState<number | null>(null);
 
   const lastTrafficPosRef = useRef<Coordinates | null>(null);
@@ -158,7 +201,7 @@ export function useRoute() {
           result = await fetchRouteTomTom(allPoints, TOMTOM_KEY);
           setIsTrafficEnabled(true);
           lastTrafficPosRef.current = origin;
-          console.log('[useRoute] Ruta con TomTom ✅ (tráfico activo)');
+          console.log('[useRoute] Ruta con TomTom ✅ (carriles y rotondas activos)');
         } catch (ttErr) {
           console.warn('[useRoute] TomTom falló, usando OSRM:', ttErr);
           result = await fetchRouteOSRM(allPoints);
@@ -217,6 +260,7 @@ export function useRoute() {
     setLiveDistance(null);
     setLiveDuration(null);
     setNextInstruction(null);
+    setActiveLaneGuidance(null);
     setDistanceToNextInstruction(null);
   }, []);
 
@@ -238,41 +282,42 @@ export function useRoute() {
     const snapped = findClosestPointOnPolyline(currentPos, route.coordinates);
     const idx = snapped.segmentIndex;
 
-    // 2. Calcular distancia restante: 
-    // Comienza desde la posición actual "proyectada" hasta el siguiente vértice, 
-    // y suma todos los segmentos restantes.
+    // 2. Calcular distancia restante
     let remainingDist = getDistance(currentPos, route.coordinates[idx + 1] || route.coordinates[idx]);
-    
     for (let i = idx + 1; i < route.coordinates.length - 1; i++) {
       remainingDist += getDistance(route.coordinates[i], route.coordinates[i + 1]);
     }
-
     setLiveDistance(remainingDist);
 
-    // 3. Estimar duración restante
-    // Mantenemos la proporción del tiempo original de la API de TomTom
-    // Si la API decía 10km en 10 min, y ahora faltan 5km, estimamos 5 min.
     if (route.distance > 0) {
       const ratio = remainingDist / route.distance;
       setLiveDuration(Math.round(route.duration * ratio));
     }
 
-    // 4. Encontrar la próxima instrucción
-    // Calculamos el offset actual del usuario en la ruta (distancia acumulada hasta 'snapped')
+    // 3. Calcular offset actual del usuario
     let currentOffset = 0;
     for (let i = 0; i < idx; i++) {
        currentOffset += getDistance(route.coordinates[i], route.coordinates[i+1]);
     }
-    // Sumamos el tramo fraccional desde el último vértice hasta el 'snapped'
     currentOffset += getDistance(route.coordinates[idx], snapped.point);
 
-    const next = route.instructions.find(ins => ins.routeOffsetInMeters > currentOffset + 10); // +10m de margen
+    // 4. Buscar próxima instrucción con lógica anticipatoria
+    const next = route.instructions.find(ins => ins.routeOffsetInMeters > currentOffset + 5); 
     if (next) {
       setNextInstruction(next);
-      setDistanceToNextInstruction(next.routeOffsetInMeters - currentOffset);
+      const distToNext = next.routeOffsetInMeters - currentOffset;
+      setDistanceToNextInstruction(distToNext);
+
+      // ACTIVACIÓN INTELIGENTE DE CARRILES (Anticipación 800m)
+      if (next.laneGuidance && distToNext < 800) {
+        setActiveLaneGuidance(next.laneGuidance);
+      } else {
+        setActiveLaneGuidance(null);
+      }
     } else {
       setNextInstruction(null);
       setDistanceToNextInstruction(null);
+      setActiveLaneGuidance(null);
     }
   }, [route]);
 
@@ -286,6 +331,7 @@ export function useRoute() {
     liveDistance,
     liveDuration,
     nextInstruction,
+    activeLaneGuidance,
     distanceToNextInstruction,
     calculateRoute,
     findAndTraceRoute,
@@ -296,3 +342,4 @@ export function useRoute() {
     updateLiveMetrics,
   };
 }
+
