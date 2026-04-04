@@ -37,6 +37,7 @@ import { User, LogOut, ChevronRight } from 'lucide-react';
 import { Session } from '@supabase/supabase-js';
 import { useProfile } from '@/hooks/useProfile';
 import { useSocial } from '@/hooks/useSocial';
+import RouteDashboard from '@/components/RouteDashboard';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -728,6 +729,19 @@ export default function Home() {
         {/* Panel de Avisos Rápidos y Velocímetro */}
         <div className="absolute bottom-6 right-6 z-[500] flex flex-col items-end gap-3 md:flex-row md:items-center md:gap-4 md:bottom-8 md:right-8">
 
+          {/* Nuevo Dashboard de Ruta Compacto (Solo en Pantalla Completa + Ruta Activa) */}
+          <AnimatePresence>
+            {!isSidebarOpen && route && liveDistance !== null && liveDuration !== null && (
+              <RouteDashboard 
+                totalDistance={route.distance}
+                totalDuration={route.duration}
+                remainingDistance={liveDistance}
+                remainingDuration={liveDuration}
+                remainingRadarsCount={remainingRadars.length}
+                onEndRoute={clearRoute}
+              />
+            )}
+          </AnimatePresence>
 
           <Speedometer speed={speed} />
           
