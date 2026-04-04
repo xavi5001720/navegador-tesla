@@ -196,13 +196,14 @@ interface MapUIProps {
 
 const createCarIcon = (heading: number, color?: string) => {
   const iconHtml = renderToStaticMarkup(
-    <div className="relative flex items-center justify-center h-20 w-20 group" style={{ transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)', transform: `rotate(${heading}deg)` }}>
+    <div className="relative flex items-center justify-center h-20 w-20 group car-always-up" style={{ transform: `rotate(var(--car-rotation, ${heading}deg))` }}>
       <div className={`absolute inset-0 rounded-full blur-2xl scale-125 transition-all duration-700 ${color === 'Rojo' ? 'bg-red-500/30' : color === 'Azul' ? 'bg-blue-500/30' : color === 'Negro' ? 'bg-gray-900/40' : 'bg-blue-500/20'}`}></div>
       <img src={getCarImage(color)} className="w-full h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] rotate-180" style={{ filter: getCarFilter(color) }} />
     </div>
   );
   return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [80, 80], iconAnchor: [40, 40] });
 };
+
 
 const createFriendIcon = (color?: string, name?: string) => {
   const iconHtml = renderToStaticMarkup(
@@ -241,18 +242,23 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
         if (Math.abs(smoothedHeadingRef.current) > 0.1) {
           container.style.transform = `rotate(${-smoothedHeadingRef.current}deg) scale(1.42)`;
           container.style.setProperty('--map-heading', `${smoothedHeadingRef.current}deg`);
+          container.style.setProperty('--car-rotation', `${smoothedHeadingRef.current}deg`);
           rafRef.current = requestAnimationFrame(animate);
         } else {
           container.style.transform = 'none';
           container.style.setProperty('--map-heading', '0deg');
+          container.style.removeProperty('--car-rotation');
         }
+
         return;
       }
       smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, targetHeadingRef.current, 0.04);
       container.style.transform = `rotate(${-smoothedHeadingRef.current}deg) scale(1.42)`;
       container.style.setProperty('--map-heading', `${smoothedHeadingRef.current}deg`);
+      container.style.setProperty('--car-rotation', `${smoothedHeadingRef.current}deg`);
       rafRef.current = requestAnimationFrame(animate);
     };
+
     rafRef.current = requestAnimationFrame(animate);
     return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current); };
   }, [map, viewMode]);
