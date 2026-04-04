@@ -313,9 +313,10 @@ function LocationTracker({
     else if (speedKmh < 120) targetZoom = 16;
     else targetZoom = 15;
 
-    if (hasRoute && distanceToNextInstruction !== null && distanceToNextInstruction < 300) {
+    if (hasRoute && typeof distanceToNextInstruction === 'number' && distanceToNextInstruction < 300) {
        targetZoom = Math.max(targetZoom, 19.5);
     }
+
     map.setView(position, targetZoom, { animate: true, duration: 1.2 });
   }, [position, viewMode, speed, map, customZoom, hasRoute, distanceToNextInstruction]);
 
