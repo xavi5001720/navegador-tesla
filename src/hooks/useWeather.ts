@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-const API_KEY = 'f90f45902d0a3c7b0475a6e295424933';
+const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || '';
 const API_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
 export interface WeatherPoint {
