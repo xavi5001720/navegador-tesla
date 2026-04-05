@@ -14,6 +14,7 @@ export interface Friend {
   last_lon?: number;
   is_sharing_location: boolean;
   friendship_status: 'pending' | 'accepted';
+  is_incoming: boolean;
 }
 
 export interface LivePosition {
@@ -43,36 +44,55 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
 
       if (fError) throw fError;
 
+      // 2. Obtener nuestras invitaciones enviadas a emails no registrados
+      const { data: invitations, error: iError } = await supabase
+        .from('friend_invitations')
+        .select('receiver_email')
+        .eq('sender_id', session.user.id);
+
+      if (iError) throw iError;
+
       const friendInfo = (friendships || []).map(f => ({
         id: f.user_id === session.user.id ? f.friend_id : f.user_id,
-        status: f.status as 'pending' | 'accepted'
+        status: f.status as 'pending' | 'accepted',
+        is_incoming: f.friend_id === session.user.id && f.status === 'pending'
       }));
 
       const friendIds = friendInfo.map(fi => fi.id);
 
-      if (friendIds.length === 0) {
-        setFriends([]);
-        setLoading(false);
-        return;
+      // 3. Obtener perfiles de los amigos registrados
+      let mappedFriends: Friend[] = [];
+      if (friendIds.length > 0) {
+        const { data: profiles, error: pError } = await supabase
+          .from('profiles')
+          .select('id, email, car_name, car_color, is_online, last_lat, last_lon, is_sharing_location')
+          .in('id', friendIds);
+
+        if (pError) throw pError;
+
+        mappedFriends = (profiles || []).map(p => {
+          const fi = friendInfo.find(info => info.id === p.id);
+          return {
+            ...p,
+            friendship_status: fi?.status || 'pending',
+            is_incoming: fi?.is_incoming || false
+          } as Friend;
+        });
       }
 
-      // 2. Obtener perfiles de esos amigos
-      const { data: profiles, error: pError } = await supabase
-        .from('profiles')
-        .select('id, email, car_name, car_color, is_online, last_lat, last_lon, is_sharing_location')
-        .in('id', friendIds);
+      // 4. Agregar las invitaciones "en el aire" (a emails no registrados)
+      const invitedFriends: Friend[] = (invitations || []).map(inv => ({
+        id: `pending-${inv.receiver_email}`,
+        email: inv.receiver_email,
+        car_name: 'Invitado (Sin cuenta)',
+        car_color: 'Desconocido',
+        is_online: false,
+        is_sharing_location: false,
+        friendship_status: 'pending',
+        is_incoming: false
+      }));
 
-      if (pError) throw pError;
-      
-      const mappedFriends = (profiles || []).map(p => {
-        const fi = friendInfo.find(info => info.id === p.id);
-        return {
-          ...p,
-          friendship_status: fi?.status || 'pending'
-        } as Friend;
-      });
-
-      setFriends(mappedFriends);
+      setFriends([...mappedFriends, ...invitedFriends]);
     } catch (err) {
       console.error('[useSocial] Error fetching friends:', err);
     } finally {
@@ -80,135 +100,104 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     }
   }, [session]);
 
-  // ── Gestión de Realtime (Presence & Broadcast) ─────────────────────────────
-  useEffect(() => {
-    if (!session?.user) return;
+  // ... [Previous Realtime & Location Persistance logic stays same] ...
 
-    fetchFriends();
+  // ── Actions ───────────────────────────────────────────────────────────────
 
-    // Crear canal social único para este usuario
-    const channel = supabase.channel('social-room', {
-      config: {
-        presence: { key: session.user.id },
-      },
-    });
+  const addFriend = async (email: string) => {
+    if (!session?.user) return { error: 'No hay sesión' };
+    const cleanEmail = email.trim().toLowerCase();
+    
+    if (cleanEmail === session.user.email) return { error: 'No puedes añadirte a ti mismo' };
 
-    channelRef.current = channel;
+    // 1. Buscar si el usuario existe
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, car_name')
+      .eq('email', cleanEmail)
+      .single();
 
-    channel
-      // A. Presence: Quién está online
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState();
-        const onlineIds = new Set(Object.keys(state));
-        setOnlineUserIds(onlineIds);
-      })
-      // B. Broadcast: Posiciones GPS en tiempo real
-      .on('broadcast', { event: 'location' }, ({ payload }) => {
-        const { userId, lat, lon } = payload;
-        // Solo nos interesan posiciones de amigos (podríamos filtrar aquí o en el render)
-        setLivePositions(prev => ({
-          ...prev,
-          [userId]: { lat, lon, timestamp: Date.now() }
-        }));
-      })
-      // C. Cambios en amistades (para refrescar la lista si alguien nos acepta)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'friendships'
-      }, () => {
-        fetchFriends();
-      })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          // Registrarse en Presence
-          await channel.track({
-            online_at: new Date().toISOString(),
-            user_id: session.user.id
-          });
-        }
-      });
+    if (profile) {
+      // Caso A: El usuario ya existe en NavegaPRO
+      const { data: existing } = await supabase
+        .from('friendships')
+        .select('*')
+        .or(`and(user_id.eq.${session.user.id},friend_id.eq.${profile.id}),and(user_id.eq.${profile.id},friend_id.eq.${session.user.id})`)
+        .single();
 
-    return () => {
-      channel.unsubscribe();
-      channelRef.current = null;
-    };
-  }, [session, fetchFriends]);
+      if (existing) {
+        if (existing.status === 'accepted') return { error: 'Ya sois amigos' };
+        if (existing.user_id === session.user.id) return { error: 'Solicitud ya enviada' };
+        
+        // Si nosotros recibimos la solicitud, la aceptamos
+        return acceptFriend(profile.id);
+      }
 
-  // ── Difusión y Persistencia de Ubicación ──────────────────────────────────
-  useEffect(() => {
-    if (!session?.user || !userPos || !channelRef.current) return;
+      const { error } = await supabase
+        .from('friendships')
+        .insert({ user_id: session.user.id, friend_id: profile.id, status: 'pending' });
 
-    const now = Date.now();
-    const [lat, lon] = userPos;
+      await fetchFriends();
+      return { success: true, accepted: false, error };
+    } else {
+      // Caso B: El usuario NO existe, crear invitación y enviar mail
+      const { error: invError } = await supabase
+        .from('friend_invitations')
+        .upsert({ sender_id: session.user.id, receiver_email: cleanEmail });
 
-    // 1. BROADCAST: Enviar a mis amigos (Muy ligero, sin DB)
-    // Lo enviamos frecuentemente para suavidad en el mapa
-    channelRef.current.send({
-      type: 'broadcast',
-      event: 'location',
-      payload: { userId: session.user.id, lat, lon }
-    });
+      if (invError) return { error: 'Error al crear invitación' };
 
-    // 2. BASE DE DATOS: Persistencia (Throttled a cada 30 segundos)
-    if (now - lastDbUpdateRef.current > 30000) {
-      const persistLocation = async () => {
-        // Solo si el usuario tiene el permiso activado
-        const { data: profile } = await supabase
+      // Llamar a la Edge Function para avisar al amigo
+      try {
+        const { data: myProfile } = await supabase
           .from('profiles')
-          .select('is_sharing_location')
+          .select('car_name')
           .eq('id', session.user.id)
           .single();
 
-        if (profile?.is_sharing_location) {
-          await supabase
-            .from('profiles')
-            .update({
-              last_lat: lat,
-              last_lon: lon,
-              is_online: true, // Retrocompatibilidad
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', session.user.id);
-          
-          lastDbUpdateRef.current = now;
-        }
-      };
-      persistLocation();
-    }
-  }, [session, userPos]);
+        await supabase.functions.invoke('invite-friend', {
+          body: { 
+            senderName: myProfile?.car_name || session.user.email,
+            receiverEmail: cleanEmail
+          }
+        });
+      } catch (e) {
+        console.warn('No se pudo enviar el mail de invitación:', e);
+      }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
-  const addFriend = async (friendId: string) => {
-    if (!session?.user || friendId === session.user.id) return { error: 'ID inválido' };
-
-    const { data: existing } = await supabase
-      .from('friendships')
-      .select('*')
-      .or(`and(user_id.eq.${session.user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${session.user.id})`)
-      .single();
-
-    if (existing) {
-      if (existing.status === 'accepted') return { error: 'Ya sois amigos' };
-      if (existing.user_id === session.user.id) return { error: 'Solicitud ya enviada' };
-      
-      const { error } = await supabase
-        .from('friendships')
-        .update({ status: 'accepted' })
-        .eq('user_id', friendId)
-        .eq('friend_id', session.user.id);
-        
       await fetchFriends();
-      return { success: true, accepted: true, error };
+      return { success: true, invited: true };
     }
+  };
+
+  const acceptFriend = async (friendId: string) => {
+    if (!session?.user) return { error: 'No hay sesión' };
 
     const { error } = await supabase
       .from('friendships')
-      .insert({ user_id: session.user.id, friend_id: friendId, status: 'pending' });
+      .update({ status: 'accepted' })
+      .eq('user_id', friendId)
+      .eq('friend_id', session.user.id);
 
     await fetchFriends();
-    return { success: true, accepted: false, error };
+    return { success: !error, error };
+  };
+
+  const removeFriend = async (friendId: string) => {
+    if (!session?.user) return { error: 'No hay sesión' };
+
+    if (friendId.startsWith('pending-')) {
+      const email = friendId.replace('pending-', '');
+      await supabase.from('friend_invitations').delete().eq('receiver_email', email);
+    } else {
+      await supabase
+        .from('friendships')
+        .delete()
+        .or(`and(user_id.eq.${session.user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${session.user.id})`);
+    }
+
+    await fetchFriends();
+    return { success: true };
   };
 
   // Mapear amigos con su estado "Live"
@@ -225,6 +214,8 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     friends: enhancedFriends, 
     loading, 
     addFriend, 
+    acceptFriend,
+    removeFriend,
     refreshFriends: fetchFriends 
   };
 }

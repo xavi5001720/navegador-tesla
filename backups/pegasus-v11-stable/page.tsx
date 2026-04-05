@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Navigation, Menu, AlertTriangle, Power, Map } from 'lucide-react';
+import { MapPin, Navigation, Menu, X, AlertTriangle, Power, Map } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import Sidebar from '@/components/Sidebar';
@@ -18,8 +18,6 @@ import { useSpeed } from '@/hooks/useSpeed';
 import { usePegasus } from '@/hooks/usePegasus';
 import { useAircraftSimulator } from '@/hooks/useAircraftSimulator';
 import { useGeolocation } from '@/hooks/useGeolocation';
-import { useRouteSimulator } from '@/hooks/useRouteSimulator';
-
 
 
 import { getDistance, distanceToPolyline, findClosestPointOnPolyline } from '@/utils/geo';
@@ -35,12 +33,10 @@ import AuthModal from '@/components/AuthModal';
 import UserMenu from '@/components/UserMenu';
 import GarageModal from '@/components/GarageModal';
 import SocialModal from '@/components/SocialModal';
-import { User, LogOut, ChevronRight, Users, Trash2, Check, X, UserCheck, MapPin } from 'lucide-react';
+import { User, LogOut, ChevronRight } from 'lucide-react';
 import { Session } from '@supabase/supabase-js';
 import { useProfile } from '@/hooks/useProfile';
 import { useSocial } from '@/hooks/useSocial';
-import RouteDashboard from '@/components/RouteDashboard';
-import NavigationPanel from '@/components/NavigationPanel';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -55,21 +51,15 @@ export default function Home() {
   const sessionClientId = useRef(typeof window !== 'undefined' ? crypto.randomUUID() : '').current;
   const [viewMode, setViewMode] = useState<'navigation' | 'overview'>('overview');
   const [isSessionDuplicated, setIsSessionDuplicated] = useState(false);
-  const [expandedFriendId, setExpandedFriendId] = useState<string | null>(null);
 
-
-  const [isSimulatingState, setIsSimulatingState] = useState(false);
 
   const { 
     userPos, 
     setUserPos, 
     heading,
-    setHeading,
     hasLocation, 
     requestGPS 
-  } = useGeolocation(isSimulatingState);
-
-  const { speed, setSpeed } = useSpeed(isSimulatingState);
+  } = useGeolocation();
 
   const {
     route, 
@@ -86,27 +76,24 @@ export default function Home() {
     isTrafficEnabled,
     liveDistance,
     liveDuration,
-    nextInstruction,
-    activeLaneGuidance,
-    distanceToNextInstruction,
     updateLiveMetrics
   } = useRoute();
-
+  
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isRadarsEnabled, setIsRadarsEnabled] = useState(false);
   const [isAircraftsEnabled, setIsAircraftsEnabled] = useState(false);
   const [isChargersEnabled, setIsChargersEnabled] = useState(false);
   const [isWeatherEnabled, setIsWeatherEnabled] = useState(false);
-  
   const [chargerFilters, setChargerFilters] = useState<ChargerFilters>({
-    isFree: false, connectors: [], minPower: 0
+    isFree: false,
+    connectors: [],
+    minPower: 0
   });
-
   const [isGasStationsEnabled, setIsGasStationsEnabled] = useState(false);
   const [gasStationFilters, setGasStationFilters] = useState<GasStationFilters>({
-    fuels: [], maxPrice: null
+    fuels: [],
+    maxPrice: null
   });
-
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [voiceType, setVoiceType] = useState<VoiceType>('mujer');
   const [lastRecalculationTime, setLastRecalculationTime] = useState(0);
@@ -117,7 +104,6 @@ export default function Home() {
     | { type: 'gasStation'; data: GasStation }
     | null
   >(null);
-
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -127,32 +113,10 @@ export default function Home() {
   const [session, setSession] = useState<Session | null>(null);
 
   const { favorites, saveFavorite, removeFavorite, isFavorite } = useFavorites();
-
-  const { 
-    isSimulating, 
-    startSimulation, 
-    stopSimulation 
-  } = useRouteSimulator({
-    routeCoordinates: route?.coordinates,
-    sections: route?.sections,
-    setUserPos,
-    setHeading,
-    setSpeed,
-    setIsSimulating: setIsSimulatingState
-  });
-
-
-
+  const speed = useSpeed(); // declarado aquí para usarlo en el recalculado automático
   
   const { profile, updateProfile } = useProfile(session);
-  const { 
-    friends, 
-    loading, 
-    addFriend, 
-    acceptFriend,
-    removeFriend,
-    refreshFriends 
-  } = useSocial(session, userPos);
+  const { friends, addFriend } = useSocial(session, userPos);
   
   const wasStoppedRef = useRef(true);
   const isManualOverviewRef = useRef(false);
@@ -319,21 +283,13 @@ export default function Home() {
     }
   }, [userPos, speed, route, destination, waypoints, loadingRoute, lastRecalculationTime, calculateRoute]);
 
-  const lastMetricsUpdateRef = useRef(0);
-
-  // Refresco de tráfico cada 20km y métricas en vivo
+  // Refresco de tráfico cada 20km
   useEffect(() => {
     if (userPos) {
       checkTrafficRefresh(userPos);
-      
-      const now = performance.now();
-      if (now - lastMetricsUpdateRef.current > 500) { // Cada 500ms es suficiente para la UI
-        updateLiveMetrics(userPos);
-        lastMetricsUpdateRef.current = now;
-      }
+      updateLiveMetrics(userPos);
     }
   }, [userPos, checkTrafficRefresh, updateLiveMetrics]);
-
 
   // Unlock audio on first interaction
   useEffect(() => {
@@ -387,7 +343,7 @@ export default function Home() {
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, voiceType, speed);
   const { allAircrafts, aircrafts, visibleAircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
  
-  // Posiciones interpoladas cada 1 s — movimiento fluido para los aviones visibles (25km máximo)
+  // Posiciones interpoladas cada 1 s — movimiento fluido para los aviones visibles (100km sospechosos / 50km comerciales)
   const simulatedAircrafts = useAircraftSimulator(visibleAircrafts);
 
   const { chargers, loading: loadingChargers, progress: chargerProgress } = useChargers(userPos, route?.coordinates, isChargersEnabled, chargerFilters);
@@ -586,171 +542,23 @@ export default function Home() {
       )}
 
       {/* Botón de Perfil / Iniciar Sesión (Top Right) */}
-      <div className="fixed top-6 right-6 z-[600] flex flex-col items-end gap-3">
+      <div className="fixed top-6 right-6 z-[600] flex items-center gap-3">
         {session ? (
-          <div className="flex flex-col items-end gap-3">
-            <div className="flex items-center gap-2 group">
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] font-black text-white uppercase italic tracking-tighter bg-blue-600 px-2 py-0.5 rounded-sm shadow-lg leading-none">USUARIO ACTIVO</span>
-                <span className="text-[14px] font-black text-white italic tracking-tight">
-                  {profile?.car_name && profile.car_name.trim().length > 0 
-                    ? profile.car_name 
-                    : (session.user.user_metadata?.full_name || session.user.email?.split('@')[0])}
-                </span>
-              </div>
-              <button 
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="h-12 w-12 flex items-center justify-center rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all group overflow-hidden"
-              >
-                <img src="/avatar.png" alt="Avatar" className="h-full w-full object-cover group-hover:scale-110 transition-transform" />
-              </button>
+          <div className="flex items-center gap-2 group">
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] font-black text-white uppercase italic tracking-tighter bg-blue-600 px-2 py-0.5 rounded-sm shadow-lg leading-none">USUARIO ACTIVO</span>
+              <span className="text-[14px] font-black text-white italic tracking-tight">
+                {profile?.car_name && profile.car_name.trim().length > 0 
+                  ? profile.car_name 
+                  : (session.user.user_metadata?.full_name || session.user.email?.split('@')[0])}
+              </span>
             </div>
-
-            {/* Recuadro de Lista de Amigos */}
-            <div className="w-64 max-h-[300px] overflow-y-auto bg-black/60 backdrop-blur-xl border border-white/10 rounded-[32px] p-4 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500 scrollbar-hide">
-              <div className="flex items-center justify-between mb-3 px-1">
-                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none">Amigos</span>
-                {friends.length > 0 && (
-                  <div className="flex gap-1">
-                     <div className="h-1 w-1 rounded-full bg-green-500 animate-pulse" />
-                     <span className="text-[8px] font-bold text-green-500/80 uppercase">{friends.filter(f => f.is_online).length}</span>
-                  </div>
-                )}
-              </div>
-              
-              {friends.length > 0 ? (
-                <div className="flex flex-col gap-2">
-                   {[...friends]
-                    .sort((a, b) => {
-                      // Orden: Online (Green) > Incoming Pending (Orange) > Outgoing Pending (Orange) > Offline (Red)
-                      if (a.is_online && !b.is_online) return -1;
-                      if (!a.is_online && b.is_online) return 1;
-                      if (a.friendship_status === 'pending' && b.friendship_status === 'accepted') return -1;
-                      if (a.friendship_status === 'accepted' && b.friendship_status === 'pending') return 1;
-                      return 0;
-                    })
-                    .map((friend) => {
-                      const isPending = friend.friendship_status === 'pending';
-                      const isExpanded = expandedFriendId === friend.id;
-                      
-                      return (
-                        <div key={friend.id} className="flex flex-col gap-2">
-                          <div 
-                            className={`flex items-center justify-between gap-3 bg-white/5 p-2 pr-3 rounded-2xl border transition-all group cursor-pointer ${isExpanded ? 'border-blue-500/50 bg-white/10' : 'border-white/5 hover:bg-white/10'}`}
-                            onClick={() => setExpandedFriendId(isExpanded ? null : friend.id)}
-                          >
-                            <div className="flex items-center gap-2 overflow-hidden">
-                              <div className="h-8 w-8 rounded-xl bg-gray-800 flex-shrink-0 flex items-center justify-center overflow-hidden border border-white/5">
-                                <img src="/avatar.png" alt={friend.car_name} className={`h-full w-full object-cover ${friend.is_online ? 'opacity-100' : isPending ? 'opacity-80' : 'opacity-40 grayscale'}`} />
-                              </div>
-                              <div className="flex flex-col overflow-hidden">
-                                <span className={`text-[11px] font-black italic leading-none uppercase truncate ${friend.is_online ? 'text-green-500' : isPending ? 'text-orange-500' : 'text-red-500'}`}>
-                                  {friend.car_name}
-                                </span>
-                                <span className="text-[8px] font-bold text-gray-500 uppercase tracking-tighter leading-tight truncate">
-                                  {isPending ? (friend.is_incoming ? 'Solicitud Recibida' : 'Esperando respuesta...') : friend.car_color}
-                                </span>
-                              </div>
-                            </div>
-                            <ChevronRight className={`h-3 w-3 text-gray-600 transition-transform duration-300 ${isExpanded ? 'rotate-90 text-blue-500' : 'group-hover:text-white'}`} />
-                          </div>
-
-                          {/* Acciones Expandidas */}
-                          <AnimatePresence>
-                            {isExpanded && (
-                              <motion.div 
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="overflow-hidden px-1"
-                              >
-                                <div className="flex gap-2 pb-2">
-                                  {!isPending ? (
-                                    <>
-                                      <button 
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          if (friend.last_lat && friend.last_lon) {
-                                            setViewMode('overview');
-                                            setMapCenterOverride([friend.last_lat, friend.last_lon]);
-                                            setExpandedFriendId(null);
-                                          }
-                                        }}
-                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-[9px] font-black text-blue-400 uppercase transition-all"
-                                      >
-                                        <MapPin className="h-3 w-3" /> Ver
-                                      </button>
-                                      <button 
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          if (confirm(`¿Eliminar a ${friend.car_name} de tus amigos?`)) {
-                                            removeFriend(friend.id);
-                                            setExpandedFriendId(null);
-                                          }
-                                        }}
-                                        className="w-10 flex items-center justify-center py-2 rounded-xl bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-500 transition-all"
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5" />
-                                      </button>
-                                    </>
-                                  ) : friend.is_incoming ? (
-                                    <>
-                                      <button 
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          acceptFriend(friend.id);
-                                          setExpandedFriendId(null);
-                                        }}
-                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-[9px] font-black text-green-400 uppercase transition-all"
-                                      >
-                                        <UserCheck className="h-3 w-3" /> Aceptar
-                                      </button>
-                                      <button 
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          removeFriend(friend.id);
-                                          setExpandedFriendId(null);
-                                        }}
-                                        className="w-10 flex items-center justify-center py-2 rounded-xl bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-500 transition-all"
-                                      >
-                                        <X className="h-3.5 w-3.5" />
-                                      </button>
-                                    </>
-                                  ) : (
-                                    <button 
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        removeFriend(friend.id);
-                                        setExpandedFriendId(null);
-                                      }}
-                                      className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-gray-600/20 hover:bg-gray-600/30 border border-gray-500/30 text-[9px] font-black text-gray-400 uppercase transition-all"
-                                    >
-                                      <Trash2 className="h-3 w-3" /> Cancelar Solicitud
-                                    </button>
-                                  )}
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-                      );
-                    })}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-3 py-4 text-center">
-                  <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-                    <Users className="h-5 w-5 text-gray-600" />
-                  </div>
-                  <p className="text-[10px] font-medium text-gray-500 leading-tight">No tienes amigos vinculados todavía</p>
-                  <button 
-                    onClick={() => setIsSocialOpen(true)}
-                    className="w-full py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-xl text-[10px] font-black text-blue-400 uppercase transition-all"
-                  >
-                    Vincular Amigos
-                  </button>
-                </div>
-              )}
-            </div>
+            <button 
+              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              className="h-12 w-12 flex items-center justify-center rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all group overflow-hidden"
+            >
+              <img src="/avatar.png" alt="Avatar" className="h-full w-full object-cover group-hover:scale-110 transition-transform" />
+            </button>
           </div>
         ) : (
           <button 
@@ -762,6 +570,7 @@ export default function Home() {
         )}
       </div>
 
+      {/* Menú Desplegable de Usuario */}
       <UserMenu 
         isOpen={isUserMenuOpen}
         onClose={() => setIsUserMenuOpen(false)}
@@ -772,46 +581,65 @@ export default function Home() {
         onLogout={handleSignOut}
       />
 
+      {/* Lista de Amigos (Right Side) */}
+      {session && friends.length > 0 && (
+        <div className="fixed top-24 right-6 z-[500] flex flex-col gap-2 animate-in fade-in slide-in-from-right-4 duration-1000">
+          <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/5 self-end mb-2">
+            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none">Amigos Conectados</span>
+          </div>
+          {friends.map((friend) => (
+            <div 
+              key={friend.id}
+              className="flex items-center gap-3 bg-black/60 backdrop-blur-xl border border-white/10 p-2 pr-4 rounded-2xl shadow-xl group hover:border-white/20 transition-all"
+            >
+              <div className="relative">
+                <div className="h-10 w-10 rounded-xl bg-gray-800 flex items-center justify-center overflow-hidden border border-white/5">
+                   <img src="/avatar.png" alt={friend.car_name} className="h-full w-full object-cover opacity-50" />
+                </div>
+                <div className={`absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-gray-900 ${friend.is_online ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`} />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-white italic leading-tight uppercase">{friend.car_name}</span>
+                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter leading-none">En su {friend.car_color}</span>
+              </div>
+              <button 
+                className="ml-2 opacity-0 group-hover:opacity-100 transition-all h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10"
+                onClick={() => {
+                   if (friend.last_lat && friend.last_lon) {
+                     setViewMode('overview');
+                     setMapCenterOverride([friend.last_lat, friend.last_lon]);
+                   }
+                }}
+              >
+                <ChevronRight className="h-4 w-4 text-gray-400" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Panel Izquierdo (Bloque de Control) */}
-      {/* Branding NavegaPRO (Oculto si hay instrucciones de navegación activas en modo pantalla completa) */}
-      <AnimatePresence>
-        {(!route || isSidebarOpen) && (
-          <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="fixed top-8 left-8 z-[100] flex items-center gap-5 pointer-events-none select-none"
-          >
-            <img 
-              src="/pro-logo.png?v=5" 
-              alt="NavegaPRO Logo" 
-              className="h-20 w-auto object-contain drop-shadow-2xl" 
-            />
-            <AnimatePresence>
-              {isSidebarOpen && (
-                <motion.h1
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="text-4xl font-black italic tracking-tighter bg-gradient-to-r from-blue-200 via-blue-500 to-blue-900 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(59,130,246,0.4)] pr-4 pb-1"
-                >
-                  NavegaPRO
-                </motion.h1>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <NavigationPanel 
-        isVisible={!isSidebarOpen && viewMode === 'navigation' && !!route}
-        instruction={nextInstruction}
-        distance={distanceToNextInstruction}
-        activeLaneGuidance={activeLaneGuidance}
-        isSimulating={isSimulating}
-      />
-
+      {/* Branding NavegaPRO (Siempre visible en la misma posición) */}
+      <div className="fixed top-8 left-8 z-[100] flex items-center gap-5 pointer-events-none select-none">
+        <img 
+          src="/pro-logo.png?v=5" 
+          alt="NavegaPRO Logo" 
+          className="h-20 w-auto object-contain drop-shadow-2xl" 
+        />
+        <AnimatePresence>
+          {isSidebarOpen && (
+            <motion.h1
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
+              className="text-4xl font-black italic tracking-tighter bg-gradient-to-r from-blue-200 via-blue-500 to-blue-900 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(59,130,246,0.4)] pr-4 pb-1"
+            >
+              NavegaPRO
+            </motion.h1>
+          )}
+        </AnimatePresence>
+      </div>
 
       <Sidebar 
         isSidebarOpen={isSidebarOpen}
@@ -892,30 +720,10 @@ export default function Home() {
           onOpenGarage={() => setIsGarageOpen(true)}
           routeSections={route?.sections}
           carColor={profile?.car_color}
-          friends={friends.filter(f => f.is_online)}
+          friends={friends}
           centerOverride={mapCenterOverride}
           overviewFitTrigger={overviewFitTrigger}
-          distanceToNextInstruction={distanceToNextInstruction}
-          isSimulating={isSimulating}
         />
-
-
-        {/* Nuevo Dashboard de Ruta Compacto (Solo en Pantalla Completa + Ruta Activa) */}
-        <AnimatePresence>
-          {!isSidebarOpen && route && (
-            <RouteDashboard 
-              totalDistance={route.distance}
-              totalDuration={route.duration}
-              remainingDistance={liveDistance ?? route.distance}
-              remainingDuration={liveDuration ?? route.duration}
-              remainingRadarsCount={remainingRadars}
-              onEndRoute={clearRoute}
-              isSimulating={isSimulating}
-              onStartSimulation={startSimulation}
-              onStopSimulation={stopSimulation}
-            />
-          )}
-        </AnimatePresence>
 
         {/* Panel de Avisos Rápidos y Velocímetro */}
         <div className="absolute bottom-6 right-6 z-[500] flex flex-col items-end gap-3 md:flex-row md:items-center md:gap-4 md:bottom-8 md:right-8">

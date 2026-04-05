@@ -17,6 +17,14 @@ CREATE TABLE IF NOT EXISTS public.friendships (
   PRIMARY KEY (user_id, friend_id)
 );
 
+-- Tabla de invitaciones pendientes (para usuarios no registrados aún)
+CREATE TABLE IF NOT EXISTS public.friend_invitations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  receiver_email TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Habilitar RLS en amistades
 ALTER TABLE public.friendships ENABLE ROW LEVEL SECURITY;
 
@@ -24,6 +32,10 @@ ALTER TABLE public.friendships ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Usuarios pueden ver sus propias amistades" 
   ON public.friendships FOR SELECT 
   USING (auth.uid() = user_id OR auth.uid() = friend_id);
+
+CREATE POLICY "Los usuarios pueden buscar perfiles por email" 
+  ON public.profiles FOR SELECT 
+  USING (auth.uid() IS NOT NULL);
 
 CREATE POLICY "Usuarios pueden crear solicitudes de amistad" 
   ON public.friendships FOR INSERT 
@@ -50,3 +62,27 @@ CREATE POLICY "Ver ubicación de amigos aceptados"
 -- Habilitar Realtime para estas tablas
 ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.friendships;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.friend_invitations;
+
+-- Función y disparador para convertir invitaciones en amistades al registrarse
+CREATE OR REPLACE FUNCTION public.handle_invite_conversion() 
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Buscar si el email que se acaba de registrar tiene invitaciones pendientes
+  INSERT INTO public.friendships (user_id, friend_id, status)
+  SELECT sender_id, NEW.id, 'pending'
+  FROM public.friend_invitations
+  WHERE receiver_email = NEW.email
+  ON CONFLICT (user_id, friend_id) DO NOTHING;
+
+  -- Limpiar la invitación una vez convertida (o si ya existía la amistad)
+  DELETE FROM public.friend_invitations WHERE receiver_email = NEW.email;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_profile_created_convert_invite ON public.profiles;
+CREATE TRIGGER on_profile_created_convert_invite
+  AFTER INSERT ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.handle_invite_conversion();

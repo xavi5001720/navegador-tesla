@@ -19,13 +19,28 @@ export default function SocialModal({ isOpen, onClose, session, onAddFriend }: S
   const [scannerActive, setScannerActive] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+
+  useEffect(() => {
+    // Detectar si es móvil para mostrar/ocultar pestaña de escaneo
+    const checkMobile = () => {
+      setIsMobile(window.matchMedia("(max-width: 768px)").matches || /Android|iPhone|iPad/i.test(navigator.userAgent));
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'scan' && isOpen && !scannerRef.current) {
       const scanner = new Html5QrcodeScanner(
         "qr-reader",
-        { fps: 10, qrbox: { width: 250, height: 250 } },
+        { 
+          fps: 10, 
+          qrbox: { width: 250, height: 250 },
+          videoConstraints: { facingMode: "environment" } 
+        },
         /* verbose= */ false
       );
       
@@ -47,16 +62,18 @@ export default function SocialModal({ isOpen, onClose, session, onAddFriend }: S
     };
   }, [activeTab, isOpen]);
 
-  const handleScan = async (id: string) => {
-    setResult(id);
+  const handleScan = async (email: string) => {
+    setResult(email);
     setStatus('Vinculando...');
-    const res = await onAddFriend(id);
+    const res = await onAddFriend(email.trim().toLowerCase());
     if (res.error) {
       setStatus(`Error: ${res.error}`);
     } else if (res.accepted) {
       setStatus('¡Amigo vinculado con éxito!');
+    } else if ((res as any).invited) {
+      setStatus('Amigo invitado. Recibirá un mail para unirse.');
     } else {
-      setStatus('Solicitud enviada. Pendiente de que el amigo te escanee.');
+      setStatus('Solicitud enviada. Pendiente de respuesta.');
     }
   };
 
@@ -95,7 +112,7 @@ export default function SocialModal({ isOpen, onClose, session, onAddFriend }: S
             </div>
 
             {/* Tabs */}
-            <div className="flex bg-white/5 mx-8  rounded-2xl p-1">
+            <div className="flex bg-white/5 mx-8 rounded-2xl p-1">
               <button
                 onClick={() => setActiveTab('invite')}
                 className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeTab === 'invite' ? 'bg-white text-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
@@ -103,13 +120,15 @@ export default function SocialModal({ isOpen, onClose, session, onAddFriend }: S
                 <QrCode className="h-4 w-4" />
                 MI CÓDIGO QR
               </button>
-              <button
-                onClick={() => setActiveTab('scan')}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeTab === 'scan' ? 'bg-white text-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
-              >
-                <Scan className="h-4 w-4" />
-                ESCANEAR AMIGO
-              </button>
+              {isMobile && (
+                <button
+                  onClick={() => setActiveTab('scan')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all ${activeTab === 'scan' ? 'bg-white text-black shadow-lg' : 'text-gray-400 hover:text-white'}`}
+                >
+                  <Scan className="h-4 w-4" />
+                  ESCANEAR AMIGO
+                </button>
+              )}
             </div>
 
             <div className="p-8">
@@ -117,7 +136,7 @@ export default function SocialModal({ isOpen, onClose, session, onAddFriend }: S
                 <div className="flex flex-col items-center gap-8 py-4">
                   <div className="relative p-6 bg-white rounded-3xl shadow-[0_0_50px_rgba(255,255,255,0.1)]">
                     <QRCodeSVG 
-                      value={session?.user?.id || ''} 
+                      value={session?.user?.email || ''} 
                       size={200}
                       level="H"
                       includeMargin={false}
@@ -130,14 +149,14 @@ export default function SocialModal({ isOpen, onClose, session, onAddFriend }: S
                   <div className="text-center space-y-2">
                     <p className="text-sm text-gray-400">Escaneen este código para vincularse contigo</p>
                     <div className="flex items-center gap-2 justify-center bg-white/5 px-4 py-2 rounded-xl border border-white/5">
-                      <span className="text-[10px] font-black text-amber-500 uppercase">TU ID</span>
-                      <code className="text-xs text-white opacity-50 break-all select-all">{session?.user?.id}</code>
+                      <span className="text-[10px] font-black text-amber-500 uppercase">TU EMAIL</span>
+                      <code className="text-xs text-white opacity-50 break-all select-all">{session?.user?.email}</code>
                     </div>
                   </div>
 
                   <button 
                     onClick={() => {
-                        const shareUrl = `${window.location.origin}?invite=${session?.user?.id}`;
+                        const shareUrl = `${window.location.origin}?invite=${session?.user?.email}`;
                         navigator.clipboard.writeText(shareUrl);
                         setStatus('Enlace copiado al portapapeles');
                         setTimeout(() => setStatus(null), 3000);
@@ -175,18 +194,18 @@ export default function SocialModal({ isOpen, onClose, session, onAddFriend }: S
                   <div className="w-full space-y-4">
                     <div className="flex items-center gap-2 text-gray-500">
                       <Search className="h-3 w-3" />
-                      <span className="text-[10px] font-black uppercase tracking-widest leading-none">O introduce ID manualmente</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest leading-none">O introduce su Email manualmente</span>
                     </div>
                     <div className="flex gap-2">
                       <input 
-                        id="manual-id"
-                        type="text" 
-                        placeholder="ID de tu amigo"
+                        id="manual-email"
+                        type="email" 
+                        placeholder="Email de tu amigo"
                         className="flex-1 bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm outline-none focus:border-amber-500/50"
                       />
                       <button 
                         onClick={() => {
-                          const val = (document.getElementById('manual-id') as HTMLInputElement).value;
+                          const val = (document.getElementById('manual-email') as HTMLInputElement).value;
                           if (val) handleScan(val);
                         }}
                         className="bg-amber-600 px-4 rounded-xl font-bold text-xs uppercase hover:bg-amber-500 transition-all"
