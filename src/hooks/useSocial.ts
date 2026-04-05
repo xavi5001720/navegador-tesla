@@ -178,7 +178,6 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     const dbChannel = supabase.channel('garage_db_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => fetchFriends())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_invitations' }, () => fetchFriends())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchFriends())
       .subscribe();
 
     return () => {
