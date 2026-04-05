@@ -74,10 +74,21 @@ CREATE POLICY "Ver ubicación de amigos aceptados"
     )
   );
 
--- Habilitar Realtime para estas tablas
-ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.friendships;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.friend_invitations;
+-- Habilitar Realtime para estas tablas (evitando errores si ya están configuradas)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'profiles') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'friendships') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.friendships;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'friend_invitations') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.friend_invitations;
+  END IF;
+END $$;
 
 -- Función y disparador para convertir invitaciones en amistades al registrarse
 CREATE OR REPLACE FUNCTION public.handle_invite_conversion() 
