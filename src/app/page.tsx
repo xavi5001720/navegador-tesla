@@ -156,6 +156,7 @@ export default function Home() {
   
   const wasStoppedRef = useRef(true);
   const isManualOverviewRef = useRef(false);
+  const [currentZoom, setCurrentZoom] = useState(15);
   const [mapCenterOverride, setMapCenterOverride] = useState<[number, number] | null>(null);
 
   const [overviewFitTrigger, setOverviewFitTrigger] = useState(0);
@@ -902,6 +903,7 @@ export default function Home() {
           overviewFitTrigger={overviewFitTrigger}
           distanceToNextInstruction={distanceToNextInstruction}
           isSimulating={isSimulating}
+          onCurrentZoomChange={setCurrentZoom}
         />
 
 
@@ -926,7 +928,7 @@ export default function Home() {
         <div className="absolute bottom-6 right-6 z-[500] flex flex-col items-end gap-3 md:flex-row md:items-center md:gap-4 md:bottom-8 md:right-8">
 
 
-          <Speedometer speed={speed} />
+          <Speedometer speed={speed} zoom={currentZoom} />
           
           <div className="flex flex-col gap-3 md:flex-row">
             {viewMode === 'navigation' && (

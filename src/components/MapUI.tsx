@@ -12,7 +12,7 @@ import { Charger } from '@/hooks/useChargers';
 import { GasStation } from '@/hooks/useGasStations';
 import { Friend } from '@/hooks/useSocial';
 import { useMemo } from 'react';
-import { getDistance, getBearing, findClosestPointOnPolyline, getPointAtDistance } from '@/utils/geo';
+import { getDistance, getBearing, findClosestPointOnPolyline, getPointAtDistance, getOffsetPoint } from '@/utils/geo';
 import { RouteSection } from '@/hooks/useRoute';
 import { WeatherPoint } from '@/hooks/useWeather';
 import { getCarFilter, getCarImage } from '@/utils/carStyles';
@@ -188,6 +188,7 @@ interface MapUIProps {
    onChargerClick?: (charger: Charger) => void;
    onGasStationClick?: (station: GasStation) => void;
    onOpenGarage?: () => void;
+   onCurrentZoomChange?: (zoom: number) => void;
    routeSections?: RouteSection[];
    centerOverride?: [number, number] | null;
    overviewFitTrigger?: number;
@@ -269,15 +270,15 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
 function LocationTracker({ 
   position, viewMode, hasRoute, speed = 0, routeCoordinates, customZoom, hasLocation, centerOverride,
   overviewFitTrigger, radars, aircrafts, chargers, gasStations, weatherPoints, friends, distanceToNextInstruction,
-  isSimulating
+  isSimulating, onCurrentZoomChange
 }: { 
   position: [number, number], viewMode: string, hasRoute: boolean, speed?: number, 
   routeCoordinates?: [number, number][], customZoom?: number | null, hasLocation?: boolean, 
   centerOverride?: [number, number] | null,
   overviewFitTrigger?: number, radars?: Radar[], aircrafts?: Aircraft[], chargers?: Charger[],
   gasStations?: GasStation[], weatherPoints?: WeatherPoint[], friends?: Friend[],
-  distanceToNextInstruction?: number | null,
-  isSimulating?: boolean
+  distanceToNextInstruction?: number | null, isSimulating?: boolean,
+  onCurrentZoomChange?: (zoom: number) => void
 }) {
   const map = useMap();
   const lastFitTriggerRef = useRef<number>(-1);
@@ -354,6 +355,24 @@ function LocationTracker({
 
   }, [position, viewMode, speed, map, customZoom, hasRoute, distanceToNextInstruction, isSimulating]);
 
+  // Sensor de Zoom Realtime para la UI
+  useEffect(() => {
+    if (!map || !onCurrentZoomChange) return;
+    
+    const handleZoom = () => {
+      onCurrentZoomChange(map.getZoom());
+    };
+
+    map.on('zoomend', handleZoom);
+    map.on('moveend', handleZoom);
+    handleZoom(); // Llamada inicial
+
+    return () => {
+      map.off('zoomend', handleZoom);
+      map.off('moveend', handleZoom);
+    };
+  }, [map, onCurrentZoomChange]);
+
   return null;
 }
 
@@ -361,8 +380,8 @@ export default function MapUI({
   userPos, heading, carColor, routeCoordinates, radars = [], aircrafts = [], chargers = [],
   gasStations = [], weatherPoints = [], waypoints = [], speed = 0, hasLocation = false,
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
-  onGasStationClick, onOpenGarage, routeSections = [], friends = [], centerOverride = null, 
-  overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false
+  onGasStationClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [], 
+  centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false
 }: MapUIProps) {
   // Pre-calculamos distancias acumuladas para lógica de trazada cinemática (GPS Real)
   const routeCumDist = useMemo(() => {
@@ -408,7 +427,26 @@ export default function MapUI({
         <TileLayer attribution="&copy; Google Maps" url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" />
         <TileLayer attribution="&copy; Google Maps" url="https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}&apistyle=s.t:3|p.v:off|s.t:4|p.v:off" />
         <RouteFitter routeCoordinates={routeCoordinates} />
-        <LocationTracker position={snappedPos} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} customZoom={customZoom} hasLocation={hasLocation} centerOverride={centerOverride} overviewFitTrigger={overviewFitTrigger} radars={radars} aircrafts={aircrafts} chargers={chargers} gasStations={gasStations} weatherPoints={weatherPoints} friends={friends} distanceToNextInstruction={distanceToNextInstruction} isSimulating={isSimulating} />
+        <LocationTracker 
+          position={snappedPos} 
+          viewMode={viewMode} 
+          hasRoute={!!routeCoordinates} 
+          speed={speed} 
+          routeCoordinates={routeCoordinates} 
+          customZoom={customZoom} 
+          hasLocation={hasLocation} 
+          centerOverride={centerOverride} 
+          overviewFitTrigger={overviewFitTrigger} 
+          radars={radars} 
+          aircrafts={aircrafts} 
+          chargers={chargers} 
+          gasStations={gasStations} 
+          weatherPoints={weatherPoints} 
+          friends={friends} 
+          distanceToNextInstruction={distanceToNextInstruction} 
+          isSimulating={isSimulating}
+          onCurrentZoomChange={onCurrentZoomChange}
+        />
 
         
         {(() => {
