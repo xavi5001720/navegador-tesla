@@ -70,15 +70,23 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
       
       console.log('[useSocial] Found invitations:', invitations?.length || 0);
 
-      const friendInfo = (friendships || []).map(f => ({
-        id: f.user_id === session.user.id ? f.friend_id : f.user_id,
-        status: f.status as 'pending' | 'accepted',
-        is_incoming: f.friend_id === session.user.id && f.status === 'pending'
-      }));
+      // 3. Procesar amistades (Deduplicando y priorizando 'accepted')
+      const friendInfoMap: Record<string, { status: 'pending' | 'accepted', is_incoming: boolean }> = {};
+      
+      (friendships || []).forEach(f => {
+        const friendId = f.user_id === session.user.id ? f.friend_id : f.user_id;
+        const status = f.status as 'pending' | 'accepted';
+        const isIncoming = f.friend_id === session.user.id && status === 'pending';
+        
+        // Priorizar aceptado si ya existe el ID
+        if (!friendInfoMap[friendId] || status === 'accepted') {
+          friendInfoMap[friendId] = { status, is_incoming: isIncoming };
+        }
+      });
 
-      const friendIds = friendInfo.map(fi => fi.id);
+      const friendIds = Object.keys(friendInfoMap);
 
-      // 3. Obtener perfiles de los amigos registrados
+      // 4. Obtener perfiles de los amigos registrados
       let mappedFriends: Friend[] = [];
       if (friendIds.length > 0) {
         console.log('[useSocial] Fetching profiles for IDs:', friendIds);
@@ -89,21 +97,20 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
 
         if (pError) {
           console.error('[useSocial] Error fetching profiles:', pError);
-          // No lanzamos error para que al menos las invitaciones funcionen
         } else {
           console.log('[useSocial] Found profiles:', profiles?.length || 0);
           mappedFriends = (profiles || []).map(p => {
-            const fi = friendInfo.find(info => info.id === p.id);
+            const info = friendInfoMap[p.id];
             return {
               ...p,
-              friendship_status: fi?.status || 'pending',
-              is_incoming: fi?.is_incoming || false
+              friendship_status: info.status,
+              is_incoming: info.is_incoming
             } as Friend;
           });
         }
       }
 
-      // 4. Agregar las invitaciones "en el aire" (a emails no registrados)
+      // 5. Agregar las invitaciones "en el aire"
       const invitedFriends: Friend[] = (invitations || []).map(inv => ({
         id: `pending-${inv.receiver_email}`,
         email: inv.receiver_email,
