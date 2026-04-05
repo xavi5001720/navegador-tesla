@@ -58,6 +58,17 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
         throw fError;
       }
       
+      // 1.1. Obtener nuestros apodos privados (Agenda Personal)
+      const { data: privateNicknames } = await supabase
+        .from('friend_nicknames')
+        .select('friend_id, nickname')
+        .eq('user_id', session.user.id);
+
+      const nicknamesMap: Record<string, string> = {};
+      (privateNicknames || []).forEach(n => {
+        nicknamesMap[n.friend_id] = n.nickname;
+      });
+      
       console.log('[useSocial] Found friendships:', friendships?.length || 0);
 
       // 2. Obtener nuestras invitaciones enviadas a emails no registrados
@@ -83,7 +94,12 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
         
         // Priorizar aceptado si ya existe el ID
         if (!friendInfoMap[friendId] || status === 'accepted') {
-          friendInfoMap[friendId] = { status, is_incoming: isIncoming, nickname: f.nickname || undefined };
+          // El apodo viene de nuestra tabla privada, no de friendships
+          friendInfoMap[friendId] = { 
+            status, 
+            is_incoming: isIncoming, 
+            nickname: nicknamesMap[friendId] || undefined 
+          };
         }
       });
 
@@ -182,6 +198,7 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     const dbChannel = supabase.channel('garage_db_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => fetchFriends())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_invitations' }, () => fetchFriends())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_nicknames' }, () => fetchFriends())
       .subscribe();
 
     return () => {
@@ -340,14 +357,19 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     }
   };
 
-  const updateFriendNickname = async (friendId: string, nickname: string) => {
-    if (!session?.user) return { error: 'No hay sesión' };
+  const updateFriendNickname = async (friendId: string, nickname: string): Promise<{ success: boolean; error?: any }> => {
+    if (!session?.user) return { success: false, error: 'No hay sesión' };
     
-    console.log(`[useSocial] Actualizando apodo para ${friendId}: ${nickname}`);
+    console.log(`[useSocial] Guardando apodo privado para ${friendId}: ${nickname}`);
+    
+    // Usamos upsert en nuestra propia tabla de apodos
     const { error } = await supabase
-      .from('friendships')
-      .update({ nickname: nickname || null })
-      .or(`and(user_id.eq.${session.user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${session.user.id})`);
+      .from('friend_nicknames')
+      .upsert({ 
+        user_id: session.user.id, 
+        friend_id: friendId, 
+        nickname: nickname || null 
+      }, { onConflict: 'user_id,friend_id' });
 
     await fetchFriends();
     return { success: !error, error };
