@@ -43,7 +43,7 @@ export function useProfile(session: Session | null) {
     fetchProfile();
   }, [fetchProfile]);
 
-  const updateProfile = async (updates: Partial<UserProfile>) => {
+  const updateProfile = useCallback(async (updates: Partial<UserProfile>) => {
     if (!session?.user) return { success: false, error: 'No hay sesión activa' };
 
     const { error } = await supabase
@@ -72,7 +72,7 @@ export function useProfile(session: Session | null) {
       } as UserProfile;
     });
     return { success: true };
-  };
+  }, [session]);
 
   return { profile, loading, updateProfile, refreshProfile: fetchProfile };
 }
