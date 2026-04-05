@@ -930,35 +930,41 @@ export default function Home() {
 
           <Speedometer speed={speed} zoom={currentZoom} />
           
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-5">
             {viewMode === 'navigation' && (
-              <button 
-                onClick={() => handleManualViewModeChange('overview')}
-                className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-gray-800 hover:bg-gray-700"
-              >
-                <img src="/mapa.png" alt="Vista General" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
-                <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Vista General</span>
-              </button>
+              <div className="flex flex-col items-center gap-1.5">
+                <button 
+                  onClick={() => handleManualViewModeChange('overview')}
+                  className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-gray-800 hover:bg-gray-700"
+                >
+                  <img src="/mapa.png" alt="Vista General" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
+                </button>
+                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center shadow-black drop-shadow-lg">Vista General</span>
+              </div>
             )}
             {viewMode === 'overview' && (
               <>
-                <button 
-                  onClick={() => setOverviewFitTrigger(prev => prev + 1)}
-                  className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-gray-800 hover:bg-gray-700"
-                >
-                  <img src="/mapa.png" alt="Centrar Mapa Global" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
-                  <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Centrar Mapa Global</span>
-                </button>
-                <button 
-                  onClick={() => {
-                    if (!hasLocation) requestGPS();
-                    handleManualViewModeChange('navigation');
-                  }}
-                  className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-blue-600/80 hover:bg-blue-500 border-blue-400/50"
-                >
-                  <img src="/volante.png" alt="Modo Navegación" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
-                  <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Modo Navegación</span>
-                </button>
+                <div className="flex flex-col items-center gap-1.5">
+                  <button 
+                    onClick={() => setOverviewFitTrigger(prev => prev + 1)}
+                    className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-gray-800 hover:bg-gray-700"
+                  >
+                    <img src="/mapa.png" alt="Centrar Mapa Global" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
+                  </button>
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center shadow-black drop-shadow-lg">Vista General</span>
+                </div>
+                <div className="flex flex-col items-center gap-1.5">
+                  <button 
+                    onClick={() => {
+                      if (!hasLocation) requestGPS();
+                      handleManualViewModeChange('navigation');
+                    }}
+                    className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-blue-600/80 hover:bg-blue-500 border-blue-400/50"
+                  >
+                    <img src="/volante.png" alt="Modo Navegación" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
+                  </button>
+                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center shadow-black drop-shadow-lg">Modo Navegación</span>
+                </div>
               </>
             )}
           </div>
