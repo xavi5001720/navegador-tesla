@@ -405,9 +405,8 @@ export default function MapUI({
         const p2 = routeCoordinates[snapped.segmentIndex + 1];
         if (p1 && p2) {
           const roadBearing = getBearing(p1, p2);
-          // NAVEGACIÓN POR CARRIL: Desplazamos la posición visual 2.2m a la derecha
-          const lanePos = getOffsetPoint(snapped.point, roadBearing + 90, 2.2);
-          return { snappedPos: lanePos, snappedHeading: roadBearing };
+          // POSICIÓN CENTRADA: Alineado con la línea de la vía
+          return { snappedPos: snapped.point, snappedHeading: roadBearing };
         }
       }
     }

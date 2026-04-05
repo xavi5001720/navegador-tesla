@@ -136,11 +136,10 @@ export function useRouteSimulator({
 
         const pos = interpolatePoint(p1, p2, fraction);
         
-        // NAVEGACIÓN POR CARRIL: 2.2 metros a la derecha de la trayectoria
+        // POSICIÓN CENTRADA SOBRE LA RUTA
         const roadBearing = getBearing(p1, p2);
-        const lanePos = getOffsetPoint(pos, roadBearing + 90, 2.2);
         
-        setUserPos(lanePos);
+        setUserPos(pos);
         setHeading(roadBearing); // Mantiene el paralelismo total con la vía
         setSpeed(Math.round(currentSpeedRef.current));
       }
