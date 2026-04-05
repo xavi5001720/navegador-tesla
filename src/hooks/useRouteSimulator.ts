@@ -44,13 +44,18 @@ export function useRouteSimulator({
 
   const totalRouteDistance = cumulativeDistances[cumulativeDistances.length - 1] || 0;
 
+  const currentSpeedRef = useRef(0);
+  const startTimeRef = useRef<number | null>(null);
+
   const stopSimulation = useCallback(() => {
     setIsSimulating(false);
     if (setIsSimulatingExt) setIsSimulatingExt(false);
     if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     setSpeed(0);
     lastTimeRef.current = null;
+    startTimeRef.current = null;
     distanceTraveledRef.current = 0;
+    currentSpeedRef.current = 0;
     setProgress(0);
   }, [setSpeed, setIsSimulatingExt]);
 
@@ -59,8 +64,10 @@ export function useRouteSimulator({
     setIsSimulating(true);
     if (setIsSimulatingExt) setIsSimulatingExt(true);
     distanceTraveledRef.current = 0;
+    currentSpeedRef.current = 0;
     setProgress(0);
     lastTimeRef.current = performance.now();
+    startTimeRef.current = performance.now();
   }, [routeCoordinates, setIsSimulatingExt]);
 
 
@@ -70,6 +77,7 @@ export function useRouteSimulator({
     const animate = (time: number) => {
       if (!lastTimeRef.current) {
         lastTimeRef.current = time;
+        startTimeRef.current = time;
         animationFrameRef.current = requestAnimationFrame(animate);
         return;
       }
@@ -78,10 +86,11 @@ export function useRouteSimulator({
       if (deltaTime > 0.1) deltaTime = 0.1; 
       lastTimeRef.current = time;
 
+      // 1. Calcular fase de velocidad (Ciclo de 30s)
+      const totalElapsed = (time - (startTimeRef.current || time)) / 1000;
+      const phase = totalElapsed % 30;
+
       const currentDist = distanceTraveledRef.current;
-      
-      // 1. Determinar el límite de velocidad del tramo actual
-      // Usamos findIndex de forma robusta
       let currentIdx = cumulativeDistances.findIndex((d) => d > currentDist) - 1;
       if (currentIdx < 0) currentIdx = 0;
       
@@ -92,9 +101,19 @@ export function useRouteSimulator({
 
       const speedSection = sections?.find(s => s.speedLimit && currentIdx >= s.start && currentIdx < s.end);
       const limitKmh = speedSection?.speedLimit || 90;
+
+      // Lógica de "Stress Test": 30 -> Límite -> 2x Límite
+      let targetSpeedKmh = 30;
+      if (phase >= 10 && phase < 20) targetSpeedKmh = limitKmh;
+      else if (phase >= 20) targetSpeedKmh = limitKmh * 2;
+
+      // ACELERACIÓN PROGRESIVA (Inercia)
+      // Ajustamos un factor de aceleración/frenado suave
+      const accelerationFactor = 0.04; 
+      currentSpeedRef.current = currentSpeedRef.current + (targetSpeedKmh - currentSpeedRef.current) * accelerationFactor;
       
       // 2. Avanzar distancia
-      const speedMps = limitKmh / 3.6;
+      const speedMps = currentSpeedRef.current / 3.6;
       let newDist = currentDist + speedMps * deltaTime;
 
       if (newDist >= totalRouteDistance) {
@@ -102,10 +121,10 @@ export function useRouteSimulator({
         return;
       }
 
-      // 3. ACTUALIZAR REFERENCIA (Solo hacia adelante)
+      // 3. ACTUALIZAR REFERENCIA
       distanceTraveledRef.current = Math.max(distanceTraveledRef.current, newDist);
 
-      // 4. Calcular posición exacta por interpolación (usando newDist)
+      // 4. Calcular posición exacta por interpolación
       const p1Idx = Math.max(0, cumulativeDistances.findIndex((d) => d > newDist) - 1);
       const p1 = routeCoordinates[p1Idx];
       const p2 = routeCoordinates[p1Idx + 1];
@@ -119,10 +138,10 @@ export function useRouteSimulator({
         
         setUserPos(pos);
         setHeading(getBearing(p1, p2));
-        setSpeed(limitKmh);
+        setSpeed(currentSpeedRef.current);
       }
 
-      // 5. Actualizar el estado de progreso solo de vez en cuando
+      // 5. Actualizar el estado de progreso
       if (time - lastProgressUpdateRef.current > 500) {
         setProgress((newDist / totalRouteDistance) * 100);
         lastProgressUpdateRef.current = time;
