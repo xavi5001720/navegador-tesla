@@ -36,13 +36,20 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     if (!session?.user) return;
 
     try {
+      console.log('[useSocial] Fetching friendships for:', session.user.id);
+      
       // 1. Obtener todas nuestras amistades (aceptadas y pendientes)
       const { data: friendships, error: fError } = await supabase
         .from('friendships')
         .select('user_id, friend_id, status')
         .or(`user_id.eq.${session.user.id},friend_id.eq.${session.user.id}`);
 
-      if (fError) throw fError;
+      if (fError) {
+        console.error('[useSocial] Error fetching friendships:', fError);
+        throw fError;
+      }
+      
+      console.log('[useSocial] Found friendships:', friendships?.length || 0);
 
       // 2. Obtener nuestras invitaciones enviadas a emails no registrados
       const { data: invitations, error: iError } = await supabase
@@ -50,7 +57,12 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
         .select('receiver_email')
         .eq('sender_id', session.user.id);
 
-      if (iError) throw iError;
+      if (iError) {
+        console.error('[useSocial] Error fetching invitations:', iError);
+        throw iError;
+      }
+      
+      console.log('[useSocial] Found invitations:', invitations?.length || 0);
 
       const friendInfo = (friendships || []).map(f => ({
         id: f.user_id === session.user.id ? f.friend_id : f.user_id,
@@ -63,21 +75,26 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
       // 3. Obtener perfiles de los amigos registrados
       let mappedFriends: Friend[] = [];
       if (friendIds.length > 0) {
+        console.log('[useSocial] Fetching profiles for IDs:', friendIds);
         const { data: profiles, error: pError } = await supabase
           .from('profiles')
           .select('id, email, car_name, car_color, is_online, last_lat, last_lon, is_sharing_location')
           .in('id', friendIds);
 
-        if (pError) throw pError;
-
-        mappedFriends = (profiles || []).map(p => {
-          const fi = friendInfo.find(info => info.id === p.id);
-          return {
-            ...p,
-            friendship_status: fi?.status || 'pending',
-            is_incoming: fi?.is_incoming || false
-          } as Friend;
-        });
+        if (pError) {
+          console.error('[useSocial] Error fetching profiles:', pError);
+          // No lanzamos error para que al menos las invitaciones funcionen
+        } else {
+          console.log('[useSocial] Found profiles:', profiles?.length || 0);
+          mappedFriends = (profiles || []).map(p => {
+            const fi = friendInfo.find(info => info.id === p.id);
+            return {
+              ...p,
+              friendship_status: fi?.status || 'pending',
+              is_incoming: fi?.is_incoming || false
+            } as Friend;
+          });
+        }
       }
 
       // 4. Agregar las invitaciones "en el aire" (a emails no registrados)
@@ -92,9 +109,10 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
         is_incoming: false
       }));
 
+      console.log('[useSocial] Final friends count:', mappedFriends.length + invitedFriends.length);
       setFriends([...mappedFriends, ...invitedFriends]);
     } catch (err) {
-      console.error('[useSocial] Error fetching friends:', err);
+      console.error('[useSocial] Final catch error:', err);
     } finally {
       setLoading(false);
     }
