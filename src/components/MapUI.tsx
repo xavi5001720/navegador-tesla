@@ -324,9 +324,9 @@ function LocationTracker({
     if (customZoom != null) {
       newTargetZoom = customZoom;
     } else {
-      if (speedKmh < 45) newTargetZoom = 20; 
-      else if (speedKmh < 75) newTargetZoom = 18.5;
-      else if (speedKmh < 105) newTargetZoom = 17;
+      if (speedKmh < 50) newTargetZoom = 20; 
+      else if (speedKmh < 90) newTargetZoom = 18.5;
+      else if (speedKmh < 125) newTargetZoom = 17;
       else newTargetZoom = 16;
 
       if (hasRoute && typeof distanceToNextInstruction === 'number' && distanceToNextInstruction < 350) {

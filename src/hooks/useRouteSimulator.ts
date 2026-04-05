@@ -138,7 +138,7 @@ export function useRouteSimulator({
         
         setUserPos(pos);
         setHeading(getBearing(p1, p2));
-        setSpeed(currentSpeedRef.current);
+        setSpeed(Math.round(currentSpeedRef.current));
       }
 
       // 5. Actualizar el estado de progreso
