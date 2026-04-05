@@ -766,7 +766,7 @@ export default function Home() {
             >
               <img src="/avatar.png" alt="Avatar" className="h-full w-full object-cover group-hover:scale-110 transition-transform" />
             </button>
-            <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest text-center shadow-black drop-shadow-lg">Inicio</span>
+            <span className="text-[9px] font-black text-white uppercase tracking-widest text-center shadow-black drop-shadow-lg">Inicio</span>
           </div>
         )}
       </div>
@@ -942,7 +942,7 @@ export default function Home() {
                 >
                   <img src="/mapa.png" alt="Vista General" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
                 </button>
-                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center shadow-black drop-shadow-lg">Vista General</span>
+                <span className="text-[9px] font-black text-white uppercase tracking-widest text-center shadow-black drop-shadow-lg">Vista General</span>
               </div>
             )}
             {viewMode === 'overview' && (
@@ -954,7 +954,7 @@ export default function Home() {
                   >
                     <img src="/mapa.png" alt="Centrar Mapa Global" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
                   </button>
-                  <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest text-center shadow-black drop-shadow-lg">Vista General</span>
+                  <span className="text-[9px] font-black text-white uppercase tracking-widest text-center shadow-black drop-shadow-lg">Vista General</span>
                 </div>
                 <div className="flex flex-col items-center gap-1.5">
                   <button 
@@ -966,7 +966,7 @@ export default function Home() {
                   >
                     <img src="/volante.png" alt="Modo Navegación" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
                   </button>
-                  <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest text-center shadow-black drop-shadow-lg">Modo Navegación</span>
+                  <span className="text-[9px] font-black text-white uppercase tracking-widest text-center shadow-black drop-shadow-lg">Modo Navegación</span>
                 </div>
               </>
             )}
