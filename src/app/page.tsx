@@ -35,7 +35,7 @@ import AuthModal from '@/components/AuthModal';
 import UserMenu from '@/components/UserMenu';
 import GarageModal from '@/components/GarageModal';
 import SocialModal from '@/components/SocialModal';
-import { User, LogOut, ChevronRight } from 'lucide-react';
+import { User, LogOut, ChevronRight, Users } from 'lucide-react';
 import { Session } from '@supabase/supabase-js';
 import { useProfile } from '@/hooks/useProfile';
 import { useSocial } from '@/hooks/useSocial';
