@@ -25,6 +25,21 @@ CREATE TABLE IF NOT EXISTS public.friend_invitations (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Habilitar RLS en invitaciones
+ALTER TABLE public.friend_invitations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Usuarios pueden crear sus propias invitaciones" 
+  ON public.friend_invitations FOR INSERT 
+  WITH CHECK (auth.uid() = sender_id);
+
+CREATE POLICY "Usuarios pueden ver sus invitaciones enviadas" 
+  ON public.friend_invitations FOR SELECT 
+  USING (auth.uid() = sender_id);
+
+CREATE POLICY "Usuarios pueden eliminar sus invitaciones" 
+  ON public.friend_invitations FOR DELETE 
+  USING (auth.uid() = sender_id);
+
 -- Habilitar RLS en amistades
 ALTER TABLE public.friendships ENABLE ROW LEVEL SECURITY;
 
