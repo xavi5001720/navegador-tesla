@@ -187,12 +187,17 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     };
   }, [session, fetchFriends]);
 
-  // 3. Persistencia de ubicación en DB (Debounce 30s)
+  const lastBroadcastPosRef = useRef<[number, number] | null>(null);
+  const lastBroadcastTimeRef = useRef<number>(0);
+
+  // 3. Persistencia de ubicación y Broadcast (Bajo Consumo)
   useEffect(() => {
     if (!session?.user || !userPos) return;
 
     const now = Date.now();
-    if (now - lastDbUpdateRef.current > 30000) {
+    
+    // A. Actualización en Base de Datos (Persistencia cada 30-45s)
+    if (now - lastDbUpdateRef.current > 45000) {
       supabase.from('profiles').update({
         last_lat: userPos[0],
         last_lon: userPos[1],
@@ -201,13 +206,36 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
       lastDbUpdateRef.current = now;
     }
 
-    // Broadcast live (frecuente)
+    // B. Broadcast Realtime (Frecuente pero optimizado)
     if (channelRef.current && channelRef.current.state === 'joined') {
-      channelRef.current.send({
-        type: 'broadcast',
-        event: 'location',
-        payload: { userId: session.user.id, lat: userPos[0], lon: userPos[1] }
-      });
+      let shouldBroadcast = false;
+
+      if (!lastBroadcastPosRef.current) {
+        shouldBroadcast = true;
+      } else {
+        // Cálculo de distancia aproximada (euclídea simple para eficiencia)
+        const latDiff = userPos[0] - lastBroadcastPosRef.current[0];
+        const lonDiff = userPos[1] - lastBroadcastPosRef.current[1];
+        // ~111,320 metros por grado de latitud
+        const distance = Math.sqrt(latDiff * latDiff + lonDiff * lonDiff) * 111320;
+        
+        // Solo emitir si:
+        // 1. Se ha movido > 15 metros
+        // 2. O si han pasado > 10 segundos desde el último broadcast
+        if (distance > 15 || (now - lastBroadcastTimeRef.current > 10000)) {
+          shouldBroadcast = true;
+        }
+      }
+
+      if (shouldBroadcast) {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'location',
+          payload: { userId: session.user.id, lat: userPos[0], lon: userPos[1] }
+        });
+        lastBroadcastPosRef.current = userPos;
+        lastBroadcastTimeRef.current = now;
+      }
     }
   }, [userPos, session]);
 
