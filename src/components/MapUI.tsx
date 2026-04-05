@@ -194,9 +194,12 @@ interface MapUIProps {
    overviewFitTrigger?: number;
    distanceToNextInstruction?: number | null;
    isSimulating?: boolean;
+   mapMode?: 'satellite' | 'light';
+   onMapError?: () => void;
 }
 
 const createCarIcon = (heading: number, color?: string) => {
+// ... (rest of the file as needed)
   const iconHtml = renderToStaticMarkup(
     <div className="relative flex items-center justify-center h-20 w-20 group car-always-up" style={{ transform: `rotate(var(--car-rotation, ${heading}deg))` }}>
       <div className={`absolute inset-0 rounded-full blur-2xl scale-125 transition-all duration-700 ${color === 'Rojo' ? 'bg-red-500/30' : color === 'Azul' ? 'bg-blue-500/30' : color === 'Negro' ? 'bg-gray-900/40' : 'bg-blue-500/20'}`}></div>
@@ -381,8 +384,11 @@ export default function MapUI({
   gasStations = [], weatherPoints = [], waypoints = [], speed = 0, hasLocation = false,
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
   onGasStationClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [], 
-  centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false
+  centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
+  mapMode = 'satellite', onMapError
 }: MapUIProps) {
+  // Ref para contar errores de carga del mapa (para fallback automático)
+  const errorCountRef = useRef(0);
   // Pre-calculamos distancias acumuladas para lógica de trazada cinemática (GPS Real)
   const routeCumDist = useMemo(() => {
     if (!routeCoordinates || routeCoordinates.length < 2) return [];
@@ -423,8 +429,34 @@ export default function MapUI({
       <MapContainer center={userPos} zoom={15} className="h-full w-full z-0" zoomControl={false}>
         <MapEvents viewMode={viewMode} onViewModeChange={onViewModeChange} onMapClick={onMapClick} />
         <MapRotator heading={snappedHeading} viewMode={viewMode} speed={speed} />
-        <TileLayer attribution="&copy; Google Maps" url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" />
-        <TileLayer attribution="&copy; Google Maps" url="https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}&apistyle=s.t:3|p.v:off|s.t:4|p.v:off" />
+        
+        {mapMode === 'satellite' ? (
+          <>
+            <TileLayer 
+              attribution="&copy; Google Maps" 
+              url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" 
+              eventHandlers={{
+                tileerror: () => {
+                  errorCountRef.current++;
+                  if (errorCountRef.current > 5 && onMapError) {
+                    onMapError();
+                    errorCountRef.current = 0;
+                  }
+                },
+                tileload: () => {
+                  errorCountRef.current = 0; // Reset si algo carga bien
+                }
+              }}
+            />
+            <TileLayer attribution="&copy; Google Maps" url="https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}&apistyle=s.t:3|p.v:off|s.t:4|p.v:off" />
+          </>
+        ) : (
+          <TileLayer 
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          />
+        )}
+
         <RouteFitter routeCoordinates={routeCoordinates} />
         <LocationTracker 
           position={snappedPos} 

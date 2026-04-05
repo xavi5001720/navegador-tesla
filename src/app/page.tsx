@@ -97,6 +97,7 @@ export default function Home() {
   const [isAircraftsEnabled, setIsAircraftsEnabled] = useState(false);
   const [isChargersEnabled, setIsChargersEnabled] = useState(false);
   const [isWeatherEnabled, setIsWeatherEnabled] = useState(false);
+  const [mapMode, setMapMode] = useState<'satellite' | 'light'>('satellite');
   
   const [chargerFilters, setChargerFilters] = useState<ChargerFilters>({
     isFree: false, connectors: [], minPower: 0
@@ -778,6 +779,8 @@ export default function Home() {
         onOpenSocial={() => setIsSocialOpen(true)}
         isFullscreen={!isSidebarOpen}
         onToggleFullscreen={() => setIsSidebarOpen(!isSidebarOpen)}
+        mapMode={mapMode}
+        onToggleMapMode={() => setMapMode(prev => prev === 'satellite' ? 'light' : 'satellite')}
         onLogout={handleSignOut}
       />
 
@@ -907,6 +910,13 @@ export default function Home() {
           distanceToNextInstruction={distanceToNextInstruction}
           isSimulating={isSimulating}
           onCurrentZoomChange={setCurrentZoom}
+          mapMode={mapMode}
+          onMapError={() => {
+             if (mapMode === 'satellite') {
+               console.warn('[Auto-Fallback] Fallo en satélite detectado. Cambiando a Modo Ligero...');
+               setMapMode('light');
+             }
+          }}
         />
 
 
