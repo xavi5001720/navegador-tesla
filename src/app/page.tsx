@@ -811,7 +811,7 @@ export default function Home() {
       </AnimatePresence>
 
       <NavigationPanel 
-        isVisible={!isSidebarOpen && viewMode === 'navigation' && !!route}
+        isVisible={(isSimulating || !isSidebarOpen) && viewMode === 'navigation' && !!route}
         instruction={nextInstruction}
         distance={distanceToNextInstruction}
         activeLaneGuidance={activeLaneGuidance}
@@ -918,7 +918,7 @@ export default function Home() {
               remainingRadarsCount={remainingRadars}
               onEndRoute={clearRoute}
               isSimulating={isSimulating}
-              onStartSimulation={startSimulation}
+              onStartSimulation={() => { setViewMode('navigation'); startSimulation(); }}
               onStopSimulation={stopSimulation}
             />
           )}
@@ -930,7 +930,7 @@ export default function Home() {
 
           <Speedometer speed={speed} zoom={currentZoom} />
           
-          <div className="flex flex-col gap-3 md:flex-row">
+          <div className="flex flex-col gap-3">
             {viewMode === 'navigation' && (
               <button 
                 onClick={() => handleManualViewModeChange('overview')}
@@ -946,7 +946,7 @@ export default function Home() {
                   onClick={() => setOverviewFitTrigger(prev => prev + 1)}
                   className="flex h-14 w-14 md:h-16 md:w-16 items-center justify-center rounded-2xl shadow-2xl transition-all hover:scale-105 active:scale-95 group relative border border-white/20 bg-gray-800 hover:bg-gray-700"
                 >
-                  <Map className="h-6 w-6 md:h-8 md:w-8 text-white drop-shadow-md" />
+                  <img src="/mapa.png" alt="Centrar Mapa Global" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
                   <span className="absolute -top-10 right-0 scale-0 group-hover:scale-100 transition-all bg-black/80 px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap">Centrar Mapa Global</span>
                 </button>
                 <button 

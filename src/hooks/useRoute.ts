@@ -147,7 +147,7 @@ const fetchRouteTomTom = async (allPoints: Coordinates[], key: string): Promise<
 // Ruta con OSRM (sin tráfico — fallback gratuito)
 const fetchRouteOSRM = async (allPoints: Coordinates[]): Promise<RouteResult> => {
   const coordStr = allPoints.map(p => `${p[1]},${p[0]}`).join(';');
-  const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=full&geometries=geojson`);
+  const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=full&geometries=geojson&steps=true`);
   const data = await res.json();
   if (data.code !== 'Ok' || !data.routes.length) throw new Error('OSRM: no se encontró ruta.');
 
@@ -155,12 +155,44 @@ const fetchRouteOSRM = async (allPoints: Coordinates[]): Promise<RouteResult> =>
   const latLngs: Coordinates[] = mainRoute.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
   if (latLngs.length > 0) latLngs.unshift([...allPoints[0]]);
 
+  // Mapear pasos de OSRM a instrucciones internas
+  const instructions: RouteInstruction[] = (mainRoute.legs?.[0]?.steps || []).map((s: any) => {
+    const maneuver = s.maneuver.type.toUpperCase();
+    const modifier = s.maneuver.modifier?.toUpperCase() || '';
+    
+    // Mapeo básico de maniobras OSRM a nuestro formato
+    let internalManeuver = 'STRAIGHT';
+    if (maneuver.includes('TURN')) {
+      internalManeuver = modifier.includes('LEFT') ? 'TURN_LEFT' : 'TURN_RIGHT';
+    } else if (maneuver.includes('ROUNDABOUT')) {
+      internalManeuver = 'ROUNDABOUT';
+    }
+
+    return {
+      message: s.name ? `Gira en ${s.name}` : (s.maneuver.instruction || 'Continúa recto'),
+      instructionType: internalManeuver,
+      maneuver: internalManeuver,
+      routeOffsetInMeters: s.distance, // Esto es relativo, necesitaremos acumularlo
+      point: [s.maneuver.location[1], s.maneuver.location[0]] as Coordinates,
+      street: s.name,
+      isRoundabout: internalManeuver === 'ROUNDABOUT'
+    };
+  });
+
+  // Calculamos el offset acumulado para que el contador de distancia funcione correctamente
+  let accumulatedOffset = 0;
+  instructions.forEach(ins => {
+    const originalDist = ins.routeOffsetInMeters;
+    ins.routeOffsetInMeters = accumulatedOffset;
+    accumulatedOffset += originalDist;
+  });
+
   return {
     coordinates: latLngs,
     distance: mainRoute.distance,
     duration: mainRoute.duration,
-    sections: [], // Sin tráfico
-    instructions: [], // Sin instrucciones detalladas en OSRM por ahora
+    sections: [], // OSRM no da tráfico detallado por tramos en este endpoint
+    instructions: instructions,
   };
 };
 
