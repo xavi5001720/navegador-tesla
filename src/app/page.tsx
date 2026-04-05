@@ -1180,6 +1180,8 @@ export default function Home() {
         isOpen={isSocialOpen}
         onClose={() => setIsSocialOpen(false)}
         session={session}
+        profile={profile}
+        updateProfile={updateProfile}
         onAddFriend={addFriend}
       />
     </main>

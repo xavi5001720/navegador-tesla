@@ -1,18 +1,21 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Users, ShieldCheck, Search, Send } from 'lucide-react';
+import { X, Users, ShieldCheck, Search, Send, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Session } from '@supabase/supabase-js';
+import { UserProfile } from '@/hooks/useProfile';
 
 interface SocialModalProps {
   isOpen: boolean;
   onClose: () => void;
   session: Session | null;
+  profile: UserProfile | null;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<{ success: boolean; error?: string }>;
   onAddFriend: (email: string) => Promise<{ success?: boolean; accepted?: boolean; invited?: boolean; error?: any }>;
 }
 
-export default function SocialModal({ isOpen, onClose, session, onAddFriend }: SocialModalProps) {
+export default function SocialModal({ isOpen, onClose, session, profile, updateProfile, onAddFriend }: SocialModalProps) {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -78,8 +81,28 @@ export default function SocialModal({ isOpen, onClose, session, onAddFriend }: S
               </button>
             </div>
 
-            <div className="p-8 space-y-8">
-              {/* Explicación */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-8 scrollbar-hide">
+          
+          {/* Toggle de Privacidad de Ubicación */}
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/10 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-xl ${profile?.is_sharing_location ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                <MapPin className="h-5 w-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs font-black text-white uppercase tracking-wider italic">Compartir Ubicación</span>
+                <span className="text-[10px] text-gray-500 font-bold uppercase leading-none">Tus amigos podrán verte en el mapa</span>
+              </div>
+            </div>
+            <button 
+              onClick={() => updateProfile({ is_sharing_location: !profile?.is_sharing_location })}
+              className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${profile?.is_sharing_location ? 'bg-green-600' : 'bg-gray-700'}`}
+            >
+              <div className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform duration-300 ${profile?.is_sharing_location ? 'translate-x-6' : 'translate-x-0'}`} />
+            </button>
+          </div>
+
+          {/* Sección de Explicación */}
               <div className="space-y-3">
                 <p className="text-gray-300 text-sm leading-relaxed">
                   Conéctate con otros conductores para viajar juntos. Podréis ver vuestras ubicaciones en tiempo real sobre el mapa y compartir detalles de la ruta hacia vuestro destino.
