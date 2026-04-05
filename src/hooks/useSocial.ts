@@ -124,6 +124,13 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     }
   }, [session]);
 
+  // Disparador inicial y por cambio de sesión
+  useEffect(() => {
+    if (session?.user) {
+      fetchFriends();
+    }
+  }, [session, fetchFriends]);
+
   // ... [Previous Realtime & Location Persistance logic stays same] ...
 
   // ── Actions ───────────────────────────────────────────────────────────────
