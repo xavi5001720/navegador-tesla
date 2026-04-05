@@ -304,7 +304,9 @@ function LocationTracker({
     if (chargers) chargers.forEach(c => allPoints.push([c.lat, c.lon]));
     if (gasStations) gasStations.forEach(g => allPoints.push([g.lat, g.lon]));
     if (weatherPoints) weatherPoints.forEach(w => allPoints.push([w.lat, w.lon]));
-    if (friends) friends.forEach(f => { if(f.last_lat && f.last_lon) allPoints.push([f.last_lat, f.last_lon]) });
+    if (friends) friends.forEach(f => { 
+      if(f.is_sharing_location && f.last_lat && f.last_lon) allPoints.push([f.last_lat, f.last_lon]);
+    });
     try {
       const bounds = L.latLngBounds(allPoints);
       map.fitBounds(bounds, { padding: [100, 100], animate: true, maxZoom: 16, duration: 1.5 });
