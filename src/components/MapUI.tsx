@@ -197,8 +197,6 @@ interface MapUIProps {
    mapMode?: 'satellite' | 'light';
    onMapError?: () => void;
    followingFriendId?: string | null;
-   onJoinFriendTrip?: (friend: Friend) => void;
-   onLeaveFriendTrip?: (friendId: string) => void;
    onUpdateFriendNickname?: (friendId: string, nickname: string) => void;
 }
 
@@ -390,7 +388,7 @@ export default function MapUI({
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
   onGasStationClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [], 
   centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
-  mapMode = 'satellite', onMapError, followingFriendId, onJoinFriendTrip, onLeaveFriendTrip, onUpdateFriendNickname
+  mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname
 }: MapUIProps) {
   // Ref para contar errores de carga del mapa (para fallback automático)
   const errorCountRef = useRef(0);
@@ -569,24 +567,6 @@ export default function MapUI({
                  <div className="h-px bg-white/10 w-full" />
 
                  <div className="flex flex-col gap-1.5">
-                   {followingFriendId === friend.id ? (
-                      <button 
-                        onClick={() => onLeaveFriendTrip?.(friend.id)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all text-[11px] font-bold uppercase"
-                      >
-                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x-circle"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
-                         Dejar de seguir
-                      </button>
-                   ) : (
-                      <button 
-                        disabled={!friend.current_destination}
-                        onClick={() => onJoinFriendTrip?.(friend)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all text-[11px] font-bold uppercase ${friend.current_destination ? 'bg-blue-600/20 border-blue-500/30 text-blue-400 hover:bg-blue-600/30 active:scale-95' : 'bg-gray-800/10 border-white/5 text-gray-600 opacity-50 cursor-not-allowed'}`}
-                      >
-                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-navigation"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-                         {friend.current_destination ? 'Unirme al viaje' : 'Sin ruta activa'}
-                      </button>
-                   )}
 
                    <button 
                      onClick={() => {

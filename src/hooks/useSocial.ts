@@ -170,24 +170,6 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
           }
         }));
       })
-      .on('broadcast', { event: 'convoy_join' }, ({ payload }) => {
-        // Solo nos interesa si nosotros somos el líder (o si queremos enterarnos de quién se une a quién)
-        if (payload.leaderId === session.user.id) {
-          console.info(`[Convoy] ${payload.userName} se ha unido a tu viaje.`);
-          // Disparar evento global para UI
-          window.dispatchEvent(new CustomEvent('tesla-convoy-notification', { 
-            detail: { type: 'join', userName: payload.userName } 
-          }));
-        }
-      })
-      .on('broadcast', { event: 'convoy_leave' }, ({ payload }) => {
-        if (payload.leaderId === session.user.id) {
-          console.info(`[Convoy] Un amigo ha dejado tu viaje.`);
-          window.dispatchEvent(new CustomEvent('tesla-convoy-notification', { 
-            detail: { type: 'leave' } 
-          }));
-        }
-      })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           await channel.track({ key: session.user.id, online_at: new Date().toISOString() });
@@ -371,31 +353,6 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     return { success: !error, error };
   };
 
-  const joinConvoy = async (friendId: string) => {
-    if (!session?.user || !channelRef.current) return;
-    
-    console.log(`[useSocial] Notificando unión al convoy de ${friendId}`);
-    channelRef.current.send({
-      type: 'broadcast',
-      event: 'convoy_join',
-      payload: { 
-        userId: session.user.id, 
-        leaderId: friendId,
-        userName: (await supabase.from('profiles').select('car_name').eq('id', session.user.id).single()).data?.car_name || session.user.email
-      }
-    });
-  };
-
-  const leaveConvoy = async (friendId: string) => {
-    if (!session?.user || !channelRef.current) return;
-    
-    console.log(`[useSocial] Notificando salida del convoy de ${friendId}`);
-    channelRef.current.send({
-      type: 'broadcast',
-      event: 'convoy_leave',
-      payload: { userId: session.user.id, leaderId: friendId }
-    });
-  };
 
   // Mapear amigos con su estado "Live"
   // Solo consideramos online si la amistad está aceptada
@@ -414,8 +371,6 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     acceptFriend,
     removeFriend,
     updateFriendNickname,
-    joinConvoy,
-    leaveConvoy,
     refreshFriends: fetchFriends 
   };
 }
