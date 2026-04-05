@@ -363,6 +363,20 @@ export default function MapUI({
   onGasStationClick, onOpenGarage, routeSections = [], friends = [], centerOverride = null, 
   overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false
 }: MapUIProps) {
+  // Rumbo perfeccionado: Si estamos navegando, intentamos alinearnos a la ruta
+  const snappedHeading = (() => {
+    if (viewMode === 'navigation' && routeCoordinates && routeCoordinates.length > 1) {
+      const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
+      // Solo nos "imantamos" si estamos a menos de 40 metros de la ruta
+      if (snapped.distance < 40) {
+        const p1 = routeCoordinates[snapped.segmentIndex];
+        const p2 = routeCoordinates[snapped.segmentIndex + 1];
+        if (p1 && p2) return getBearing(p1, p2);
+      }
+    }
+    return heading; // Fallback al rumbo crudo (GPS o Simulador)
+  })();
+
   return (
     <div className="relative h-full w-full bg-gray-900 overflow-hidden">
       <style jsx global>{`
@@ -372,7 +386,7 @@ export default function MapUI({
       `}</style>
       <MapContainer center={userPos} zoom={15} className="h-full w-full z-0" zoomControl={false}>
         <MapEvents viewMode={viewMode} onViewModeChange={onViewModeChange} onMapClick={onMapClick} />
-        <MapRotator heading={heading} viewMode={viewMode} speed={speed} />
+        <MapRotator heading={snappedHeading} viewMode={viewMode} speed={speed} />
         <TileLayer attribution="&copy; Google Maps" url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" />
         <TileLayer attribution="&copy; OSM contributors &copy; CARTO" url="https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png" opacity={0.8} />
         <RouteFitter routeCoordinates={routeCoordinates} />
@@ -444,16 +458,15 @@ export default function MapUI({
         {(() => {
           let pos = userPos;
           let carHeading = heading;
-          if (viewMode === 'navigation' && !isSimulating) {
-            if (routeCoordinates && routeCoordinates.length > 0) {
+          
+          if (viewMode === 'navigation') {
+            carHeading = snappedHeading;
+            if (!isSimulating && routeCoordinates && routeCoordinates.length > 0) {
               const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
               if (snapped.distance < 30) {
                 pos = snapped.point;
-                const p1 = routeCoordinates[snapped.segmentIndex];
-                const p2 = routeCoordinates[snapped.segmentIndex + 1];
-                if (p1 && p2) carHeading = getBearing(p1, p2);
               }
-            } else carHeading = 0;
+            }
           }
           return <Marker key="user-car-marker" position={pos} icon={createCarIcon(carHeading, carColor)} zIndexOffset={1000} interactive={true} eventHandlers={{ click: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); }, mousedown: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); } }} />;
         })()}
