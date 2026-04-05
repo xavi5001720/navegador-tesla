@@ -544,8 +544,8 @@ export default function MapUI({
         {gasStations.map(station => <Marker key={`gas-${station.id}`} position={[station.lat, station.lon]} icon={gasStationIcon} eventHandlers={{ click: () => { if (onGasStationClick) onGasStationClick(station); } }} />)}
         {weatherPoints.map(wp => <Marker key={`weather-${wp.id}`} position={[wp.lat, wp.lon]} icon={createWeatherIcon(wp.temp, wp.condition)} interactive={false} />)}
         
-        {/* Amigos (Markers Interactivos) */}
-        {friends.filter(f => f.last_lat && f.last_lon).map((friend) => (
+        {/* Amigos (Markers Interactivos - Solo Online) */}
+        {friends.filter(f => f.is_online && f.last_lat && f.last_lon).map((friend) => (
           <Marker 
             key={`friend-${friend.id}`} 
             position={[friend.last_lat!, friend.last_lon!]} 
