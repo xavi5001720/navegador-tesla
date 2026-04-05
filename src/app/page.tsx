@@ -648,7 +648,7 @@ export default function Home() {
                                   {friend.car_name}
                                 </span>
                                 <span className="text-[8px] font-bold text-gray-500 uppercase tracking-tighter leading-tight truncate">
-                                  {isPending ? (friend.is_incoming ? 'Solicitud Recibida' : 'Esperando respuesta...') : friend.car_color}
+                                  {isPending ? (friend.is_incoming ? 'Solicitud Recibida' : 'Esperando respuesta...') : friend.email}
                                 </span>
                               </div>
                             </div>
