@@ -17,6 +17,11 @@ CREATE TABLE IF NOT EXISTS public.friendships (
   PRIMARY KEY (user_id, friend_id)
 );
 
+-- Apodos y rutas sociales
+ALTER TABLE public.friendships ADD COLUMN IF NOT EXISTS nickname TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS current_destination JSONB;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS current_waypoints JSONB DEFAULT '[]';
+
 -- Tabla de invitaciones pendientes (para usuarios no registrados aún)
 CREATE TABLE IF NOT EXISTS public.friend_invitations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

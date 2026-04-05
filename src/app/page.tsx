@@ -98,6 +98,8 @@ export default function Home() {
   const [isChargersEnabled, setIsChargersEnabled] = useState(false);
   const [isWeatherEnabled, setIsWeatherEnabled] = useState(false);
   const [mapMode, setMapMode] = useState<'satellite' | 'light'>('satellite');
+  const [followingFriendId, setFollowingFriendId] = useState<string | null>(null);
+  const [convoyNotification, setConvoyNotification] = useState<{ type: 'join' | 'leave', userName?: string } | null>(null);
   
   const [chargerFilters, setChargerFilters] = useState<ChargerFilters>({
     isFree: false, connectors: [], minPower: 0
@@ -152,7 +154,10 @@ export default function Home() {
     addFriend, 
     acceptFriend,
     removeFriend,
-    refreshFriends 
+    updateFriendNickname,
+    joinConvoy,
+    leaveConvoy,
+    refreshFriends: fetchFriends 
   } = useSocial(session, userPos);
   
   const wasStoppedRef = useRef(true);
@@ -217,7 +222,58 @@ export default function Home() {
     if (!session) {
       setPrefsLoaded(false);
     }
-  }, [session]);
+  }, [userPos, session]);
+
+  // --- MODO CONVOY: Sincronizar mi propia ruta con la DB ---
+  useEffect(() => {
+    if (!session?.user) return;
+    
+    const syncRouteToDB = async () => {
+      console.log('[Convoy] Sincronizando mi ruta con DB...', destination);
+      await supabase.from('profiles').update({
+        current_destination: destination,
+        current_waypoints: waypoints
+      }).eq('id', session.user.id);
+    };
+
+    const timer = setTimeout(syncRouteToDB, 2000); // Debounce de 2s
+    return () => clearTimeout(timer);
+  }, [destination, waypoints, session]);
+
+  // --- MODO CONVOY: Seguir la ruta del líder ---
+  useEffect(() => {
+    if (!followingFriendId) return;
+
+    const leader = friends.find(f => f.id === followingFriendId);
+    if (!leader || !leader.current_destination) {
+      console.log('[Convoy] El líder ya no tiene ruta activa. Convoy finalizado.');
+      setFollowingFriendId(null);
+      return;
+    }
+
+    // Comprobar si la ruta del líder es distinta a la nuestra actual
+    const leaderDest = leader.current_destination;
+    const isDifferent = !destination || destination[0] !== leaderDest.lat || destination[1] !== leaderDest.lon;
+
+    if (isDifferent) {
+      console.log('[Convoy] El líder ha cambiado la ruta. Sincronizando...');
+      calculateRoute(
+        userPos as [number, number],
+        [leaderDest.lat, leaderDest.lon] as [number, number],
+        (leader.current_waypoints || []) as [number, number][]
+      );
+    }
+  }, [friends, followingFriendId, destination, calculateRoute]);
+
+  // --- MODO CONVOY: Escuchar notificaciones ---
+  useEffect(() => {
+    const handleNotification = (e: any) => {
+      setConvoyNotification(e.detail);
+      setTimeout(() => setConvoyNotification(null), 5000);
+    };
+    window.addEventListener('tesla-convoy-notification', handleNotification);
+    return () => window.removeEventListener('tesla-convoy-notification', handleNotification);
+  }, []);
 
   // 2. Guardar preferencias explícitamente cuando el usuario pulse el botón Guardar
   const handleSavePreferences = useCallback(async () => {
@@ -647,7 +703,7 @@ export default function Home() {
                               </div>
                               <div className="flex flex-col overflow-hidden">
                                 <span className={`text-[11px] font-black italic leading-none uppercase truncate ${friend.is_online ? 'text-green-500' : isPending ? 'text-orange-500' : 'text-red-500'}`}>
-                                  {friend.car_name}
+                                  {friend.nickname ? `${friend.nickname} (${friend.car_name})` : friend.car_name}
                                 </span>
                                 <span className="text-[8px] font-bold text-gray-500 uppercase tracking-tighter leading-tight truncate">
                                   {isPending ? (friend.is_incoming ? 'Solicitud Recibida' : 'Esperando respuesta...') : friend.email}
@@ -817,13 +873,38 @@ export default function Home() {
       </AnimatePresence>
 
       <NavigationPanel 
-        isVisible={(isSimulating || !isSidebarOpen) && viewMode === 'navigation' && !!route}
-        instruction={nextInstruction}
+        isVisible={!!(route || nextInstruction) || isSimulating}
+        instruction={nextInstruction || (route ? { message: 'Iniciando ruta...', maneuver: 'STRAIGHT' } : null)}
         distance={distanceToNextInstruction}
         activeLaneGuidance={activeLaneGuidance}
         isSimulating={isSimulating}
+        followingFriendName={friends.find(f => f.id === followingFriendId)?.nickname || friends.find(f => f.id === followingFriendId)?.car_name}
       />
 
+
+      {/* Notificación de Convoy (Tesla Toast) */}
+      <AnimatePresence>
+        {convoyNotification && (
+          <motion.div 
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed top-24 left-1/2 -translate-x-1/2 z-[1000] flex items-center gap-3 px-6 py-3 rounded-2xl bg-blue-600/90 backdrop-blur-3xl border border-blue-400/40 shadow-[0_0_30px_rgba(37,99,235,0.4)] text-white"
+          >
+             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
+                <Users className="h-5 w-5 text-white" />
+             </div>
+             <div className="flex flex-col">
+               <span className="text-xs font-bold uppercase tracking-widest opacity-70">Convoy Social</span>
+               <span className="text-sm font-black">
+                 {convoyNotification.type === 'join' 
+                   ? `${convoyNotification.userName} se ha unido a tu viaje` 
+                   : 'Un amigo ha dejado tu convoy'}
+               </span>
+             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Sidebar 
         isSidebarOpen={isSidebarOpen}
@@ -848,6 +929,7 @@ export default function Home() {
         rawAircraftCount={aircraftCount}
         hasLocation={hasLocation}
         onSearch={handleSearchSubmit}
+        onAddFriend={addFriend as (email: string) => Promise<{ success?: boolean; accepted?: boolean; invited?: boolean; error?: any }>}
         isSoundEnabled={isSoundEnabled}
         setIsSoundEnabled={setIsSoundEnabled}
         voiceType={voiceType}
@@ -904,7 +986,7 @@ export default function Home() {
           onOpenGarage={() => setIsGarageOpen(true)}
           routeSections={route?.sections}
           carColor={profile?.car_color}
-          friends={friends.filter(f => f.is_online)}
+          friends={friends}
           centerOverride={mapCenterOverride}
           overviewFitTrigger={overviewFitTrigger}
           distanceToNextInstruction={distanceToNextInstruction}
@@ -916,6 +998,25 @@ export default function Home() {
                console.warn('[Auto-Fallback] Fallo en satélite detectado. Cambiando a Modo Ligero...');
                setMapMode('light');
              }
+          }}
+          followingFriendId={followingFriendId}
+          onJoinFriendTrip={(friend) => {
+            console.info(`[Convoy] Uniéndose al viaje de ${friend.car_name}`);
+            setFollowingFriendId(friend.id);
+            joinConvoy(friend.id);
+            calculateRoute(
+              userPos as [number, number],
+              [friend.current_destination.lat, friend.current_destination.lon] as [number, number],
+              (friend.current_waypoints || []) as [number, number][]
+            );
+          }}
+          onLeaveFriendTrip={(friendId) => {
+            console.info('[Convoy] Saliendo del convoy.');
+            setFollowingFriendId(null);
+            leaveConvoy(friendId);
+          } }
+          onUpdateFriendNickname={(friendId, name) => {
+            updateFriendNickname(friendId, name);
           }}
         />
 

@@ -61,10 +61,15 @@ export function usePegasus(
   const userPosRef = useRef(userPos);
   useEffect(() => { userPosRef.current = userPos; }, [userPos]);
 
+  // Ref para controlar el primer fetch tras activar el interruptor
+  const isFirstFetchAfterEnable = useRef(true);
+
   useEffect(() => {
     if (!isEnabled || !userPos) {
+      isFirstFetchAfterEnable.current = true; // Reset para la próxima vez
       if (!isEnabled) {
         setAllAircrafts([]);
+        setIsRateLimited(false); // Limpiamos errores al apagar
         if (userPosRef.current) {
           const bboxKey = buildBboxKey(userPosRef.current);
           supabase.from('opensky_requests').delete().eq('bbox_key', bboxKey).then(() => {});
@@ -78,6 +83,9 @@ export function usePegasus(
       if (!pos) return;
 
       setLoading(true);
+      // Siempre reseteamos el error al empezar un fetch nuevo
+      setIsRateLimited(false);
+
       try {
         const sLamin = snapDown(pos[0]);
         const sLomin = snapDown(pos[1]);
@@ -85,7 +93,7 @@ export function usePegasus(
         const sLomax = sLomin + SNAP_SIZE;
         const bboxKey = `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${sLamax.toFixed(1)}_${sLomax.toFixed(1)}`;
 
-        console.log(`[usePegasus V11] 📡 Macro-Zona (4.0°): ${bboxKey}`);
+        console.log(`[usePegasus V12] 📡 Macro-Zona (4.0°): ${bboxKey}`);
         
         // 1. Avisar al feeder (Macro-Zona)
         await supabase.from('opensky_requests').upsert({
@@ -96,7 +104,14 @@ export function usePegasus(
           ulon: pos[1]
         });
 
-        // 2. Pedir al servidor con FETCH estándar (V10+) para evitar problemas de cabeceras
+        // 2. PAUSA TÉCNICA (Solo el primer fetch): 
+        // Damos 1.5s al servidor para que el feeder encuentre los aviones antes de preguntar.
+        if (isFirstFetchAfterEnable.current) {
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          isFirstFetchAfterEnable.current = false;
+        }
+
+        // 3. Pedir al servidor
         const response = await fetch(`${SUPABASE_URL}/functions/v1/pegasus`, {
           method: 'POST',
           headers: {

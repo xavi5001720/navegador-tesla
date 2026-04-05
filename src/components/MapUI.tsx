@@ -196,10 +196,13 @@ interface MapUIProps {
    isSimulating?: boolean;
    mapMode?: 'satellite' | 'light';
    onMapError?: () => void;
+   followingFriendId?: string | null;
+   onJoinFriendTrip?: (friend: Friend) => void;
+   onLeaveFriendTrip?: (friendId: string) => void;
+   onUpdateFriendNickname?: (friendId: string, nickname: string) => void;
 }
 
 const createCarIcon = (heading: number, color?: string) => {
-// ... (rest of the file as needed)
   const iconHtml = renderToStaticMarkup(
     <div className="relative flex items-center justify-center h-20 w-20 group car-always-up" style={{ transform: `rotate(var(--car-rotation, ${heading}deg))` }}>
       <div className={`absolute inset-0 rounded-full blur-2xl scale-125 transition-all duration-700 ${color === 'Rojo' ? 'bg-red-500/30' : color === 'Azul' ? 'bg-blue-500/30' : color === 'Negro' ? 'bg-gray-900/40' : 'bg-blue-500/20'}`}></div>
@@ -209,16 +212,18 @@ const createCarIcon = (heading: number, color?: string) => {
   return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [80, 80], iconAnchor: [40, 40] });
 };
 
-
-const createFriendIcon = (color?: string, name?: string) => {
+const createFriendIcon = (color?: string, name?: string, nickname?: string) => {
+  const displayName = nickname ? `${nickname} (${name})` : name;
   const iconHtml = renderToStaticMarkup(
-    <div className="relative flex flex-col items-center counter-rotate">
+    <div className="relative flex flex-col items-center group car-marker-social">
+      <div className="mb-1 pointer-events-none">
+        <span className="text-[10px] font-black text-white px-2 py-0.5 rounded-full bg-blue-600/60 border border-blue-400/40 backdrop-blur-sm shadow-lg whitespace-nowrap uppercase tracking-widest leading-none block">
+          {displayName}
+        </span>
+      </div>
       <div className="relative h-20 w-20">
         <div className={`absolute inset-0 rounded-full blur-2xl scale-125 ${color === 'Rojo' ? 'bg-red-500/30' : color === 'Azul' ? 'bg-blue-500/30' : 'bg-blue-500/20'}`}></div>
         <img src={getCarImage(color)} className="w-full h-full object-contain rotate-180 opacity-90" style={{ filter: getCarFilter(color) }} />
-      </div>
-      <div className="mt-2 px-3 py-1 bg-black/80 backdrop-blur-md border border-green-500/50 rounded-full">
-         <span className="text-[10px] font-black text-white uppercase tracking-widest">{name}</span>
       </div>
     </div>
   );
@@ -385,7 +390,7 @@ export default function MapUI({
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
   onGasStationClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [], 
   centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
-  mapMode = 'satellite', onMapError
+  mapMode = 'satellite', onMapError, followingFriendId, onJoinFriendTrip, onLeaveFriendTrip, onUpdateFriendNickname
 }: MapUIProps) {
   // Ref para contar errores de carga del mapa (para fallback automático)
   const errorCountRef = useRef(0);
@@ -540,7 +545,59 @@ export default function MapUI({
         {chargers.map(charger => <Marker key={`charger-${charger.id}`} position={[charger.lat, charger.lon]} icon={chargerIcon} eventHandlers={{ click: () => { if (onChargerClick) onChargerClick(charger); } }} />)}
         {gasStations.map(station => <Marker key={`gas-${station.id}`} position={[station.lat, station.lon]} icon={gasStationIcon} eventHandlers={{ click: () => { if (onGasStationClick) onGasStationClick(station); } }} />)}
         {weatherPoints.map(wp => <Marker key={`weather-${wp.id}`} position={[wp.lat, wp.lon]} icon={createWeatherIcon(wp.temp, wp.condition)} interactive={false} />)}
-        {friends.filter(f => f.is_sharing_location && f.last_lat && f.last_lon).map((friend) => <Marker key={`friend-${friend.id}`} position={[friend.last_lat!, friend.last_lon!]} icon={createFriendIcon(friend.car_color, friend.car_name)} zIndexOffset={800} />)}
+        
+        {/* Amigos (Markers Interactivos) */}
+        {friends.filter(f => f.last_lat && f.last_lon).map((friend) => (
+          <Marker 
+            key={`friend-${friend.id}`} 
+            position={[friend.last_lat!, friend.last_lon!]} 
+            icon={createFriendIcon(friend.car_color, friend.car_name, friend.nickname)} 
+            zIndexOffset={800}
+          >
+            <Popup className="tesla-popup" minWidth={180}>
+              <div className="p-3 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-2xl flex flex-col gap-3">
+                 <div className="flex flex-col">
+                   <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-tight">Contacto Social</span>
+                   <span className="text-sm font-bold text-white truncate max-w-[140px]">{friend.nickname || friend.car_name}</span>
+                 </div>
+
+                 <div className="h-px bg-white/10 w-full" />
+
+                 <div className="flex flex-col gap-1.5">
+                   {followingFriendId === friend.id ? (
+                      <button 
+                        onClick={() => onLeaveFriendTrip?.(friend.id)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 transition-all text-[11px] font-bold uppercase"
+                      >
+                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x-circle"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+                         Dejar de seguir
+                      </button>
+                   ) : (
+                      <button 
+                        disabled={!friend.current_destination}
+                        onClick={() => onJoinFriendTrip?.(friend)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all text-[11px] font-bold uppercase ${friend.current_destination ? 'bg-blue-600/20 border-blue-500/30 text-blue-400 hover:bg-blue-600/30 active:scale-95' : 'bg-gray-800/10 border-white/5 text-gray-600 opacity-50 cursor-not-allowed'}`}
+                      >
+                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-navigation"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                         {friend.current_destination ? 'Unirme al viaje' : 'Sin ruta activa'}
+                      </button>
+                   )}
+
+                   <button 
+                     onClick={() => {
+                       const newName = prompt('Introduce el apodo para este amigo:', friend.nickname || '');
+                       if (newName !== null) onUpdateFriendNickname?.(friend.id, newName);
+                     }}
+                     className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all text-[11px] font-bold uppercase"
+                   >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                      Editar nombre
+                   </button>
+                 </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
 
         {(() => {
           let pos = userPos;

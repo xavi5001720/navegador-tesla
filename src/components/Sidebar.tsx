@@ -63,6 +63,7 @@ interface SidebarProps {
   waypoints?: [number, number][];
   onSavePreferences?: () => void;
   isLoggedIn?: boolean;
+  onAddFriend?: (email: string) => Promise<{ success?: boolean; accepted?: boolean; invited?: boolean; error?: any }>;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({

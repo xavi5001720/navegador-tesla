@@ -19,6 +19,7 @@ interface NavigationPanelProps {
     lanes: { directions: string[], recommended: boolean }[]
   } | null;
   isSimulating?: boolean;
+  followingFriendName?: string | null;
 }
 
 export default function NavigationPanel({ 
@@ -26,7 +27,8 @@ export default function NavigationPanel({
   instruction, 
   distance, 
   activeLaneGuidance,
-  isSimulating = false 
+  isSimulating = false,
+  followingFriendName = null
 }: NavigationPanelProps) {
   if (!isVisible || !instruction) return null;
 
@@ -48,7 +50,17 @@ export default function NavigationPanel({
         {/* Indicador de Simulación */}
         {isSimulating && (
           <div className="bg-amber-500/90 py-1.5 px-4 text-center">
-            <span className="text-[10px] font-black italic text-black tracking-widest uppercase">MODO SIMULACIÓN ACTIVO</span>
+            <span className="text-[10px] font-black italic text-black tracking-widest uppercase leading-none">MODO SIMULACIÓN ACTIVO</span>
+          </div>
+        )}
+
+        {/* Indicador de Convoy Social */}
+        {followingFriendName && (
+          <div className="bg-blue-600/90 py-1.5 px-4 text-center border-b border-white/5 flex items-center justify-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-blue-300 animate-pulse shadow-[0_0_8px_rgba(147,197,253,1)]" />
+            <span className="text-[10px] font-black italic text-blue-100 tracking-widest uppercase leading-none">
+              MODO CONVOY: SIGUIENDO A {followingFriendName}
+            </span>
           </div>
         )}
 

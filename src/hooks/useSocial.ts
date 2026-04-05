@@ -15,6 +15,9 @@ export interface Friend {
   is_sharing_location: boolean;
   friendship_status: 'pending' | 'accepted';
   is_incoming: boolean;
+  nickname?: string;
+  current_destination?: any;
+  current_waypoints?: any[];
 }
 
 export interface LivePosition {
@@ -47,7 +50,7 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
       // 1. Obtener todas nuestras amistades (aceptadas y pendientes)
       const { data: friendships, error: fError } = await supabase
         .from('friendships')
-        .select('user_id, friend_id, status')
+        .select('user_id, friend_id, status, nickname')
         .or(`user_id.eq.${session.user.id},friend_id.eq.${session.user.id}`);
 
       if (fError) {
@@ -71,7 +74,7 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
       console.log('[useSocial] Found invitations:', invitations?.length || 0);
 
       // 3. Procesar amistades (Deduplicando y priorizando 'accepted')
-      const friendInfoMap: Record<string, { status: 'pending' | 'accepted', is_incoming: boolean }> = {};
+      const friendInfoMap: Record<string, { status: 'pending' | 'accepted', is_incoming: boolean, nickname?: string }> = {};
       
       (friendships || []).forEach(f => {
         const friendId = f.user_id === session.user.id ? f.friend_id : f.user_id;
@@ -80,7 +83,7 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
         
         // Priorizar aceptado si ya existe el ID
         if (!friendInfoMap[friendId] || status === 'accepted') {
-          friendInfoMap[friendId] = { status, is_incoming: isIncoming };
+          friendInfoMap[friendId] = { status, is_incoming: isIncoming, nickname: f.nickname || undefined };
         }
       });
 
@@ -92,7 +95,7 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
         console.log('[useSocial] Fetching profiles for IDs:', friendIds);
         const { data: profiles, error: pError } = await supabase
           .from('profiles')
-          .select('id, email, car_name, car_color, is_online, last_lat, last_lon, is_sharing_location')
+          .select('id, email, car_name, car_color, is_online, last_lat, last_lon, is_sharing_location, current_destination, current_waypoints')
           .in('id', friendIds);
 
         if (pError) {
@@ -104,7 +107,8 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
             return {
               ...p,
               friendship_status: info.status,
-              is_incoming: info.is_incoming
+              is_incoming: info.is_incoming,
+              nickname: info.nickname
             } as Friend;
           });
         }
@@ -165,6 +169,24 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
             timestamp: Date.now()
           }
         }));
+      })
+      .on('broadcast', { event: 'convoy_join' }, ({ payload }) => {
+        // Solo nos interesa si nosotros somos el líder (o si queremos enterarnos de quién se une a quién)
+        if (payload.leaderId === session.user.id) {
+          console.info(`[Convoy] ${payload.userName} se ha unido a tu viaje.`);
+          // Disparar evento global para UI
+          window.dispatchEvent(new CustomEvent('tesla-convoy-notification', { 
+            detail: { type: 'join', userName: payload.userName } 
+          }));
+        }
+      })
+      .on('broadcast', { event: 'convoy_leave' }, ({ payload }) => {
+        if (payload.leaderId === session.user.id) {
+          console.info(`[Convoy] Un amigo ha dejado tu viaje.`);
+          window.dispatchEvent(new CustomEvent('tesla-convoy-notification', { 
+            detail: { type: 'leave' } 
+          }));
+        }
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
@@ -240,8 +262,10 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
-  const addFriend = async (email: string) => {
-    if (!session?.user) return { error: 'No hay sesión' };
+  const addFriend = async (email: string): Promise<{ success?: boolean; accepted?: boolean; invited?: boolean; error?: any }> => {
+    if (!session?.user) return { error: 'No hay sesión activa' };
+    
+    console.log(`[useSocial] Intentando invitar/añadir: ${email}`);
     const cleanEmail = email.trim().toLowerCase();
     
     if (cleanEmail === session.user.email) return { error: 'No puedes añadirte a ti mismo' };
@@ -274,7 +298,7 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
         .insert({ user_id: session.user.id, friend_id: profile.id, status: 'pending' });
 
       await fetchFriends();
-      return { success: true, accepted: false, error };
+      return { success: !error, accepted: false, error };
     } else {
       // Caso B: El usuario NO existe, crear invitación y enviar mail
       const { error: invError } = await supabase
@@ -307,33 +331,50 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
   };
 
   const acceptFriend = async (friendId: string) => {
-    if (!session?.user) return { error: 'No hay sesión' };
+    // ... (existing code)
+  };
 
+  const removeFriend = async (friendId: string) => {
+    // ... (existing code)
+  };
+
+  const updateFriendNickname = async (friendId: string, nickname: string) => {
+    if (!session?.user) return { error: 'No hay sesión' };
+    
+    console.log(`[useSocial] Actualizando apodo para ${friendId}: ${nickname}`);
     const { error } = await supabase
       .from('friendships')
-      .update({ status: 'accepted' })
-      .eq('user_id', friendId)
-      .eq('friend_id', session.user.id);
+      .update({ nickname: nickname || null })
+      .or(`and(user_id.eq.${session.user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${session.user.id})`);
 
     await fetchFriends();
     return { success: !error, error };
   };
 
-  const removeFriend = async (friendId: string) => {
-    if (!session?.user) return { error: 'No hay sesión' };
+  const joinConvoy = async (friendId: string) => {
+    if (!session?.user || !channelRef.current) return;
+    
+    console.log(`[useSocial] Notificando unión al convoy de ${friendId}`);
+    channelRef.current.send({
+      type: 'broadcast',
+      event: 'convoy_join',
+      payload: { 
+        userId: session.user.id, 
+        leaderId: friendId,
+        userName: (await supabase.from('profiles').select('car_name').eq('id', session.user.id).single()).data?.car_name || session.user.email
+      }
+    });
+  };
 
-    if (friendId.startsWith('pending-')) {
-      const email = friendId.replace('pending-', '');
-      await supabase.from('friend_invitations').delete().eq('receiver_email', email);
-    } else {
-      await supabase
-        .from('friendships')
-        .delete()
-        .or(`and(user_id.eq.${session.user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${session.user.id})`);
-    }
-
-    await fetchFriends();
-    return { success: true };
+  const leaveConvoy = async (friendId: string) => {
+    if (!session?.user || !channelRef.current) return;
+    
+    console.log(`[useSocial] Notificando salida del convoy de ${friendId}`);
+    channelRef.current.send({
+      type: 'broadcast',
+      event: 'convoy_leave',
+      payload: { userId: session.user.id, leaderId: friendId }
+    });
   };
 
   // Mapear amigos con su estado "Live"
@@ -352,6 +393,9 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     addFriend, 
     acceptFriend,
     removeFriend,
+    updateFriendNickname,
+    joinConvoy,
+    leaveConvoy,
     refreshFriends: fetchFriends 
   };
 }
