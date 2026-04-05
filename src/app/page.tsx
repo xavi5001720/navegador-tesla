@@ -599,16 +599,18 @@ export default function Home() {
             </div>
 
             {/* Recuadro de Lista de Amigos */}
-            {friends.length > 0 && (
-              <div className="w-64 max-h-[300px] overflow-y-auto bg-black/60 backdrop-blur-xl border border-white/10 rounded-[32px] p-4 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500 scrollbar-hide">
-                <div className="flex items-center justify-between mb-3 px-1">
-                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none">Amigos ({friends.length})</span>
+            <div className="w-64 max-h-[300px] overflow-y-auto bg-black/60 backdrop-blur-xl border border-white/10 rounded-[32px] p-4 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500 scrollbar-hide">
+              <div className="flex items-center justify-between mb-3 px-1">
+                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none">Amigos</span>
+                {friends.length > 0 && (
                   <div className="flex gap-1">
                      <div className="h-1 w-1 rounded-full bg-green-500 animate-pulse" />
                      <span className="text-[8px] font-bold text-green-500/80 uppercase">{friends.filter(f => f.is_online).length}</span>
                   </div>
-                </div>
-                
+                )}
+              </div>
+              
+              {friends.length > 0 ? (
                 <div className="flex flex-col gap-2">
                   {[...friends]
                     .sort((a, b) => (b.is_online ? 1 : 0) - (a.is_online ? 1 : 0))
@@ -642,8 +644,21 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="flex flex-col items-center gap-3 py-4 text-center">
+                  <div className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
+                    <Users className="h-5 w-5 text-gray-600" />
+                  </div>
+                  <p className="text-[10px] font-medium text-gray-500 leading-tight">No tienes amigos vinculados todavía</p>
+                  <button 
+                    onClick={() => setIsSocialOpen(true)}
+                    className="w-full py-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 rounded-xl text-[10px] font-black text-blue-400 uppercase transition-all"
+                  >
+                    Vincular Amigos
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <button 
