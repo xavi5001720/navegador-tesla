@@ -80,6 +80,10 @@ export function useWeather(userPos: [number, number] | null, routeCoordinates?: 
       }
 
       try {
+        if (!API_KEY) {
+          console.warn('[useWeather] ⚠️ No se detectó la NEXT_PUBLIC_OPENWEATHER_API_KEY en las variables de entorno.');
+        }
+        
         const fetchPromises = targetPoints.map(async (point) => {
           const params = new URLSearchParams({
             lat: point[0].toString(),
@@ -89,6 +93,12 @@ export function useWeather(userPos: [number, number] | null, routeCoordinates?: 
             lang: 'es'
           });
           const res = await fetch(`${API_URL}?${params.toString()}`);
+          
+          if (!res.ok) {
+            console.error(`[useWeather] ❌ Error en la API de OWM: ${res.status} ${res.statusText}`);
+            return null;
+          }
+
           const data = await res.json();
           if (data && data.main) {
             return {
@@ -111,7 +121,7 @@ export function useWeather(userPos: [number, number] | null, routeCoordinates?: 
         lastFetchRef.current = { type: currentType, pos: userPos, routeLength };
 
       } catch (err) {
-        console.error('[useWeather] Error fetched OWM:', err);
+        console.error('[useWeather] ❌ Error fatal al conectar con OWM:', err);
       } finally {
         setLoading(false);
       }
