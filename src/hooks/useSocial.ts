@@ -131,7 +131,78 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     }
   }, [session, fetchFriends]);
 
-  // ... [Previous Realtime & Location Persistance logic stays same] ...
+  // ── Sincronización Realtime ──────────────────────────────────────────────
+  useEffect(() => {
+    if (!session?.user) return;
+
+    // 1. Canal de presencia para estados online y posiciones live
+    const channel = supabase.channel('garage_social_live', {
+      config: { presence: { key: session.user.id } }
+    });
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const onlineIds = new Set<string>();
+        Object.keys(state).forEach((key: any) => {
+          (state[key] as any[]).forEach((p: any) => onlineIds.add(p.key));
+        });
+        setOnlineUserIds(onlineIds);
+      })
+      .on('broadcast', { event: 'location' }, ({ payload }) => {
+        setLivePositions(prev => ({
+          ...prev,
+          [payload.userId]: {
+            lat: payload.lat,
+            lon: payload.lon,
+            timestamp: Date.now()
+          }
+        }));
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({ key: session.user.id, online_at: new Date().toISOString() });
+        }
+      });
+
+    channelRef.current = channel;
+
+    // 2. Escuchar cambios en la base de datos (Realtime)
+    const dbChannel = supabase.channel('garage_db_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => fetchFriends())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_invitations' }, () => fetchFriends())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => fetchFriends())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(dbChannel);
+    };
+  }, [session, fetchFriends]);
+
+  // 3. Persistencia de ubicación en DB (Debounce 30s)
+  useEffect(() => {
+    if (!session?.user || !userPos) return;
+
+    const now = Date.now();
+    if (now - lastDbUpdateRef.current > 30000) {
+      supabase.from('profiles').update({
+        last_lat: userPos[0],
+        last_lon: userPos[1],
+        is_online: true
+      }).eq('id', session.user.id).then();
+      lastDbUpdateRef.current = now;
+    }
+
+    // Broadcast live (frecuente)
+    if (channelRef.current && channelRef.current.state === 'joined') {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'location',
+        payload: { userId: session.user.id, lat: userPos[0], lon: userPos[1] }
+      });
+    }
+  }, [userPos, session]);
 
   // ── Actions ───────────────────────────────────────────────────────────────
 
