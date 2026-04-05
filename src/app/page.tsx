@@ -668,15 +668,20 @@ export default function Home() {
                                   {!isPending ? (
                                     <>
                                       <button 
+                                        disabled={!friend.is_sharing_location}
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          if (friend.last_lat && friend.last_lon) {
+                                          if (friend.is_sharing_location && friend.last_lat && friend.last_lon) {
                                             setViewMode('overview');
                                             setMapCenterOverride([friend.last_lat, friend.last_lon]);
                                             setExpandedFriendId(null);
                                           }
                                         }}
-                                        className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-[9px] font-black text-blue-400 uppercase transition-all"
+                                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border text-[9px] font-black uppercase transition-all ${
+                                          friend.is_sharing_location 
+                                            ? 'bg-blue-600/20 hover:bg-blue-600/30 border-blue-500/30 text-blue-400' 
+                                            : 'bg-gray-600/10 border-gray-500/10 text-gray-600 cursor-not-allowed'
+                                        }`}
                                       >
                                         <MapPin className="h-3 w-3" /> Ver
                                       </button>
