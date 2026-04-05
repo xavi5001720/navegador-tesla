@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { getDistance, getBearing, interpolatePoint, getPointAtDistance } from '@/utils/geo';
+import { getDistance, getBearing, interpolatePoint, getPointAtDistance, getOffsetPoint } from '@/utils/geo';
 import { RouteSection } from './useRoute';
 
 interface useRouteSimulatorProps {
@@ -136,13 +136,12 @@ export function useRouteSimulator({
 
         const pos = interpolatePoint(p1, p2, fraction);
         
-        // FÍSICA DE CHASIS (5 metros de separación virtual entre ejes para giro suave)
-        const AXLE_OFFSET = 2.5; 
-        const posFront = getPointAtDistance(cumulativeDistances, routeCoordinates, newDist + AXLE_OFFSET);
-        const posRear = getPointAtDistance(cumulativeDistances, routeCoordinates, newDist - AXLE_OFFSET);
+        // NAVEGACIÓN POR CARRIL: 2.2 metros a la derecha de la trayectoria
+        const roadBearing = getBearing(p1, p2);
+        const lanePos = getOffsetPoint(pos, roadBearing + 90, 2.2);
         
-        setUserPos(pos);
-        setHeading(getBearing(posRear, posFront)); 
+        setUserPos(lanePos);
+        setHeading(roadBearing); // Mantiene el paralelismo total con la vía
         setSpeed(Math.round(currentSpeedRef.current));
       }
 

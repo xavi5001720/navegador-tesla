@@ -376,28 +376,24 @@ export default function MapUI({
     return dists;
   }, [routeCoordinates]);
 
-  // Rumbo perfeccionado: Si estamos navegando, intentamos alinearnos a la ruta
-  const snappedHeading = (() => {
+  // LÓGICA DE NAVEGACIÓN PERFECCIONADA (Carril + Paralelismo)
+  const { snappedPos, snappedHeading } = useMemo(() => {
     if (viewMode === 'navigation' && routeCoordinates && routeCoordinates.length > 1 && routeCumDist.length > 0) {
       const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
       // Solo nos "imantamos" si estamos a menos de 40 metros de la ruta
       if (snapped.distance < 40) {
-        // Encontramos la distancia total acumulada hasta el punto "snapped"
-        const distAtP1 = routeCumDist[snapped.segmentIndex];
-        const distInSeg = getDistance(routeCoordinates[snapped.segmentIndex], snapped.point);
-        const totalDistAtSnapped = distAtP1 + distInSeg;
-
-        // FÍSICA DE CHASIS: Calculamos rumbo por dos puntos (eje delantero y trasero virtual)
-        // Usamos una separación de 3 metros para una trazada elegante
-        const offset = 3; 
-        const pFront = getPointAtDistance(routeCumDist, routeCoordinates, totalDistAtSnapped + offset);
-        const pRear = getPointAtDistance(routeCumDist, routeCoordinates, totalDistAtSnapped - offset);
-        
-        return getBearing(pRear, pFront);
+        const p1 = routeCoordinates[snapped.segmentIndex];
+        const p2 = routeCoordinates[snapped.segmentIndex + 1];
+        if (p1 && p2) {
+          const roadBearing = getBearing(p1, p2);
+          // NAVEGACIÓN POR CARRIL: Desplazamos la posición visual 2.2m a la derecha
+          const lanePos = getOffsetPoint(snapped.point, roadBearing + 90, 2.2);
+          return { snappedPos: lanePos, snappedHeading: roadBearing };
+        }
       }
     }
-    return heading; // Fallback al rumbo crudo (GPS o Simulador)
-  })();
+    return { snappedPos: userPos, snappedHeading: heading };
+  }, [viewMode, userPos, heading, routeCoordinates, routeCumDist]);
 
   return (
     <div className="relative h-full w-full bg-gray-900 overflow-hidden">
@@ -412,7 +408,7 @@ export default function MapUI({
         <TileLayer attribution="&copy; Google Maps" url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" />
         <TileLayer attribution="&copy; Google Maps" url="https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}&apistyle=s.t:3|p.v:off|s.t:4|p.v:off" />
         <RouteFitter routeCoordinates={routeCoordinates} />
-        <LocationTracker position={userPos} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} customZoom={customZoom} hasLocation={hasLocation} centerOverride={centerOverride} overviewFitTrigger={overviewFitTrigger} radars={radars} aircrafts={aircrafts} chargers={chargers} gasStations={gasStations} weatherPoints={weatherPoints} friends={friends} distanceToNextInstruction={distanceToNextInstruction} isSimulating={isSimulating} />
+        <LocationTracker position={snappedPos} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} customZoom={customZoom} hasLocation={hasLocation} centerOverride={centerOverride} overviewFitTrigger={overviewFitTrigger} radars={radars} aircrafts={aircrafts} chargers={chargers} gasStations={gasStations} weatherPoints={weatherPoints} friends={friends} distanceToNextInstruction={distanceToNextInstruction} isSimulating={isSimulating} />
 
         
         {(() => {

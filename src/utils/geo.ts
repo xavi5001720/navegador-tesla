@@ -116,3 +116,17 @@ export function getPointAtDistance(cumulativeDistances: number[], routeCoordinat
 
   return interpolatePoint(p1, p2, fraction);
 }
+
+export function getOffsetPoint(p: [number, number], bearing: number, distance: number): [number, number] {
+  const R = 6371e3; // Radio tierra
+  const lat1 = p[0] * Math.PI / 180;
+  const lon1 = p[1] * Math.PI / 180;
+  const brng = bearing * Math.PI / 180;
+
+  const lat2 = Math.asin(Math.sin(lat1) * Math.cos(distance / R) +
+                        Math.cos(lat1) * Math.sin(distance / R) * Math.cos(brng));
+  const lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(distance / R) * Math.cos(lat1),
+                                 Math.cos(distance / R) - Math.sin(lat1) * Math.sin(lat2));
+
+  return [lat2 * 180 / Math.PI, (lon2 * 180 / Math.PI + 540) % 360 - 180];
+}
