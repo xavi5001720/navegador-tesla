@@ -93,9 +93,26 @@ export function findClosestPointOnPolyline(p: [number, number], polyline: [numbe
 }
 
 export function interpolatePoint(p1: [number, number], p2: [number, number], fraction: number): [number, number] {
-
   return [
     p1[0] + (p2[0] - p1[0]) * fraction,
     p1[1] + (p2[1] - p1[1]) * fraction
   ];
+}
+
+export function getPointAtDistance(cumulativeDistances: number[], routeCoordinates: [number, number][], targetDist: number): [number, number] {
+  if (!routeCoordinates || routeCoordinates.length === 0) return [0, 0];
+  const totalDist = cumulativeDistances[cumulativeDistances.length - 1] || 0;
+  const d = Math.max(0, Math.min(totalDist, targetDist));
+
+  let i = cumulativeDistances.findIndex((cd) => cd > d) - 1;
+  if (i < 0) i = 0;
+  if (i >= routeCoordinates.length - 1) return routeCoordinates[routeCoordinates.length - 1];
+
+  const p1 = routeCoordinates[i];
+  const p2 = routeCoordinates[i + 1];
+  const segDist = cumulativeDistances[i + 1] - cumulativeDistances[i];
+  const distInSeg = d - cumulativeDistances[i];
+  const fraction = segDist > 0 ? distInSeg / segDist : 0;
+
+  return interpolatePoint(p1, p2, fraction);
 }

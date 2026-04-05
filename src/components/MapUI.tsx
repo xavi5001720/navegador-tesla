@@ -10,11 +10,12 @@ import { Radar } from '@/hooks/useRadars';
 import { Aircraft } from '@/hooks/usePegasus';
 import { Charger } from '@/hooks/useChargers';
 import { GasStation } from '@/hooks/useGasStations';
-import { findClosestPointOnPolyline, getBearing } from '@/utils/geo';
+import { Friend } from '@/hooks/useSocial';
+import { useMemo } from 'react';
+import { getDistance, getBearing, findClosestPointOnPolyline, getPointAtDistance } from '@/utils/geo';
 import { RouteSection } from '@/hooks/useRoute';
 import { WeatherPoint } from '@/hooks/useWeather';
 import { getCarFilter, getCarImage } from '@/utils/carStyles';
-import { Friend } from '@/hooks/useSocial';
 
 const endMarkerIcon = L.divIcon({
    html: renderToStaticMarkup(
@@ -363,15 +364,36 @@ export default function MapUI({
   onGasStationClick, onOpenGarage, routeSections = [], friends = [], centerOverride = null, 
   overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false
 }: MapUIProps) {
+  // Pre-calculamos distancias acumuladas para lógica de trazada cinemática (GPS Real)
+  const routeCumDist = useMemo(() => {
+    if (!routeCoordinates || routeCoordinates.length < 2) return [];
+    const dists = [0];
+    let total = 0;
+    for (let i = 0; i < routeCoordinates.length - 1; i++) {
+       total += getDistance(routeCoordinates[i], routeCoordinates[i+1]);
+       dists.push(total);
+    }
+    return dists;
+  }, [routeCoordinates]);
+
   // Rumbo perfeccionado: Si estamos navegando, intentamos alinearnos a la ruta
   const snappedHeading = (() => {
-    if (viewMode === 'navigation' && routeCoordinates && routeCoordinates.length > 1) {
+    if (viewMode === 'navigation' && routeCoordinates && routeCoordinates.length > 1 && routeCumDist.length > 0) {
       const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
       // Solo nos "imantamos" si estamos a menos de 40 metros de la ruta
       if (snapped.distance < 40) {
-        const p1 = routeCoordinates[snapped.segmentIndex];
-        const p2 = routeCoordinates[snapped.segmentIndex + 1];
-        if (p1 && p2) return getBearing(p1, p2);
+        // Encontramos la distancia total acumulada hasta el punto "snapped"
+        const distAtP1 = routeCumDist[snapped.segmentIndex];
+        const distInSeg = getDistance(routeCoordinates[snapped.segmentIndex], snapped.point);
+        const totalDistAtSnapped = distAtP1 + distInSeg;
+
+        // FÍSICA DE CHASIS: Calculamos rumbo por dos puntos (eje delantero y trasero virtual)
+        // Usamos una separación de 3 metros para una trazada elegante
+        const offset = 3; 
+        const pFront = getPointAtDistance(routeCumDist, routeCoordinates, totalDistAtSnapped + offset);
+        const pRear = getPointAtDistance(routeCumDist, routeCoordinates, totalDistAtSnapped - offset);
+        
+        return getBearing(pRear, pFront);
       }
     }
     return heading; // Fallback al rumbo crudo (GPS o Simulador)

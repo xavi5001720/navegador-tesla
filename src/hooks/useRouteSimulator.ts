@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { getDistance, getBearing, interpolatePoint } from '@/utils/geo';
+import { getDistance, getBearing, interpolatePoint, getPointAtDistance } from '@/utils/geo';
 import { RouteSection } from './useRoute';
 
 interface useRouteSimulatorProps {
@@ -136,8 +136,13 @@ export function useRouteSimulator({
 
         const pos = interpolatePoint(p1, p2, fraction);
         
+        // FÍSICA DE CHASIS (5 metros de separación virtual entre ejes para giro suave)
+        const AXLE_OFFSET = 2.5; 
+        const posFront = getPointAtDistance(cumulativeDistances, routeCoordinates, newDist + AXLE_OFFSET);
+        const posRear = getPointAtDistance(cumulativeDistances, routeCoordinates, newDist - AXLE_OFFSET);
+        
         setUserPos(pos);
-        setHeading(getBearing(p1, p2));
+        setHeading(getBearing(posRear, posFront)); 
         setSpeed(Math.round(currentSpeedRef.current));
       }
 
