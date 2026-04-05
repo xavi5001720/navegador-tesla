@@ -552,9 +552,14 @@ export default function MapUI({
             key={`friend-${friend.id}`} 
             position={[friend.last_lat!, friend.last_lon!]} 
             icon={createFriendIcon(friend.car_color, friend.car_name, friend.nickname)} 
-            zIndexOffset={800}
+            zIndexOffset={1000}
+            eventHandlers={{
+              click: (e) => {
+                e.target.openPopup();
+              }
+            }}
           >
-            <Popup className="tesla-popup" minWidth={180}>
+            <Popup className="tesla-popup" minWidth={220} offset={[0, -20]}>
               <div className="p-3 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-2xl flex flex-col gap-3">
                  <div className="flex flex-col">
                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-tight">Contacto Social</span>

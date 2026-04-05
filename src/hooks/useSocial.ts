@@ -290,7 +290,7 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
         if (existing.user_id === session.user.id) return { error: 'Solicitud ya enviada' };
         
         // Si nosotros recibimos la solicitud, la aceptamos
-        return acceptFriend(profile.id);
+        return await acceptFriend(profile.id);
       }
 
       const { error } = await supabase
@@ -330,12 +330,32 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     }
   };
 
-  const acceptFriend = async (friendId: string) => {
-    // ... (existing code)
+  const acceptFriend = async (friendId: string): Promise<{ success: boolean; error?: any }> => {
+    try {
+      const { error } = await supabase
+        .from('friendships')
+        .update({ status: 'accepted' })
+        .match({ user_id: friendId, friend_id: session?.user?.id });
+      
+      await fetchFriends();
+      return { success: !error, error };
+    } catch (err) {
+      return { success: false, error: err };
+    }
   };
 
-  const removeFriend = async (friendId: string) => {
-    // ... (existing code)
+  const removeFriend = async (friendId: string): Promise<{ success: boolean; error?: any }> => {
+    try {
+      const { error } = await supabase
+        .from('friendships')
+        .delete()
+        .or(`and(user_id.eq.${session?.user?.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${session?.user?.id})`);
+      
+      await fetchFriends();
+      return { success: !error, error };
+    } catch (err) {
+      return { success: false, error: err };
+    }
   };
 
   const updateFriendNickname = async (friendId: string, nickname: string) => {
