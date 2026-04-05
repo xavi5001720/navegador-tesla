@@ -578,23 +578,72 @@ export default function Home() {
       )}
 
       {/* Botón de Perfil / Iniciar Sesión (Top Right) */}
-      <div className="fixed top-6 right-6 z-[600] flex items-center gap-3">
+      <div className="fixed top-6 right-6 z-[600] flex flex-col items-end gap-3">
         {session ? (
-          <div className="flex items-center gap-2 group">
-            <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black text-white uppercase italic tracking-tighter bg-blue-600 px-2 py-0.5 rounded-sm shadow-lg leading-none">USUARIO ACTIVO</span>
-              <span className="text-[14px] font-black text-white italic tracking-tight">
-                {profile?.car_name && profile.car_name.trim().length > 0 
-                  ? profile.car_name 
-                  : (session.user.user_metadata?.full_name || session.user.email?.split('@')[0])}
-              </span>
+          <div className="flex flex-col items-end gap-3">
+            <div className="flex items-center gap-2 group">
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] font-black text-white uppercase italic tracking-tighter bg-blue-600 px-2 py-0.5 rounded-sm shadow-lg leading-none">USUARIO ACTIVO</span>
+                <span className="text-[14px] font-black text-white italic tracking-tight">
+                  {profile?.car_name && profile.car_name.trim().length > 0 
+                    ? profile.car_name 
+                    : (session.user.user_metadata?.full_name || session.user.email?.split('@')[0])}
+                </span>
+              </div>
+              <button 
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="h-12 w-12 flex items-center justify-center rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all group overflow-hidden"
+              >
+                <img src="/avatar.png" alt="Avatar" className="h-full w-full object-cover group-hover:scale-110 transition-transform" />
+              </button>
             </div>
-            <button 
-              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="h-12 w-12 flex items-center justify-center rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all group overflow-hidden"
-            >
-              <img src="/avatar.png" alt="Avatar" className="h-full w-full object-cover group-hover:scale-110 transition-transform" />
-            </button>
+
+            {/* Recuadro de Lista de Amigos */}
+            {friends.length > 0 && (
+              <div className="w-64 max-h-[300px] overflow-y-auto bg-black/60 backdrop-blur-xl border border-white/10 rounded-[32px] p-4 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500 scrollbar-hide">
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none">Amigos ({friends.length})</span>
+                  <div className="flex gap-1">
+                     <div className="h-1 w-1 rounded-full bg-green-500 animate-pulse" />
+                     <span className="text-[8px] font-bold text-green-500/80 uppercase">{friends.filter(f => f.is_online).length}</span>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col gap-2">
+                  {[...friends]
+                    .sort((a, b) => (b.is_online ? 1 : 0) - (a.is_online ? 1 : 0))
+                    .map((friend) => (
+                    <div 
+                      key={friend.id}
+                      className="flex items-center justify-between gap-3 bg-white/5 p-2 pr-3 rounded-2xl border border-white/5 hover:bg-white/10 transition-all group cursor-pointer"
+                      onClick={() => {
+                        if (friend.is_online && friend.last_lat && friend.last_lon) {
+                          setViewMode('overview');
+                          setMapCenterOverride([friend.last_lat, friend.last_lon]);
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <div className="h-8 w-8 rounded-xl bg-gray-800 flex-shrink-0 flex items-center justify-center overflow-hidden border border-white/5">
+                          <img src="/avatar.png" alt={friend.car_name} className={`h-full w-full object-cover ${friend.is_online ? 'opacity-100' : 'opacity-40 grayscale'}`} />
+                        </div>
+                        <div className="flex flex-col overflow-hidden">
+                          <span className={`text-[11px] font-black italic leading-none uppercase truncate ${friend.is_online ? 'text-green-500' : 'text-red-500'}`}>
+                            {friend.car_name}
+                          </span>
+                          <span className="text-[8px] font-bold text-gray-500 uppercase tracking-tighter leading-tight truncate">
+                            {friend.car_color}
+                          </span>
+                        </div>
+                      </div>
+                      {friend.is_online && (
+                        <ChevronRight className="h-3 w-3 text-gray-600 group-hover:text-white transition-colors" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <button 
@@ -606,7 +655,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* Menú Desplegable de Usuario */}
       <UserMenu 
         isOpen={isUserMenuOpen}
         onClose={() => setIsUserMenuOpen(false)}
@@ -616,43 +664,6 @@ export default function Home() {
         onToggleFullscreen={() => setIsSidebarOpen(!isSidebarOpen)}
         onLogout={handleSignOut}
       />
-
-      {/* Lista de Amigos (Right Side) */}
-      {session && friends.length > 0 && (
-        <div className="fixed top-24 right-6 z-[500] flex flex-col gap-2 animate-in fade-in slide-in-from-right-4 duration-1000">
-          <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/5 self-end mb-2">
-            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none">Amigos Conectados ({friends.filter(f => f.is_online).length})</span>
-          </div>
-          {friends.map((friend) => (
-            <div 
-              key={friend.id}
-              className="flex items-center gap-3 bg-black/60 backdrop-blur-xl border border-white/10 p-2 pr-4 rounded-2xl shadow-xl group hover:border-white/20 transition-all"
-            >
-              <div className="relative">
-                <div className="h-10 w-10 rounded-xl bg-gray-800 flex items-center justify-center overflow-hidden border border-white/5">
-                   <img src="/avatar.png" alt={friend.car_name} className="h-full w-full object-cover opacity-50" />
-                </div>
-                <div className={`absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full border-2 border-gray-900 ${friend.is_online ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-red-500'}`} />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-white italic leading-tight uppercase">{friend.car_name}</span>
-                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter leading-none">En su {friend.car_color}</span>
-              </div>
-              <button 
-                className="ml-2 opacity-0 group-hover:opacity-100 transition-all h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10"
-                onClick={() => {
-                   if (friend.last_lat && friend.last_lon) {
-                     setViewMode('overview');
-                     setMapCenterOverride([friend.last_lat, friend.last_lon]);
-                   }
-                }}
-              >
-                <ChevronRight className="h-4 w-4 text-gray-400" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Panel Izquierdo (Bloque de Control) */}
       {/* Branding NavegaPRO (Oculto si hay instrucciones de navegación activas en modo pantalla completa) */}

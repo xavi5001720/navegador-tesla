@@ -13,6 +13,7 @@ export interface Friend {
   last_lat?: number;
   last_lon?: number;
   is_sharing_location: boolean;
+  friendship_status: 'pending' | 'accepted';
 }
 
 export interface LivePosition {
@@ -34,16 +35,20 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     if (!session?.user) return;
 
     try {
-      // 1. Obtener todas nuestras amistades aceptadas
+      // 1. Obtener todas nuestras amistades (aceptadas y pendientes)
       const { data: friendships, error: fError } = await supabase
         .from('friendships')
-        .select('user_id, friend_id')
-        .eq('status', 'accepted')
+        .select('user_id, friend_id, status')
         .or(`user_id.eq.${session.user.id},friend_id.eq.${session.user.id}`);
 
       if (fError) throw fError;
 
-      const friendIds = (friendships || []).map(f => f.user_id === session.user.id ? f.friend_id : f.user_id);
+      const friendInfo = (friendships || []).map(f => ({
+        id: f.user_id === session.user.id ? f.friend_id : f.user_id,
+        status: f.status as 'pending' | 'accepted'
+      }));
+
+      const friendIds = friendInfo.map(fi => fi.id);
 
       if (friendIds.length === 0) {
         setFriends([]);
@@ -59,7 +64,15 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
 
       if (pError) throw pError;
       
-      setFriends(profiles as Friend[]);
+      const mappedFriends = (profiles || []).map(p => {
+        const fi = friendInfo.find(info => info.id === p.id);
+        return {
+          ...p,
+          friendship_status: fi?.status || 'pending'
+        } as Friend;
+      });
+
+      setFriends(mappedFriends);
     } catch (err) {
       console.error('[useSocial] Error fetching friends:', err);
     } finally {
@@ -199,9 +212,10 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
   };
 
   // Mapear amigos con su estado "Live"
+  // Solo consideramos online si la amistad está aceptada
   const enhancedFriends = friends.map(f => ({
     ...f,
-    is_online: onlineUserIds.has(f.id),
+    is_online: f.friendship_status === 'accepted' && onlineUserIds.has(f.id),
     // Usar posición de broadcast si está disponible (más fresca), si no la de DB
     last_lat: livePositions[f.id]?.lat ?? f.last_lat,
     last_lon: livePositions[f.id]?.lon ?? f.last_lon,
