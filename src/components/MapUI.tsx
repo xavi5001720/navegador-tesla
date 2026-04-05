@@ -387,7 +387,7 @@ export default function MapUI({
       <MapContainer center={userPos} zoom={15} className="h-full w-full z-0" zoomControl={false}>
         <MapEvents viewMode={viewMode} onViewModeChange={onViewModeChange} onMapClick={onMapClick} />
         <MapRotator heading={snappedHeading} viewMode={viewMode} speed={speed} />
-        <TileLayer attribution="&copy; Google Maps" url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}" />
+        <TileLayer attribution="&copy; Google Maps" url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}&apistyle=p.v:off" />
         <RouteFitter routeCoordinates={routeCoordinates} />
         <LocationTracker position={userPos} viewMode={viewMode} hasRoute={!!routeCoordinates} speed={speed} routeCoordinates={routeCoordinates} customZoom={customZoom} hasLocation={hasLocation} centerOverride={centerOverride} overviewFitTrigger={overviewFitTrigger} radars={radars} aircrafts={aircrafts} chargers={chargers} gasStations={gasStations} weatherPoints={weatherPoints} friends={friends} distanceToNextInstruction={distanceToNextInstruction} isSimulating={isSimulating} />
 
