@@ -32,11 +32,17 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
   const lastDbUpdateRef = useRef<number>(0);
   const channelRef = useRef<any>(null);
 
+  console.info(`[useSocial] 🔄 Hook inicializado para el usuario: ${session?.user?.id || 'Sesión no detectada'}`);
+
   const fetchFriends = useCallback(async () => {
-    if (!session?.user) return;
+    console.info('[useSocial] 🔄 Intentando cargar amigos...');
+    if (!session?.user) {
+      console.info('[useSocial] ⚠️ Sin sesión activa, abortando carga de amigos.');
+      return;
+    }
 
     try {
-      console.log('[useSocial] Fetching friendships for:', session.user.id);
+      console.info('[useSocial] 🔍 Cargando amistades para:', session.user.id);
       
       // 1. Obtener todas nuestras amistades (aceptadas y pendientes)
       const { data: friendships, error: fError } = await supabase
