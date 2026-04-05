@@ -759,12 +759,15 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <button 
-            onClick={() => setIsAuthModalOpen(true)}
-            className="h-12 w-12 flex items-center justify-center rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all animate-in fade-in slide-in-from-top-4 duration-700 overflow-hidden group"
-          >
-            <img src="/avatar.png" alt="Avatar" className="h-full w-full object-cover group-hover:scale-110 transition-transform" />
-          </button>
+          <div className="flex flex-col items-center gap-1.5 animate-in fade-in slide-in-from-top-4 duration-700">
+            <button 
+              onClick={() => setIsAuthModalOpen(true)}
+              className="h-12 w-12 flex items-center justify-center rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl hover:bg-white/10 transition-all overflow-hidden group"
+            >
+              <img src="/avatar.png" alt="Avatar" className="h-full w-full object-cover group-hover:scale-110 transition-transform" />
+            </button>
+            <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest text-center shadow-black drop-shadow-lg">Inicio</span>
+          </div>
         )}
       </div>
 
@@ -951,7 +954,7 @@ export default function Home() {
                   >
                     <img src="/mapa.png" alt="Centrar Mapa Global" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
                   </button>
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center shadow-black drop-shadow-lg">Vista General</span>
+                  <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest text-center shadow-black drop-shadow-lg">Vista General</span>
                 </div>
                 <div className="flex flex-col items-center gap-1.5">
                   <button 
@@ -963,7 +966,7 @@ export default function Home() {
                   >
                     <img src="/volante.png" alt="Modo Navegación" className="h-6 w-6 md:h-8 md:w-8 object-contain drop-shadow-md" />
                   </button>
-                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest text-center shadow-black drop-shadow-lg">Modo Navegación</span>
+                  <span className="text-[9px] font-black text-blue-500 uppercase tracking-widest text-center shadow-black drop-shadow-lg">Modo Navegación</span>
                 </div>
               </>
             )}
