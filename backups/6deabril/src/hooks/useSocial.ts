@@ -194,23 +194,16 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
 
     channelRef.current = channel;
 
-    // 2. Escuchar cambios en la base de datos (Realtime - Debounced)
-    let fetchTimeout: NodeJS.Timeout;
-    const debouncedFetch = () => {
-      clearTimeout(fetchTimeout);
-      fetchTimeout = setTimeout(() => fetchFriends(), 5000); // Debounce de 5s
-    };
-
+    // 2. Escuchar cambios en la base de datos (Realtime)
     const dbChannel = supabase.channel('garage_db_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => debouncedFetch())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_invitations' }, () => debouncedFetch())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_nicknames' }, () => debouncedFetch())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => fetchFriends())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_invitations' }, () => fetchFriends())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_nicknames' }, () => fetchFriends())
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(dbChannel);
-      clearTimeout(fetchTimeout);
     };
   }, [session, fetchFriends]);
 
@@ -221,13 +214,10 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
   useEffect(() => {
     if (!session?.user || !userPos) return;
 
-    // Ahorro de datos: Si la pestaña no es visible, NO gastamos créditos de Supabase
-    if (document.visibilityState !== 'visible') return;
-
     const now = Date.now();
     
-    // A. Actualización en Base de Datos (Persistencia cada 2 minutos si no hay movimiento crítico)
-    if (now - lastDbUpdateRef.current > 120000) {
+    // A. Actualización en Base de Datos (Persistencia cada 30-45s)
+    if (now - lastDbUpdateRef.current > 45000) {
       supabase.from('profiles').update({
         last_lat: userPos[0],
         last_lon: userPos[1],
@@ -236,21 +226,23 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
       lastDbUpdateRef.current = now;
     }
 
-    // B. Broadcast Realtime (Frecuencia de emergencia)
+    // B. Broadcast Realtime (Frecuente pero optimizado)
     if (channelRef.current && channelRef.current.state === 'joined') {
       let shouldBroadcast = false;
 
       if (!lastBroadcastPosRef.current) {
         shouldBroadcast = true;
       } else {
+        // Cálculo de distancia aproximada (euclídea simple para eficiencia)
         const latDiff = userPos[0] - lastBroadcastPosRef.current[0];
         const lonDiff = userPos[1] - lastBroadcastPosRef.current[1];
+        // ~111,320 metros por grado de latitud
         const distance = Math.sqrt(latDiff * latDiff + lonDiff * lonDiff) * 111320;
         
-        // --- DIETA REALTIME ---
-        // 1. Se ha movido > 250 metros (En carretera, 250m es suficiente para seguimiento social)
-        // 2. O si han pasado > 5 minutos (300.000ms) desde el último broadcast (Heartbeat estático)
-        if (distance > 250 || (now - lastBroadcastTimeRef.current > 300000)) {
+        // Solo emitir si:
+        // 1. Se ha movido > 15 metros
+        // 2. O si han pasado > 10 segundos desde el último broadcast
+        if (distance > 15 || (now - lastBroadcastTimeRef.current > 10000)) {
           shouldBroadcast = true;
         }
       }
