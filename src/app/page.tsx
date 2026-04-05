@@ -621,7 +621,7 @@ export default function Home() {
       {session && friends.length > 0 && (
         <div className="fixed top-24 right-6 z-[500] flex flex-col gap-2 animate-in fade-in slide-in-from-right-4 duration-1000">
           <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/5 self-end mb-2">
-            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none">Amigos Conectados</span>
+            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none">Amigos Conectados ({friends.filter(f => f.is_online).length})</span>
           </div>
           {friends.map((friend) => (
             <div 
@@ -774,7 +774,7 @@ export default function Home() {
           onOpenGarage={() => setIsGarageOpen(true)}
           routeSections={route?.sections}
           carColor={profile?.car_color}
-          friends={friends}
+          friends={friends.filter(f => f.is_online)}
           centerOverride={mapCenterOverride}
           overviewFitTrigger={overviewFitTrigger}
           distanceToNextInstruction={distanceToNextInstruction}

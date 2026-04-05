@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 
@@ -15,93 +15,90 @@ export interface Friend {
   is_sharing_location: boolean;
 }
 
+export interface LivePosition {
+  lat: number;
+  lon: number;
+  timestamp: number;
+}
+
 export function useSocial(session: Session | null, userPos: [number, number] | null) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
+  const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
+  const [livePositions, setLivePositions] = useState<Record<string, LivePosition>>({});
+  
+  const lastDbUpdateRef = useRef<number>(0);
+  const channelRef = useRef<any>(null);
 
   const fetchFriends = useCallback(async () => {
     if (!session?.user) return;
 
-    // Obtener amistades aceptadas
-    const { data: friendships, error: fError } = await supabase
-      .from('friendships')
-      .select('user_id, friend_id')
-      .eq('status', 'accepted')
-      .or(`user_id.eq.${session.user.id},friend_id.eq.${session.user.id}`);
+    try {
+      // 1. Obtener todas nuestras amistades aceptadas
+      const { data: friendships, error: fError } = await supabase
+        .from('friendships')
+        .select('user_id, friend_id')
+        .eq('status', 'accepted')
+        .or(`user_id.eq.${session.user.id},friend_id.eq.${session.user.id}`);
 
-    if (fError) {
-      console.error('Error fetching friendships:', fError);
-      return;
-    }
+      if (fError) throw fError;
 
-    const friendIds = friendships.map(f => f.user_id === session.user.id ? f.friend_id : f.user_id);
+      const friendIds = (friendships || []).map(f => f.user_id === session.user.id ? f.friend_id : f.user_id);
 
-    if (friendIds.length === 0) {
-      setFriends([]);
-      setLoading(false);
-      return;
-    }
+      if (friendIds.length === 0) {
+        setFriends([]);
+        setLoading(false);
+        return;
+      }
 
-    // Obtener perfiles de los amigos
-    const { data: profiles, error: pError } = await supabase
-      .from('profiles')
-      .select('id, email, car_name, car_color, is_online, last_lat, last_lon, is_sharing_location')
-      .in('id', friendIds);
+      // 2. Obtener perfiles de esos amigos
+      const { data: profiles, error: pError } = await supabase
+        .from('profiles')
+        .select('id, email, car_name, car_color, is_online, last_lat, last_lon, is_sharing_location')
+        .in('id', friendIds);
 
-    if (pError) {
-      console.error('Error fetching friend profiles:', pError);
-    } else {
+      if (pError) throw pError;
+      
       setFriends(profiles as Friend[]);
+    } catch (err) {
+      console.error('[useSocial] Error fetching friends:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [session]);
 
-  // Actualizar mi propia ubicación en Supabase si estoy compartiendo
-  useEffect(() => {
-    if (!session?.user || !userPos) return;
-
-    const updateMyLocation = async () => {
-      // Primero verificar si el usuario tiene activado "compartir"
-      const { data } = await supabase
-        .from('profiles')
-        .select('is_sharing_location')
-        .eq('id', session.user.id)
-        .single();
-
-      if (data?.is_sharing_location) {
-        await supabase
-          .from('profiles')
-          .update({
-            last_lat: userPos[0],
-            last_lon: userPos[1],
-            is_online: true,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', session.user.id);
-      }
-    };
-
-    const interval = setInterval(updateMyLocation, 10000); // Cada 10 segundos
-    updateMyLocation();
-
-    return () => clearInterval(interval);
-  }, [session, userPos]);
-
-  // Suscribirse a cambios en tiempo real
+  // ── Gestión de Realtime (Presence & Broadcast) ─────────────────────────────
   useEffect(() => {
     if (!session?.user) return;
 
     fetchFriends();
 
-    const channel = supabase
-      .channel('social-updates')
-      .on('postgres_changes', { 
-        event: '*', 
-        schema: 'public', 
-        table: 'profiles' 
-      }, () => {
-        fetchFriends(); 
+    // Crear canal social único para este usuario
+    const channel = supabase.channel('social-room', {
+      config: {
+        presence: { key: session.user.id },
+      },
+    });
+
+    channelRef.current = channel;
+
+    channel
+      // A. Presence: Quién está online
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const onlineIds = new Set(Object.keys(state));
+        setOnlineUserIds(onlineIds);
       })
+      // B. Broadcast: Posiciones GPS en tiempo real
+      .on('broadcast', { event: 'location' }, ({ payload }) => {
+        const { userId, lat, lon } = payload;
+        // Solo nos interesan posiciones de amigos (podríamos filtrar aquí o en el render)
+        setLivePositions(prev => ({
+          ...prev,
+          [userId]: { lat, lon, timestamp: Date.now() }
+        }));
+      })
+      // C. Cambios en amistades (para refrescar la lista si alguien nos acepta)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -109,17 +106,70 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
       }, () => {
         fetchFriends();
       })
-      .subscribe();
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          // Registrarse en Presence
+          await channel.track({
+            online_at: new Date().toISOString(),
+            user_id: session.user.id
+          });
+        }
+      });
 
     return () => {
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
+      channelRef.current = null;
     };
   }, [session, fetchFriends]);
+
+  // ── Difusión y Persistencia de Ubicación ──────────────────────────────────
+  useEffect(() => {
+    if (!session?.user || !userPos || !channelRef.current) return;
+
+    const now = Date.now();
+    const [lat, lon] = userPos;
+
+    // 1. BROADCAST: Enviar a mis amigos (Muy ligero, sin DB)
+    // Lo enviamos frecuentemente para suavidad en el mapa
+    channelRef.current.send({
+      type: 'broadcast',
+      event: 'location',
+      payload: { userId: session.user.id, lat, lon }
+    });
+
+    // 2. BASE DE DATOS: Persistencia (Throttled a cada 30 segundos)
+    if (now - lastDbUpdateRef.current > 30000) {
+      const persistLocation = async () => {
+        // Solo si el usuario tiene el permiso activado
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_sharing_location')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.is_sharing_location) {
+          await supabase
+            .from('profiles')
+            .update({
+              last_lat: lat,
+              last_lon: lon,
+              is_online: true, // Retrocompatibilidad
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', session.user.id);
+          
+          lastDbUpdateRef.current = now;
+        }
+      };
+      persistLocation();
+    }
+  }, [session, userPos]);
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
 
   const addFriend = async (friendId: string) => {
     if (!session?.user || friendId === session.user.id) return { error: 'ID inválido' };
 
-    // Verificar si ya existe relación
     const { data: existing } = await supabase
       .from('friendships')
       .select('*')
@@ -130,7 +180,6 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
       if (existing.status === 'accepted') return { error: 'Ya sois amigos' };
       if (existing.user_id === session.user.id) return { error: 'Solicitud ya enviada' };
       
-      // Si el otro ya me había mandado solicitud, aceptarla automáticamente
       const { error } = await supabase
         .from('friendships')
         .update({ status: 'accepted' })
@@ -149,5 +198,19 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     return { success: true, accepted: false, error };
   };
 
-  return { friends, loading, addFriend, refreshFriends: fetchFriends };
+  // Mapear amigos con su estado "Live"
+  const enhancedFriends = friends.map(f => ({
+    ...f,
+    is_online: onlineUserIds.has(f.id),
+    // Usar posición de broadcast si está disponible (más fresca), si no la de DB
+    last_lat: livePositions[f.id]?.lat ?? f.last_lat,
+    last_lon: livePositions[f.id]?.lon ?? f.last_lon,
+  }));
+
+  return { 
+    friends: enhancedFriends, 
+    loading, 
+    addFriend, 
+    refreshFriends: fetchFriends 
+  };
 }
