@@ -1,12 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { BufReader, BufWriter } from "https://deno.land/std@0.168.0/io/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Simple manual SMTP implementation using Deno's native TLS
-async function sendEmail(opts: {
+async function sendSmtpEmail(opts: {
   smtpHost: string
   smtpPort: number
   user: string
@@ -17,49 +17,63 @@ async function sendEmail(opts: {
   html: string
 }) {
   const conn = await Deno.connectTls({ hostname: opts.smtpHost, port: opts.smtpPort })
+  const reader = new BufReader(conn)
+  const writer = new BufWriter(conn)
   const encoder = new TextEncoder()
-  const decoder = new TextDecoder()
 
-  async function readLine(): Promise<string> {
-    const buf = new Uint8Array(1024)
+  async function readAll(): Promise<string> {
     let result = ''
     while (true) {
-      const n = await conn.read(buf)
-      if (!n) break
-      const chunk = decoder.decode(buf.subarray(0, n))
-      result += chunk
-      if (result.endsWith('\r\n')) break
+      const line = await reader.readString('\n')
+      if (!line) throw new Error('Connection closed unexpectedly')
+      result += line
+      console.log('SMTP <', line.trim())
+      // If the 4th char is a space, this is the last line of the response
+      if (line.length >= 4 && line[3] === ' ') break
     }
     return result.trim()
   }
 
-  async function cmd(command: string): Promise<string> {
-    await conn.write(encoder.encode(command + '\r\n'))
-    return await readLine()
+  async function send(command: string): Promise<string> {
+    const masked = command.startsWith('AUTH') ? 'AUTH LOGIN ****' : command
+    console.log('SMTP >', masked)
+    await writer.write(encoder.encode(command + '\r\n'))
+    await writer.flush()
+    return await readAll()
   }
 
-  // Read greeting
-  await readLine()
+  // Greeting
+  await readAll()
 
   // EHLO
-  await cmd(`EHLO navegapro`)
-
-  // Read all EHLO lines (multi-line response)
-  // We'll just wait a bit and read what's available
-  await new Promise(r => setTimeout(r, 100))
+  let resp = await send('EHLO [127.0.0.1]')
+  if (!resp.startsWith('250')) throw new Error(`EHLO failed: ${resp}`)
 
   // AUTH LOGIN
-  await cmd('AUTH LOGIN')
-  await cmd(btoa(opts.user))
-  const authResp = await cmd(btoa(opts.pass))
-  if (!authResp.startsWith('235')) throw new Error(`AUTH failed: ${authResp}`)
+  resp = await send('AUTH LOGIN')
+  if (!resp.startsWith('334')) throw new Error(`AUTH init failed: ${resp}`)
 
-  await cmd(`MAIL FROM:<${opts.from}>`)
-  await cmd(`RCPT TO:<${opts.to}>`)
-  await cmd('DATA')
+  resp = await send(btoa(opts.user))
+  if (!resp.startsWith('334')) throw new Error(`AUTH user failed: ${resp}`)
 
+  resp = await send(btoa(opts.pass))
+  if (!resp.startsWith('235')) throw new Error(`AUTH pass failed: ${resp}`)
+
+  // MAIL FROM
+  resp = await send(`MAIL FROM:<${opts.from}>`)
+  if (!resp.startsWith('250')) throw new Error(`MAIL FROM failed: ${resp}`)
+
+  // RCPT TO
+  resp = await send(`RCPT TO:<${opts.to}>`)
+  if (!resp.startsWith('250')) throw new Error(`RCPT TO failed: ${resp}`)
+
+  // DATA
+  resp = await send('DATA')
+  if (!resp.startsWith('354')) throw new Error(`DATA failed: ${resp}`)
+
+  // Message
   const boundary = `boundary_${Date.now()}`
-  const body = [
+  const message = [
     `From: "NavegaPRO" <${opts.from}>`,
     `To: ${opts.to}`,
     `Subject: ${opts.subject}`,
@@ -69,7 +83,7 @@ async function sendEmail(opts: {
     `--${boundary}`,
     `Content-Type: text/plain; charset=UTF-8`,
     ``,
-    `Visita https://navegador-tesla.vercel.app para unirte a NavegaPRO.`,
+    `Tu amigo te ha invitado a NavegaPRO. Visita: https://navegador-tesla.vercel.app`,
     ``,
     `--${boundary}`,
     `Content-Type: text/html; charset=UTF-8`,
@@ -79,12 +93,16 @@ async function sendEmail(opts: {
     `--${boundary}--`,
     ``,
     `.`,
+    ``,
   ].join('\r\n')
 
-  const quitResp = await cmd(body)
-  if (!quitResp.startsWith('250')) throw new Error(`DATA failed: ${quitResp}`)
+  await writer.write(encoder.encode(message))
+  await writer.flush()
 
-  await cmd('QUIT')
+  resp = await readAll()
+  if (!resp.startsWith('250')) throw new Error(`Send failed: ${resp}`)
+
+  await send('QUIT')
   conn.close()
 }
 
@@ -95,32 +113,14 @@ serve(async (req) => {
 
   try {
     const { senderName, receiverEmail } = await req.json()
-    console.log(`Sending invite from ${senderName} to ${receiverEmail}`)
+    console.log(`Sending invite from "${senderName}" to ${receiverEmail}`)
 
     const smtpUser = Deno.env.get("SMTP_USER") ?? "registros@viajandoentesla.es"
     const smtpPass = Deno.env.get("SMTP_PASS") ?? ""
 
-    const htmlContent = `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #000; color: #fff; padding: 40px; border-radius: 20px;">
-        <h1 style="color: #3b82f6; font-style: italic; font-weight: 900; letter-spacing: -2px;">NavegaPRO</h1>
-        <p style="font-size: 18px; line-height: 1.6;">Hola,</p>
-        <p style="font-size: 18px; line-height: 1.6;">Tu amigo <strong>${senderName}</strong> te ha invitado a unirte a la red social de <strong>NavegaPRO</strong> para Tesla.</p>
-        <div style="background-color: #111; border: 1px solid #333; padding: 20px; border-radius: 15px; margin: 25px 0;">
-          <h2 style="font-size: 16px; color: #666; text-transform: uppercase; margin-top: 0;">¿Qué es NavegaPRO?</h2>
-          <ul style="padding-left: 20px; color: #ccc;">
-            <li>Navegación social en tiempo real con tus amigos.</li>
-            <li>Alertas de radares y helicópteros Pegasus actualizadas por la comunidad.</li>
-            <li>Localización de Superchargers y gasolineras con precios en vivo.</li>
-            <li>Diseño premium optimizado para la pantalla de tu Tesla.</li>
-          </ul>
-        </div>
-        <p style="font-size: 16px; color: #888;">Regístrate ahora con este email para ver la solicitud de tu amigo esperándote en el panel social.</p>
-        <a href="https://navegador-tesla.vercel.app" style="display: inline-block; background-color: #3b82f6; color: #fff; padding: 15px 30px; border-radius: 10px; text-decoration: none; font-weight: bold; margin-top: 20px;">ENTRAR EN NAVEGAPRO</a>
-        <p style="margin-top: 40px; font-size: 12px; color: #444;">Mensaje automático enviado por NavegaPRO. Disfruta del viaje.</p>
-      </div>
-    `
+    const htmlContent = `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #000; color: #fff; padding: 40px; border-radius: 20px;"><h1 style="color: #3b82f6; font-style: italic; font-weight: 900; letter-spacing: -2px;">NavegaPRO</h1><p style="font-size: 18px; line-height: 1.6;">Hola,</p><p style="font-size: 18px; line-height: 1.6;">Tu amigo <strong>${senderName}</strong> te ha invitado a unirte a la red social de <strong>NavegaPRO</strong> para Tesla.</p><div style="background-color: #111; border: 1px solid #333; padding: 20px; border-radius: 15px; margin: 25px 0;"><h2 style="font-size: 16px; color: #666; text-transform: uppercase; margin-top: 0;">Que es NavegaPRO?</h2><ul style="padding-left: 20px; color: #ccc;"><li>Navegacion social en tiempo real con tus amigos.</li><li>Alertas de radares y helicopteros Pegasus actualizadas por la comunidad.</li><li>Localizacion de Superchargers y gasolineras con precios en vivo.</li><li>Diseno premium optimizado para la pantalla de tu Tesla.</li></ul></div><p style="font-size: 16px; color: #888;">Registrate ahora con este email para ver la solicitud de tu amigo esperandote en el panel social.</p><a href="https://navegador-tesla.vercel.app" style="display: inline-block; background-color: #3b82f6; color: #fff; padding: 15px 30px; border-radius: 10px; text-decoration: none; font-weight: bold; margin-top: 20px;">ENTRAR EN NAVEGAPRO</a><p style="margin-top: 40px; font-size: 12px; color: #444;">Mensaje automatico enviado por NavegaPRO. Disfruta del viaje.</p></div>`
 
-    await sendEmail({
+    await sendSmtpEmail({
       smtpHost: "smtp.ionos.es",
       smtpPort: 465,
       user: smtpUser,
@@ -138,7 +138,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
-    console.error("Error sending email:", error)
+    console.error("Error:", error)
     return new Response(
       JSON.stringify({ error: String(error) }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
