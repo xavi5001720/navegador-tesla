@@ -35,7 +35,10 @@ export function useWeather(userPos: [number, number] | null, routeCoordinates?: 
 
   useEffect(() => {
     if (!isEnabled || !userPos) {
-      if (!isEnabled && weatherPoints.length > 0) setWeatherPoints([]);
+      if (!isEnabled) {
+        if (weatherPoints.length > 0) setWeatherPoints([]);
+        lastFetchRef.current = null; // Permite refetch al volver a activar
+      }
       return;
     }
 
@@ -43,7 +46,7 @@ export function useWeather(userPos: [number, number] | null, routeCoordinates?: 
     const currentType = hasRoute ? 'route' : 'local';
 
     let shouldFetch = false;
-    if (!lastFetchRef.current) {
+    if (!lastFetchRef.current || weatherPoints.length === 0) {
       shouldFetch = true;
     } else if (lastFetchRef.current.type !== currentType) {
       shouldFetch = true;
