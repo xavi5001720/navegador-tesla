@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { Navigation, Radar, Plane, X, Volume2, VolumeX, Play, Power, Database } from 'lucide-react';
-import SearchPanel from './SearchPanel';
 import { playTestSound, VoiceType } from '@/utils/sound';
 
 import { ChargerFilters } from '@/hooks/useChargers';
@@ -176,7 +175,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
 
-      <SearchPanel onSearch={onSearch} isLoading={loadingRoute} onOpenFavorites={onOpenFavorites} />
+      {/* Espaciador fijo para el SearchPanel que ahora flota en page.tsx */}
+      <div className="h-[62px] w-full shrink-0 mb-4" />
 
       {/* Botón Eliminar Ruta (solo cuando hay ruta activa) */}
       {route && (

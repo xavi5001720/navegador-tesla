@@ -33,7 +33,18 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
           className="w-full rounded-2xl border border-white/10 bg-white/5 py-4 pl-12 pr-4 text-sm text-white placeholder:text-gray-500 hover:bg-white/10 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 focus:ring-4 focus:ring-blue-500/10 transition-all"
         />
       </div>
-      
+      <button 
+        type="submit"
+        disabled={isLoading || !query.trim()}
+        className={`group relative flex h-[54px] px-4 shrink-0 items-center justify-center rounded-2xl shadow-lg transition-all ${
+          isLoading || !query.trim() 
+            ? 'bg-white/10 opacity-50 cursor-not-allowed text-gray-500'
+            : 'bg-blue-600 hover:bg-blue-500 hover:scale-105 active:scale-95 shadow-blue-500/20 text-white'
+        }`}
+      >
+        <span className="font-bold text-xs uppercase tracking-widest">Buscar</span>
+      </button>
+
       <button 
         type="button"
         onClick={onOpenFavorites}

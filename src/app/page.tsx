@@ -6,6 +6,7 @@ import { Navigation, Menu, AlertTriangle, Power, Map } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import Sidebar from '@/components/Sidebar';
+import SearchPanel from '@/components/SearchPanel';
 import AlertOverlay from '@/components/AlertOverlay';
 import Speedometer from '@/components/Speedometer';
 import SessionAlert from '@/components/SessionAlert';
@@ -811,6 +812,24 @@ export default function Home() {
         activeLaneGuidance={activeLaneGuidance}
         isSimulating={isSimulating}
       />
+
+      {/* Panel Flotante de Búsqueda (Siempre Visible) */}
+      <AnimatePresence>
+        {(!route || isSidebarOpen) && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed top-[120px] left-6 right-6 md:left-8 md:w-[332px] md:right-auto z-[90] pointer-events-auto"
+          >
+            <SearchPanel 
+              onSearch={handleSearchSubmit} 
+              isLoading={loadingRoute} 
+              onOpenFavorites={() => setIsFavoritesOpen(true)} 
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
 
       <Sidebar 
