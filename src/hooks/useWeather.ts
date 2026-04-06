@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 
 // Usando nueva key OWM: teslaapp
-const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || '';
+const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'd78521d9d03fc712e2a7ec84c6b58de2';
 const API_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
 export interface WeatherPoint {
@@ -29,7 +29,7 @@ export function useWeather(userPos: [number, number] | null, routeCoordinates?: 
   const [weatherPoints, setWeatherPoints] = useState<WeatherPoint[]>([]);
   const [loading, setLoading] = useState(false);
   
-  const lastFetchRef = useRef<{ type: 'route' | 'local', pos: [number, number], routeLength: number } | null>(null);
+  const lastFetchRef = useRef<{ type: 'route' | 'local', pos: [number, number], routeLength: number, timestamp: number } | null>(null);
 
   const routeLength = routeCoordinates?.length ?? 0;
 
@@ -44,9 +44,16 @@ export function useWeather(userPos: [number, number] | null, routeCoordinates?: 
 
     const hasRoute = routeCoordinates && routeCoordinates.length > 0;
     const currentType = hasRoute ? 'route' : 'local';
+    const now = Date.now();
 
     let shouldFetch = false;
-    if (!lastFetchRef.current || weatherPoints.length === 0) {
+    
+    // Evitar spam si ha fallado recientemente (debounce de 15 segundos)
+    const isDebounced = lastFetchRef.current && (now - lastFetchRef.current.timestamp < 15000);
+
+    if (isDebounced) {
+      shouldFetch = false;
+    } else if (!lastFetchRef.current) {
       shouldFetch = true;
     } else if (lastFetchRef.current.type !== currentType) {
       shouldFetch = true;
@@ -55,6 +62,9 @@ export function useWeather(userPos: [number, number] | null, routeCoordinates?: 
     } else if (currentType === 'local') {
       const dist = getDist(lastFetchRef.current.pos, userPos);
       if (dist > 10000) shouldFetch = true; // Auto refresh cada 10km que el coche avance sin ruta
+    } else if (weatherPoints.length === 0 && !loading && (now - lastFetchRef.current.timestamp > 30000)) {
+      // Si tenemos estado validado vacío (fallo previo) y han pasado 30 segs, reintentar
+      shouldFetch = true;
     }
 
     if (!shouldFetch) return;
@@ -122,10 +132,11 @@ export function useWeather(userPos: [number, number] | null, routeCoordinates?: 
         const validResults = results.filter(r => r !== null) as WeatherPoint[];
         
         setWeatherPoints(validResults);
-        lastFetchRef.current = { type: currentType, pos: userPos, routeLength };
+        lastFetchRef.current = { type: currentType, pos: userPos, routeLength, timestamp: Date.now() };
 
       } catch (err) {
         console.error('[useWeather] ❌ Error fatal al conectar con OWM:', err);
+        lastFetchRef.current = { type: currentType, pos: userPos, routeLength, timestamp: Date.now() };
       } finally {
         setLoading(false);
       }
