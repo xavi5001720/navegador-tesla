@@ -1,24 +1,25 @@
 'use client';
 
+import { motion } from 'framer-motion';
+
 interface SpeedometerProps {
   speed: number;
-  zoom?: number;
 }
 
-export default function Speedometer({ speed, zoom }: SpeedometerProps) {
+export default function Speedometer({ speed }: SpeedometerProps) {
   return (
-    <div className="flex flex-col items-center justify-center bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl min-w-[140px]">
-      {zoom !== undefined && (
-        <span className="text-[10px] font-black text-gray-500/80 uppercase tracking-widest mb-1 animate-pulse">
-          ZOOM {zoom.toFixed(1)}
-        </span>
-      )}
+    <motion.div 
+      drag 
+      dragMomentum={false}
+      style={{ touchAction: 'none' }}
+      className="flex flex-col items-center justify-center bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl min-w-[140px] cursor-grab active:cursor-grabbing hover:bg-black/50 transition-colors pointer-events-auto"
+    >
       <span className="text-6xl font-black text-white tabular-nums tracking-tighter">
         {speed}
       </span>
       <span className="text-xs font-bold text-blue-500 uppercase tracking-widest mt-1">
         km/h
       </span>
-    </div>
+    </motion.div>
   );
 }

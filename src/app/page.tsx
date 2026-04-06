@@ -610,7 +610,11 @@ export default function Home() {
             </div>
 
             {/* Recuadro de Lista de Amigos */}
-            <div className="w-64 max-h-[300px] overflow-y-auto bg-black/60 backdrop-blur-xl border border-white/10 rounded-[32px] p-4 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500 scrollbar-hide">
+            <motion.div 
+              drag 
+              dragMomentum={false}
+              className="w-64 max-h-[300px] overflow-y-auto bg-black/60 backdrop-blur-xl border border-white/10 rounded-[32px] p-4 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500 scrollbar-hide cursor-grab active:cursor-grabbing pointer-events-auto"
+            >
               <div className="flex items-center justify-between mb-3 px-1">
                 <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none">Amigos</span>
                 {friends.length > 0 && (
@@ -740,7 +744,7 @@ export default function Home() {
                   </button>
                 </div>
               )}
-            </div>
+            </motion.div>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-1.5 animate-in fade-in slide-in-from-top-4 duration-700">
@@ -928,7 +932,7 @@ export default function Home() {
         <div className="absolute bottom-6 right-6 z-[500] flex flex-col items-end gap-3 md:flex-row md:items-center md:gap-4 md:bottom-8 md:right-8">
 
 
-          <Speedometer speed={speed} zoom={currentZoom} />
+          <Speedometer speed={speed} />
           
           <div className="flex flex-col gap-5">
             {viewMode === 'navigation' && (
