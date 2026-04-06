@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
+// Usando nueva key OWM: teslaapp
 const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || '';
 const API_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
