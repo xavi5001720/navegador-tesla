@@ -57,6 +57,7 @@ export default function Home() {
   const [viewMode, setViewMode] = useState<'navigation' | 'overview'>('overview');
   const [isSessionDuplicated, setIsSessionDuplicated] = useState(false);
   const [expandedFriendId, setExpandedFriendId] = useState<string | null>(null);
+  const [isNavMinimized, setIsNavMinimized] = useState(false);
 
 
   const [isSimulatingState, setIsSimulatingState] = useState(false);
@@ -811,6 +812,8 @@ export default function Home() {
         distance={distanceToNextInstruction}
         activeLaneGuidance={activeLaneGuidance}
         isSimulating={isSimulating}
+        isMinimized={isNavMinimized}
+        onMinimize={() => setIsNavMinimized(true)}
       />
 
       {/* Panel Flotante de Búsqueda (Siempre Visible) */}
@@ -944,6 +947,10 @@ export default function Home() {
               isSimulating={isSimulating}
               onStartSimulation={() => { setViewMode('navigation'); startSimulation(); }}
               onStopSimulation={stopSimulation}
+              isNavMinimized={isNavMinimized}
+              onUnminimizeNav={() => setIsNavMinimized(false)}
+              instruction={nextInstruction || (route ? { message: 'Iniciando ruta...', maneuver: 'STRAIGHT' } : null)}
+              distanceToNextInstruction={distanceToNextInstruction}
             />
           )}
         </AnimatePresence>

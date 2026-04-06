@@ -2,7 +2,8 @@
 
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, MapPin, Navigation, XCircle, Camera, Play, Square } from 'lucide-react';
+import { Clock, MapPin, Navigation, XCircle, Camera, Play, Square, Plus } from 'lucide-react';
+import ManeuverIcon from './ManeuverIcon';
 
 interface RouteDashboardProps {
   totalDistance: number;    // metros
@@ -14,6 +15,16 @@ interface RouteDashboardProps {
   isSimulating?: boolean;
   onStartSimulation?: () => void;
   onStopSimulation?: () => void;
+  isNavMinimized?: boolean;
+  onUnminimizeNav?: () => void;
+  instruction?: {
+    message: string;
+    maneuver: string;
+    street?: string;
+    exitNumber?: number;
+    isRoundabout?: boolean;
+  } | null;
+  distanceToNextInstruction?: number | null;
 }
 
 
@@ -26,7 +37,11 @@ export default function RouteDashboard({
   onEndRoute,
   isSimulating = false,
   onStartSimulation,
-  onStopSimulation
+  onStopSimulation,
+  isNavMinimized = false,
+  onUnminimizeNav,
+  instruction,
+  distanceToNextInstruction
 }: RouteDashboardProps) {
 
   
@@ -66,6 +81,36 @@ export default function RouteDashboard({
     >
       <div className="bg-black/60 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
         
+        {/* Fila superior para navegación minimizada */}
+        {isNavMinimized && instruction && (
+          <div className="flex items-center justify-between gap-4 p-3 mb-4 bg-blue-900/40 rounded-2xl border border-blue-500/30">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-blue-500/20 border border-blue-500/30 shadow-inner flex-shrink-0">
+                <ManeuverIcon 
+                  maneuver={instruction.maneuver} 
+                  exitNumber={instruction.exitNumber}
+                  className="h-7 w-7 text-blue-400 drop-shadow-md" 
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xl font-black italic text-white tracking-tighter tabular-nums leading-none">
+                  {distanceToNextInstruction !== null && distanceToNextInstruction !== undefined ? formatDistance(distanceToNextInstruction) : '-- m'}
+                </span>
+                <span className="text-[10px] font-bold text-blue-300 uppercase tracking-widest truncate max-w-[200px] mt-0.5">
+                  {instruction.street || instruction.message}
+                </span>
+              </div>
+            </div>
+            
+            <button 
+              onClick={onUnminimizeNav}
+              className="h-10 w-10 flex items-center justify-center rounded-xl bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/30 text-blue-400 hover:text-white transition-all flex-shrink-0"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          </div>
+        )}
+
         {/* Línea de progreso superior */}
         <div className="relative h-1.5 w-full bg-white/5 rounded-full mb-4 overflow-hidden">
           <motion.div 
