@@ -352,11 +352,26 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
   };
 
   const removeFriend = async (friendId: string): Promise<{ success: boolean; error?: any }> => {
+    if (!session?.user) return { success: false, error: 'No hay sesión' };
+
     try {
+      if (friendId.startsWith('pending-')) {
+        // Invitación a mail no registrado
+        const email = friendId.replace('pending-', '');
+        const { error } = await supabase
+          .from('friend_invitations')
+          .delete()
+          .match({ sender_id: session.user.id, receiver_email: email });
+        
+        await fetchFriends();
+        return { success: !error, error };
+      }
+
+      // Amistad o solicitud entre usuarios registrados
       const { error } = await supabase
         .from('friendships')
         .delete()
-        .or(`and(user_id.eq.${session?.user?.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${session?.user?.id})`);
+        .or(`and(user_id.eq.${session.user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${session.user.id})`);
       
       await fetchFriends();
       return { success: !error, error };
