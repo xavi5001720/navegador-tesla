@@ -25,6 +25,7 @@ interface RouteDashboardProps {
     isRoundabout?: boolean;
   } | null;
   distanceToNextInstruction?: number | null;
+  onOpenMenu?: () => void;
 }
 
 
@@ -41,7 +42,8 @@ export default function RouteDashboard({
   isNavMinimized = false,
   onUnminimizeNav,
   instruction,
-  distanceToNextInstruction
+  distanceToNextInstruction,
+  onOpenMenu
 }: RouteDashboardProps) {
 
   
@@ -74,17 +76,29 @@ export default function RouteDashboard({
 
   return (
     <motion.div
-      initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      exit={{ y: 100, opacity: 0 }}
-      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[600] w-[90%] max-w-2xl"
+      drag
+      dragMomentum={false}
+      initial={{ y: 100, x: "-50%", opacity: 0 }}
+      animate={{ y: 0, x: "-50%", opacity: 1 }}
+      exit={{ y: 100, x: "-50%", opacity: 0 }}
+      className="fixed bottom-6 left-1/2 z-[600] w-[90%] max-w-2xl cursor-grab active:cursor-grabbing pointer-events-auto"
     >
       <div className="bg-black/60 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
         
         {/* Fila superior para navegación minimizada */}
         {isNavMinimized && instruction && (
           <div className="flex items-center justify-between gap-4 p-3 mb-4 bg-blue-900/40 rounded-2xl border border-blue-500/30">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
+              {/* Logo Menu Rapido */}
+              <button 
+                onClick={(e) => { e.stopPropagation(); onOpenMenu?.(); }}
+                className="h-10 px-2 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer flex-shrink-0"
+              >
+                <img src="/pro-logo.png?v=5" alt="Menú" className="h-6 w-auto object-contain pointer-events-none" />
+              </button>
+              
+              <div className="h-10 w-[1px] bg-white/10 hidden sm:block" />
+
               <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-blue-500/20 border border-blue-500/30 shadow-inner flex-shrink-0">
                 <ManeuverIcon 
                   maneuver={instruction.maneuver} 

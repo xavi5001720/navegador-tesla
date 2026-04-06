@@ -951,6 +951,7 @@ export default function Home() {
               onUnminimizeNav={() => setIsNavMinimized(false)}
               instruction={nextInstruction || (route ? { message: 'Iniciando ruta...', maneuver: 'STRAIGHT' } : null)}
               distanceToNextInstruction={distanceToNextInstruction}
+              onOpenMenu={() => setIsSidebarOpen(true)}
             />
           )}
         </AnimatePresence>
