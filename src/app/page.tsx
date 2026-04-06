@@ -779,7 +779,8 @@ export default function Home() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="fixed top-8 left-8 z-[100] flex items-center gap-5 pointer-events-none select-none"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="fixed top-8 left-8 z-[100] flex items-center gap-5 pointer-events-auto cursor-pointer select-none"
           >
             <img 
               src="/pro-logo.png?v=5" 
