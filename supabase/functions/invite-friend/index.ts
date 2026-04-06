@@ -21,8 +21,8 @@ serve(async (req) => {
       port: 587,
       secure: false, // Use STARTTLS para el puerto 587
       auth: {
-        user: "registros@viajandoentesla.es",
-        pass: "5001720viajandoentesla@",
+        user: Deno.env.get("SMTP_USER") ?? "registros@viajandoentesla.es",
+        pass: Deno.env.get("SMTP_PASS") ?? "",
       },
     });
 
