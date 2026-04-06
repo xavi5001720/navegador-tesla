@@ -78,9 +78,9 @@ export function usePegasus(
       return;
     }
 
-    const fetchAircrafts = async (): Promise<void> => {
+    const fetchAircrafts = async (): Promise<number> => {
       const pos = userPosRef.current;
-      if (!pos) return;
+      if (!pos) return 0;
 
       setLoading(true);
       // Siempre reseteamos el error al empezar un fetch nuevo
@@ -146,17 +146,46 @@ export function usePegasus(
         setAllAircrafts(states);
         setLastFetchTime(Date.now());
 
+        return states.length;
+
       } catch (error) {
         console.error('[usePegasus] ❌ Error:', error);
+        return 0;
       } finally {
         setLoading(false);
       }
     };
 
-    const initialBbox = userPos ? buildBboxKey(userPos) : '';
-    fetchAircrafts();
-    const interval = setInterval(fetchAircrafts, FETCH_INTERVAL_MS);
-    return () => clearInterval(interval);
+    let timeoutId: NodeJS.Timeout;
+    let isActive = true;
+    let startupRetries = 3;
+
+    const runLoop = async () => {
+      if (!isActive) return;
+      
+      const planeCount = await fetchAircrafts();
+      
+      if (!isActive) return;
+
+      let nextInterval = FETCH_INTERVAL_MS; // 60s
+      
+      // Fast-retry al arrancar si devuelve 0 (para dar tiempo al Home Feeder)
+      if (planeCount === 0 && startupRetries > 0) {
+        startupRetries--;
+        nextInterval = 10000; // reintenta a los 10 segundos
+      } else if (planeCount > 0) {
+        startupRetries = 0; // Si ya encontró, pasa al ciclo estable
+      }
+
+      timeoutId = setTimeout(runLoop, nextInterval);
+    };
+
+    runLoop();
+
+    return () => {
+      isActive = false;
+      clearTimeout(timeoutId);
+    };
 
   }, [isEnabled, userPos ? buildBboxKey(userPos) : '']);
 
