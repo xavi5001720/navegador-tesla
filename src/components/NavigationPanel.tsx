@@ -103,17 +103,6 @@ export default function NavigationPanel({
               <LaneGuidance lanes={activeLaneGuidance.lanes} />
             </motion.div>
           )}
-
-        {/* Barra de progreso sutil (solo si hay distancia) */}
-        <div className="h-1.5 w-full bg-white/5 relative">
-           <motion.div 
-             className="absolute top-0 left-0 h-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
-             initial={{ width: '0%' }}
-             animate={{ width: '100%' }}
-             transition={{ duration: 10, ease: "linear", repeat: Infinity }}
-           />
-        </div>
-
       </div>
     </motion.div>
   );

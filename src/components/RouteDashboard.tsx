@@ -88,16 +88,7 @@ export default function RouteDashboard({
         {/* Fila superior para navegación minimizada */}
         {isNavMinimized && instruction && (
           <div className="flex items-center justify-between gap-4 p-3 mb-4 bg-blue-900/40 rounded-2xl border border-blue-500/30">
-            <div className="flex items-center gap-4">
-              {/* Logo Menu Rapido */}
-              <button 
-                onClick={(e) => { e.stopPropagation(); onOpenMenu?.(); }}
-                className="h-10 px-2 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-all cursor-pointer flex-shrink-0"
-              >
-                <img src="/pro-logo.png?v=5" alt="Menú" className="h-6 w-auto object-contain pointer-events-none" />
-              </button>
-              
-              <div className="h-10 w-[1px] bg-white/10 hidden sm:block" />
+            <div className="flex items-center gap-3">
 
               <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-blue-500/20 border border-blue-500/30 shadow-inner flex-shrink-0">
                 <ManeuverIcon 

@@ -774,10 +774,9 @@ export default function Home() {
       />
 
       {/* Panel Izquierdo (Bloque de Control) */}
-      {/* Branding NavegaPRO (Oculto si hay instrucciones de navegación activas en modo pantalla completa) */}
+      {/* Branding NavegaPRO (Siempre Visible) */}
       <AnimatePresence>
-        {(!route || isSidebarOpen) && (
-          <motion.div 
+        <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
@@ -803,7 +802,6 @@ export default function Home() {
               )}
             </AnimatePresence>
           </motion.div>
-        )}
       </AnimatePresence>
 
       <NavigationPanel 
