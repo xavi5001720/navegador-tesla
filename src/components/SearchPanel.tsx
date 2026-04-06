@@ -30,7 +30,7 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="¿A dónde vamos hoy?"
-          className="w-full rounded-2xl border border-white/10 bg-white/5 py-4 pl-12 pr-4 text-sm text-white placeholder:text-gray-500 hover:bg-white/10 focus:outline-none focus:border-blue-500/50 focus:bg-white/10 focus:ring-4 focus:ring-blue-500/10 transition-all"
+          className="w-full rounded-2xl border border-white/10 bg-black/70 backdrop-blur-xl shadow-2xl py-4 pl-12 pr-4 text-sm text-white placeholder:text-gray-400 hover:bg-black/80 focus:outline-none focus:border-blue-500/50 focus:bg-black/90 focus:ring-4 focus:ring-blue-500/10 transition-all"
         />
       </div>
       <button 
@@ -38,7 +38,7 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
         disabled={isLoading || !query.trim()}
         className={`group relative flex h-[54px] px-4 shrink-0 items-center justify-center rounded-2xl shadow-lg transition-all ${
           isLoading || !query.trim() 
-            ? 'bg-white/10 opacity-50 cursor-not-allowed text-gray-500'
+            ? 'bg-black/60 backdrop-blur-md border border-white/5 cursor-not-allowed text-gray-500'
             : 'bg-blue-600 hover:bg-blue-500 hover:scale-105 active:scale-95 shadow-blue-500/20 text-white'
         }`}
       >
