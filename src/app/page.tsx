@@ -511,9 +511,13 @@ export default function Home() {
     };
   }, [speed, viewMode]);
 
-  const handleSearchSubmit = async (query: string) => {
+  const handleSearchSubmit = async (query: string, coords?: [number, number]) => {
     const origin: [number, number] = userPos || [40.4168, -3.7038];
-    await findAndTraceRoute(origin, query);
+    if (coords) {
+      await calculateRoute(origin, coords, []);
+    } else {
+      await findAndTraceRoute(origin, query);
+    }
   };
 
   const handleMapClick = useCallback((lat: number, lon: number, screenX: number, screenY: number) => {
