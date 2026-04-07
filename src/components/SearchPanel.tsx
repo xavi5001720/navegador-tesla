@@ -106,6 +106,9 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
             onFocus={() => { if (suggestions.length > 0) setShowDropdown(true); setShowFilters(false); }}
             onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
             placeholder={showFilters ? "Calle o sitio exacto..." : "¿A dónde vamos?"}
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
             className={`w-full rounded-2xl border border-white/10 bg-black/70 backdrop-blur-xl shadow-2xl py-4 pl-10 pr-12 text-sm text-white placeholder:text-gray-400 hover:bg-black/80 focus:outline-none focus:border-blue-500/50 focus:bg-black/90 focus:ring-4 focus:ring-blue-500/10 transition-all ${showFilters ? 'ring-2 ring-blue-500/50' : ''}`}
           />
           <button
@@ -180,6 +183,9 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
                 placeholder="Ciudad"
                 value={cityFilter}
                 onChange={(e) => setCityFilter(e.target.value)}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
                 className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50"
               />
               <input
@@ -187,6 +193,9 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
                 placeholder="C.Postal"
                 value={postalFilter}
                 onChange={(e) => setPostalFilter(e.target.value)}
+                autoComplete="off"
+                autoCorrect="off"
+                spellCheck={false}
                 className="w-24 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50"
               />
             </div>
@@ -195,6 +204,9 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
               placeholder="País"
               value={countryFilter}
               onChange={(e) => setCountryFilter(e.target.value)}
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
               className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50"
             />
           </div>
