@@ -105,7 +105,7 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => { if (suggestions.length > 0) setShowDropdown(true); setShowFilters(false); }}
             onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-            placeholder={showFilters ? "Calle o sitio exacto..." : "¿A dónde vamos?"}
+            placeholder={showFilters ? "Calle..." : "¿A dónde vamos?"}
             autoComplete="no-autocomplete-please"
             name="tesla-search-field-obscure"
             id="tesla-search-field-obscure"
@@ -156,7 +156,7 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
 
       {/* Autocomplete Dropdown */}
       {showDropdown && suggestions.length > 0 && (
-        <div className="absolute top-[64px] left-0 w-[calc(100%-120px)] bg-black/90 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,1)] overflow-hidden z-[1001] py-2 animate-in fade-in slide-in-from-top-4 duration-200">
+        <div className="absolute top-[64px] left-0 w-full bg-black/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,1)] overflow-hidden z-[1001] py-2 animate-in fade-in slide-in-from-top-4 duration-200">
           {suggestions.map((s) => (
             <button
               key={s.id}
@@ -164,11 +164,11 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
               onClick={() => handleSuggestionClick(s)}
               className="w-full text-left px-4 py-3 hover:bg-blue-600/20 flex flex-col gap-0.5 border-b border-white/5 last:border-0 transition-colors"
             >
-              <div className="flex items-center gap-2">
-                <MapPin className="h-3.5 w-3.5 text-blue-400 shrink-0" />
-                <span className="text-white font-medium text-sm truncate">{s.name}</span>
+              <div className="flex items-start gap-2">
+                <MapPin className="h-3.5 w-3.5 text-blue-400 shrink-0 mt-0.5" />
+                <span className="text-white font-medium text-sm">{s.name}</span>
               </div>
-              <span className="text-gray-400 text-xs truncate pl-5.5 ml-[22px]">{s.address}</span>
+              <span className="text-gray-400 text-xs pl-5.5 ml-[22px] block">{s.address}</span>
             </button>
           ))}
         </div>
