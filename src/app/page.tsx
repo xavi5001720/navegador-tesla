@@ -805,7 +805,7 @@ export default function Home() {
       </AnimatePresence>
 
       <NavigationPanel 
-        isVisible={!!(route || nextInstruction) || isSimulating}
+        isVisible={!isSidebarOpen && (!!(route || nextInstruction) || isSimulating)}
         instruction={nextInstruction || (route ? { message: 'Iniciando ruta...', maneuver: 'STRAIGHT' } : null)}
         distance={distanceToNextInstruction}
         activeLaneGuidance={activeLaneGuidance}
