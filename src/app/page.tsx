@@ -517,6 +517,16 @@ export default function Home() {
     };
   }, [speed, viewMode]);
 
+  const handleLocateYacht = useCallback((lat: number, lng: number) => {
+    setMapCenterOverride([lat, lng]);
+    setViewMode('overview');
+    isManualOverviewRef.current = true;
+    // Si el sidebar está abierto en móvil, lo cerramos para ver el mapa
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setIsSidebarOpen(false);
+    }
+  }, [setMapCenterOverride, setIsSidebarOpen]);
+
   const handleSearchSubmit = async (query: string, coords?: [number, number]) => {
     const origin: [number, number] = userPos || [40.4168, -3.7038];
     if (coords) {
@@ -908,7 +918,8 @@ export default function Home() {
           isLoggedIn={!!session}
           isYachtsEnabled={isYachtsEnabled}
           setIsYachtsEnabled={setIsYachtsEnabled}
-          yachtsCount={yachts.length}
+          yachts={yachts}
+          onLocateYacht={handleLocateYacht}
         />
 
       {/* Sección del Mapa (Fondo) */}

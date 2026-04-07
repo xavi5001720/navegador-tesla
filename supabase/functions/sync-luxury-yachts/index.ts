@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     }
 
     const data = await response.json()
-    const vessels = data.data || []
+    const vessels = data.vesselPositions || []
 
     if (vessels.length === 0) {
       return new Response(JSON.stringify({ success: true, count: 0, message: 'La API no devolvió posiciones activas', debug: data }), { 
@@ -56,8 +56,22 @@ Deno.serve(async (req) => {
       })
     }
 
-    // 3. Preparar datos para Upsert
-    const positions = vessels.map((v: any) => ({
+    // 3. Deduplicar por MMSI (VesselAPI puede devolver múltiples posiciones históricas, necesitamos la más reciente)
+    const latestVesselMap = new Map();
+    vessels.forEach((v: any) => {
+      const existing = latestVesselMap.get(String(v.mmsi));
+      const currentTS = v.timestamp ? new Date(v.timestamp).getTime() : 0;
+      const existingTS = existing?.timestamp ? new Date(existing.timestamp).getTime() : 0;
+      
+      if (!existing || currentTS > existingTS) {
+        latestVesselMap.set(String(v.mmsi), v);
+      }
+    });
+
+    const dedupedVessels = Array.from(latestVesselMap.values());
+
+    // 4. Preparar datos para Upsert
+    const positions = dedupedVessels.map((v: any) => ({
       mmsi: String(v.mmsi),
       latitude: v.latitude,
       longitude: v.longitude,

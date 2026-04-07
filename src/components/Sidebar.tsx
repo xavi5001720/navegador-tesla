@@ -65,7 +65,8 @@ interface SidebarProps {
   onAddFriend?: (email: string) => Promise<{ success?: boolean; accepted?: boolean; invited?: boolean; error?: any }>;
   isYachtsEnabled: boolean;
   setIsYachtsEnabled: (v: boolean) => void;
-  yachtsCount: number;
+  yachts: any[];
+  onLocateYacht?: (lat: number, lng: number) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -124,9 +125,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   isLoggedIn,
   isYachtsEnabled,
   setIsYachtsEnabled,
-  yachtsCount
+  yachts,
+  onLocateYacht
 }) => {
   const [showRadarStats, setShowRadarStats] = useState(false);
+  const [showYachtList, setShowYachtList] = useState(false);
   const [showChargerFilters, setShowChargerFilters] = useState(false);
   const [showSoundOptions, setShowSoundOptions] = useState(false);
   const [radarStatsData, setRadarStatsData] = useState<any>(null);
@@ -505,12 +508,15 @@ const Sidebar: React.FC<SidebarProps> = ({
            </div>
 
            {/* Bloque Yates de Lujo */}
-           <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 ${isYachtsEnabled ? 'bg-blue-600/20 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'bg-white/5 border-white/10'}`}>
+           <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 mb-4 ${isYachtsEnabled ? 'bg-blue-600/20 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'bg-white/5 border-white/10'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className={`p-1 rounded-xl flex items-center justify-center ${isYachtsEnabled ? 'bg-blue-500/20' : 'bg-gray-500/20'}`}>
+                  <button 
+                    onClick={() => setShowYachtList(!showYachtList)}
+                    className={`p-1 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isYachtsEnabled ? 'bg-blue-500/20 hover:bg-blue-500/30' : 'bg-gray-500/20'}`}
+                  >
                     <img src="/yacht-icon.png" alt="Yates" className="h-11 w-11 object-contain drop-shadow-md" />
-                  </div>
+                  </button>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Radar Marítimo</span>
@@ -535,7 +541,32 @@ const Sidebar: React.FC<SidebarProps> = ({
               {isYachtsEnabled && (
                 <div className="mt-3 flex items-center justify-between bg-blue-600/10 p-2 rounded-xl border border-blue-500/20">
                   <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Flota Monitorizada</span>
-                  <span className="text-sm font-black text-blue-400">{yachtsCount}</span>
+                  <span className="text-sm font-black text-blue-400">{yachts.length}</span>
+                </div>
+              )}
+
+              {/* Lista de Yates (Desplegable) */}
+              {showYachtList && isYachtsEnabled && (
+                <div className="mt-4 pt-4 border-t border-white/10 animate-fade-in flex flex-col gap-2">
+                  {yachts.length === 0 ? (
+                    <p className="text-[10px] text-gray-500 uppercase text-center py-2">No hay yates detectados en este momento</p>
+                  ) : (
+                    yachts.map((yacht) => (
+                      <div key={yacht.mmsi} className="flex items-center justify-between bg-white/5 p-2 rounded-xl border border-white/5 hover:bg-white/10 transition-all group">
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-[11px] font-black text-white italic uppercase truncate">{yacht.name}</span>
+                          <span className="text-[9px] text-gray-500 font-bold truncate tracking-tighter">{yacht.owner}</span>
+                        </div>
+                        <button 
+                          onClick={() => onLocateYacht?.(yacht.latitude, yacht.longitude)}
+                          className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-400 hover:bg-blue-600/40 transition-all text-[9px] font-black uppercase tracking-tighter shrink-0"
+                        >
+                          <Navigation className="h-3 w-3" />
+                           Ver
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
               )}
            </div>
