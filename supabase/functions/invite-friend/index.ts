@@ -83,7 +83,7 @@ async function sendSmtpEmail(opts: {
     `--${boundary}`,
     `Content-Type: text/plain; charset=UTF-8`,
     ``,
-    `Tu amigo te ha invitado a NavegaPRO. Visita: https://navegador-tesla.vercel.app`,
+    `Tu amigo ${senderName} te ha invitado a NavegaPRO. Regístrate ahora y únete, tu amigo te espera: https://navegador-tesla.vercel.app`,
     ``,
     `--${boundary}`,
     `Content-Type: text/html; charset=UTF-8`,
@@ -118,7 +118,66 @@ serve(async (req) => {
     const smtpUser = Deno.env.get("SMTP_USER") ?? "registros@viajandoentesla.es"
     const smtpPass = Deno.env.get("SMTP_PASS") ?? ""
 
-    const htmlContent = `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #000; color: #fff; padding: 40px; border-radius: 20px;"><h1 style="color: #3b82f6; font-style: italic; font-weight: 900; letter-spacing: -2px;">NavegaPRO</h1><p style="font-size: 18px; line-height: 1.6;">Hola,</p><p style="font-size: 18px; line-height: 1.6;">Tu amigo <strong>${senderName}</strong> te ha invitado a unirte a la red social de <strong>NavegaPRO</strong> para Tesla.</p><div style="background-color: #111; border: 1px solid #333; padding: 20px; border-radius: 15px; margin: 25px 0;"><h2 style="font-size: 16px; color: #666; text-transform: uppercase; margin-top: 0;">Que es NavegaPRO?</h2><ul style="padding-left: 20px; color: #ccc;"><li>Navegacion social en tiempo real con tus amigos.</li><li>Alertas de radares y helicopteros Pegasus actualizadas por la comunidad.</li><li>Localizacion de Superchargers y gasolineras con precios en vivo.</li><li>Diseno premium optimizado para la pantalla de tu Tesla.</li></ul></div><p style="font-size: 16px; color: #888;">Registrate ahora con este email para ver la solicitud de tu amigo esperandote en el panel social.</p><a href="https://navegador-tesla.vercel.app" style="display: inline-block; background-color: #3b82f6; color: #fff; padding: 15px 30px; border-radius: 10px; text-decoration: none; font-weight: bold; margin-top: 20px;">ENTRAR EN NAVEGAPRO</a><p style="margin-top: 40px; font-size: 12px; color: #444;">Mensaje automatico enviado por NavegaPRO. Disfruta del viaje.</p></div>`
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#0a0a0a;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
+
+    <!-- LOGO -->
+    <div style="text-align:center;margin-bottom:36px;">
+      <div style="display:inline-block;background:linear-gradient(135deg,#1d4ed8,#3b82f6);padding:16px 28px;border-radius:16px;">
+        <span style="font-size:32px;font-weight:900;font-style:italic;color:#fff;letter-spacing:-2px;text-shadow:0 2px 12px rgba(0,0,0,0.5);">Navega<span style="color:#93c5fd;">PRO</span></span>
+      </div>
+    </div>
+
+    <!-- CARD PRINCIPAL -->
+    <div style="background-color:#111;border:1px solid #222;border-radius:24px;padding:36px;">
+
+      <p style="font-size:20px;line-height:1.6;color:#fff;margin:0 0 16px;">Hola,</p>
+
+      <p style="font-size:18px;line-height:1.6;color:#e5e7eb;margin:0 0 28px;">
+        Tu amigo <strong style="color:#fff;">${senderName}</strong> te ha invitado a unirte a la red social de <strong style="color:#3b82f6;">NavegaPRO</strong> para conductores.
+      </p>
+
+      <!-- DESCRIPCIÓN -->
+      <div style="background-color:#0d0d0d;border:1px solid #2a2a2a;border-left:3px solid #3b82f6;padding:24px;border-radius:16px;margin-bottom:28px;">
+        <h2 style="font-size:13px;color:#3b82f6;text-transform:uppercase;letter-spacing:2px;margin:0 0 20px;font-weight:700;">¿Qué es NavegaPRO?</h2>
+        <ul style="padding-left:0;color:#d1d5db;list-style:none;margin:0;">
+          <li style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;">
+            <span style="color:#3b82f6;font-size:18px;line-height:1;margin-top:2px;">&#8594;</span>
+            <span>Navegación social en tiempo real con tus amigos que te permite tenerlos localizados en el mapa.</span>
+          </li>
+          <li style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;">
+            <span style="color:#3b82f6;font-size:18px;line-height:1;margin-top:2px;">&#8594;</span>
+            <span>Alertas de radares, tráfico, clima y aviones en tiempo real.</span>
+          </li>
+          <li style="display:flex;gap:12px;align-items:flex-start;margin-bottom:14px;">
+            <span style="color:#3b82f6;font-size:18px;line-height:1;margin-top:2px;">&#8594;</span>
+            <span>Localización de cargadores EV y gasolineras con precios en vivo y filtrado para localizar los más económicos de la ruta.</span>
+          </li>
+          <li style="display:flex;gap:12px;align-items:flex-start;">
+            <span style="color:#3b82f6;font-size:18px;line-height:1;margin-top:2px;">&#8594;</span>
+            <span>Diseño premium optimizado para la pantalla de tu coche.</span>
+          </li>
+        </ul>
+      </div>
+
+      <p style="font-size:17px;color:#d1d5db;margin:0 0 28px;">Regístrate ahora y únete, tu amigo te espera.</p>
+
+      <!-- CTA BUTTON -->
+      <div style="text-align:center;">
+        <a href="https://navegador-tesla.vercel.app" style="display:inline-block;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;padding:16px 40px;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;letter-spacing:0.5px;box-shadow:0 4px 20px rgba(59,130,246,0.4);">ENTRAR EN NAVEGAPRO &rarr;</a>
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <p style="margin-top:28px;font-size:12px;color:#444;text-align:center;">Mensaje automático enviado por NavegaPRO &mdash; Disfruta del viaje.</p>
+  </div>
+</body>
+</html>`
 
     await sendSmtpEmail({
       smtpHost: "smtp.ionos.es",
