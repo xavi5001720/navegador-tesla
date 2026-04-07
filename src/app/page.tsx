@@ -91,6 +91,8 @@ export default function Home() {
     nextInstruction,
     activeLaneGuidance,
     distanceToNextInstruction,
+    originalTotalDistance,
+    originalTotalDuration,
     updateLiveMetrics
   } = useRoute();
 
@@ -320,7 +322,7 @@ export default function Home() {
     if (distOffRoute > 100) {
       console.log("Desviación detectada (" + Math.round(distOffRoute) + "m) a " + speedKmh.toFixed(0) + " km/h. Recalculando...");
       setLastRecalculationTime(now);
-      calculateRoute(userPos, destination, waypoints);
+      calculateRoute(userPos, destination, waypoints, true);
     }
   }, [userPos, speed, route, destination, waypoints, loadingRoute, lastRecalculationTime, calculateRoute]);
 
@@ -937,8 +939,8 @@ export default function Home() {
         <AnimatePresence>
           {!isSidebarOpen && route && (
             <RouteDashboard 
-              totalDistance={route.distance}
-              totalDuration={route.duration}
+              totalDistance={originalTotalDistance || route.distance}
+              totalDuration={originalTotalDuration || route.duration}
               remainingDistance={liveDistance ?? route.distance}
               remainingDuration={liveDuration ?? route.duration}
               remainingRadarsCount={remainingRadars}

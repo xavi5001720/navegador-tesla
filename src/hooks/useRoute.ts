@@ -208,8 +208,11 @@ export function useRoute() {
   const [nextInstruction, setNextInstruction] = useState<RouteInstruction | null>(null);
   const [activeLaneGuidance, setActiveLaneGuidance] = useState<LaneGuidance | null>(null);
   const [distanceToNextInstruction, setDistanceToNextInstruction] = useState<number | null>(null);
+  const [originalTotalDistance, setOriginalTotalDistance] = useState<number>(0);
+  const [originalTotalDuration, setOriginalTotalDuration] = useState<number>(0);
 
   const lastTrafficPosRef = useRef<Coordinates | null>(null);
+  const lastTrafficTimeRef = useRef<number>(0);
 
   const getDist = (p1: Coordinates, p2: Coordinates) => {
     const R = 6371e3;
@@ -220,7 +223,7 @@ export function useRoute() {
   };
 
   // Routing principal — TomTom si hay clave, OSRM si no
-  const calculateRoute = useCallback(async (origin: Coordinates, destination: Coordinates, stops: Coordinates[] = []) => {
+  const calculateRoute = useCallback(async (origin: Coordinates, destination: Coordinates, stops: Coordinates[] = [], isRecalculation = false) => {
     setLoadingRoute(true);
     setRouteError(null);
     const allPoints: Coordinates[] = [origin, ...stops, destination];
@@ -232,7 +235,11 @@ export function useRoute() {
         try {
           result = await fetchRouteTomTom(allPoints, TOMTOM_KEY);
           setIsTrafficEnabled(true);
-          lastTrafficPosRef.current = origin;
+          // Solo reseteamos referencias de tracking si es una ruta completamente nueva o superamos las condiciones
+          if (!isRecalculation) {
+            lastTrafficPosRef.current = origin;
+            lastTrafficTimeRef.current = Date.now();
+          }
           console.log('[useRoute] Ruta con TomTom ✅ (carriles y rotondas activos)');
         } catch (ttErr) {
           console.warn('[useRoute] TomTom falló, usando OSRM:', ttErr);
@@ -250,6 +257,11 @@ export function useRoute() {
       setLiveDuration(result.duration);
       setDestination(destination);
       setWaypoints(stops);
+      
+      if (!isRecalculation) {
+        setOriginalTotalDistance(result.distance);
+        setOriginalTotalDuration(result.duration);
+      }
     } catch (err: any) {
       setRouteError(err.message || 'Error calculando ruta.');
       setRoute(null);
@@ -294,15 +306,35 @@ export function useRoute() {
     setNextInstruction(null);
     setActiveLaneGuidance(null);
     setDistanceToNextInstruction(null);
+    setOriginalTotalDistance(0);
+    setOriginalTotalDuration(0);
   }, []);
 
-  // Refresco automático de tráfico cada 20km
+  // Refresco automático de tráfico: cada 30 minutos, pero SOLO si nos hemos movido más de 1km
   const checkTrafficRefresh = useCallback((currentPos: Coordinates) => {
     if (!route || !destination || !lastTrafficPosRef.current || loadingRoute) return;
-    const distSinceLastFetch = getDist(currentPos, lastTrafficPosRef.current);
-    if (distSinceLastFetch > 20000) {
-      console.log('[useRoute] 20km recorridos — refrescando tráfico TomTom...');
-      calculateRoute(currentPos, destination, waypoints);
+    
+    // Si no tenemos tiempo inicial guardado por alguna razón, usar ahora
+    if (!lastTrafficTimeRef.current) lastTrafficTimeRef.current = Date.now();
+
+    const now = Date.now();
+    const timeSinceLastFetchMs = now - lastTrafficTimeRef.current;
+    
+    // Revisamos al pasar 30 minutos (1800000 ms)
+    if (timeSinceLastFetchMs > 30 * 60 * 1000) {
+      const distSinceLastFetch = getDist(currentPos, lastTrafficPosRef.current);
+      
+      // Solo lanzamos API si nos hemos alejado al menos 1 kilómetro (1000m)
+      if (distSinceLastFetch > 1000) {
+        console.log(`[useRoute] 30m superados y 1km recorrido (${Math.round(distSinceLastFetch)}m). Repintando ruta para recaucular tráfico TomTom...`);
+        lastTrafficTimeRef.current = now;
+        lastTrafficPosRef.current = currentPos;
+        calculateRoute(currentPos, destination, waypoints, true);
+      } else {
+        // Rearmar el reloj, porque no nos hemos movido (ej: estamos en un atasco inmenso o parados).
+        // Así evitamos volver a entrar en esta condición cada segundo a partir del minuto 30.
+        lastTrafficTimeRef.current = now;
+      }
     }
   }, [route, destination, waypoints, loadingRoute, calculateRoute]);
 
@@ -365,6 +397,8 @@ export function useRoute() {
     nextInstruction,
     activeLaneGuidance,
     distanceToNextInstruction,
+    originalTotalDistance,
+    originalTotalDuration,
     calculateRoute,
     findAndTraceRoute,
     addWaypointBefore,
