@@ -11,6 +11,7 @@ import { Aircraft } from '@/hooks/usePegasus';
 import { Charger } from '@/hooks/useChargers';
 import { GasStation } from '@/hooks/useGasStations';
 import { Friend } from '@/hooks/useSocial';
+import { YachtPosition } from '@/hooks/useLuxuryYachts';
 import { useMemo } from 'react';
 import { getDistance, getBearing, findClosestPointOnPolyline, getPointAtDistance, getOffsetPoint } from '@/utils/geo';
 import { RouteSection } from '@/hooks/useRoute';
@@ -120,6 +121,18 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
   });
 };
 
+const yachtIcon = (heading: number) => L.divIcon({
+  html: renderToStaticMarkup(
+    <div className="relative flex items-center justify-center h-12 w-12 counter-rotate" style={{ transform: `rotate(${heading - 45}deg)` }}>
+      <div className="absolute inset-0 rounded-full bg-blue-400/20 blur-xl scale-150"></div>
+      <img src="/yacht-icon.png" alt="Y" className="h-10 w-10 object-contain drop-shadow-[0_5px_10px_rgba(0,0,0,0.5)]" />
+    </div>
+  ),
+  className: 'custom-yacht-icon',
+  iconSize: [48, 48],
+  iconAnchor: [24, 24],
+});
+
 const weatherEmojiMap: Record<string, string> = {
   'Clear': '☀️', 'Clouds': '⛅', 'Rain': '🌧️', 'Drizzle': '🌦️', 'Thunderstorm': '⛈️', 'Snow': '❄️', 'Mist': '🌫️', 'Fog': '🌫️'
 };
@@ -178,6 +191,7 @@ interface MapUIProps {
    gasStations?: GasStation[];
    weatherPoints?: WeatherPoint[];
    waypoints?: [number, number][];
+   yachts?: YachtPosition[];
    speed?: number;
    hasLocation?: boolean;
    viewMode?: 'navigation' | 'overview';
@@ -384,7 +398,7 @@ function LocationTracker({
 
 export default function MapUI({ 
   userPos, heading, carColor, routeCoordinates, radars = [], aircrafts = [], chargers = [],
-  gasStations = [], weatherPoints = [], waypoints = [], speed = 0, hasLocation = false,
+  gasStations = [], weatherPoints = [], waypoints = [], yachts = [], speed = 0, hasLocation = false,
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
   onGasStationClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [], 
   centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
@@ -579,6 +593,57 @@ export default function MapUI({
                       Editar nombre
                    </button>
                  </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+
+        {/* Yates de Lujo */}
+        {yachts.map((yacht) => (
+          <Marker 
+            key={`yacht-${yacht.mmsi}`} 
+            position={[yacht.latitude, yacht.longitude]} 
+            icon={yachtIcon(yacht.course || yacht.heading || 0)}
+          >
+            <Popup className="tesla-popup" minWidth={240}>
+              <div className="p-3 bg-black/95 backdrop-blur-3xl border border-blue-500/30 rounded-2xl flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                    <img src="/yacht-icon.png" alt="Y" className="h-8 w-8 object-contain" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Yate de Lujo</span>
+                    <span className="text-sm font-black text-white italic uppercase tracking-tighter">{yacht.name}</span>
+                  </div>
+                </div>
+
+                <div className="h-px bg-white/10 w-full" />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col">
+                    <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Propietario</span>
+                    <span className="text-[11px] font-bold text-gray-200">{yacht.owner}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Velocidad</span>
+                    <span className="text-[11px] font-bold text-gray-200">{yacht.speed} nudos</span>
+                  </div>
+                  {yacht.destination && (
+                    <div className="flex flex-col col-span-2">
+                      <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Destino Reportado</span>
+                      <span className="text-[11px] font-bold text-blue-400 italic">{yacht.destination}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="h-px bg-white/10 w-full" />
+
+                <div className="flex items-center justify-between">
+                  <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest">Actualizado</span>
+                  <span className="text-[9px] font-medium text-gray-500">
+                    {new Date(yacht.last_update).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
               </div>
             </Popup>
           </Marker>

@@ -43,6 +43,7 @@ import { useSocial } from '@/hooks/useSocial';
 import RouteDashboard from '@/components/RouteDashboard';
 import NavigationPanel from '@/components/NavigationPanel';
 import AboutModal from '@/components/AboutModal';
+import { useLuxuryYachts } from '@/hooks/useLuxuryYachts';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -129,6 +130,7 @@ export default function Home() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isGarageOpen, setIsGarageOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isYachtsEnabled, setIsYachtsEnabled] = useState(false);
   const [isSocialOpen, setIsSocialOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
@@ -161,6 +163,8 @@ export default function Home() {
     updateFriendNickname,
     refreshFriends: fetchFriends 
   } = useSocial(session, userPos);
+
+  const { yachts, loadingYachts } = useLuxuryYachts(isYachtsEnabled);
   
   const wasStoppedRef = useRef(true);
   const isManualOverviewRef = useRef(false);
@@ -848,61 +852,64 @@ export default function Home() {
       </AnimatePresence>
 
 
-      <Sidebar 
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-        loadingRoute={loadingRoute}
-        routeError={routeError}
-        route={route}
-        clearRoute={clearRoute}
-        loadingRadars={loadingRadars}
-        fetchingRouteRadars={fetchingRouteRadars}
-        radars={radars}
-        isRadarsEnabled={isRadarsEnabled}
-        setIsRadarsEnabled={setIsRadarsEnabled}
-        remainingRadars={remainingRadars}
-        isAnyPegasusNearby={isAnyPegasusNearby}
-        isRateLimited={isRateLimited}
-        loadingAircrafts={loadingAircrafts}
-        aircraftCount={aircrafts.length}
-        isAircraftsEnabled={isAircraftsEnabled}
-        setIsAircraftsEnabled={setIsAircraftsEnabled}
-        activeAccount={activeAccount}
-        rawAircraftCount={aircraftCount}
-        hasLocation={hasLocation}
-        onSearch={handleSearchSubmit}
-        onAddFriend={addFriend as (email: string) => Promise<{ success?: boolean; accepted?: boolean; invited?: boolean; error?: any }>}
-        isSoundEnabled={isSoundEnabled}
-        setIsSoundEnabled={setIsSoundEnabled}
-        voiceType={voiceType}
-        setVoiceType={setVoiceType}
-        onOpenFavorites={() => setIsFavoritesOpen(true)}
-        radarProgress={progress}
-        isTrafficEnabled={isTrafficEnabled}
-        liveDistance={liveDistance}
-        liveDuration={liveDuration}
-        waypoints={waypoints}
-        isChargersEnabled={isChargersEnabled}
-        setIsChargersEnabled={setIsChargersEnabled}
-        chargerFilters={chargerFilters}
-        setChargerFilters={setChargerFilters}
-        chargersCount={chargers.length}
-        loadingChargers={loadingChargers}
-        chargerProgress={chargerProgress}
-        isGasStationsEnabled={isGasStationsEnabled}
-        setIsGasStationsEnabled={setIsGasStationsEnabled}
-        gasStationFilters={gasStationFilters}
-        setGasStationFilters={setGasStationFilters}
-        gasStationsCount={gasStations.length}
-        loadingGasStations={loadingGasStations}
-        gasProgress={gasProgress}
-        isWeatherEnabled={isWeatherEnabled}
-        setIsWeatherEnabled={setIsWeatherEnabled}
-        currentWeather={currentWeather}
-        loadingWeather={loadingWeather}
-        onSavePreferences={handleSavePreferences}
-        isLoggedIn={!!session}
-      />
+        <Sidebar 
+          isSidebarOpen={isSidebarOpen}
+          setIsSidebarOpen={setIsSidebarOpen}
+          loadingRoute={loadingRoute}
+          routeError={routeError}
+          route={route}
+          clearRoute={clearRoute}
+          loadingRadars={loadingRadars}
+          fetchingRouteRadars={fetchingRouteRadars}
+          radars={radars}
+          isRadarsEnabled={isRadarsEnabled}
+          setIsRadarsEnabled={setIsRadarsEnabled}
+          remainingRadars={remainingRadars}
+          isAnyPegasusNearby={isAnyPegasusNearby}
+          isRateLimited={isRateLimited}
+          loadingAircrafts={loadingAircrafts}
+          aircraftCount={aircrafts.length}
+          isAircraftsEnabled={isAircraftsEnabled}
+          setIsAircraftsEnabled={setIsAircraftsEnabled}
+          activeAccount={activeAccount}
+          rawAircraftCount={aircraftCount}
+          hasLocation={hasLocation}
+          onSearch={handleSearchSubmit}
+          onAddFriend={addFriend as (email: string) => Promise<{ success?: boolean; accepted?: boolean; invited?: boolean; error?: any }>}
+          isSoundEnabled={isSoundEnabled}
+          setIsSoundEnabled={setIsSoundEnabled}
+          voiceType={voiceType}
+          setVoiceType={setVoiceType}
+          onOpenFavorites={() => setIsFavoritesOpen(true)}
+          radarProgress={progress}
+          isTrafficEnabled={isTrafficEnabled}
+          liveDistance={liveDistance}
+          liveDuration={liveDuration}
+          waypoints={waypoints}
+          isChargersEnabled={isChargersEnabled}
+          setIsChargersEnabled={setIsChargersEnabled}
+          chargerFilters={chargerFilters}
+          setChargerFilters={setChargerFilters}
+          chargersCount={chargers.length}
+          loadingChargers={loadingChargers}
+          chargerProgress={chargerProgress}
+          isGasStationsEnabled={isGasStationsEnabled}
+          setIsGasStationsEnabled={setIsGasStationsEnabled}
+          gasStationFilters={gasStationFilters}
+          setGasStationFilters={setGasStationFilters}
+          gasStationsCount={gasStations.length}
+          loadingGasStations={loadingGasStations}
+          gasProgress={gasProgress}
+          isWeatherEnabled={isWeatherEnabled}
+          setIsWeatherEnabled={setIsWeatherEnabled}
+          currentWeather={currentWeather}
+          loadingWeather={loadingWeather}
+          onSavePreferences={handleSavePreferences}
+          isLoggedIn={!!session}
+          isYachtsEnabled={isYachtsEnabled}
+          setIsYachtsEnabled={setIsYachtsEnabled}
+          yachtsCount={yachts.length}
+        />
 
       {/* Sección del Mapa (Fondo) */}
       <section className="relative flex-1 bg-gray-900 overflow-hidden">
@@ -917,6 +924,7 @@ export default function Home() {
           gasStations={gasStations}
           weatherPoints={weatherPoints}
           waypoints={waypoints}
+          yachts={isYachtsEnabled ? yachts : []}
           speed={speed}
           viewMode={viewMode}
           onViewModeChange={(mode) => handleManualViewModeChange(mode as 'navigation' | 'overview')}

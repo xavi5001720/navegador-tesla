@@ -63,6 +63,9 @@ interface SidebarProps {
   onSavePreferences?: () => void;
   isLoggedIn?: boolean;
   onAddFriend?: (email: string) => Promise<{ success?: boolean; accepted?: boolean; invited?: boolean; error?: any }>;
+  isYachtsEnabled: boolean;
+  setIsYachtsEnabled: (v: boolean) => void;
+  yachtsCount: number;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -118,7 +121,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   loadingWeather,
   currentWeather,
   onSavePreferences,
-  isLoggedIn
+  isLoggedIn,
+  isYachtsEnabled,
+  setIsYachtsEnabled,
+  yachtsCount
 }) => {
   const [showRadarStats, setShowRadarStats] = useState(false);
   const [showChargerFilters, setShowChargerFilters] = useState(false);
@@ -199,8 +205,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           {routeError}
         </div>
       )}
-
-
 
       {/* Información de Ruta Activa */}
       {route && (
@@ -500,6 +504,42 @@ const Sidebar: React.FC<SidebarProps> = ({
               )}
            </div>
 
+           {/* Bloque Yates de Lujo */}
+           <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 ${isYachtsEnabled ? 'bg-blue-600/20 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'bg-white/5 border-white/10'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`p-1 rounded-xl flex items-center justify-center ${isYachtsEnabled ? 'bg-blue-500/20' : 'bg-gray-500/20'}`}>
+                    <img src="/yacht-icon.png" alt="Yates" className="h-11 w-11 object-contain drop-shadow-md" />
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Radar Marítimo</span>
+                    </div>
+                    <span className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Yates de Lujo</span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-1.5">
+                  <button 
+                    onClick={() => setIsYachtsEnabled(!isYachtsEnabled)}
+                    className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isYachtsEnabled ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
+                  >
+                    <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isYachtsEnabled ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
+                      <Power className={`h-3 w-3 ${isYachtsEnabled ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
+                    </span>
+                  </button>
+                  <span className={`text-[9px] font-bold uppercase tracking-wider ${isYachtsEnabled ? 'text-green-500' : 'text-rose-500'}`}>
+                    {isYachtsEnabled ? 'Activado' : 'Desactivado'}
+                  </span>
+                </div>
+              </div>
+              {isYachtsEnabled && (
+                <div className="mt-3 flex items-center justify-between bg-blue-600/10 p-2 rounded-xl border border-blue-500/20">
+                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Flota Monitorizada</span>
+                  <span className="text-sm font-black text-blue-400">{yachtsCount}</span>
+                </div>
+              )}
+           </div>
+
            {/* Bloque Cargadores */}
            <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isChargersEnabled && 'opacity-70'}`}>
               <div className="flex items-center justify-between">
@@ -561,44 +601,44 @@ const Sidebar: React.FC<SidebarProps> = ({
                   </div>
                   
                   <div className="bg-white/5 p-2 rounded-lg flex flex-col gap-2">
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Conector</span>
-                      <div className="flex flex-wrap gap-2">
-                         {(['ccs', 'tipo2', 'enchufe'] as const).map(c => (
-                            <button 
-                               key={c}
-                               onClick={() => {
-                                 let newC = [...(chargerFilters.connectors || [])] as ('ccs' | 'tipo2' | 'enchufe')[];
-                                 if (newC.includes(c)) newC = newC.filter(x => x !== c);
-                                 else newC.push(c);
-                                 setChargerFilters({ ...chargerFilters, connectors: newC });
-                               }}
-                               className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md transition-colors ${chargerFilters.connectors?.includes(c) ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
-                            >
-                               {c}
-                            </button>
-                         ))}
-                         <button 
-                            onClick={() => setChargerFilters({ ...chargerFilters, connectors: [] })}
-                            className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md transition-colors ${!chargerFilters.connectors?.length ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-700 text-gray-400'}`}
-                         >
-                            Todos
-                         </button>
-                      </div>
+                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Conector</span>
+                       <div className="flex flex-wrap gap-2">
+                          {(['ccs', 'tipo2', 'enchufe'] as const).map(c => (
+                             <button 
+                                key={c}
+                                onClick={() => {
+                                  let newC = [...(chargerFilters.connectors || [])] as ('ccs' | 'tipo2' | 'enchufe')[];
+                                  if (newC.includes(c)) newC = newC.filter(x => x !== c);
+                                  else newC.push(c);
+                                  setChargerFilters({ ...chargerFilters, connectors: newC });
+                                }}
+                                className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md transition-colors ${chargerFilters.connectors?.includes(c) ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                             >
+                                {c}
+                             </button>
+                          ))}
+                          <button 
+                             onClick={() => setChargerFilters({ ...chargerFilters, connectors: [] })}
+                             className={`px-2 py-1 text-[10px] font-bold uppercase rounded-md transition-colors ${!chargerFilters.connectors?.length ? 'bg-blue-600 text-white shadow-lg' : 'bg-gray-700 text-gray-400'}`}
+                          >
+                             Todos
+                          </button>
+                       </div>
                   </div>
 
                   <div className="bg-white/5 p-2 rounded-lg flex flex-col gap-2">
-                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Potencia Mínima</span>
-                      <div className="flex gap-2">
-                         {[0, 22, 50, 150].map(p => (
-                            <button 
-                               key={p}
-                               onClick={() => setChargerFilters({ ...chargerFilters, minPower: p })}
-                               className={`flex-1 py-1 text-[10px] font-bold rounded-md transition-colors ${chargerFilters.minPower === p ? 'bg-emerald-600 text-white shadow-lg' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
-                            >
-                               {p === 0 ? 'Todas' : `>${p}kW`}
-                            </button>
-                         ))}
-                      </div>
+                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Potencia Mínima</span>
+                       <div className="flex gap-2">
+                          {[0, 22, 50, 150].map(p => (
+                             <button 
+                                key={p}
+                                onClick={() => setChargerFilters({ ...chargerFilters, minPower: p })}
+                                className={`flex-1 py-1 text-[10px] font-bold rounded-md transition-colors ${chargerFilters.minPower === p ? 'bg-emerald-600 text-white shadow-lg' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                             >
+                                {p === 0 ? 'Todas' : `>${p}kW`}
+                             </button>
+                          ))}
+                       </div>
                   </div>
                 </div>
               )}
