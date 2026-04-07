@@ -81,6 +81,7 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
     e.preventDefault();
     if (query.trim()) {
       setShowDropdown(false);
+      setShowFilters(false);
       onSearch(query);
     }
   };
@@ -89,6 +90,7 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
     skipSearchRef.current = true;
     setQuery(s.name);
     setShowDropdown(false);
+    setShowFilters(false);
     onSearch(s.name, s.position);
   };
 
@@ -103,7 +105,7 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            onFocus={() => { if (suggestions.length > 0) setShowDropdown(true); setShowFilters(false); }}
+            onFocus={() => { if (suggestions.length > 0) setShowDropdown(true); }}
             onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
             placeholder={showFilters ? "Calle..." : "¿A dónde vamos?"}
             autoComplete="no-autocomplete-please"
@@ -116,10 +118,15 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
           <button
             type="button"
             onClick={() => { setShowFilters(!showFilters); setShowDropdown(false); }}
-            className={`absolute inset-y-0 right-0 flex items-center pr-4 transition-colors ${showFilters ? 'text-blue-500' : 'text-gray-400 hover:text-white'}`}
+            className={`absolute inset-y-0 right-0 flex items-center pr-4 transition-colors relative ${showFilters ? 'text-blue-500' : 'text-gray-400 hover:text-white'}`}
             title="Búsqueda Avanzada"
           >
             {showFilters ? <ChevronUp className="h-5 w-5" /> : <SlidersHorizontal className="h-4 w-4" />}
+            
+            {/* Punto indicador de filtros activos */}
+            {!showFilters && (cityFilter || postalFilter || (countryFilter && countryFilter !== 'España')) && (
+              <span className="absolute top-3 right-3 h-2 w-2 bg-blue-500 rounded-full border-2 border-black animate-pulse" />
+            )}
           </button>
         </div>
         <button 
