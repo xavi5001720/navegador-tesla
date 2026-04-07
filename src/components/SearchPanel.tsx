@@ -105,7 +105,7 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => { if (suggestions.length > 0) setShowDropdown(true); setShowFilters(false); }}
             onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-            placeholder={showFilters ? "Calle o sitio exacto..." : "¿A dónde vamos hoy?"}
+            placeholder={showFilters ? "Calle o sitio exacto..." : "¿A dónde vamos?"}
             className={`w-full rounded-2xl border border-white/10 bg-black/70 backdrop-blur-xl shadow-2xl py-4 pl-10 pr-12 text-sm text-white placeholder:text-gray-400 hover:bg-black/80 focus:outline-none focus:border-blue-500/50 focus:bg-black/90 focus:ring-4 focus:ring-blue-500/10 transition-all ${showFilters ? 'ring-2 ring-blue-500/50' : ''}`}
           />
           <button
