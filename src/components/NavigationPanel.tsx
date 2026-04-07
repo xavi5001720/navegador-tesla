@@ -49,7 +49,7 @@ export default function NavigationPanel({
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: -400, opacity: 0 }}
       transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-      className="fixed top-8 left-[182px] z-[1000] w-[320px] cursor-grab active:cursor-grabbing pointer-events-auto"
+      className="fixed top-[26px] left-[148px] z-[1000] w-[320px] cursor-grab active:cursor-grabbing pointer-events-auto"
     >
       <div className="bg-black/80 backdrop-blur-3xl border border-white/10 rounded-[2rem] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.9)] relative group/panel">
         
