@@ -21,6 +21,7 @@ interface NavigationPanelProps {
   isSimulating?: boolean;
   isMinimized?: boolean;
   onMinimize?: () => void;
+  isSidebarOpen?: boolean;
 }
 
 export default function NavigationPanel({ 
@@ -30,7 +31,8 @@ export default function NavigationPanel({
   activeLaneGuidance,
   isSimulating = false,
   isMinimized = false,
-  onMinimize
+  onMinimize,
+  isSidebarOpen = false,
 }: NavigationPanelProps) {
   if (!isVisible || !instruction || isMinimized) return null;
 
@@ -47,15 +49,15 @@ export default function NavigationPanel({
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: -400, opacity: 0 }}
       transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-      className="fixed top-8 left-8 z-[1000] w-[320px] cursor-grab active:cursor-grabbing pointer-events-auto"
+      className="fixed top-8 left-36 z-[1000] w-[320px] cursor-grab active:cursor-grabbing pointer-events-auto"
     >
       <div className="bg-black/80 backdrop-blur-3xl border border-white/10 rounded-[2rem] overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.9)] relative group/panel">
         
         {/* Botón Minimizar */}
-        {onMinimize && (
+        {onMinimize && !isSidebarOpen && (
           <button 
             onClick={(e) => { e.stopPropagation(); onMinimize(); }}
-            className="absolute top-4 right-4 z-50 h-8 w-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-all pointer-events-auto opacity-0 group-hover/panel:opacity-100"
+            className="absolute top-4 right-4 z-50 h-8 w-8 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white transition-all pointer-events-auto"
           >
             <div className="h-0.5 w-3 bg-white rounded-full" />
           </button>

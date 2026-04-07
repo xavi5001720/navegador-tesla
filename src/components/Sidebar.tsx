@@ -487,8 +487,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </p>
               )}
               {isRateLimited && (
-                <p className="mt-2 text-[10px] text-amber-500/80 font-medium leading-tight">
-                  Límite de API alcanzado.
+                <p className="mt-2 text-[10px] font-medium leading-tight animate-pulse">
+                  {loadingAircrafts && rawAircraftCount === 0
+                    ? <span className="text-blue-400/80">Inicializando sistema de seguimiento…</span>
+                    : <span className="text-amber-500/80">Límite de API alcanzado.</span>
+                  }
                 </p>
               )}
            </div>

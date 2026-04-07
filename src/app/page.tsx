@@ -812,6 +812,7 @@ export default function Home() {
         isSimulating={isSimulating}
         isMinimized={isNavMinimized}
         onMinimize={() => setIsNavMinimized(true)}
+        isSidebarOpen={isSidebarOpen}
       />
 
       {/* Panel Flotante de Búsqueda (Siempre Visible) */}
