@@ -164,19 +164,23 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 backdrop-blur-3xl shadow-2xl transition-transform duration-500 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-      {/* Header Fijo (Espaciador para la marca NavegaPRO) */}
-      <div className="h-28 shrink-0 hidden md:block px-6 pt-6" />
-      
-      <div className="flex-1 overflow-y-auto no-scrollbar p-6 pt-0 md:pt-2">
+      {/* Header Fijo (Espaciador para la marca NavegaPRO y SearchPanel) */}
+      <div className="shrink-0">
+        <div className="h-28 hidden md:block px-6 pt-6" />
+        
+        <div className="px-6">
+          <div className="mb-4 flex items-center justify-end md:hidden">
+            <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-gray-400">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-      <div className="mb-4 flex items-center justify-end md:hidden">
-        <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-gray-400">
-          <X className="h-5 w-5" />
-        </button>
+          {/* Espaciador fijo para el SearchPanel que ahora flota en page.tsx */}
+          <div className="h-[62px] w-full mb-4" />
+        </div>
       </div>
-
-      {/* Espaciador fijo para el SearchPanel que ahora flota en page.tsx */}
-      <div className="h-[62px] w-full shrink-0 mb-4" />
+      
+      <div className="flex-1 overflow-y-auto no-scrollbar p-6 pt-0">
 
       {/* Botón Eliminar Ruta (solo cuando hay ruta activa) */}
       {route && (
