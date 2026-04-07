@@ -42,6 +42,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useSocial } from '@/hooks/useSocial';
 import RouteDashboard from '@/components/RouteDashboard';
 import NavigationPanel from '@/components/NavigationPanel';
+import AboutModal from '@/components/AboutModal';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -127,6 +128,7 @@ export default function Home() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isGarageOpen, setIsGarageOpen] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isSocialOpen, setIsSocialOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
@@ -776,7 +778,13 @@ export default function Home() {
         onToggleFullscreen={() => setIsSidebarOpen(!isSidebarOpen)}
         mapMode={mapMode}
         onToggleMapMode={() => setMapMode(prev => prev === 'satellite' ? 'light' : 'satellite')}
+        onOpenAbout={() => setIsAboutOpen(true)}
         onLogout={handleSignOut}
+      />
+
+      <AboutModal 
+        isOpen={isAboutOpen} 
+        onClose={() => setIsAboutOpen(false)} 
       />
 
       {/* Panel Izquierdo (Bloque de Control) */}

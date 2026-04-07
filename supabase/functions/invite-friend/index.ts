@@ -15,6 +15,7 @@ async function sendSmtpEmail(opts: {
   to: string
   subject: string
   html: string
+  senderName: string
 }) {
   const conn = await Deno.connectTls({ hostname: opts.smtpHost, port: opts.smtpPort })
   const reader = new BufReader(conn)
@@ -83,7 +84,7 @@ async function sendSmtpEmail(opts: {
     `--${boundary}`,
     `Content-Type: text/plain; charset=UTF-8`,
     ``,
-    `Tu amigo ${senderName} te ha invitado a NavegaPRO. Regístrate ahora y únete, tu amigo te espera: https://navegador-tesla.vercel.app`,
+    `Tu amigo ${opts.senderName} te ha invitado a NavegaPRO. Regístrate ahora y únete, tu amigo te espera: https://navegador-tesla.vercel.app`,
     ``,
     `--${boundary}`,
     `Content-Type: text/html; charset=UTF-8`,
@@ -187,7 +188,8 @@ serve(async (req) => {
       from: smtpUser,
       to: receiverEmail,
       subject: `${senderName} te invita a unirte a NavegaPRO`,
-      html: htmlContent,
+      html: htmlContent.replace(/\r?\n/g, '\r\n'),
+      senderName: senderName,
     })
 
     console.log("Email sent successfully to", receiverEmail)

@@ -1,6 +1,6 @@
 'use client';
 
-import { Car, Users, Maximize, Minimize, LogOut, X, Map as MapIcon } from 'lucide-react';
+import { Car, Users, Maximize, Minimize, LogOut, X, Map as MapIcon, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface UserMenuProps {
@@ -12,6 +12,7 @@ interface UserMenuProps {
   onToggleFullscreen: () => void;
   mapMode: 'satellite' | 'light';
   onToggleMapMode: () => void;
+  onOpenAbout: () => void;
   onLogout: () => void;
 }
 
@@ -24,6 +25,7 @@ export default function UserMenu({
   onToggleFullscreen, 
   mapMode,
   onToggleMapMode,
+  onOpenAbout,
   onLogout 
 }: UserMenuProps) {
   return (
@@ -62,6 +64,11 @@ export default function UserMenu({
                 icon={<MapIcon className="h-5 w-5" />} 
                 label={mapMode === 'satellite' ? "Mapa modo ligero" : "Mapa modo satélite"} 
                 onClick={() => { onToggleMapMode(); onClose(); }} 
+              />
+              <MenuButton 
+                icon={<Info className="h-5 w-5" />} 
+                label="Acerca de" 
+                onClick={() => { onOpenAbout(); onClose(); }} 
               />
               
               <div className="h-px bg-white/5 my-2 mx-4" />
