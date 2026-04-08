@@ -4,6 +4,9 @@
  */
 
 const SUPABASE_URL = 'https://uhvwptagewswfiluqgmc.supabase.co';
+// IMPORTANTE: Se recomienda encarecidamente usar la SERVICE_ROLE_KEY en lugar de la ANON_KEY
+// para este script de backend, ya que la SERVICE_ROLE_KEY se salta las políticas de RLS.
+// Obtén tu SERVICE_ROLE_KEY en el panel de Supabase: Settings -> API.
 const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVodndwdGFnZXdzd2ZpbHVxZ21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDI4NTEsImV4cCI6MjA5MDM3ODg1MX0.LEygUxMX0zzrkRVv8MJivhPDmy6yp2KIlaU3oICjyAk';
 
 const ACCOUNTS = [
