@@ -577,6 +577,9 @@ export default function Home() {
 
   return (
     <main className="flex h-screen w-full overflow-hidden bg-gray-950 font-sans text-white selection:bg-blue-500/30">
+      {/* SEO: H1 oculto para motores de búsqueda */}
+      <h1 className="sr-only">Viajando en Tesla - Navegador Inteligente y Detector de Radares Pegasus</h1>
+      
       
       {/* Alerta de Radar */}
       {isAlertActive && nearestRadar && distance !== null && (
