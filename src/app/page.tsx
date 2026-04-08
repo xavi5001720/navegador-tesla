@@ -815,7 +815,7 @@ export default function Home() {
             className="fixed top-8 left-8 z-[100] flex items-center gap-5 pointer-events-auto cursor-pointer select-none"
           >
             <img 
-              src="/pro-logo.png?v=5" 
+              src="/favicon-logo.png" 
               alt="NavegaPRO Logo" 
               className="h-20 w-auto object-contain drop-shadow-2xl" 
             />
