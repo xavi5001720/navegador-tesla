@@ -175,7 +175,9 @@ const Sidebar: React.FC<SidebarProps> = ({
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 backdrop-blur-3xl shadow-2xl transition-transform duration-500 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       {/* Header Fijo (Espaciador para la marca NavegaPRO y SearchPanel) */}
       <div className="shrink-0">
-        <div className="h-28 hidden md:block px-6 pt-6" />
+        <div className="h-28 hidden md:flex px-6 pt-6 items-center justify-center">
+          <img src="/logonuevo.png" alt="NavegaPRO" className="h-16 w-auto object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]" />
+        </div>
         
         <div className="px-6">
           <div className="mb-4 flex items-center justify-end md:hidden">
