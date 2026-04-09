@@ -3,7 +3,8 @@
  * Versión estable basada en polling cada 10s y caché de 45s.
  */
 
-import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
