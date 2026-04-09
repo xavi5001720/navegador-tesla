@@ -1,5 +1,6 @@
-const SUPABASE_URL = 'https://uhvwptagewswfiluqgmc.supabase.co';
-const ANON_KEY = 'sb_publishable_9EUX4dnQ9rqxS9Bon7SKVg_HXrII5vD';
+import 'dotenv/config';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 async function checkRequests() {
   console.log('Checking opensky_requests table...');

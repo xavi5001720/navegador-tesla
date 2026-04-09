@@ -3,11 +3,15 @@
  * Versión estable basada en polling cada 10s y caché de 45s.
  */
 
-const SUPABASE_URL = 'https://uhvwptagewswfiluqgmc.supabase.co';
-// IMPORTANTE: Se recomienda encarecidamente usar la SERVICE_ROLE_KEY en lugar de la ANON_KEY
-// para este script de backend, ya que la SERVICE_ROLE_KEY se salta las políticas de RLS.
-// Obtén tu SERVICE_ROLE_KEY en el panel de Supabase: Settings -> API.
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVodndwdGFnZXdzd2ZpbHVxZ21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDI4NTEsImV4cCI6MjA5MDM3ODg1MX0.LEygUxMX0zzrkRVv8MJivhPDmy6yp2KIlaU3oICjyAk';
+import 'dotenv/config';
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !ANON_KEY) {
+  console.error('❌ Error: NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY no están configuradas en .env.local');
+  process.exit(1);
+}
 
 const ACCOUNTS = [
   { id: 'luliloqui-api-client', secret: 'YEXtTfBwCd5w2Kxhvp57W4C0s6f4Pb5n' },

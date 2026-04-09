@@ -38,9 +38,9 @@ const FETCH_INTERVAL_MS = 60_000;
 // ─────────────────────────────────────────────────────────────────────────────
 import { createClient } from '@supabase/supabase-js';
 
-// Llaves maestras forzadas para evitar errores de caché
-const SUPABASE_URL = 'https://uhvwptagewswfiluqgmc.supabase.co';
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVodndwdGFnZXdzd2ZpbHVxZ21jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MDI4NTEsImV4cCI6MjA5MDM3ODg1MX0.LEygUxMX0zzrkRVv8MJivhPDmy6yp2KIlaU3oICjyAk';
+// Variables de entorno cargadas desde config global
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 const localSupabase = createClient(SUPABASE_URL, ANON_KEY);
 
@@ -111,42 +111,79 @@ export function usePegasus(
           isFirstFetchAfterEnable.current = false;
         }
 
-        // 3. Pedir al servidor
-        const response = await fetch(`${SUPABASE_URL}/functions/v1/pegasus`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': ANON_KEY,
-            'Authorization': `Bearer ${ANON_KEY}`
-          },
-          body: JSON.stringify({
-            lamin: sLamin,
-            lomin: sLomin,
-            lamax: sLamax,
-            lomax: sLomax,
-            ulat: pos[0],
-            ulon: pos[1]
-          })
-        });
+        // 3. Pedir al servidor (AHORA DIRECTO A LA TABLA PARA EVITAR 404)
+        const { data: cached, error } = await supabase
+          .from('opensky_cache')
+          .select('states, ts, rate_limited, account_index')
+          .eq('bbox_key', bboxKey)
+          .single();
 
-        if (!response.ok) {
-          console.error(`[usePegasus] Error HTTP ${response.status}:`, await response.text());
-          throw new Error(`Edge Function returned ${response.status}`);
+        if (error) {
+          console.warn('[usePegasus] Error consultando caché:', error.message);
+          return 0;
         }
 
-        const data = await response.json();
+        if (!cached) return 0;
 
-        setIsRateLimited(data?.rateLimited ?? false);
-        if (data?.accountIndex && data.accountIndex !== -1) {
-          setActiveAccount(data.accountIndex);
+        setIsRateLimited(cached.rate_limited ?? false);
+        if (cached.account_index && cached.account_index !== -1) {
+          setActiveAccount(cached.account_index);
         }
 
-        const states: Aircraft[] = data?.states ?? [];
-        console.log(`[usePegasus V10] ✅ RECIBIDOS ${states.length} AVIONES para zona ${bboxKey}`);
-        setAllAircrafts(states);
+        const rawStates: any[] = cached.states ?? [];
+        
+        // 4. Enriquecimiento de datos (El "cerebro" ahora está aquí)
+        const AIRPORTS = [
+          [40.4936, -3.5668], [41.2971, 2.0785], [37.4274, -5.8931],
+          [36.6749, -4.4990], [39.5526, 2.7388], [28.4527, -13.8655],
+          [27.9319, -15.3866],[28.0445, -16.5725],[28.4827, -16.3415],
+          [38.8722,  1.3731], [43.3011, -8.3777], [43.3565, -5.8603],
+          [43.3010, -1.7921], [43.3011, -3.8257], [39.4926, -0.4815],
+          [38.1814, -1.0014], [38.2816, -0.5582], [36.7878, -2.3696],
+        ];
+
+        const COMMERCIAL_RE = /^(EAX|IBE|RYR|VLG|EZY|AFR|DLH|KLM|BAW)/i;
+        const WATCH_RE = /DGT|PESG|SAER|POLIC|GUARDIA|GC|POL/i;
+
+        const haversine = (p1: [number, number], p2: [number, number]) => {
+          const R = 6371000;
+          const dLat = (p2[0] - p1[0]) * Math.PI / 180;
+          const dLon = (p2[1] - p1[1]) * Math.PI / 180;
+          const a = Math.sin(dLat / 2) ** 2 + Math.cos(p1[0] * Math.PI/180) * Math.cos(p2[0] * Math.PI/180) * Math.sin(dLon / 2) ** 2;
+          return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        };
+
+        const enriched: Aircraft[] = rawStates.map(s => {
+          const lat = s[6], lon = s[5];
+          if (lat == null || lon == null || s[8] === true) return null;
+
+          const callsign = (s[1] || '').trim();
+          const altitude = s[7] ?? s[13] ?? 0;
+          const velocity = s[9] ?? 0;
+          const icao24 = s[0] || '';
+
+          const isCommercial = COMMERCIAL_RE.test(callsign);
+          const hasWatchPattern = WATCH_RE.test(callsign);
+          const isDGT = icao24.startsWith('34');
+          const isLow = altitude < 1000;
+          const isSlow = velocity < 60;
+          const nearApt = AIRPORTS.some(ap => haversine([lat, lon], [ap[0] as number, ap[1] as number]) < 5000);
+
+          const isSuspect = !isCommercial && (hasWatchPattern || isDGT || ((isLow && isSlow) && !nearApt));
+          const distanceToUser = haversine([pos[0], pos[1]], [lat, lon]);
+
+          return {
+            icao24, callsign: callsign || 'N/A', origin_country: s[2] || '',
+            lat, lon, altitude, velocity, track: s[10] ?? 0,
+            isSuspect, distanceToUser
+          };
+        }).filter((a): a is Aircraft => a !== null);
+
+        console.log(`[usePegasus V11-Local] ✅ PROCESADOS ${enriched.length} AVIONES para zona ${bboxKey}`);
+        setAllAircrafts(enriched);
         setLastFetchTime(Date.now());
 
-        return states.length;
+        return enriched.length;
 
       } catch (error) {
         console.error('[usePegasus] ❌ Error:', error);
