@@ -126,8 +126,8 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
             const routeWkt = `LINESTRING(${wktPoints})`;
 
             const { data, error } = await supabase.rpc('get_radars_in_route', {
-              route_wkt: routeWkt,
-              buffer_meters: 100 // Usamos 100m para rutas largas para mayor seguridad
+              p_route_wkt: routeWkt,
+              p_buffer_meters: 100 // Usamos 100m para rutas largas para mayor seguridad
             });
 
             if (error) {
@@ -159,9 +159,9 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
           // MODO LOCAL: Búsqueda circular de 15km (Solo 1 petición)
           console.log(`[useRadars] Consultando radares cercanos via Supabase RPC...`);
           const { data, error } = await supabase.rpc('get_radars_nearby', {
-            lat: userPos[0],
-            lon: userPos[1],
-            radius_meters: 15000
+            p_lat: userPos[0],
+            p_lon: userPos[1],
+            p_radius_meters: 15000
           });
 
           if (error) throw error;
