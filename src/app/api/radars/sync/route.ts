@@ -5,7 +5,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const BATCH_SIZE = 500;
 
-export const maxDuration = 60; // Permitir hasta 60s en Vercel
+export const maxDuration = 300; // Aumentar al máximo en Vercel Pro (o 60s en Hobby)
 export const dynamic = 'force-dynamic';
 
 async function fetchRadarsFromOverpass(query: string): Promise<any[]> {
@@ -61,8 +61,8 @@ export async function GET(request: Request) {
       const queryES = `
         [out:json][timeout:90];
         (
-          node["highway"="speed_camera"](27,-19,44,5);
-          node["enforcement"="speed"](27,-19,44,5);
+          node["highway"="speed_camera"](35.0,-10.0,44.0,5.0);
+          node["enforcement"="speed"](35.0,-10.0,44.0,5.0);
         );
         out body;
       `;
