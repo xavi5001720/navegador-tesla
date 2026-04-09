@@ -17,10 +17,27 @@
 .DS_Store
 *.pem
 
-# debug
+# Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Binary & Office files (Security Prevent)
+*.odt
+*.odt#
+.~lock.*
+*.doc
+*.docx
+*.pdf
+API\ open\ chargue\ map/
 
 # local env files
 .env*.local
