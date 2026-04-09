@@ -27,7 +27,10 @@ const OPENSKY_BASE = 'https://opensky-network.org/api';
 const TOKEN_URL = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
 
 const POLL_INTERVAL_MS = 10_000;
+const YACHT_POLL_INTERVAL_MS = 3600_000 * 5; // Cada 5 horas
 const REQUEST_STALE_MS = 300_000;
+
+const VESSEL_API_KEY = process.env.VESSEL_API_KEY;
 
 // Distancia entre dos puntos (lat, lon) en metros
 function haversine(p1, p2) {
@@ -256,13 +259,52 @@ async function main() {
   }
 }
 
+async function syncYachts() {
+  console.log(`[${new Date().toLocaleTimeString()}] ⛴️ Sincronizando posiciones de Yates...`);
+  if (!VESSEL_API_KEY) {
+    console.warn('   ⚠️ VESSEL_API_KEY no configurada. Saltando barcos.');
+    return;
+  }
+
+  try {
+    const { data: yachts } = await supabase.from('luxury_yacht_list').select('mmsi');
+    if (!yachts || yachts.length === 0) return;
+
+    const mmsis = yachts.map(y => y.mmsi).join(',');
+    const url = `https://api.vesselapi.com/v1/vessels/positions?filter.ids=${mmsis}&filter.idType=mmsi`;
+
+    const res = await fetch(url, { headers: { 'Authorization': `Bearer ${VESSEL_API_KEY}` } });
+    if (!res.ok) throw new Error(await res.text());
+
+    const data = await res.json();
+    const vessels = data.vesselPositions || [];
+    
+    const positions = vessels.map(v => ({
+      mmsi: String(v.mmsi),
+      latitude: v.latitude,
+      longitude: v.longitude,
+      speed: v.sog,
+      course: v.cog,
+      last_update: v.timestamp ? new Date(v.timestamp).toISOString() : new Date().toISOString()
+    }));
+
+    await supabase.from('luxury_yacht_positions').upsert(positions, { onConflict: 'mmsi' });
+    console.log(`   ✅ OK: ${positions.length} yates actualizados.`);
+  } catch (e) {
+    console.error(`   ❌ Error en barcos:`, e.message);
+  }
+}
+
 console.log(`-----------------------------------------`);
 console.log(`DETECTIVE DINÁMICO (V2.1 RESTAURADO)`);
 console.log(`Estado: Estable (Polling Periódico)`);
 console.log(`-----------------------------------------`);
 
 main();
+syncYachts(); // Primera carga de barcos al arrancar
+
 setInterval(main, POLL_INTERVAL_MS);
+setInterval(syncYachts, YACHT_POLL_INTERVAL_MS); // Cada 5 horas
 
 // Informe de estado cada 1 hora (automático)
 setInterval(() => {
