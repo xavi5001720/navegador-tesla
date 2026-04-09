@@ -192,8 +192,8 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
             const routeWkt = `LINESTRING(${wktPoints})`;
 
             const { data, error } = await supabase.rpc('get_stations_in_route', {
-              route_wkt: routeWkt,
-              buffer_meters: 2000 // 2km margen
+              p_route_wkt: routeWkt,
+              p_buffer_meters: 300
             });
 
             if (error) {
