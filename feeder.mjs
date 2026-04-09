@@ -6,12 +6,15 @@
 import 'dotenv/config';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!SUPABASE_URL || !ANON_KEY) {
+if (!SUPABASE_URL || !SERVICE_KEY) {
   console.error('❌ Error: NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY no están configuradas en .env.local');
   process.exit(1);
 }
+
+// Para retrocompatibilidad con las funciones internas del script
+const ANON_KEY = SERVICE_KEY;
 
 const ACCOUNTS = [
   { id: 'luliloqui-api-client', secret: 'YEXtTfBwCd5w2Kxhvp57W4C0s6f4Pb5n' },
