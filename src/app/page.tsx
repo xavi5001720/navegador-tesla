@@ -528,7 +528,8 @@ export default function Home() {
   }, [setMapCenterOverride, setIsSidebarOpen]);
 
   const handleSearchSubmit = async (query: string, coords?: [number, number]) => {
-    const origin: [number, number] = userPos || [40.4168, -3.7038];
+    const origin: [number, number] = userPos || [0, 0];
+    if (origin[0] === 0) return; // No navegar si no hay posición real
     if (coords) {
       await calculateRoute(origin, coords, []);
     } else {
@@ -554,7 +555,8 @@ export default function Home() {
 
   const handleNavigateToPoint = useCallback(() => {
     if (!contextMenu) return;
-    const origin: [number, number] = userPos || [40.4168, -3.7038];
+    const origin: [number, number] = userPos || [0, 0];
+    if (origin[0] === 0) return;
     calculateRoute(origin, [contextMenu.lat, contextMenu.lon]);
   }, [contextMenu, userPos, calculateRoute]);
 
@@ -565,13 +567,15 @@ export default function Home() {
 
   const handleAddStopBefore = useCallback(() => {
     if (!contextMenu) return;
-    const origin: [number, number] = userPos || [40.4168, -3.7038];
+    const origin: [number, number] = userPos || [0, 0];
+    if (origin[0] === 0) return;
     addWaypointBefore(origin, [contextMenu.lat, contextMenu.lon]);
   }, [contextMenu, userPos, addWaypointBefore]);
 
   const handleAddStopAfter = useCallback(() => {
     if (!contextMenu) return;
-    const origin: [number, number] = userPos || [40.4168, -3.7038];
+    const origin: [number, number] = userPos || [0, 0];
+    if (origin[0] === 0) return;
     addWaypointAfter(origin, [contextMenu.lat, contextMenu.lon]);
   }, [contextMenu, userPos, addWaypointAfter]);
 

@@ -231,7 +231,9 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     const now = Date.now();
     
     // A. Actualización en Base de Datos (Persistencia cada 2 minutos si no hay movimiento crítico)
-    if (now - lastDbUpdateRef.current > 120000) {
+    // Forzamos actualización inmediata la primera vez (lastDbUpdateRef es 0)
+    if (lastDbUpdateRef.current === 0 || now - lastDbUpdateRef.current > 120000) {
+      console.log('[useSocial] 🛰️ Actualizando posición persistente en DB...');
       supabase.from('profiles').update({
         last_lat: userPos[0],
         last_lon: userPos[1],
