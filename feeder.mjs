@@ -266,29 +266,95 @@ async function syncYachts() {
     return;
   }
 
+  // OPTIMIZACIÓN: No consultar si los datos están frescos en Supabase (Ahorro de créditos)
   try {
-    const { data: yachts } = await supabase.from('luxury_yacht_list').select('mmsi');
+    const resCheck = await fetch(`${SUPABASE_URL}/rest/v1/luxury_yacht_positions?select=last_update&order=last_update.desc&limit=1`, {
+      headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }
+    });
+    if (resCheck.ok) {
+      const lastPos = await resCheck.json();
+      if (lastPos && lastPos.length > 0) {
+        const lastUpdate = new Date(lastPos[0].last_update).getTime();
+        const elapsed = Date.now() - lastUpdate;
+        if (elapsed < YACHT_POLL_INTERVAL_MS) {
+          const remaining = Math.round((YACHT_POLL_INTERVAL_MS - elapsed) / 60000);
+          console.log(`   ⏳ [Barcos]: Datos frescos (${Math.round(elapsed/60000)}m de antigüedad). Faltan ${remaining}m para el próximo refresco.`);
+          return;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('   ⚠️ Error verificando caché de barcos:', e.message);
+  }
+
+  try {
+    // 1. Obtener MMSIs
+    const resList = await fetch(`${SUPABASE_URL}/rest/v1/luxury_yacht_list?select=mmsi`, {
+      headers: { 'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}` }
+    });
+    if (!resList.ok) throw new Error(`Error lista: ${resList.statusText}`);
+    const yachts = await resList.json();
     if (!yachts || yachts.length === 0) return;
 
     const mmsis = yachts.map(y => y.mmsi).join(',');
-    const url = `https://api.vesselapi.com/v1/vessels/positions?filter.ids=${mmsis}&filter.idType=mmsi`;
+    const vesselUrl = `https://api.vesselapi.com/v1/vessels/positions?filter.ids=${mmsis}&filter.idType=mmsi`;
 
-    const res = await fetch(url, { headers: { 'Authorization': `Bearer ${VESSEL_API_KEY}` } });
-    if (!res.ok) throw new Error(await res.text());
+    // 2. Consultar VesselAPI (El servidor exige prefijo Bearer)
+    const cleanKey = VESSEL_API_KEY.trim();
+    const resVessel = await fetch(vesselUrl, { 
+      headers: { 
+        'Authorization': `Bearer ${cleanKey}`,
+        'Content-Type': 'application/json'
+      } 
+    });
 
-    const data = await res.json();
+    if (!resVessel.ok) {
+        const errText = await resVessel.text();
+        console.error(`   ❌ Fallo en VesselAPI (${resVessel.status}): ${errText}`);
+        throw new Error(`Auth failed (HTTP ${resVessel.status})`);
+    }
+
+    const data = await resVessel.json();
     const vessels = data.vesselPositions || [];
     
-    const positions = vessels.map(v => ({
+    // Deduplicar: Mantener solo la posición más reciente por cada MMSI
+    const latestVesselMap = new Map();
+    vessels.forEach(v => {
+      const existing = latestVesselMap.get(String(v.mmsi));
+      const currentTS = v.timestamp ? new Date(v.timestamp).getTime() : 0;
+      const existingTS = existing?.timestamp ? new Date(existing.timestamp).getTime() : 0;
+      
+      if (!existing || currentTS > existingTS) {
+        latestVesselMap.set(String(v.mmsi), v);
+      }
+    });
+
+    const positions = Array.from(latestVesselMap.values()).map(v => ({
       mmsi: String(v.mmsi),
-      latitude: v.latitude,
-      longitude: v.longitude,
-      speed: v.sog,
-      course: v.cog,
-      last_update: v.timestamp ? new Date(v.timestamp).toISOString() : new Date().toISOString()
+      latitude: v.latitude ? parseFloat(v.latitude) : null,
+      longitude: v.longitude ? parseFloat(v.longitude) : null,
+      speed: v.sog ? parseFloat(v.sog) : 0,
+      course: v.cog ? parseFloat(v.cog) : 0,
+      heading: v.heading ? parseFloat(v.heading) : null,
+      nav_status: v.nav_status !== null ? String(v.nav_status) : null,
+      last_update: v.timestamp ? new Date(v.timestamp).toISOString() : new Date().toISOString(),
+      destination: v.destination || null
     }));
 
-    await supabase.from('luxury_yacht_positions').upsert(positions, { onConflict: 'mmsi' });
+    // 3. Upsert a Supabase
+    const resUpsert = await fetch(`${SUPABASE_URL}/rest/v1/luxury_yacht_positions`, {
+      method: 'POST',
+      headers: {
+        'apikey': ANON_KEY, 'Authorization': `Bearer ${ANON_KEY}`,
+        'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify(positions)
+    });
+
+    if (!resUpsert.ok) {
+        const body = await resUpsert.text();
+        throw new Error(`Upsert (${resUpsert.status}): ${body}`);
+    }
     console.log(`   ✅ OK: ${positions.length} yates actualizados.`);
   } catch (e) {
     console.error(`   ❌ Error en barcos:`, e.message);

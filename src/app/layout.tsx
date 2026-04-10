@@ -17,7 +17,6 @@ export const metadata: Metadata = {
   description: "Navegación inteligente optimizada para la pantalla de tu Tesla. Incluye detección de radares Pegasus en tiempo real, tráfico, cargadores y radares meteorológicos.",
   keywords: ["Tesla", "Navegador", "Radares", "Pegasus", "Cargadores Tesla", "Navegación Social"],
   authors: [{ name: "Viajando en Tesla" }],
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
   openGraph: {
     title: "Viajando en Tesla | Navegador Premium para tu Tesla",
     description: "La mejor experiencia de navegación con alertas en tiempo real de radares Pegasus y tráfico.",
@@ -40,6 +39,13 @@ export const metadata: Metadata = {
     description: "Navegación inteligente y radares Pegasus para tu Tesla.",
     images: ["/og-image.png"],
   },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

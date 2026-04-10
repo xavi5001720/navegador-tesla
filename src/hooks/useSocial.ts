@@ -134,7 +134,7 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
       const invitedFriends: Friend[] = (invitations || []).map(inv => ({
         id: `pending-${inv.receiver_email}`,
         email: inv.receiver_email,
-        car_name: 'Invitado (Sin cuenta)',
+        car_name: `Invitado (${inv.receiver_email})`,
         car_color: 'Desconocido',
         is_online: false,
         is_sharing_location: false,
@@ -276,6 +276,12 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
     const cleanEmail = email.trim().toLowerCase();
     
     if (cleanEmail === session.user.email) return { error: 'No puedes añadirte a ti mismo' };
+    
+    // Nueva verificación: ¿Ya está en nuestra lista local de amigos (pendiente o aceptado)?
+    const alreadyInList = friends.find(f => f.email?.toLowerCase() === cleanEmail);
+    if (alreadyInList) {
+      return { error: 'Tu amigo ya estaba en la lista de amigos' };
+    }
 
     // 1. Buscar si el usuario existe
     const { data: profile } = await supabase
