@@ -228,10 +228,9 @@ export function useSocial(session: Session | null, userPos: [number, number], is
         
         const elapsed = now - lastBroadcastTimeRef.current;
         const isMovedSignificant = distance > 10;
-        const isTimeForMovementUpdate = elapsed > 10000; // 10 segundos mínimo entre movimientos
-        const isTimeForHeartbeat = elapsed > 120000;     // 2 minutos para latido en parado
+        const isTimeForMovementUpdate = elapsed > 10000; // 10 segundos mínimo entre envíos por movimiento
 
-        if ((isMovedSignificant && isTimeForMovementUpdate) || isTimeForHeartbeat) {
+        if (isMovedSignificant && isTimeForMovementUpdate) {
           shouldBroadcast = true;
         }
       }
