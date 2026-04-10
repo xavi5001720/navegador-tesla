@@ -87,6 +87,8 @@ export default function Home() {
     clearRoute,
     checkTrafficRefresh,
     isTrafficEnabled,
+    lastTrafficTime,
+    lastTrafficPos,
     liveDistance,
     liveDuration,
     nextInstruction,
@@ -117,6 +119,7 @@ export default function Home() {
   const [isTrafficWanted, setIsTrafficWanted] = useState(true);
   const [voiceType, setVoiceType] = useState<VoiceType>('mujer');
   const [lastRecalculationTime, setLastRecalculationTime] = useState(0);
+  const lastTrafficRequestTimeRef = useRef(0);
   const [customZoom, setCustomZoom] = useState<number | null>(null);
   const [contextMenu, setContextMenu] = useState<{ lat: number; lon: number; screenX: number; screenY: number } | null>(null);
   const [selectedPOI, setSelectedPOI] = useState<
@@ -350,6 +353,29 @@ export default function Home() {
   // Recalcular ruta al cambiar la preferencia de tráfico si hay una ruta activa
   useEffect(() => {
     if (route && destination && userPos) {
+      // Protección anti-spam estricta: solo llamamos a la API si han pasado más de 30min Y se ha movido > 1km
+      const now = Date.now();
+      const timeSinceLastRequest = now - lastTrafficTime;
+      
+      // Calculamos distancia desde la última vez que TomTom dio OK
+      const getDistance = (p1: [number, number], p2: [number, number]) => {
+        const R = 6371e3;
+        const dLat = (p2[0] - p1[0]) * Math.PI / 180;
+        const dLon = (p2[1] - p1[1]) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos(p1[0] * Math.PI / 180) * Math.cos(p2[0] * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      };
+      
+      const distSinceLastRequest = lastTrafficPos ? getDistance(userPos, lastTrafficPos) : Infinity;
+
+      const isTimeOk = timeSinceLastRequest > 1800000; // 30 min
+      const isDistOk = distSinceLastRequest > 1000; // 1 km
+      
+      if (isTrafficWanted && !(isTimeOk && isDistOk)) {
+        console.log(`[Ahorro Crítico] Tráfico bloqueado. Han pasado ${Math.round(timeSinceLastRequest/60000)}min y movido ${Math.round(distSinceLastRequest)}m. (Faltan: ${isTimeOk ? '0' : 30 - Math.round(timeSinceLastRequest/60000)}min o ${isDistOk ? '0' : 1000 - Math.round(distSinceLastRequest)}m)`);
+        return;
+      }
+
       console.log(`[page] Preferencia de tráfico cambiada a ${isTrafficWanted ? 'ON' : 'OFF'}. Recalculando ruta...`);
       calculateRoute(userPos, destination, waypoints, true, isTrafficWanted);
     }

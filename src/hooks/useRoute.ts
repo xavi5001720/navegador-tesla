@@ -241,6 +241,9 @@ export function useRoute() {
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
+  const [lastTrafficTime, setLastTrafficTime] = useState(0);
+  const [lastTrafficPos, setLastTrafficPos] = useState<Coordinates | null>(null);
+
   // Routing principal — TomTom si hay clave, OSRM si no
   const calculateRoute = useCallback(async (origin: Coordinates, destination: Coordinates, stops: Coordinates[] = [], isRecalculation = false, enableTrafficRequested = true) => {
     setLoadingRoute(true);
@@ -258,6 +261,8 @@ export function useRoute() {
           if (!isRecalculation) {
             lastTrafficPosRef.current = origin;
             lastTrafficTimeRef.current = Date.now();
+            setLastTrafficPos(origin);
+            setLastTrafficTime(Date.now());
           }
           console.log(`[useRoute V2] Ruta con TomTom ✅ (Tráfico: ${enableTrafficRequested ? 'ON' : 'OFF'})`);
         } catch (ttErr) {
@@ -411,6 +416,8 @@ export function useRoute() {
     loadingRoute,
     routeError,
     isTrafficEnabled,
+    lastTrafficTime,
+    lastTrafficPos,
     liveDistance,
     liveDuration,
     nextInstruction,

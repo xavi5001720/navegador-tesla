@@ -819,13 +819,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                   </div>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Estado del Tráfico</span>
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Tráfico</span>
                     </div>
                     {isTrafficWanted ? (
                       <div className="flex flex-col">
-                        <span className={`text-2xl font-black leading-none uppercase ${isTrafficEnabled ? 'text-emerald-400 shadow-emerald-500/50' : (route ? 'text-amber-400 animate-pulse' : 'text-gray-500')} drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]`}>
-                          {!route ? 'ESPERANDO RUTA' : (isTrafficEnabled ? 'SISTEMA ACTIVO' : 'CONSULTANDO')}
-                        </span>
                         <span className="text-[9px] text-gray-500 font-medium mt-1 uppercase tracking-tighter">
                           {!route ? 'ESPERANDO RUTA' : (isTrafficEnabled ? 'TRÁFICO EN TIEMPO REAL' : (routeError ? 'TRÁFICO NO DISPONIBLE' : 'CONSULTANDO TRÁFICO'))}
                         </span>
@@ -845,9 +842,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                     </span>
                   </button>
                   {isTrafficWanted ? (
-                    <span className="text-[9px] font-bold text-green-500 uppercase tracking-wider">Habilitado</span>
+                    <span className="text-[9px] font-bold text-green-500 uppercase tracking-wider">Activado</span>
                   ) : (
-                    <span className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">Deshabilitado</span>
+                    <span className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">Desactivado</span>
                   )}
                 </div>
               </div>
