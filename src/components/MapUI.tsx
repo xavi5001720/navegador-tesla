@@ -214,17 +214,28 @@ interface MapUIProps {
    onUpdateFriendNickname?: (friendId: string, nickname: string) => void;
 }
 
-const createCarIcon = (heading: number, color?: string) => {
+const getCarIcon = (heading: number, color?: string) => {
+  const key = `owner-${color}`;
+  if (iconCache.has(key)) return iconCache.get(key)!;
+
   const iconHtml = renderToStaticMarkup(
     <div className="relative flex items-center justify-center h-20 w-20 group car-always-up" style={{ transform: `rotate(var(--car-rotation, ${heading}deg))` }}>
       <div className={`absolute inset-0 rounded-full blur-2xl scale-125 transition-all duration-700 ${color === 'Rojo' ? 'bg-red-500/30' : color === 'Azul' ? 'bg-blue-500/30' : color === 'Negro' ? 'bg-gray-900/40' : 'bg-blue-500/20'}`}></div>
       <img src={getCarImage(color)} className="w-full h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] rotate-180" style={{ filter: getCarFilter(color) }} />
     </div>
   );
-  return L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [80, 80], iconAnchor: [40, 40] });
+  const icon = L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [80, 80], iconAnchor: [40, 40] });
+  iconCache.set(key, icon);
+  return icon;
 };
 
-const createFriendIcon = (color?: string, name?: string, nickname?: string) => {
+// Sistema de Caché de Iconos para evitar parpadeo (Flickering)
+const iconCache = new Map<string, L.DivIcon>();
+
+const getFriendIcon = (color?: string, name?: string, nickname?: string) => {
+  const key = `${color}-${name}-${nickname}`;
+  if (iconCache.has(key)) return iconCache.get(key)!;
+
   const displayName = nickname ? `${nickname} (${name})` : name;
   const iconHtml = renderToStaticMarkup(
     <div className="relative flex flex-col items-center group car-marker-social">
@@ -239,7 +250,10 @@ const createFriendIcon = (color?: string, name?: string, nickname?: string) => {
       </div>
     </div>
   );
-  return L.divIcon({ html: iconHtml, className: 'custom-friend-icon', iconSize: [100, 130], iconAnchor: [50, 65] });
+  
+  const icon = L.divIcon({ html: iconHtml, className: 'custom-friend-icon', iconSize: [100, 130], iconAnchor: [50, 65] });
+  iconCache.set(key, icon);
+  return icon;
 };
 
 function lerpAngle(current: number, target: number, alpha: number): number {
@@ -563,7 +577,7 @@ export default function MapUI({
           <Marker 
             key={`friend-${friend.id}`} 
             position={[friend.last_lat!, friend.last_lon!]} 
-            icon={createFriendIcon(friend.car_color, friend.car_name, friend.nickname)} 
+            icon={getFriendIcon(friend.car_color, friend.car_name, friend.nickname)} 
             zIndexOffset={1000}
             eventHandlers={{
               click: (e) => {
@@ -662,10 +676,9 @@ export default function MapUI({
               }
             }
           }
-          return <Marker key="user-car-marker" position={pos} icon={createCarIcon(carHeading, carColor)} zIndexOffset={1000} interactive={true} eventHandlers={{ click: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); }, mousedown: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); } }} />;
+          return <Marker key="user-car-marker" position={pos} icon={getCarIcon(carHeading, carColor)} zIndexOffset={1000} interactive={true} eventHandlers={{ click: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); }, mousedown: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); } }} />;
         })()}
       </MapContainer>
     </div>
   );
 }
-

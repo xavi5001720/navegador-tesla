@@ -34,67 +34,41 @@ export function useSocial(session: Session | null, userPos: [number, number], is
   
   const lastDbUpdateRef = useRef<number>(0);
   const channelRef = useRef<any>(null);
+  const lastBroadcastPosRef = useRef<[number, number] | null>(null);
+  const lastBroadcastTimeRef = useRef<number>(0);
 
-  console.info(`[useSocial] 🔄 Hook inicializado para el usuario: ${session?.user?.id || 'Sesión no detectada'}`);
-
+  // 1. Cargar lista de amigos
   const fetchFriends = useCallback(async () => {
-    console.info('[useSocial] 🔄 Intentando cargar amigos...');
-    if (!session?.user) {
-      console.info('[useSocial] ⚠️ Sin sesión activa, abortando carga de amigos.');
-      return;
-    }
+    if (!session?.user) return;
 
     try {
-      console.info('[useSocial] 🔍 Cargando amistades para:', session.user.id);
-      
-      // 1. Obtener todas nuestras amistades (aceptadas y pendientes)
       const { data: friendships, error: fError } = await supabase
         .from('friendships')
-        .select('user_id, friend_id, status, nickname')
+        .select('user_id, friend_id, status')
         .or(`user_id.eq.${session.user.id},friend_id.eq.${session.user.id}`);
 
-      if (fError) {
-        console.error('[useSocial] Error fetching friendships:', fError);
-        throw fError;
-      }
+      if (fError) throw fError;
       
-      // 1.1. Obtener nuestros apodos privados (Agenda Personal)
       const { data: privateNicknames } = await supabase
         .from('friend_nicknames')
         .select('friend_id, nickname')
         .eq('user_id', session.user.id);
 
       const nicknamesMap: Record<string, string> = {};
-      (privateNicknames || []).forEach(n => {
-        nicknamesMap[n.friend_id] = n.nickname;
-      });
+      (privateNicknames || []).forEach(n => { nicknamesMap[n.friend_id] = n.nickname; });
       
-      console.log('[useSocial] Found friendships:', friendships?.length || 0);
-
-      // 2. Obtener nuestras invitaciones enviadas a emails no registrados
-      const { data: invitations, error: iError } = await supabase
+      const { data: invitations } = await supabase
         .from('friend_invitations')
         .select('receiver_email')
         .eq('sender_id', session.user.id);
 
-      if (iError) {
-        console.error('[useSocial] Error fetching invitations:', iError);
-        throw iError;
-      }
-      
-      console.log('[useSocial] Found invitations:', invitations?.length || 0);
-
-      // 3. Procesar amistades (Deduplicando y priorizando 'accepted')
       const friendInfoMap: Record<string, { status: 'pending' | 'accepted', is_incoming: boolean, nickname?: string }> = {};
-      
       (friendships || []).forEach(f => {
         const friendId = f.user_id === session.user.id ? f.friend_id : f.user_id;
         const status = f.status as 'pending' | 'accepted';
         const isIncoming = f.friend_id === session.user.id && status === 'pending';
         
-        // Priorizar aceptado si ya existe el ID
         if (!friendInfoMap[friendId] || status === 'accepted') {
-          // El apodo viene de nuestra tabla privada, no de friendships
           friendInfoMap[friendId] = { 
             status, 
             is_incoming: isIncoming, 
@@ -104,21 +78,16 @@ export function useSocial(session: Session | null, userPos: [number, number], is
       });
 
       const friendIds = Object.keys(friendInfoMap);
-
-      // 4. Obtener perfiles de los amigos registrados
       let mappedFriends: Friend[] = [];
+
       if (friendIds.length > 0) {
-        console.log('[useSocial] Fetching profiles for IDs:', friendIds);
-        const { data: profiles, error: pError } = await supabase
+        const { data: profiles } = await supabase
           .from('profiles')
-          .select('id, email, car_name, car_color, is_online, last_lat, last_lon, avatar_url, full_name, preferences, last_session_id, is_sharing_location, current_destination, current_waypoints')
+          .select('id, email, car_name, car_color, is_online, last_lat, last_lon, is_sharing_location')
           .in('id', friendIds);
 
-        if (pError) {
-          console.error('[useSocial] Error fetching profiles:', pError);
-        } else {
-          console.log('[useSocial] Found profiles:', profiles?.length || 0);
-          mappedFriends = (profiles || []).map(p => {
+        if (profiles) {
+          mappedFriends = profiles.map(p => {
             const info = friendInfoMap[p.id];
             return {
               ...p,
@@ -130,7 +99,6 @@ export function useSocial(session: Session | null, userPos: [number, number], is
         }
       }
 
-      // 5. Agregar las invitaciones "en el aire"
       const invitedFriends: Friend[] = (invitations || []).map(inv => ({
         id: `pending-${inv.receiver_email}`,
         email: inv.receiver_email,
@@ -142,27 +110,22 @@ export function useSocial(session: Session | null, userPos: [number, number], is
         is_incoming: false
       }));
 
-      console.log('[useSocial] Final friends count:', mappedFriends.length + invitedFriends.length);
       setFriends([...mappedFriends, ...invitedFriends]);
     } catch (err) {
-      console.error('[useSocial] Final catch error:', err);
+      console.error('[useSocial] Error loading friends:', err);
     } finally {
       setLoading(false);
     }
   }, [session]);
 
-  // Disparador inicial y por cambio de sesión
   useEffect(() => {
-    if (session?.user) {
-      fetchFriends();
-    }
+    if (session?.user) fetchFriends();
   }, [session, fetchFriends]);
 
-  // ── Sincronización Realtime ──────────────────────────────────────────────
+  // 2. Canal Realtime (Braodcast y Presencia)
   useEffect(() => {
     if (!session?.user) return;
 
-    // 1. Canal de presencia para estados online y posiciones live
     const channel = supabase.channel('garage_social_live', {
       config: { presence: { key: session.user.id } }
     });
@@ -177,14 +140,31 @@ export function useSocial(session: Session | null, userPos: [number, number], is
         setOnlineUserIds(onlineIds);
       })
       .on('broadcast', { event: 'location' }, ({ payload }) => {
+        // Lógica de recepción:
+        if (payload.is_sharing === false) {
+          // Si el amigo oculta ubicación, lo quitamos de la lista "Live" inmediatamente
+          setLivePositions(prev => {
+            const next = { ...prev };
+            delete next[payload.user_id];
+            return next;
+          });
+          // Forzamos actualización visual de la lista de amigos
+          setFriends(prev => prev.map(f => f.id === payload.user_id ? { ...f, is_sharing_location: false } : f));
+          return;
+        }
+
+        // Si el amigo está compartiendo, actualizamos su posición live
         setLivePositions(prev => ({
           ...prev,
-          [payload.userId]: {
+          [payload.user_id]: {
             lat: payload.lat,
             lon: payload.lon,
             timestamp: Date.now()
           }
         }));
+        
+        // Si no lo teníamos como compartiendo, lo activamos
+        setFriends(prev => prev.map(f => f.id === payload.user_id && !f.is_sharing_location ? { ...f, is_sharing_location: true } : f));
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
@@ -194,95 +174,59 @@ export function useSocial(session: Session | null, userPos: [number, number], is
 
     channelRef.current = channel;
 
-    // 2. Escuchar cambios en la base de datos (Realtime - Debounced)
-    let fetchTimeout: NodeJS.Timeout;
-    const debouncedFetch = () => {
-      clearTimeout(fetchTimeout);
-      fetchTimeout = setTimeout(() => fetchFriends(), 5000); // Debounce de 5s
-    };
-
     const dbChannel = supabase.channel('garage_db_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => debouncedFetch())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_invitations' }, () => debouncedFetch())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_nicknames' }, () => debouncedFetch())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => fetchFriends())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_invitations' }, () => fetchFriends())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'friend_nicknames' }, () => fetchFriends())
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(dbChannel);
-      clearTimeout(fetchTimeout);
     };
   }, [session, fetchFriends]);
 
-  const lastBroadcastPosRef = useRef<[number, number] | null>(null);
-  const lastBroadcastTimeRef = useRef<number>(0);
-
-  // 3. Persistencia de ubicación y Broadcast (Bajo Consumo)
+  // 3. Emisión de datos (Broadcast y Persistencia)
   useEffect(() => {
-    if (!session?.user || !userPos) return;
+    if (!session?.user || !userPos || !hasLocation) return;
     
-    // SEGURIDAD: Si no tenemos ubicación confirmada (GPS/WiFi), no mandamos NADA.
-    if (!hasLocation) return;
+    const now = Date.now();
 
-    // EFECTO DE DESCONEXIÓN INMEDIATA:
-    // Si el usuario apaga el interruptor, mandamos un último mensaje para que los demás nos borren del mapa.
+    // CASO A: EL USUARIO APAGA EL INTERRUPTOR
     if (isSharingLocation === false) {
-      if (channelRef.current && channelRef.current.state === 'joined') {
+      if (channelRef.current?.state === 'joined') {
         channelRef.current.send({
           type: 'broadcast',
           event: 'location',
-          payload: {
-            user_id: session.user.id,
-            is_sharing: false, // Señal para ocultar el coche
-            timestamp: Date.now()
-          }
+          payload: { user_id: session.user.id, is_sharing: false, timestamp: now }
         });
-        
-        // También actualizamos la DB para que los nuevos que entren no nos vean
-        supabase.from('profiles').update({
-          is_sharing_location: false,
-          is_online: false
-        }).eq('id', session.user.id).then();
       }
+      
+      // Persistimos en DB para nuevos logins
+      supabase.from('profiles').update({ is_sharing_location: false, is_online: false }).eq('id', session.user.id).then();
+      
+      // Limpiamos ref de broadcast para que al volver a encender lo haga inmediato
+      lastBroadcastPosRef.current = null;
       return;
     }
 
-    // Ahorro de datos: Si la pestaña no es visible, NO gastamos créditos de Supabase
-    if (document.visibilityState !== 'visible') return;
-
-    const now = Date.now();
+    // CASO B: EL USUARIO COMPARTE (O ACABA DE ENCENDER EL INTERRUPTOR)
+    const isFirstTimeAfterEnable = lastBroadcastPosRef.current === null;
     
-    // A. Actualización en Base de Datos (Persistencia inmediata al inicio o cada 30 seg)
-    // Reducimos de 120s a 30s para que la sincronización inicial sea infalible.
-    if (lastDbUpdateRef.current === 0 || now - lastDbUpdateRef.current > 30000) {
-      console.log(`[useSocial] 🛰️ Sincronizando posición en DB de forma prioritaria: ${userPos[0]}, ${userPos[1]}`);
-      
-      supabase.from('profiles').update({
-        last_lat: userPos[0],
-        last_lon: userPos[1],
-        is_online: true
-      }).eq('id', session.user.id)
-      .then(({ error }) => {
-        if (!error) console.log('[useSocial] ✅ DB actualizada con Gerona.');
-      });
-      
-      lastDbUpdateRef.current = now;
-    }
+    // Si la pestaña está oculta, solo emitimos si acabamos de encender el interruptor
+    if (document.visibilityState !== 'visible' && !isFirstTimeAfterEnable) return;
 
-    // B. Broadcast Realtime (Frecuencia de emergencia)
-    if (channelRef.current && channelRef.current.state === 'joined') {
+    if (channelRef.current?.state === 'joined') {
       let shouldBroadcast = false;
 
-      if (!lastBroadcastPosRef.current) {
+      if (isFirstTimeAfterEnable) {
         shouldBroadcast = true;
       } else {
-        const latDiff = userPos[0] - lastBroadcastPosRef.current[0];
-        const lonDiff = userPos[1] - lastBroadcastPosRef.current[1];
+        const latDiff = userPos[0] - lastBroadcastPosRef.current![0];
+        const lonDiff = userPos[1] - lastBroadcastPosRef.current![1];
         const distance = Math.sqrt(latDiff * latDiff + lonDiff * lonDiff) * 111320;
         
-        // --- AJUSTE DE RESPUESTA ---
-        // 1. Se ha movido > 10 metros (Antes eran 250m, demasiado para una ciudad)
-        // 2. O si han pasado > 20 segundos (Heartbeat activo para evitar que el teléfono pierda la señal)
+        // Umbrales de emisión: 10 metros o 20 segundos
         if (distance > 10 || (now - lastBroadcastTimeRef.current > 20000)) {
           shouldBroadcast = true;
         }
@@ -292,169 +236,82 @@ export function useSocial(session: Session | null, userPos: [number, number], is
         channelRef.current.send({
           type: 'broadcast',
           event: 'location',
-          payload: { userId: session.user.id, lat: userPos[0], lon: userPos[1] }
+          payload: { 
+            user_id: session.user.id, 
+            lat: userPos[0], 
+            lon: userPos[1], 
+            is_sharing: true,
+            timestamp: now 
+          }
         });
         lastBroadcastPosRef.current = userPos;
         lastBroadcastTimeRef.current = now;
       }
     }
-  }, [userPos, session]);
 
-  // ── Actions ───────────────────────────────────────────────────────────────
-
-  const addFriend = async (email: string): Promise<{ success?: boolean; accepted?: boolean; invited?: boolean; error?: any }> => {
-    if (!session?.user) return { error: 'No hay sesión activa' };
-    
-    console.log(`[useSocial] Intentando invitar/añadir: ${email}`);
-    const cleanEmail = email.trim().toLowerCase();
-    
-    if (cleanEmail === session.user.email) return { error: 'No puedes añadirte a ti mismo' };
-    
-    // Nueva verificación: ¿Ya está en nuestra lista local de amigos (pendiente o aceptado)?
-    const alreadyInList = friends.find(f => f.email?.toLowerCase() === cleanEmail);
-    if (alreadyInList) {
-      return { error: 'Tu amigo ya estaba en la lista de amigos' };
+    // C. Persistencia en DB cada 30 segundos (Backup para entrar a mitad de sesión)
+    if (now - lastDbUpdateRef.current > 30000) {
+      supabase.from('profiles').update({
+        last_lat: userPos[0],
+        last_lon: userPos[1],
+        is_online: true,
+        is_sharing_location: true
+      }).eq('id', session.user.id).then();
+      lastDbUpdateRef.current = now;
     }
 
-    // 1. Buscar si el usuario existe
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id, car_name')
-      .eq('email', cleanEmail)
-      .single();
+  }, [session?.user?.id, userPos, isSharingLocation, hasLocation]);
+
+  // 4. Acciones
+  const addFriend = async (email: string) => {
+    if (!session?.user) return { error: 'No hay sesión' };
+    const cleanEmail = email.trim().toLowerCase();
+    if (cleanEmail === session.user.email) return { error: 'No puedes añadirte a ti mismo' };
+
+    const { data: profile } = await supabase.from('profiles').select('id').eq('email', cleanEmail).single();
 
     if (profile) {
-      // Caso A: El usuario ya existe en NavegaPRO
-      const { data: existing } = await supabase
-        .from('friendships')
-        .select('*')
-        .or(`and(user_id.eq.${session.user.id},friend_id.eq.${profile.id}),and(user_id.eq.${profile.id},friend_id.eq.${session.user.id})`)
-        .single();
-
-      if (existing) {
-        if (existing.status === 'accepted') return { error: 'Ya sois amigos' };
-        if (existing.user_id === session.user.id) return { error: 'Solicitud ya enviada' };
-        
-        // Si nosotros recibimos la solicitud, la aceptamos
-        return await acceptFriend(profile.id);
-      }
-
-      const { error } = await supabase
-        .from('friendships')
-        .insert({ user_id: session.user.id, friend_id: profile.id, status: 'pending' });
-
+      const { error } = await supabase.from('friendships').insert({ user_id: session.user.id, friend_id: profile.id, status: 'pending' });
       await fetchFriends();
-      return { success: !error, accepted: false, error };
+      return { success: !error, error };
     } else {
-      // Caso B: El usuario NO existe, crear invitación y enviar mail
-      const { error: invError } = await supabase
-        .from('friend_invitations')
-        .upsert({ sender_id: session.user.id, receiver_email: cleanEmail });
-
-      if (invError) return { error: 'Error al crear invitación' };
-
-      // Llamar a la Edge Function para avisar al amigo
-      try {
-        const { data: myProfile } = await supabase
-          .from('profiles')
-          .select('car_name')
-          .eq('id', session.user.id)
-          .single();
-
-        await supabase.functions.invoke('invite-friend', {
-          body: { 
-            senderName: myProfile?.car_name || session.user.email,
-            receiverEmail: cleanEmail
-          }
-        });
-      } catch (e) {
-        console.warn('No se pudo enviar el mail de invitación:', e);
-      }
-
+      await supabase.from('friend_invitations').upsert({ sender_id: session.user.id, receiver_email: cleanEmail });
       await fetchFriends();
       return { success: true, invited: true };
     }
   };
 
-  const acceptFriend = async (friendId: string): Promise<{ success: boolean; error?: any }> => {
-    try {
-      const { error } = await supabase
-        .from('friendships')
-        .update({ status: 'accepted' })
-        .match({ user_id: friendId, friend_id: session?.user?.id });
-      
-      await fetchFriends();
-      return { success: !error, error };
-    } catch (err) {
-      return { success: false, error: err };
+  const removeFriend = async (friendId: string) => {
+    if (!session?.user) return { success: false };
+    if (friendId.startsWith('pending-')) {
+      await supabase.from('friend_invitations').delete().match({ sender_id: session.user.id, receiver_email: friendId.replace('pending-', '') });
+    } else {
+      await supabase.from('friendships').delete().or(`and(user_id.eq.${session.user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${session.user.id})`);
     }
-  };
-
-  const removeFriend = async (friendId: string): Promise<{ success: boolean; error?: any }> => {
-    if (!session?.user) return { success: false, error: 'No hay sesión' };
-
-    try {
-      if (friendId.startsWith('pending-')) {
-        // Invitación a mail no registrado
-        const email = friendId.replace('pending-', '');
-        const { error } = await supabase
-          .from('friend_invitations')
-          .delete()
-          .match({ sender_id: session.user.id, receiver_email: email });
-        
-        await fetchFriends();
-        return { success: !error, error };
-      }
-
-      // Amistad o solicitud entre usuarios registrados
-      const { error } = await supabase
-        .from('friendships')
-        .delete()
-        .or(`and(user_id.eq.${session.user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${session.user.id})`);
-      
-      await fetchFriends();
-      return { success: !error, error };
-    } catch (err) {
-      return { success: false, error: err };
-    }
-  };
-
-  const updateFriendNickname = async (friendId: string, nickname: string): Promise<{ success: boolean; error?: any }> => {
-    if (!session?.user) return { success: false, error: 'No hay sesión' };
-    
-    console.log(`[useSocial] Guardando apodo privado para ${friendId}: ${nickname}`);
-    
-    // Usamos upsert en nuestra propia tabla de apodos
-    const { error } = await supabase
-      .from('friend_nicknames')
-      .upsert({ 
-        user_id: session.user.id, 
-        friend_id: friendId, 
-        nickname: nickname || null 
-      }, { onConflict: 'user_id,friend_id' });
-
     await fetchFriends();
-    return { success: !error, error };
+    return { success: true };
   };
 
+  const updateFriendNickname = async (friendId: string, nickname: string) => {
+    if (!session?.user) return { success: false };
+    await supabase.from('friend_nicknames').upsert({ user_id: session.user.id, friend_id: friendId, nickname: nickname || null });
+    await fetchFriends();
+    return { success: true };
+  };
 
-  // Mapear amigos con su estado "Live"
-  // Solo consideramos online si la amistad está aceptada
+  const acceptFriend = async (friendId: string) => {
+    await supabase.from('friendships').update({ status: 'accepted' }).match({ user_id: friendId, friend_id: session?.user?.id });
+    await fetchFriends();
+    return { success: true };
+  };
+
+  // Mapeo final para el mapa
   const enhancedFriends = friends.map(f => ({
     ...f,
     is_online: f.friendship_status === 'accepted' && onlineUserIds.has(f.id),
-    // Usar posición de broadcast si está disponible (más fresca), si no la de DB
     last_lat: livePositions[f.id]?.lat ?? f.last_lat,
     last_lon: livePositions[f.id]?.lon ?? f.last_lon,
   }));
 
-  return { 
-    friends: enhancedFriends, 
-    loading, 
-    addFriend, 
-    acceptFriend,
-    removeFriend,
-    updateFriendNickname,
-    refreshFriends: fetchFriends 
-  };
+  return { friends: enhancedFriends, loading, addFriend, removeFriend, acceptFriend, updateFriendNickname, refreshFriends: fetchFriends };
 }
