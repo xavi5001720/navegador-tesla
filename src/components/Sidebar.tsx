@@ -269,7 +269,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               ) : isTrafficWanted ? (
                 <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                  Conectando tráfico...
+                  {routeError ? 'Tráfico no disponible' : 'Consultando tráfico'}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-500/10 border border-gray-500/20 px-2 py-1 rounded-lg">
@@ -812,7 +812,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className={`p-1 rounded-xl flex items-center justify-center ${isTrafficWanted ? 'bg-amber-500/20' : 'bg-gray-500/20'}`}>
-                    <img src="/trafico_icon.png" alt="Tráfico" className="h-11 w-11 object-contain drop-shadow-lg" onError={(e) => {
+                    <img src="/atasco.png" alt="Tráfico" className="h-11 w-11 object-contain drop-shadow-lg" onError={(e) => {
                       // Fallback si la imagen no existe
                       e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/2983/2983637.png";
                     }} />
@@ -823,11 +823,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                     </div>
                     {isTrafficWanted ? (
                       <div className="flex flex-col">
-                        <span className={`text-2xl font-black leading-none uppercase ${isTrafficEnabled ? 'text-emerald-400 shadow-emerald-500/50' : 'text-amber-400 animate-pulse'} drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]`}>
-                          {isTrafficEnabled ? 'ACTIVO' : 'CONECTANDO'}
+                        <span className={`text-2xl font-black leading-none uppercase ${isTrafficEnabled ? 'text-emerald-400 shadow-emerald-500/50' : (route ? 'text-amber-400 animate-pulse' : 'text-gray-500')} drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]`}>
+                          {!route ? 'ESPERANDO RUTA' : (isTrafficEnabled ? 'SISTEMA ACTIVO' : 'CONSULTANDO')}
                         </span>
                         <span className="text-[9px] text-gray-500 font-medium mt-1 uppercase tracking-tighter">
-                          {isTrafficEnabled ? 'Datos de TomTom Realtime' : 'Buscando incidencias...'}
+                          {!route ? 'ESPERANDO RUTA' : (isTrafficEnabled ? 'TRÁFICO EN TIEMPO REAL' : (routeError ? 'TRÁFICO NO DISPONIBLE' : 'CONSULTANDO TRÁFICO'))}
                         </span>
                       </div>
                     ) : (
