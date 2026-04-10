@@ -68,7 +68,8 @@ const fetchRouteTomTom = async (allPoints: Coordinates[], key: string, useTraffi
   
   // 1. TomTom prefiere parámetros repetidos para sectionType en lugar de comas
   // 2. Mantenemos departAt=now para tráfico real
-  let url = `https://api.tomtom.com/routing/1/calculateRoute/${coordStr}/json?key=${key}&report=effectiveSettings&instructionsType=text&language=es-ES&laneGuidance=true&departAt=now&sectionType=lanes`;
+  // 3. Eliminamos laneGuidance porque el servidor lo rechaza
+  let url = `https://api.tomtom.com/routing/1/calculateRoute/${coordStr}/json?key=${key}&report=effectiveSettings&instructionsType=text&language=es-ES&departAt=now&sectionType=lanes`;
   
   if (useTraffic) {
     url += `&traffic=true&routeType=fastest&sectionType=traffic`;
