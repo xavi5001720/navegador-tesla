@@ -26,7 +26,7 @@ export interface LivePosition {
   timestamp: number;
 }
 
-export function useSocial(session: Session | null, userPos: [number, number] | null) {
+export function useSocial(session: Session | null, userPos: [number, number] | null, isSharingLocation: boolean = true) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
@@ -220,6 +220,9 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
   // 3. Persistencia de ubicación y Broadcast (Bajo Consumo)
   useEffect(() => {
     if (!session?.user || !userPos) return;
+    
+    // SI EL USUARIO NO COMPARTE, NO MANDAMOS NADA (Ahorro total de créditos y privacidad)
+    if (!isSharingLocation) return;
 
     // Ahorro de datos: Si la pestaña no es visible, NO gastamos créditos de Supabase
     if (document.visibilityState !== 'visible') return;

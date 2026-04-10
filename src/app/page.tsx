@@ -162,7 +162,7 @@ export default function Home() {
     removeFriend,
     updateFriendNickname,
     refreshFriends: fetchFriends 
-  } = useSocial(session, userPos);
+  } = useSocial(session, userPos, profile?.is_sharing_location);
 
   const { yachts, loadingYachts } = useLuxuryYachts(isYachtsEnabled);
   

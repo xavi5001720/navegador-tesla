@@ -17,6 +17,10 @@ async function sendSmtpEmail(opts: {
   html: string
   senderName: string
 }) {
+  console.log(`[SMTP] Conectando a ${opts.smtpHost}:${opts.smtpPort} (v2)...`)
+  
+  // Para port 465 usamos connectTls (SSL implícito)
+  // IONOS suele preferir TLS implícito en el 465
   const conn = await Deno.connectTls({ hostname: opts.smtpHost, port: opts.smtpPort })
   const reader = new BufReader(conn)
   const writer = new BufWriter(conn)
@@ -29,7 +33,6 @@ async function sendSmtpEmail(opts: {
       if (!line) throw new Error('Connection closed unexpectedly')
       result += line
       console.log('SMTP <', line.trim())
-      // If the 4th char is a space, this is the last line of the response
       if (line.length >= 4 && line[3] === ' ') break
     }
     return result.trim()
@@ -37,74 +40,86 @@ async function sendSmtpEmail(opts: {
 
   async function send(command: string): Promise<string> {
     const masked = command.startsWith('AUTH') ? 'AUTH LOGIN ****' : command
-    console.log('SMTP >', masked)
+    // Ocultar también el base64 de la contraseña en los logs
+    const isBase64Sensitive = command !== 'AUTH LOGIN' && command.length > 20 && !command.includes(' ')
+    console.log('SMTP >', isBase64Sensitive ? '****' : masked)
+    
     await writer.write(encoder.encode(command + '\r\n'))
     await writer.flush()
     return await readAll()
   }
 
-  // Greeting
-  await readAll()
+  try {
+    // Greeting
+    console.log('[SMTP] Esperando saludo...')
+    await readAll()
 
-  // EHLO
-  let resp = await send('EHLO [127.0.0.1]')
-  if (!resp.startsWith('250')) throw new Error(`EHLO failed: ${resp}`)
+    // EHLO
+    console.log('[SMTP] Enviando EHLO...')
+    let resp = await send('EHLO [127.0.0.1]')
+    if (!resp.startsWith('250')) throw new Error(`EHLO failed: ${resp}`)
 
-  // AUTH LOGIN
-  resp = await send('AUTH LOGIN')
-  if (!resp.startsWith('334')) throw new Error(`AUTH init failed: ${resp}`)
+    // AUTH LOGIN
+    console.log('[SMTP] Iniciando AUTH LOGIN...')
+    resp = await send('AUTH LOGIN')
+    if (!resp.startsWith('334')) throw new Error(`AUTH init failed: ${resp}`)
 
-  resp = await send(btoa(opts.user))
-  if (!resp.startsWith('334')) throw new Error(`AUTH user failed: ${resp}`)
+    resp = await send(btoa(opts.user))
+    if (!resp.startsWith('334')) throw new Error(`AUTH user failed: ${resp}`)
 
-  resp = await send(btoa(opts.pass))
-  if (!resp.startsWith('235')) throw new Error(`AUTH pass failed: ${resp}`)
+    resp = await send(btoa(opts.pass))
+    if (!resp.startsWith('235')) throw new Error(`AUTH pass failed: ${resp}`)
 
-  // MAIL FROM
-  resp = await send(`MAIL FROM:<${opts.from}>`)
-  if (!resp.startsWith('250')) throw new Error(`MAIL FROM failed: ${resp}`)
+    console.log('[SMTP] Autenticación exitosa.')
 
-  // RCPT TO
-  resp = await send(`RCPT TO:<${opts.to}>`)
-  if (!resp.startsWith('250')) throw new Error(`RCPT TO failed: ${resp}`)
+    // MAIL FROM
+    resp = await send(`MAIL FROM:<${opts.from}>`)
+    if (!resp.startsWith('250')) throw new Error(`MAIL FROM failed: ${resp}`)
 
-  // DATA
-  resp = await send('DATA')
-  if (!resp.startsWith('354')) throw new Error(`DATA failed: ${resp}`)
+    // RCPT TO
+    resp = await send(`RCPT TO:<${opts.to}>`)
+    if (!resp.startsWith('250')) throw new Error(`RCPT TO failed: ${resp}`)
 
-  // Message
-  const boundary = `boundary_${Date.now()}`
-  const message = [
-    `From: "NavegaPRO" <${opts.from}>`,
-    `To: ${opts.to}`,
-    `Subject: ${opts.subject}`,
-    `MIME-Version: 1.0`,
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
-    ``,
-    `--${boundary}`,
-    `Content-Type: text/plain; charset=UTF-8`,
-    ``,
-    `Tu amigo ${opts.senderName} te ha invitado a NavegaPRO. Regístrate ahora y únete, tu amigo te espera: https://navegador-tesla.vercel.app`,
-    ``,
-    `--${boundary}`,
-    `Content-Type: text/html; charset=UTF-8`,
-    ``,
-    opts.html,
-    ``,
-    `--${boundary}--`,
-    ``,
-    `.`,
-    ``,
-  ].join('\r\n')
+    // DATA
+    resp = await send('DATA')
+    if (!resp.startsWith('354')) throw new Error(`DATA failed: ${resp}`)
 
-  await writer.write(encoder.encode(message))
-  await writer.flush()
+    // Message
+    const boundary = `boundary_${Date.now()}`
+    const message = [
+      `From: "NavegaPRO" <${opts.from}>`,
+      `To: ${opts.to}`,
+      `Subject: ${opts.subject}`,
+      `MIME-Version: 1.0`,
+      `Content-Type: multipart/alternative; boundary="${boundary}"`,
+      ``,
+      `--${boundary}`,
+      `Content-Type: text/plain; charset=UTF-8`,
+      ``,
+      `Tu amigo ${opts.senderName} te ha invitado a NavegaPRO. Regístrate ahora y únete, tu amigo te espera: https://www.viajandoentesla.es`,
+      ``,
+      `--${boundary}`,
+      `Content-Type: text/html; charset=UTF-8`,
+      ``,
+      opts.html,
+      ``,
+      `--${boundary}--`,
+      `.`,
+      ``,
+    ].join('\r\n')
 
-  resp = await readAll()
-  if (!resp.startsWith('250')) throw new Error(`Send failed: ${resp}`)
+    console.log('[SMTP] Enviando cuerpo del mensaje...')
+    await writer.write(encoder.encode(message))
+    await writer.flush()
 
-  await send('QUIT')
-  conn.close()
+    resp = await readAll()
+    if (!resp.startsWith('250')) throw new Error(`Send failed: ${resp}`)
+
+    console.log('[SMTP] Mensaje entregado al servidor.')
+    await send('QUIT')
+  } finally {
+    conn.close()
+  }
 }
 
 serve(async (req) => {
@@ -114,10 +129,15 @@ serve(async (req) => {
 
   try {
     const { senderName, receiverEmail } = await req.json()
-    console.log(`Sending invite from "${senderName}" to ${receiverEmail}`)
+    console.log(`[INVITE] Iniciando proceso para: ${receiverEmail} (Invitado por ${senderName})`)
 
-    const smtpUser = Deno.env.get("SMTP_USER") ?? "registros@viajandoentesla.es"
-    const smtpPass = Deno.env.get("SMTP_PASS") ?? ""
+    const smtpUser = Deno.env.get("SMTP_USER")
+    const smtpPass = Deno.env.get("SMTP_PASS")
+
+    if (!smtpUser || !smtpPass) {
+      console.error('[INVITE] Error: Faltan secretos SMTP_USER o SMTP_PASS en Supabase.')
+      throw new Error("Configuración de correo incompleta en el servidor.")
+    }
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -169,7 +189,7 @@ serve(async (req) => {
 
       <!-- CTA BUTTON -->
       <div style="text-align:center;">
-        <a href="https://navegador-tesla.vercel.app" style="display:inline-block;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;padding:16px 40px;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;letter-spacing:0.5px;box-shadow:0 4px 20px rgba(59,130,246,0.4);">ENTRAR EN NAVEGAPRO &rarr;</a>
+        <a href="https://www.viajandoentesla.es" style="display:inline-block;background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;padding:16px 40px;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;letter-spacing:0.5px;box-shadow:0 4px 20px rgba(59,130,246,0.4);">ENTRAR EN NAVEGAPRO &rarr;</a>
       </div>
 
     </div>
@@ -192,14 +212,12 @@ serve(async (req) => {
       senderName: senderName,
     })
 
-    console.log("Email sent successfully to", receiverEmail)
-
     return new Response(
       JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
-    console.error("Error:", error)
+    console.error("[INVITE] Error crítico:", error)
     return new Response(
       JSON.stringify({ error: String(error) }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
