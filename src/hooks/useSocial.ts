@@ -216,18 +216,21 @@ export function useSocial(session: Session | null, userPos: [number, number], is
     // Si la pestaña está oculta, solo emitimos si acabamos de encender el interruptor
     if (document.visibilityState !== 'visible' && !isFirstTimeAfterEnable) return;
 
+    // Cálculo de movimiento general
+    const lastBroadcastPos = lastBroadcastPosRef.current;
+    const distance = lastBroadcastPos ? Math.sqrt(
+      (userPos[0] - lastBroadcastPos[0]) ** 2 + 
+      (userPos[1] - lastBroadcastPos[1]) ** 2
+    ) * 111320 : 0;
+    const isMovedSignificant = distance > 10;
+
     if (channelRef.current?.state === 'joined') {
       let shouldBroadcast = false;
 
       if (isFirstTimeAfterEnable) {
         shouldBroadcast = true;
       } else {
-        const latDiff = userPos[0] - lastBroadcastPosRef.current![0];
-        const lonDiff = userPos[1] - lastBroadcastPosRef.current![1];
-        const distance = Math.sqrt(latDiff * latDiff + lonDiff * lonDiff) * 111320;
-        
         const elapsed = now - lastBroadcastTimeRef.current;
-        const isMovedSignificant = distance > 10;
         const isTimeForMovementUpdate = elapsed > 10000; // 10 segundos mínimo entre envíos por movimiento
 
         if (isMovedSignificant && isTimeForMovementUpdate) {
@@ -252,8 +255,8 @@ export function useSocial(session: Session | null, userPos: [number, number], is
       }
     }
 
-    // C. Persistencia en DB cada 30 segundos (Backup para entrar a mitad de sesión)
-    if (now - lastDbUpdateRef.current > 30000) {
+    // C. Persistencia en DB cada 30 segundos (Solo si se ha movido algo)
+    if (now - lastDbUpdateRef.current > 30000 && isMovedSignificant) {
       supabase.from('profiles').update({
         last_lat: userPos[0],
         last_lon: userPos[1],
