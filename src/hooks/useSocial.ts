@@ -222,11 +222,30 @@ export function useSocial(session: Session | null, userPos: [number, number], is
     if (!session?.user || !userPos) return;
     
     // SEGURIDAD: Si no tenemos ubicación confirmada (GPS/WiFi), no mandamos NADA.
-    // Esto evita que tus amigos te vean en Madrid por error al arrancar.
     if (!hasLocation) return;
 
-    // SI EL USUARIO NO COMPARTE EXPLICITAMENTE, NO MANDAMOS NADA (Ahorro total de créditos y privacidad)
-    if (isSharingLocation === false) return;
+    // EFECTO DE DESCONEXIÓN INMEDIATA:
+    // Si el usuario apaga el interruptor, mandamos un último mensaje para que los demás nos borren del mapa.
+    if (isSharingLocation === false) {
+      if (channelRef.current && channelRef.current.state === 'joined') {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'location',
+          payload: {
+            user_id: session.user.id,
+            is_sharing: false, // Señal para ocultar el coche
+            timestamp: Date.now()
+          }
+        });
+        
+        // También actualizamos la DB para que los nuevos que entren no nos vean
+        supabase.from('profiles').update({
+          is_sharing_location: false,
+          is_online: false
+        }).eq('id', session.user.id).then();
+      }
+      return;
+    }
 
     // Ahorro de datos: Si la pestaña no es visible, NO gastamos créditos de Supabase
     if (document.visibilityState !== 'visible') return;
