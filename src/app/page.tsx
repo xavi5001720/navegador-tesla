@@ -114,6 +114,7 @@ export default function Home() {
   });
 
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const [isTrafficWanted, setIsTrafficWanted] = useState(true);
   const [voiceType, setVoiceType] = useState<VoiceType>('mujer');
   const [lastRecalculationTime, setLastRecalculationTime] = useState(0);
   const [customZoom, setCustomZoom] = useState<number | null>(null);
@@ -327,9 +328,9 @@ export default function Home() {
     if (distOffRoute > 100) {
       console.log("Desviación detectada (" + Math.round(distOffRoute) + "m) a " + speedKmh.toFixed(0) + " km/h. Recalculando...");
       setLastRecalculationTime(now);
-      calculateRoute(userPos, destination, waypoints, true);
+      calculateRoute(userPos, destination, waypoints, true, isTrafficWanted);
     }
-  }, [userPos, speed, route, destination, waypoints, loadingRoute, lastRecalculationTime, calculateRoute]);
+  }, [userPos, speed, route, destination, waypoints, loadingRoute, lastRecalculationTime, calculateRoute, isTrafficWanted]);
 
   const lastMetricsUpdateRef = useRef(0);
 
@@ -345,6 +346,14 @@ export default function Home() {
       }
     }
   }, [userPos, checkTrafficRefresh, updateLiveMetrics]);
+
+  // Recalcular ruta al cambiar la preferencia de tráfico si hay una ruta activa
+  useEffect(() => {
+    if (route && destination && userPos) {
+      console.log(`[page] Preferencia de tráfico cambiada a ${isTrafficWanted ? 'ON' : 'OFF'}. Recalculando ruta...`);
+      calculateRoute(userPos, destination, waypoints, true, isTrafficWanted);
+    }
+  }, [isTrafficWanted]);
 
 
   // Unlock audio on first interaction
@@ -530,9 +539,9 @@ export default function Home() {
     const origin: [number, number] = userPos || [0, 0];
     if (origin[0] === 0) return; // No navegar si no hay posición real
     if (coords) {
-      await calculateRoute(origin, coords, []);
+      await calculateRoute(origin, coords, [], false, isTrafficWanted);
     } else {
-      await findAndTraceRoute(origin, query);
+      await findAndTraceRoute(origin, query, isTrafficWanted);
     }
   };
 
@@ -556,8 +565,8 @@ export default function Home() {
     if (!contextMenu) return;
     const origin: [number, number] = userPos || [0, 0];
     if (origin[0] === 0) return;
-    calculateRoute(origin, [contextMenu.lat, contextMenu.lon]);
-  }, [contextMenu, userPos, calculateRoute]);
+    calculateRoute(origin, [contextMenu.lat, contextMenu.lon], [], false, isTrafficWanted);
+  }, [contextMenu, userPos, calculateRoute, isTrafficWanted]);
 
   const handleSaveFavorite = useCallback((name: string) => {
     if (!contextMenu) return;
@@ -899,6 +908,8 @@ export default function Home() {
           onOpenFavorites={() => setIsFavoritesOpen(true)}
           radarProgress={progress}
           isTrafficEnabled={isTrafficEnabled}
+          isTrafficWanted={isTrafficWanted}
+          setIsTrafficWanted={setIsTrafficWanted}
           liveDistance={liveDistance}
           liveDuration={liveDuration}
           waypoints={waypoints}
@@ -1069,7 +1080,7 @@ export default function Home() {
 
         const handleNavigateToPOI = () => {
           const origin: [number, number] = userPos || [40.4168, -3.7038];
-          calculateRoute(origin, [lat, lon]);
+          calculateRoute(origin, [lat, lon], [], false, isTrafficWanted);
           setSelectedPOI(null);
         };
         const handleAddStopBeforePOI = () => {

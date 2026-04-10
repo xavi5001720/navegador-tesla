@@ -63,10 +63,15 @@ const geocodeAddress = async (query: string): Promise<Coordinates | null> => {
 };
 
 // Ruta con TomTom (tráfico en tiempo real)
-const fetchRouteTomTom = async (allPoints: Coordinates[], key: string): Promise<RouteResult> => {
+const fetchRouteTomTom = async (allPoints: Coordinates[], key: string, useTraffic: boolean): Promise<RouteResult> => {
   const coordStr = allPoints.map(p => `${p[0]},${p[1]}`).join(':');
-  // Añadimos sectionType=lanes, sectionType=traffic y sectionType=speedLimit
-  const url = `https://api.tomtom.com/routing/1/calculateRoute/${coordStr}/json?key=${key}&traffic=true&sectionType=traffic&sectionType=lanes&sectionType=speedLimit&report=effectiveSettings&instructionsType=text&language=es-ES&laneGuidance=true`;
+  // Añadimos routeType=fastest y traffic=true si el usuario lo desea
+  let url = `https://api.tomtom.com/routing/1/calculateRoute/${coordStr}/json?key=${key}&sectionType=lanes&sectionType=speedLimit&report=effectiveSettings&instructionsType=text&language=es-ES&laneGuidance=true`;
+  
+  if (useTraffic) {
+    url += `&traffic=true&sectionType=traffic&routeType=fastest`;
+  }
+
   const res = await fetch(url);
   if (!res.ok) throw new Error(`TomTom API error: ${res.status}`);
   const data = await res.json();
@@ -223,7 +228,7 @@ export function useRoute() {
   };
 
   // Routing principal — TomTom si hay clave, OSRM si no
-  const calculateRoute = useCallback(async (origin: Coordinates, destination: Coordinates, stops: Coordinates[] = [], isRecalculation = false) => {
+  const calculateRoute = useCallback(async (origin: Coordinates, destination: Coordinates, stops: Coordinates[] = [], isRecalculation = false, enableTrafficRequested = true) => {
     setLoadingRoute(true);
     setRouteError(null);
     const allPoints: Coordinates[] = [origin, ...stops, destination];
@@ -233,14 +238,14 @@ export function useRoute() {
 
       if (TOMTOM_KEY) {
         try {
-          result = await fetchRouteTomTom(allPoints, TOMTOM_KEY);
-          setIsTrafficEnabled(true);
-          // Solo reseteamos referencias de tracking si es una ruta completamente nueva o superamos las condiciones
+          result = await fetchRouteTomTom(allPoints, TOMTOM_KEY, enableTrafficRequested);
+          setIsTrafficEnabled(enableTrafficRequested);
+          
           if (!isRecalculation) {
             lastTrafficPosRef.current = origin;
             lastTrafficTimeRef.current = Date.now();
           }
-          console.log('[useRoute] Ruta con TomTom ✅ (carriles y rotondas activos)');
+          console.log(`[useRoute] Ruta con TomTom ✅ (Tráfico: ${enableTrafficRequested ? 'ON' : 'OFF'})`);
         } catch (ttErr) {
           console.warn('[useRoute] TomTom falló, usando OSRM:', ttErr);
           result = await fetchRouteOSRM(allPoints);
@@ -271,7 +276,7 @@ export function useRoute() {
     }
   }, []);
 
-  const findAndTraceRoute = useCallback(async (origin: Coordinates, destinationQuery: string) => {
+  const findAndTraceRoute = useCallback(async (origin: Coordinates, destinationQuery: string, useTraffic = true) => {
     setLoadingRoute(true);
     setRouteError(null);
     const destCoords = await geocodeAddress(destinationQuery);
@@ -280,7 +285,7 @@ export function useRoute() {
       setLoadingRoute(false);
       return false;
     }
-    await calculateRoute(origin, destCoords, []);
+    await calculateRoute(origin, destCoords, [], false, useTraffic);
     return true;
   }, [calculateRoute]);
 
@@ -329,7 +334,7 @@ export function useRoute() {
         console.log(`[useRoute] 30m superados y 1km recorrido (${Math.round(distSinceLastFetch)}m). Repintando ruta para recaucular tráfico TomTom...`);
         lastTrafficTimeRef.current = now;
         lastTrafficPosRef.current = currentPos;
-        calculateRoute(currentPos, destination, waypoints, true);
+        calculateRoute(currentPos, destination, waypoints, true, isTrafficEnabled);
       } else {
         // Rearmar el reloj, porque no nos hemos movido (ej: estamos en un atasco inmenso o parados).
         // Así evitamos volver a entrar en esta condición cada segundo a partir del minuto 30.

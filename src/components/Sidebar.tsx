@@ -57,6 +57,8 @@ interface SidebarProps {
   lastRadarUpdate?: string | null;
   radarProgress?: number;
   isTrafficEnabled?: boolean;
+  isTrafficWanted?: boolean;
+  setIsTrafficWanted?: (wanted: boolean) => void;
   liveDistance?: number | null;
   liveDuration?: number | null;
   waypoints?: [number, number][];
@@ -100,6 +102,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   lastRadarUpdate,
   radarProgress = 0,
   isTrafficEnabled = false,
+  isTrafficWanted = true,
+  setIsTrafficWanted,
   liveDistance = null,
   liveDuration = null,
   waypoints = [],
@@ -261,6 +265,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                   Tráfico en tiempo real
+                </span>
+              ) : isTrafficWanted ? (
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                  Conectando tráfico...
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-500/10 border border-gray-500/20 px-2 py-1 rounded-lg">
@@ -796,6 +805,52 @@ const Sidebar: React.FC<SidebarProps> = ({
                   </div>
                 </div>
               )}
+           </div>
+
+           {/* Bloque de Sistema de Tráfico (Nuevo) */}
+           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isTrafficWanted && 'opacity-70'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`p-1 rounded-xl flex items-center justify-center ${isTrafficWanted ? 'bg-amber-500/20' : 'bg-gray-500/20'}`}>
+                    <img src="/trafico_icon.png" alt="Tráfico" className="h-11 w-11 object-contain drop-shadow-lg" onError={(e) => {
+                      // Fallback si la imagen no existe
+                      e.currentTarget.src = "https://cdn-icons-png.flaticon.com/512/2983/2983637.png";
+                    }} />
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Estado del Tráfico</span>
+                    </div>
+                    {isTrafficWanted ? (
+                      <div className="flex flex-col">
+                        <span className={`text-2xl font-black leading-none uppercase ${isTrafficEnabled ? 'text-emerald-400 shadow-emerald-500/50' : 'text-amber-400 animate-pulse'} drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]`}>
+                          {isTrafficEnabled ? 'ACTIVO' : 'CONECTANDO'}
+                        </span>
+                        <span className="text-[9px] text-gray-500 font-medium mt-1 uppercase tracking-tighter">
+                          {isTrafficEnabled ? 'Datos de TomTom Realtime' : 'Buscando incidencias...'}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-2xl font-black leading-none text-white/30 uppercase">OFF</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-1.5 shrink-0 align-self-start mt-1">
+                  <button 
+                    onClick={() => setIsTrafficWanted && setIsTrafficWanted(!isTrafficWanted)}
+                    className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isTrafficWanted ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
+                  >
+                    <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isTrafficWanted ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
+                      <Power className={`h-3 w-3 ${isTrafficWanted ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
+                    </span>
+                  </button>
+                  {isTrafficWanted ? (
+                    <span className="text-[9px] font-bold text-green-500 uppercase tracking-wider">Habilitado</span>
+                  ) : (
+                    <span className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">Deshabilitado</span>
+                  )}
+                </div>
+              </div>
            </div>
 
            {/* Bloque Meteorológico (Clima) */}
