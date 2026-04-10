@@ -26,7 +26,7 @@ export interface LivePosition {
   timestamp: number;
 }
 
-export function useSocial(session: Session | null, userPos: [number, number] | null, isSharingLocation: boolean = true) {
+export function useSocial(session: Session | null, userPos: [number, number], isSharingLocation: boolean = true, hasLocation: boolean = false) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
@@ -221,8 +221,11 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
   useEffect(() => {
     if (!session?.user || !userPos) return;
     
+    // SEGURIDAD: Si no tenemos ubicación confirmada (GPS/WiFi), no mandamos NADA.
+    // Esto evita que tus amigos te vean en Madrid por error al arrancar.
+    if (!hasLocation) return;
+
     // SI EL USUARIO NO COMPARTE EXPLICITAMENTE, NO MANDAMOS NADA (Ahorro total de créditos y privacidad)
-    // Si es null o true, se comparte por defecto para usuarios existentes.
     if (isSharingLocation === false) return;
 
     // Ahorro de datos: Si la pestaña no es visible, NO gastamos créditos de Supabase

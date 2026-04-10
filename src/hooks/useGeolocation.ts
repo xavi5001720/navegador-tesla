@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 
 export function useGeolocation(isPaused?: boolean) {
-  const [userPos, setUserPos] = useState<[number, number] | null>(null); 
+  const [userPos, setUserPos] = useState<[number, number]>([40.4168, -3.7038]); 
   const [heading, setHeading] = useState<number>(0);
   const [hasLocation, setHasLocation] = useState(false);
   const [locationSource, setLocationSource] = useState<'default' | 'gps'>('default');
@@ -24,7 +24,7 @@ export function useGeolocation(isPaused?: boolean) {
 
   const updatePosition = useCallback((newPos: [number, number]) => {
     setUserPos((prev) => {
-      if (!prev) return newPos;
+      if (!hasLocation) return newPos;
       // Solo calculamos rumbo si la posición ha cambiado significativamente (> 1 metro aprox)
       const dist = Math.sqrt(Math.pow(newPos[0] - prev[0], 2) + Math.pow(newPos[1] - prev[1], 2));
       if (dist > 0.00001) {

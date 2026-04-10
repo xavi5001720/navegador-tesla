@@ -161,7 +161,7 @@ export default function Home() {
     removeFriend,
     updateFriendNickname,
     refreshFriends: fetchFriends 
-  } = useSocial(session, userPos, profile?.is_sharing_location);
+  } = useSocial(session, userPos as [number, number], profile?.is_sharing_location, hasLocation);
 
   const { yachts, loadingYachts } = useLuxuryYachts(isYachtsEnabled);
   
@@ -577,22 +577,6 @@ export default function Home() {
     if (origin[0] === 0) return;
     addWaypointAfter(origin, [contextMenu.lat, contextMenu.lon]);
   }, [contextMenu, userPos, addWaypointAfter]);
-
-  if (!userPos && !hasLocation) {
-    return (
-      <div className="fixed inset-0 bg-gray-950 flex flex-col items-center justify-center z-[9999]">
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="mb-6"
-        >
-          <Car className="h-12 w-12 text-blue-500" />
-        </motion.div>
-        <h2 className="text-xl font-bold text-white mb-2">Localizando vehículo...</h2>
-        <p className="text-gray-400 text-sm">Asegúrate de permitir el acceso al GPS</p>
-      </div>
-    );
-  }
 
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-black font-sans selection:bg-blue-500/30">
@@ -1084,20 +1068,17 @@ export default function Home() {
         const fuelLabels: Record<string, string> = { g95: 'G95', g98: 'G98', diesel: 'Diésel', glp: 'GLP' };
 
         const handleNavigateToPOI = () => {
-          const origin: [number, number] = userPos || [0, 0];
-          if (origin[0] === 0) return;
+          const origin: [number, number] = userPos || [40.4168, -3.7038];
           calculateRoute(origin, [lat, lon]);
           setSelectedPOI(null);
         };
         const handleAddStopBeforePOI = () => {
-          const origin: [number, number] = userPos || [0, 0];
-          if (origin[0] === 0) return;
+          const origin: [number, number] = userPos || [40.4168, -3.7038];
           addWaypointBefore(origin, [lat, lon]);
           setSelectedPOI(null);
         };
         const handleAddStopAfterPOI = () => {
-          const origin: [number, number] = userPos || [0, 0];
-          if (origin[0] === 0) return;
+          const origin: [number, number] = userPos || [40.4168, -3.7038];
           addWaypointAfter(origin, [lat, lon]);
           setSelectedPOI(null);
         };
