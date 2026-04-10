@@ -226,8 +226,8 @@ export function useSocial(session: Session | null, userPos: [number, number], is
         const lonDiff = userPos[1] - lastBroadcastPosRef.current![1];
         const distance = Math.sqrt(latDiff * latDiff + lonDiff * lonDiff) * 111320;
         
-        // Umbrales de emisión: 10 metros o 20 segundos
-        if (distance > 10 || (now - lastBroadcastTimeRef.current > 20000)) {
+        // Umbrales de emisión: 10 metros o 30 segundos
+        if (distance > 10 || (now - lastBroadcastTimeRef.current > 30000)) {
           shouldBroadcast = true;
         }
       }

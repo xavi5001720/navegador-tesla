@@ -35,14 +35,9 @@ function buildBboxKey(userPos: [number, number]): string {
 const FETCH_INTERVAL_MS = 60_000;
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-import { createClient } from '@supabase/supabase-js';
-
-// Variables de entorno cargadas desde config global
+// Variables de entorno cargadas desde config global (para posible debug futuro)
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-const localSupabase = createClient(SUPABASE_URL, ANON_KEY);
 
 export function usePegasus(
   userPos          : [number, number] | null,
