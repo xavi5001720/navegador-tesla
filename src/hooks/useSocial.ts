@@ -230,15 +230,20 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
 
     const now = Date.now();
     
-    // A. Actualización en Base de Datos (Persistencia cada 2 minutos si no hay movimiento crítico)
-    // Forzamos actualización inmediata la primera vez (lastDbUpdateRef es 0)
-    if (lastDbUpdateRef.current === 0 || now - lastDbUpdateRef.current > 120000) {
-      console.log('[useSocial] 🛰️ Actualizando posición persistente en DB...');
+    // A. Actualización en Base de Datos (Persistencia inmediata al inicio o cada 30 seg)
+    // Reducimos de 120s a 30s para que la sincronización inicial sea infalible.
+    if (lastDbUpdateRef.current === 0 || now - lastDbUpdateRef.current > 30000) {
+      console.log(`[useSocial] 🛰️ Sincronizando posición en DB de forma prioritaria: ${userPos[0]}, ${userPos[1]}`);
+      
       supabase.from('profiles').update({
         last_lat: userPos[0],
         last_lon: userPos[1],
         is_online: true
-      }).eq('id', session.user.id).then();
+      }).eq('id', session.user.id)
+      .then(({ error }) => {
+        if (!error) console.log('[useSocial] ✅ DB actualizada con Gerona.');
+      });
+      
       lastDbUpdateRef.current = now;
     }
 
@@ -253,10 +258,10 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
         const lonDiff = userPos[1] - lastBroadcastPosRef.current[1];
         const distance = Math.sqrt(latDiff * latDiff + lonDiff * lonDiff) * 111320;
         
-        // --- DIETA REALTIME ---
-        // 1. Se ha movido > 250 metros (En carretera, 250m es suficiente para seguimiento social)
-        // 2. O si han pasado > 5 minutos (300.000ms) desde el último broadcast (Heartbeat estático)
-        if (distance > 250 || (now - lastBroadcastTimeRef.current > 300000)) {
+        // --- AJUSTE DE RESPUESTA ---
+        // 1. Se ha movido > 10 metros (Antes eran 250m, demasiado para una ciudad)
+        // 2. O si han pasado > 20 segundos (Heartbeat activo para evitar que el teléfono pierda la señal)
+        if (distance > 10 || (now - lastBroadcastTimeRef.current > 20000)) {
           shouldBroadcast = true;
         }
       }

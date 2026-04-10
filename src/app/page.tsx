@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Navigation, Menu, AlertTriangle, Power, Map } from 'lucide-react';
+import { Car, Menu, Search, X, Navigation, AlertTriangle, Power, Map, User, LogOut, ChevronRight, Users, Trash2, Check, UserCheck, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import Sidebar from '@/components/Sidebar';
@@ -36,7 +36,6 @@ import AuthModal from '@/components/AuthModal';
 import UserMenu from '@/components/UserMenu';
 import GarageModal from '@/components/GarageModal';
 import SocialModal from '@/components/SocialModal';
-import { User, LogOut, ChevronRight, Users, Trash2, Check, X, UserCheck, MapPin } from 'lucide-react';
 import { Session } from '@supabase/supabase-js';
 import { useProfile } from '@/hooks/useProfile';
 import { useSocial } from '@/hooks/useSocial';
@@ -311,7 +310,7 @@ export default function Home() {
   // Lógica de Recalculado Automático
 
   useEffect(() => {
-    if (!route || !destination || loadingRoute) return;
+    if (!userPos || !route || !destination || loadingRoute) return;
 
     // Solo recalculamos si el usuario se está moviendo (>5 km/h)
     // Si está parado, asumimos que aún no ha empezado el trayecto
@@ -378,7 +377,7 @@ export default function Home() {
   // - Sin ruta: solo los próximos (ya se buscan en radio de 10km por useRadars)
   // - Con ruta: solo los que están en la ruta PENDIENTE por delante del usuario
   const radars = useMemo(() => {
-    if (!isRadarsEnabled) return [];
+    if (!isRadarsEnabled || !userPos) return [];
     if (!route || !route.coordinates || route.coordinates.length === 0 || allRadars.length === 0) {
       return allRadars; // Sin ruta → mostrar los próximos (búsqueda local por radio)
     }
@@ -395,10 +394,10 @@ export default function Home() {
       const distToPath = distanceToPolyline(radarPos, remainingRoute);
       return distToPath < 500;
     });
-  }, [allRadars, route, userPos]);
+  }, [allRadars, route, userPos, isRadarsEnabled]);
 
-  const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos, radars, isSoundEnabled, voiceType, speed);
-  const { allAircrafts, aircrafts, visibleAircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
+  const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos || [0,0], radars, isSoundEnabled, voiceType, speed);
+  const { allAircrafts, aircrafts, visibleAircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos || [0,0], isAircraftsEnabled, route?.coordinates);
  
   // Posiciones interpoladas cada 1 s — movimiento fluido para los aviones visibles (25km máximo)
   const simulatedAircrafts = useAircraftSimulator(visibleAircrafts);
@@ -579,8 +578,24 @@ export default function Home() {
     addWaypointAfter(origin, [contextMenu.lat, contextMenu.lon]);
   }, [contextMenu, userPos, addWaypointAfter]);
 
+  if (!userPos && !hasLocation) {
+    return (
+      <div className="fixed inset-0 bg-gray-950 flex flex-col items-center justify-center z-[9999]">
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="mb-6"
+        >
+          <Car className="h-12 w-12 text-blue-500" />
+        </motion.div>
+        <h2 className="text-xl font-bold text-white mb-2">Localizando vehículo...</h2>
+        <p className="text-gray-400 text-sm">Asegúrate de permitir el acceso al GPS</p>
+      </div>
+    );
+  }
+
   return (
-    <main className="flex h-screen w-full overflow-hidden bg-gray-950 font-sans text-white selection:bg-blue-500/30">
+    <main className="relative h-screen w-screen overflow-hidden bg-black font-sans selection:bg-blue-500/30">
       {/* SEO: H1 oculto para motores de búsqueda */}
       <h1 className="sr-only">Viajando en Tesla - Navegador Inteligente y Detector de Radares Pegasus</h1>
       
@@ -932,7 +947,7 @@ export default function Home() {
       {/* Sección del Mapa (Fondo) */}
       <section className="relative flex-1 bg-gray-900 overflow-hidden">
         <DynamicMap 
-          userPos={userPos}
+          userPos={userPos as [number, number]}
           heading={heading}
           hasLocation={hasLocation}
           routeCoordinates={route?.coordinates} 
@@ -1069,17 +1084,20 @@ export default function Home() {
         const fuelLabels: Record<string, string> = { g95: 'G95', g98: 'G98', diesel: 'Diésel', glp: 'GLP' };
 
         const handleNavigateToPOI = () => {
-          const origin: [number, number] = userPos || [40.4168, -3.7038];
+          const origin: [number, number] = userPos || [0, 0];
+          if (origin[0] === 0) return;
           calculateRoute(origin, [lat, lon]);
           setSelectedPOI(null);
         };
         const handleAddStopBeforePOI = () => {
-          const origin: [number, number] = userPos || [40.4168, -3.7038];
+          const origin: [number, number] = userPos || [0, 0];
+          if (origin[0] === 0) return;
           addWaypointBefore(origin, [lat, lon]);
           setSelectedPOI(null);
         };
         const handleAddStopAfterPOI = () => {
-          const origin: [number, number] = userPos || [40.4168, -3.7038];
+          const origin: [number, number] = userPos || [0, 0];
+          if (origin[0] === 0) return;
           addWaypointAfter(origin, [lat, lon]);
           setSelectedPOI(null);
         };
