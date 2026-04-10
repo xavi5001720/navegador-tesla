@@ -824,7 +824,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     {isTrafficWanted ? (
                       <div className="flex flex-col">
                         <span className="text-[9px] text-gray-500 font-medium mt-1 uppercase tracking-tighter">
-                          {!route ? 'ESPERANDO RUTA' : (isTrafficEnabled ? 'TRÁFICO EN TIEMPO REAL' : (routeError ? 'TRÁFICO NO DISPONIBLE' : 'CONSULTANDO TRÁFICO'))}
+                          {!route ? 'A LA ESPERA DE RUTA' : (isTrafficEnabled ? 'TRÁFICO EN TIEMPO REAL' : (routeError ? 'TRÁFICO NO DISPONIBLE' : 'CONSULTANDO TRÁFICO'))}
                         </span>
                       </div>
                     ) : (
