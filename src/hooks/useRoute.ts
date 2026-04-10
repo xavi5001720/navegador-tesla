@@ -65,15 +65,32 @@ const geocodeAddress = async (query: string): Promise<Coordinates | null> => {
 // Ruta con TomTom (tráfico en tiempo real)
 const fetchRouteTomTom = async (allPoints: Coordinates[], key: string, useTraffic: boolean): Promise<RouteResult> => {
   const coordStr = allPoints.map(p => `${p[0]},${p[1]}`).join(':');
-  // Añadimos routeType=fastest y traffic=true si el usuario lo desea
-  let url = `https://api.tomtom.com/routing/1/calculateRoute/${coordStr}/json?key=${key}&sectionType=lanes&sectionType=speedLimit&report=effectiveSettings&instructionsType=text&language=es-ES&laneGuidance=true`;
   
+  // 1. Unificamos sectionType en un solo parámetro separado por comas
+  // 2. Añadimos departAt=now para validación estricta de tráfico en tiempo real
+  // 3. Eliminamos speedLimit temporalmente para descartar que sea el causante del 400
+  let url = `https://api.tomtom.com/routing/1/calculateRoute/${coordStr}/json?key=${key}&report=effectiveSettings&instructionsType=text&language=es-ES&laneGuidance=true&departAt=now`;
+  
+  const sectionTypes = ['lanes'];
   if (useTraffic) {
-    url += `&traffic=true&sectionType=traffic&routeType=fastest`;
+    sectionTypes.push('traffic');
+    url += `&traffic=true&routeType=fastest`;
   }
+  url += `&sectionType=${sectionTypes.join(',')}`;
 
   const res = await fetch(url);
-  if (!res.ok) throw new Error(`TomTom API error: ${res.status}`);
+  
+  if (!res.ok) {
+    let errorDetail = '';
+    try {
+      const errorData = await res.json();
+      errorDetail = `: ${errorData.formatVersion || ''} ${errorData.error?.description || JSON.stringify(errorData)}`;
+    } catch (e) {
+      errorDetail = ` (no se pudo leer el cuerpo del error)`;
+    }
+    throw new Error(`TomTom API error ${res.status}${errorDetail}`);
+  }
+
   const data = await res.json();
   if (!data.routes?.length) throw new Error('TomTom: no se encontró ruta.');
 
@@ -245,9 +262,9 @@ export function useRoute() {
             lastTrafficPosRef.current = origin;
             lastTrafficTimeRef.current = Date.now();
           }
-          console.log(`[useRoute] Ruta con TomTom ✅ (Tráfico: ${enableTrafficRequested ? 'ON' : 'OFF'})`);
+          console.log(`[useRoute V2] Ruta con TomTom ✅ (Tráfico: ${enableTrafficRequested ? 'ON' : 'OFF'})`);
         } catch (ttErr) {
-          console.warn('[useRoute] TomTom falló, usando OSRM:', ttErr);
+          console.warn('[useRoute V2] TomTom falló, usando OSRM:', ttErr);
           result = await fetchRouteOSRM(allPoints);
           setIsTrafficEnabled(false);
         }
