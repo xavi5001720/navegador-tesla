@@ -47,6 +47,7 @@ API\ open\ chargue\ map/
 
 # backups
 backups/
+/private_backups/
 
 # typescript
 *.tsbuildinfo

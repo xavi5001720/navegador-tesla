@@ -17,11 +17,13 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 // Para retrocompatibilidad con las funciones internas del script
 const ANON_KEY = SERVICE_KEY;
 
-const ACCOUNTS = [
-  { id: 'luliloqui-api-client', secret: 'YEXtTfBwCd5w2Kxhvp57W4C0s6f4Pb5n' },
-  { id: 'pepinperez-api-client', secret: 'K922tGbRbq0DsrudGDVKQOJv3tYtnO6A' },
-  { id: 'saracruzhortelana-api-client', secret: 'o7FsNtYuca4K6xSHBCb3x4zKo3yiwBS1' }
-];
+// Cargar cuentas de OpenSky desde enviroment (Protección V2.1)
+const ACCOUNTS_RAW = process.env.OPENSKY_ACCOUNTS;
+const ACCOUNTS = ACCOUNTS_RAW ? JSON.parse(ACCOUNTS_RAW) : [];
+
+if (ACCOUNTS.length === 0) {
+  console.warn('⚠️ Advertencia: No se han configurado cuentas de OpenSky en OPENSKY_ACCOUNTS.');
+}
 
 const OPENSKY_BASE = 'https://opensky-network.org/api';
 const TOKEN_URL = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
