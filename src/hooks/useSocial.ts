@@ -111,7 +111,7 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
         console.log('[useSocial] Fetching profiles for IDs:', friendIds);
         const { data: profiles, error: pError } = await supabase
           .from('profiles')
-          .select('id, email, car_name, car_color, is_online, last_lat, last_lon, is_sharing_location, current_destination, current_waypoints')
+          .select('id, email, car_name, car_color, is_online, last_lat, last_lon, avatar_url, full_name, preferences, last_session_id, is_sharing_location, current_destination, current_waypoints')
           .in('id', friendIds);
 
         if (pError) {
@@ -221,8 +221,9 @@ export function useSocial(session: Session | null, userPos: [number, number] | n
   useEffect(() => {
     if (!session?.user || !userPos) return;
     
-    // SI EL USUARIO NO COMPARTE, NO MANDAMOS NADA (Ahorro total de créditos y privacidad)
-    if (!isSharingLocation) return;
+    // SI EL USUARIO NO COMPARTE EXPLICITAMENTE, NO MANDAMOS NADA (Ahorro total de créditos y privacidad)
+    // Si es null o true, se comparte por defecto para usuarios existentes.
+    if (isSharingLocation === false) return;
 
     // Ahorro de datos: Si la pestaña no es visible, NO gastamos créditos de Supabase
     if (document.visibilityState !== 'visible') return;
