@@ -66,17 +66,13 @@ const geocodeAddress = async (query: string): Promise<Coordinates | null> => {
 const fetchRouteTomTom = async (allPoints: Coordinates[], key: string, useTraffic: boolean): Promise<RouteResult> => {
   const coordStr = allPoints.map(p => `${p[0]},${p[1]}`).join(':');
   
-  // 1. Unificamos sectionType en un solo parámetro separado por comas
-  // 2. Añadimos departAt=now para validación estricta de tráfico en tiempo real
-  // 3. Eliminamos speedLimit temporalmente para descartar que sea el causante del 400
-  let url = `https://api.tomtom.com/routing/1/calculateRoute/${coordStr}/json?key=${key}&report=effectiveSettings&instructionsType=text&language=es-ES&laneGuidance=true&departAt=now`;
+  // 1. TomTom prefiere parámetros repetidos para sectionType en lugar de comas
+  // 2. Mantenemos departAt=now para tráfico real
+  let url = `https://api.tomtom.com/routing/1/calculateRoute/${coordStr}/json?key=${key}&report=effectiveSettings&instructionsType=text&language=es-ES&laneGuidance=true&departAt=now&sectionType=lanes`;
   
-  const sectionTypes = ['lanes'];
   if (useTraffic) {
-    sectionTypes.push('traffic');
-    url += `&traffic=true&routeType=fastest`;
+    url += `&traffic=true&routeType=fastest&sectionType=traffic`;
   }
-  url += `&sectionType=${sectionTypes.join(',')}`;
 
   const res = await fetch(url);
   
