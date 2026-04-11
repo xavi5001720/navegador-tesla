@@ -42,7 +42,7 @@ import { useSocial } from '@/hooks/useSocial';
 import RouteDashboard from '@/components/RouteDashboard';
 import NavigationPanel from '@/components/NavigationPanel';
 import AboutModal from '@/components/AboutModal';
-import { useLuxuryYachts } from '@/hooks/useLuxuryYachts';
+import { useLuxuryYachts, YachtPosition } from '@/hooks/useLuxuryYachts';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -134,6 +134,7 @@ export default function Home() {
     | { type: 'gasStation'; data: GasStation }
     | null
   >(null);
+  const [selectedYacht, setSelectedYacht] = useState<YachtPosition | null>(null);
 
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -1043,7 +1044,14 @@ export default function Home() {
           onZoomChange={setCustomZoom}
           onMapClick={handleMapClick}
           onChargerClick={handleChargerClick}
-          onGasStationClick={(s) => setSelectedPOI({ type: 'gasStation', data: s })}
+          onGasStationClick={(s) => {
+            setSelectedYacht(null);
+            setSelectedPOI({ type: 'gasStation', data: s });
+          }}
+          onYachtClick={(y) => {
+            setSelectedPOI(null);
+            setSelectedYacht(y);
+          }}
           onOpenGarage={() => setIsGarageOpen(true)}
           routeSections={route?.sections}
           carColor={profile?.car_color}
@@ -1320,6 +1328,77 @@ export default function Home() {
           </div>
         );
       })()}
+
+      {/* Overlay de Información de Yates (Radar de Lujo) */}
+      {selectedYacht && (
+        <div className="fixed top-[120px] left-6 right-6 md:left-8 md:w-[332px] md:right-auto z-[100] pointer-events-none animate-in fade-in slide-in-from-left-4 duration-300">
+          <div className="bg-black/90 backdrop-blur-3xl border border-blue-500/30 rounded-[32px] overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.8)] pointer-events-auto">
+            {/* Cabecera del Yate */}
+            <div className="p-5 flex items-center gap-4 bg-gradient-to-br from-blue-500/10 to-transparent border-b border-white/5">
+              <div className="h-12 w-12 flex items-center justify-center bg-blue-500/10 rounded-2xl border border-blue-500/20 shadow-inner">
+                <img src="/yacht-icon.png" alt="Y" className="h-10 w-10 object-contain" />
+              </div>
+              <div className="flex flex-col flex-1 overflow-hidden">
+                <span className="text-[10px] font-black text-blue-500/80 uppercase tracking-[0.2em] leading-none mb-1.5">RADAR DE LUJO</span>
+                <h2 className="text-xl font-black text-white italic truncate uppercase tracking-tighter leading-tight drop-shadow-md">
+                  {selectedYacht.name}
+                </h2>
+              </div>
+            </div>
+
+            {/* Detalles */}
+            <div className="p-6 flex flex-col gap-5">
+              <div className="flex flex-col bg-white/5 border border-white/10 rounded-[24px] p-4 shadow-inner">
+                <span className="text-[10px] font-black text-blue-400 uppercase leading-none opacity-60 mb-1.5 px-1 tracking-widest">PROPIETARIO</span>
+                <span className="text-lg font-black text-white uppercase tracking-tight italic px-1 drop-shadow-sm">
+                  {selectedYacht.owner}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col bg-white/5 border border-white/10 rounded-2xl p-4 transition-all hover:bg-white/10">
+                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none mb-2">Velocidad</span>
+                  <p className="text-base font-black text-white">{selectedYacht.speed} <span className="text-[10px] opacity-40 font-bold ml-0.5">NUDOS</span></p>
+                </div>
+                <div className="flex flex-col bg-white/5 border border-white/10 rounded-2xl p-4 transition-all hover:bg-white/10">
+                  <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none mb-2">Rumbo</span>
+                  <p className="text-base font-black text-white">{selectedYacht.course || selectedYacht.heading || 0}º</p>
+                </div>
+              </div>
+
+              {selectedYacht.destination && (
+                <div className="flex flex-col bg-blue-900/20 border border-blue-500/20 rounded-2xl p-4">
+                  <span className="text-[10px] font-black text-blue-400/70 uppercase tracking-widest leading-none mb-2">Destino Reportado</span>
+                  <p className="text-sm font-black text-white italic uppercase tracking-tighter">{selectedYacht.destination}</p>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between px-1">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.8)]" />
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">AIS SEÑAL ACTIVA</span>
+                </div>
+                <span className="text-[10px] font-bold text-gray-500">
+                  {(() => {
+                    try {
+                      return new Date(selectedYacht.last_update).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                    } catch (e) {
+                      return '--:--';
+                    }
+                  })()}
+                </span>
+              </div>
+
+              <button
+                onClick={() => setSelectedYacht(null)}
+                className="w-full py-4 rounded-2xl font-black text-sm text-gray-400 bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white transition-all transform hover:scale-[1.02] active:scale-[0.98] mt-2"
+              >
+                Cerrar Radar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Panel de Favoritos */}
       {isFavoritesOpen && (
         <FavoritesPanel

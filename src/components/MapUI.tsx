@@ -204,6 +204,7 @@ interface MapUIProps {
    onMapClick?: (lat: number, lon: number, screenX: number, screenY: number) => void;
    onChargerClick?: (charger: Charger) => void;
    onGasStationClick?: (station: GasStation) => void;
+   onYachtClick?: (yacht: YachtPosition) => void;
    onOpenGarage?: () => void;
    onCurrentZoomChange?: (zoom: number) => void;
    routeSections?: RouteSection[];
@@ -437,7 +438,7 @@ export default function MapUI({
   userPos, heading, carColor, routeCoordinates, radars = [], aircrafts = [], chargers = [],
   gasStations = [], weatherPoints = [], waypoints = [], yachts = [], speed = 0, hasLocation = false,
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
-  onGasStationClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [], 
+  onGasStationClick, onYachtClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [], 
   friendBatches = {},
   centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
   mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname
@@ -662,72 +663,15 @@ export default function MapUI({
             key={`yacht-${yacht.mmsi}`} 
             position={[yacht.latitude, yacht.longitude]} 
             icon={yachtIcon(yacht.course || yacht.heading || 0)}
-            zIndexOffset={15000}
+            zIndexOffset={20000}
             interactive={true}
-            bubblingMouseEvents={false}
-          >
-            <Popup className="tesla-popup" minWidth={260} offset={[0, -10]}>
-              <div className="p-4 bg-black/95 backdrop-blur-3xl border border-blue-500/30 rounded-[28px] flex flex-col gap-4 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
-                <div className="flex items-center gap-4">
-                  <div className="h-10 w-10 flex items-center justify-center bg-blue-500/10 rounded-xl border border-blue-500/20 shadow-inner">
-                    <img src="/yacht-icon.png" alt="Y" className="h-8 w-8 object-contain" />
-                  </div>
-                  <div className="flex flex-col">
-                    <h2 className="text-lg font-black text-white italic truncate uppercase tracking-tighter leading-tight drop-shadow-md">
-                      {yacht.name}
-                    </h2>
-                  </div>
-                </div>
-
-                <div className="h-px bg-white/5 w-full mx-auto" />
-
-                <div className="grid grid-cols-1 gap-4">
-                   <div className="flex flex-col bg-white/5 border border-white/10 rounded-[20px] p-3 shadow-inner">
-                      <div className="flex flex-col px-1 pb-1">
-                         <span className="text-[10px] font-black text-blue-400 uppercase leading-none opacity-60 mb-1">PROPIETARIO</span>
-                         <span className="text-base font-black text-white uppercase tracking-tight italic">
-                           {yacht.owner}
-                         </span>
-                      </div>
-                   </div>
-
-                   <div className="grid grid-cols-2 gap-2">
-                      <div className="flex flex-col bg-white/5 border border-white/10 rounded-2xl p-3">
-                         <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none mb-2">Velocidad</span>
-                         <span className="text-sm font-black text-white">{yacht.speed} <span className="text-[10px] opacity-50">NUDOS</span></span>
-                      </div>
-                      <div className="flex flex-col bg-white/5 border border-white/10 rounded-2xl p-3">
-                         <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest leading-none mb-2">Rumbo</span>
-                         <span className="text-sm font-black text-white">{(yacht.course || yacht.heading || 0)}º</span>
-                      </div>
-                   </div>
-
-                   {yacht.destination && (
-                      <div className="flex flex-col bg-blue-950/20 border border-blue-500/20 rounded-2xl p-3">
-                         <span className="text-[9px] font-black text-blue-400/80 uppercase tracking-widest leading-none mb-2">Próximo Destino</span>
-                         <span className="text-xs font-black text-white italic uppercase tracking-tighter">{yacht.destination}</span>
-                      </div>
-                   )}
-                </div>
-
-                <div className="flex items-center justify-between px-1">
-                   <div className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
-                      <span className="text-[9px] font-bold text-gray-600 uppercase tracking-[0.1em]">AIS SEÑAL ACTIVA</span>
-                   </div>
-                   <span className="text-[9px] font-bold text-gray-600">
-                     {(() => {
-                       try {
-                         return new Date(yacht.last_update).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                       } catch (e) {
-                         return '--:--';
-                       }
-                     })()}
-                   </span>
-                </div>
-              </div>
-            </Popup>
-          </Marker>
+            eventHandlers={{
+              click: (e) => {
+                L.DomEvent.stopPropagation(e as any);
+                if (onYachtClick) onYachtClick(yacht);
+              }
+            }}
+          />
         ))}
 
         {(() => {
