@@ -123,9 +123,11 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
 
 const yachtIcon = (heading: number) => L.divIcon({
   html: renderToStaticMarkup(
-    <div className="relative flex items-center justify-center h-12 w-12 counter-rotate pointer-events-auto" style={{ transform: `rotate(${heading - 45}deg)` }}>
+    <div className="relative flex items-center justify-center h-12 w-12 counter-rotate" style={{ pointerEvents: 'auto' }}>
       <div className="absolute inset-0 rounded-full bg-blue-400/20 blur-xl scale-150 animate-pulse"></div>
-      <img src="/yacht-icon.png" alt="Y" className="h-10 w-10 object-contain drop-shadow-[0_5px_15px_rgba(0,0,0,0.6)]" />
+      <div style={{ transform: `rotate(${heading - 45}deg)` }}>
+        <img src="/yacht-icon.png" alt="Y" className="h-10 w-10 object-contain drop-shadow-[0_5px_15px_rgba(0,0,0,0.6)]" />
+      </div>
     </div>
   ),
   className: 'custom-yacht-icon',
@@ -664,8 +666,12 @@ export default function MapUI({
             key={`yacht-${yacht.mmsi}`} 
             position={[yacht.latitude, yacht.longitude]} 
             icon={yachtIcon(yacht.course || yacht.heading || 0)}
+            zIndexOffset={500}
+            interactive={true}
+            riseOnHover={true}
             eventHandlers={{
               click: (e) => {
+                L.DomEvent.stopPropagation(e as any);
                 e.target.openPopup();
               }
             }}
@@ -725,7 +731,13 @@ export default function MapUI({
                       <span className="text-[9px] font-bold text-gray-600 uppercase tracking-[0.1em]">AIS SEÑAL ACTIVA</span>
                    </div>
                    <span className="text-[9px] font-bold text-gray-600">
-                     {new Date(yacht.last_update).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                     {(() => {
+                       try {
+                         return new Date(yacht.last_update).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                       } catch (e) {
+                         return '--:--';
+                       }
+                     })()}
                    </span>
                 </div>
               </div>
