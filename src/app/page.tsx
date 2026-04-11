@@ -56,7 +56,7 @@ const DynamicMap = dynamic(() => import('@/components/MapUI'), {
 export default function Home() {
   const sessionClientId = useRef(typeof window !== 'undefined' ? crypto.randomUUID() : '').current;
   const [viewMode, setViewMode] = useState<'navigation' | 'overview'>('overview');
-  const [isSessionDuplicated, setIsSessionDuplicated] = useState(false);
+  const [sessionConflict, setSessionConflict] = useState<'none' | 'warning' | 'kicked'>('none');
   const [expandedFriendId, setExpandedFriendId] = useState<string | null>(null);
   const [isNavMinimized, setIsNavMinimized] = useState(false);
 
@@ -285,14 +285,33 @@ export default function Home() {
   ]);
 
 
-  // 3. Gestión de Sesión Única (Realtime)
+  // 3. Gestión de Sesión Única Controlada (Realtime)
   useEffect(() => {
-    if (!session?.user) return;
+    if (!session?.user) {
+      setSessionConflict('none');
+      return;
+    }
 
-    // Registrar esta sesión como la activa
-    updateProfile({ last_session_id: sessionClientId });
+    // Al entrar, verificamos si ya existe una sesión activa para advertir al usuario
+    const checkActiveSession = async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('last_session_id')
+        .eq('id', session.user.id)
+        .single();
+      
+      if (!error && data?.last_session_id && data.last_session_id !== sessionClientId) {
+        // En lugar de tomar el control por la fuerza, mostramos advertencia
+        setSessionConflict('warning');
+      } else {
+        // No hay sesión activa o es la nuestra (tras refresco), tomamos control
+        updateProfile({ last_session_id: sessionClientId });
+      }
+    };
 
-    // Escuchar si el last_session_id cambia en la DB (otro dispositivo entró)
+    checkActiveSession();
+
+    // Escuchar si el last_session_id cambia en la DB (otro dispositivo entró y tomó el mando)
     const channel = supabase
       .channel(`profile_session_${session.user.id}`)
       .on(
@@ -305,10 +324,10 @@ export default function Home() {
         },
         (payload) => {
           const newSessionId = payload.new.last_session_id;
+          // Si el ID cambia y no es el nuestro, hemos sido expulsados
           if (newSessionId && newSessionId !== sessionClientId) {
             console.warn('[Auth] Sesión iniciada en otro dispositivo');
-            setIsSessionDuplicated(true);
-            handleSignOut();
+            setSessionConflict('kicked');
           }
         }
       )
@@ -1313,6 +1332,25 @@ export default function Home() {
         updateProfile={updateProfile}
         onAddFriend={addFriend}
       />
+
+      {/* Alertas de Sesión Duplicada / Advertencias */}
+      {sessionConflict !== 'none' && (
+        <SessionAlert 
+          mode={sessionConflict === 'warning' ? 'warning' : 'kickout'}
+          onConfirm={() => {
+            updateProfile({ last_session_id: sessionClientId });
+            setSessionConflict('none');
+          }}
+          onCancel={() => {
+            handleSignOut();
+            setSessionConflict('none');
+          }}
+          onClose={() => {
+            handleSignOut();
+            setSessionConflict('none');
+          }}
+        />
+      )}
     </main>
   );
 }
