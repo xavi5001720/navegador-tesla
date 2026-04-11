@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -10,13 +10,13 @@ import { Radar } from '@/hooks/useRadars';
 import { Aircraft } from '@/hooks/usePegasus';
 import { Charger } from '@/hooks/useChargers';
 import { GasStation } from '@/hooks/useGasStations';
-import { Friend } from '@/hooks/useSocial';
+import { Friend, Breadcrumb } from '@/hooks/useSocial';
 import { YachtPosition } from '@/hooks/useLuxuryYachts';
-import { useMemo } from 'react';
-import { getDistance, getBearing, findClosestPointOnPolyline, getPointAtDistance, getOffsetPoint } from '@/utils/geo';
 import { RouteSection } from '@/hooks/useRoute';
 import { WeatherPoint } from '@/hooks/useWeather';
 import { getCarFilter, getCarImage } from '@/utils/carStyles';
+import { getDistance, getBearing, findClosestPointOnPolyline } from '@/utils/geo';
+import { useFriendPlayback } from '@/hooks/useFriendPlayback';
 
 const endMarkerIcon = L.divIcon({
    html: renderToStaticMarkup(
@@ -187,6 +187,7 @@ interface MapUIProps {
    radars: Radar[];
    aircrafts?: Aircraft[];
    friends?: Friend[];
+   friendBatches?: Record<string, Breadcrumb[]>;
    chargers?: Charger[];
    gasStations?: GasStation[];
    weatherPoints?: WeatherPoint[];
@@ -232,8 +233,8 @@ const getCarIcon = (heading: number, color?: string) => {
 // Sistema de Caché de Iconos para evitar parpadeo (Flickering)
 const iconCache = new Map<string, L.DivIcon>();
 
-const getFriendIcon = (color?: string, name?: string, nickname?: string) => {
-  const key = `${color}-${name}-${nickname}`;
+const getFriendIcon = (color?: string, name?: string, nickname?: string, heading: number = 0) => {
+  const key = `${color}-${name}-${nickname}-${heading}`;
   if (iconCache.has(key)) return iconCache.get(key)!;
 
   const displayName = nickname ? `${nickname} (${name})` : name;
@@ -244,7 +245,7 @@ const getFriendIcon = (color?: string, name?: string, nickname?: string) => {
           {displayName}
         </span>
       </div>
-      <div className="relative h-20 w-20">
+      <div className="relative h-20 w-20" style={{ transform: `rotate(${heading}deg)` }}>
         <div className={`absolute inset-0 rounded-full blur-2xl scale-125 ${color === 'Rojo' ? 'bg-red-500/30' : color === 'Azul' ? 'bg-blue-500/30' : 'bg-blue-500/20'}`}></div>
         <img src={getCarImage(color)} className="w-full h-full object-contain rotate-180 opacity-90" style={{ filter: getCarFilter(color) }} />
       </div>
@@ -435,11 +436,16 @@ export default function MapUI({
   gasStations = [], weatherPoints = [], waypoints = [], yachts = [], speed = 0, hasLocation = false,
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
   onGasStationClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [], 
+  friendBatches = {},
   centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
   mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname
 }: MapUIProps) {
   // Ref para contar errores de carga del mapa (para fallback automático)
   const errorCountRef = useRef(0);
+  
+  // Motor de Reproducción de Amigos (Interpolación Suave)
+  const interpolatedFriendPositions = useFriendPlayback(friends, friendBatches);
+
   // Pre-calculamos distancias acumuladas para lógica de trazada cinemática (GPS Real)
   const routeCumDist = useMemo(() => {
     if (!routeCoordinates || routeCoordinates.length < 2) return [];
@@ -602,45 +608,55 @@ export default function MapUI({
         {gasStations.map(station => <Marker key={`gas-${station.id}`} position={[station.lat, station.lon]} icon={gasStationIcon} eventHandlers={{ click: () => { if (onGasStationClick) onGasStationClick(station); } }} />)}
         {weatherPoints.map(wp => <Marker key={`weather-${wp.id}`} position={[wp.lat, wp.lon]} icon={createWeatherIcon(wp.temp, wp.condition)} interactive={false} />)}
         
-        {/* Amigos (Markers Interactivos - Solo Online y que compartan ubicación o no hayan configurado privacidad) */}
-        {friends.filter(f => f.is_online && f.last_lat && f.last_lon && f.is_sharing_location !== false).map((friend) => (
-          <Marker 
-            key={`friend-${friend.id}`} 
-            position={[friend.last_lat!, friend.last_lon!]} 
-            icon={getFriendIcon(friend.car_color, friend.car_name, friend.nickname)} 
-            zIndexOffset={1000}
-            eventHandlers={{
-              click: (e) => {
-                e.target.openPopup();
-              }
-            }}
-          >
-            <Popup className="tesla-popup" minWidth={220} offset={[0, -20]}>
-              <div className="p-3 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-2xl flex flex-col gap-3">
-                 <div className="flex flex-col">
-                   <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-tight">Contacto Social</span>
-                   <span className="text-sm font-bold text-white truncate max-w-[140px]">{friend.nickname || friend.car_name}</span>
-                 </div>
+        {/* Amigos (Marcadores con Movimiento Fluido) */}
+        {friends.filter(f => f.is_online && f.is_sharing_location !== false).map((friend) => {
+          const pos = interpolatedFriendPositions[friend.id];
+          
+          // Fallback a static pos if playback not yet available
+          const finalLat = pos ? pos.lat : friend.last_lat;
+          const finalLon = pos ? pos.lon : friend.last_lon;
+          const finalHeading = pos ? pos.heading : 0;
 
-                 <div className="h-px bg-white/10 w-full" />
+          if (!finalLat || !finalLon) return null;
 
-                 <div className="flex flex-col gap-1.5">
+          return (
+            <Marker 
+              key={`friend-${friend.id}`} 
+              position={[finalLat, finalLon]} 
+              icon={getFriendIcon(friend.car_color, friend.car_name, friend.nickname, finalHeading)} 
+              zIndexOffset={1000}
+              eventHandlers={{
+                click: (e) => {
+                  e.target.openPopup();
+                }
+              }}
+            >
+              <Popup className="tesla-popup" minWidth={220} offset={[0, -20]}>
+                <div className="p-3 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-2xl flex flex-col gap-3">
+                   <div className="flex flex-col">
+                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-tight">Contacto Social</span>
+                     <span className="text-sm font-bold text-white truncate max-w-[140px]">{friend.nickname || friend.car_name}</span>
+                   </div>
 
-                   <button 
-                     onClick={() => {
-                       const newName = prompt('Introduce el apodo para este amigo:', friend.nickname || '');
-                       if (newName !== null) onUpdateFriendNickname?.(friend.id, newName);
-                     }}
-                     className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all text-[11px] font-bold uppercase"
-                   >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                      Editar nombre
-                   </button>
-                 </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+                   <div className="h-px bg-white/10 w-full" />
+
+                   <div className="flex flex-col gap-1.5">
+                     <button 
+                       onClick={() => {
+                         const newName = prompt('Introduce el apodo para este amigo:', friend.nickname || '');
+                         if (newName !== null) onUpdateFriendNickname?.(friend.id, newName);
+                       }}
+                       className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all text-[11px] font-bold uppercase"
+                     >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                        Editar nombre
+                     </button>
+                   </div>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
 
         {/* Yates de Lujo */}
         {yachts.map((yacht) => (
@@ -674,8 +690,8 @@ export default function MapUI({
                   </div>
                   {yacht.destination && (
                     <div className="flex flex-col col-span-2">
-                      <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Destino Reportado</span>
-                      <span className="text-[11px] font-bold text-blue-400 italic">{yacht.destination}</span>
+                       <span className="text-[8px] font-bold text-gray-500 uppercase tracking-widest">Destino Reportado</span>
+                       <span className="text-[11px] font-bold text-blue-400 italic">{yacht.destination}</span>
                     </div>
                   )}
                 </div>

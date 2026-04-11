@@ -164,8 +164,16 @@ export default function Home() {
     acceptFriend,
     removeFriend,
     updateFriendNickname,
-    refreshFriends: fetchFriends 
-  } = useSocial(session, userPos as [number, number], profile?.is_sharing_location, hasLocation);
+    refreshFriends: fetchFriends,
+    friendBatches
+  } = useSocial(
+    session, 
+    userPos as [number, number], 
+    heading,
+    speed,
+    profile?.is_sharing_location, 
+    hasLocation
+  );
 
   const { yachts, loadingYachts } = useLuxuryYachts(isYachtsEnabled);
   
@@ -991,6 +999,7 @@ export default function Home() {
           routeSections={route?.sections}
           carColor={profile?.car_color}
           friends={friends}
+          friendBatches={friendBatches}
           centerOverride={mapCenterOverride}
           overviewFitTrigger={overviewFitTrigger}
           distanceToNextInstruction={distanceToNextInstruction}
