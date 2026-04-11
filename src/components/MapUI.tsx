@@ -675,11 +675,14 @@ export default function MapUI({
             key={`yacht-${yacht.mmsi}`} 
             position={[yacht.latitude, yacht.longitude]} 
             icon={yachtIcon(yacht.course || yacht.heading || 0)}
-            zIndexOffset={20000}
+            zIndexOffset={25000}
             interactive={true}
             eventHandlers={{
               click: (e) => {
-                L.DomEvent.stopPropagation(e as any);
+                if (onYachtClick) onYachtClick(yacht);
+              },
+              mousedown: (e) => {
+                // Fallback para dispositivos de escritorio donde el click puede ser interceptado
                 if (onYachtClick) onYachtClick(yacht);
               }
             }}
