@@ -354,7 +354,7 @@ export default function Home() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [session?.user?.id, sessionClientId, updateProfile, sessionConflict]);
+  }, [session?.user?.id, sessionClientId, updateProfile]);
 
   // Lógica de Recalculado Automático
 
