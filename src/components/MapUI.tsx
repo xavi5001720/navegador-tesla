@@ -123,16 +123,16 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
 
 const yachtIcon = (heading: number) => L.divIcon({
   html: renderToStaticMarkup(
-    <div className="relative flex items-center justify-center h-12 w-12 counter-rotate" style={{ pointerEvents: 'auto' }}>
-      <div className="absolute inset-0 rounded-full bg-blue-400/20 blur-xl scale-150 animate-pulse"></div>
-      <div style={{ transform: `rotate(${heading - 45}deg)` }}>
-        <img src="/yacht-icon.png" alt="Y" className="h-10 w-10 object-contain drop-shadow-[0_5px_15px_rgba(0,0,0,0.6)]" />
+    <div className="relative flex items-center justify-center h-16 w-16 counter-rotate" style={{ pointerEvents: 'auto' }}>
+      <div className="absolute inset-0 rounded-full bg-blue-400/10 blur-2xl scale-150 animate-pulse"></div>
+      <div style={{ transform: `rotate(${heading - 45}deg)` }} className="relative z-10 h-10 w-10">
+        <img src="/yacht-icon.png" alt="Y" className="h-full w-full object-contain drop-shadow-[0_5px_15px_rgba(0,0,0,0.6)]" />
       </div>
     </div>
   ),
   className: 'custom-yacht-icon',
-  iconSize: [48, 48],
-  iconAnchor: [24, 24],
+  iconSize: [64, 64],
+  iconAnchor: [32, 32],
 });
 
 const weatherEmojiMap: Record<string, string> = {
@@ -666,7 +666,7 @@ export default function MapUI({
             key={`yacht-${yacht.mmsi}`} 
             position={[yacht.latitude, yacht.longitude]} 
             icon={yachtIcon(yacht.course || yacht.heading || 0)}
-            zIndexOffset={500}
+            zIndexOffset={10000}
             interactive={true}
             riseOnHover={true}
             eventHandlers={{
@@ -679,11 +679,10 @@ export default function MapUI({
             <Popup className="tesla-popup" minWidth={260} offset={[0, -10]}>
               <div className="p-4 bg-black/95 backdrop-blur-3xl border border-blue-500/30 rounded-[28px] flex flex-col gap-4 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 flex items-center justify-center bg-blue-500/10 rounded-2xl border border-blue-500/20 shadow-inner">
-                    <img src="/yacht-icon.png" alt="Y" className="h-10 w-10 object-contain" />
+                  <div className="h-10 w-10 flex items-center justify-center bg-blue-500/10 rounded-xl border border-blue-500/20 shadow-inner">
+                    <img src="/yacht-icon.png" alt="Y" className="h-8 w-8 object-contain" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-black text-blue-500/80 uppercase tracking-[0.2em] leading-none mb-1">RADAR DE LUJO</span>
                     <h2 className="text-lg font-black text-white italic truncate uppercase tracking-tighter leading-tight drop-shadow-md">
                       {yacht.name}
                     </h2>
@@ -694,12 +693,8 @@ export default function MapUI({
 
                 <div className="grid grid-cols-1 gap-4">
                    <div className="flex flex-col bg-white/5 border border-white/10 rounded-[20px] p-3 shadow-inner">
-                      <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 flex items-center gap-1.5 px-1">
-                         <span className="h-1 w-1 rounded-full bg-blue-500"></span> 
-                         Información de Propiedad
-                      </span>
                       <div className="flex flex-col px-1 pb-1">
-                         <span className="text-[10px] font-black text-blue-400 uppercase leading-none opacity-60 mb-0.5">PROPIETARIO</span>
+                         <span className="text-[10px] font-black text-blue-400 uppercase leading-none opacity-60 mb-1">PROPIETARIO</span>
                          <span className="text-base font-black text-white uppercase tracking-tight italic">
                            {yacht.owner}
                          </span>
