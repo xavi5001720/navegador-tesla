@@ -57,6 +57,7 @@ export default function Home() {
   const sessionClientId = useRef(typeof window !== 'undefined' ? crypto.randomUUID() : '').current;
   const [viewMode, setViewMode] = useState<'navigation' | 'overview'>('overview');
   const [sessionConflict, setSessionConflict] = useState<'none' | 'warning' | 'kicked'>('none');
+  const isSessionMasterRef = useRef(false);
   const [expandedFriendId, setExpandedFriendId] = useState<string | null>(null);
   const [isNavMinimized, setIsNavMinimized] = useState(false);
 
@@ -171,7 +172,8 @@ export default function Home() {
     userPos as [number, number], 
     heading,
     speed,
-    profile?.is_sharing_location, 
+    // CRÍTICO: Solo compartimos si está activo en el perfil Y hemos tomado el control de la sesión (sin conflictos)
+    profile?.is_sharing_location && sessionConflict === 'none' && isSessionMasterRef.current, 
     hasLocation
   );
 
@@ -269,7 +271,8 @@ export default function Home() {
 
   // 2.1 Auto-save con debounce (2 segundos)
   useEffect(() => {
-    if (!session || !prefsLoaded) return;
+    // CRÍTICO: No auto-guardar NADA si hay un conflicto de sesión pendiente o resuelto (kickout)
+    if (!session || !prefsLoaded || sessionConflict !== 'none') return;
 
     const timer = setTimeout(() => {
       console.log('[Prefs] Auto-guardando cambios detectados...');
@@ -281,7 +284,7 @@ export default function Home() {
     isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, 
     chargerFilters, isGasStationsEnabled, gasStationFilters, 
     isWeatherEnabled, isSoundEnabled, voiceType,
-    session, prefsLoaded, handleSavePreferences
+    session, prefsLoaded, handleSavePreferences, sessionConflict
   ]);
 
 
@@ -289,6 +292,7 @@ export default function Home() {
   useEffect(() => {
     if (!session?.user) {
       setSessionConflict('none');
+      isSessionMasterRef.current = false;
       return;
     }
 
@@ -300,16 +304,24 @@ export default function Home() {
         .eq('id', session.user.id)
         .single();
       
+      // Si el ID en la DB es diferente al nuestro, hay conflicto
       if (!error && data?.last_session_id && data.last_session_id !== sessionClientId) {
-        // En lugar de tomar el control por la fuerza, mostramos advertencia
+        console.log('[Auth] Conflicto de sesión detectado: ya hay un dispositivo activo');
         setSessionConflict('warning');
+        isSessionMasterRef.current = false;
       } else {
-        // No hay sesión activa o es la nuestra (tras refresco), tomamos control
+        // No hay sesión activa o es la nuestra, tomamos control oficialmente
+        console.log('[Auth] Tomando control de la sesión:', sessionClientId);
         updateProfile({ last_session_id: sessionClientId });
+        isSessionMasterRef.current = true;
+        setSessionConflict('none');
       }
     };
 
-    checkActiveSession();
+    // Solo verificamos si aún no estamos en un estado de conflicto explícito
+    if (sessionConflict === 'none') {
+      checkActiveSession();
+    }
 
     // Escuchar si el last_session_id cambia en la DB (otro dispositivo entró y tomó el mando)
     const channel = supabase
@@ -324,11 +336,17 @@ export default function Home() {
         },
         (payload) => {
           const newSessionId = payload.new.last_session_id;
+          
           // Si el ID cambia y no es el nuestro, hemos sido expulsados
-          if (newSessionId && newSessionId !== sessionClientId) {
-            console.warn('[Auth] Sesión iniciada en otro dispositivo');
+          // PERO solo nos expulsamos si nosotros éramos el "master" (isSessionMasterRef.current)
+          if (isSessionMasterRef.current && newSessionId && newSessionId !== sessionClientId) {
+            console.warn('[Auth] Sesión robada por otro terminal:', newSessionId);
             setSessionConflict('kicked');
+            isSessionMasterRef.current = false;
           }
+          
+          // Debug para trazabilidad
+          console.log('[Auth] Cambio de perfil detectado. last_session_id en DB:', newSessionId);
         }
       )
       .subscribe();
@@ -336,7 +354,7 @@ export default function Home() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [session?.user?.id, sessionClientId, updateProfile]);
+  }, [session?.user?.id, sessionClientId, updateProfile, sessionConflict]);
 
   // Lógica de Recalculado Automático
 
@@ -1339,14 +1357,17 @@ export default function Home() {
           mode={sessionConflict === 'warning' ? 'warning' : 'kickout'}
           onConfirm={() => {
             updateProfile({ last_session_id: sessionClientId });
+            isSessionMasterRef.current = true;
             setSessionConflict('none');
           }}
           onCancel={() => {
             handleSignOut();
+            isSessionMasterRef.current = false;
             setSessionConflict('none');
           }}
           onClose={() => {
             handleSignOut();
+            isSessionMasterRef.current = false;
             setSessionConflict('none');
           }}
         />
