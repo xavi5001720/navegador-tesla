@@ -197,10 +197,26 @@ export function useSocial(
           }));
         }
       })
-      .on('broadcast', { event: 'location' }, ({ payload }) => {
-        // Compatibilidad con versiones antiguas o control de visibilidad
-        if (payload.is_sharing === false) {
-          setFriends(prev => prev.map(f => f.id === payload.user_id ? { ...f, is_sharing_location: false } : f));
+      .on('broadcast', { event: 'SOCIAL_STATUS_UPDATE' }, ({ payload }) => {
+        // Actualizamos el estado de compartición de un amigo en tiempo real
+        setFriends(prev => prev.map(f => 
+          f.id === payload.user_id 
+            ? { ...f, is_sharing_location: payload.is_sharing_location } 
+            : f
+        ));
+
+        // Si el amigo deja de compartir, limpiamos sus buffers locales para liberar memoria
+        if (payload.is_sharing_location === false) {
+          setFriendBatches(prev => {
+            const next = { ...prev };
+            delete next[payload.user_id];
+            return next;
+          });
+          setLivePositions(prev => {
+            const next = { ...prev };
+            delete next[payload.user_id];
+            return next;
+          });
         }
       })
       .subscribe(async (status) => {
@@ -225,7 +241,11 @@ export function useSocial(
 
   // 3. Captura continua de Trayectoria (Buffer)
   useEffect(() => {
-    if (!hasLocation || !userPos) return;
+    // OPTIMIZACIÓN: No capturar nada si no estamos compartiendo
+    if (!hasLocation || !userPos || !isSharingLocation) {
+      trajectoryBufferRef.current = []; // Limpiamos buffer si se apaga
+      return;
+    }
 
     const now = Date.now();
     
@@ -248,7 +268,7 @@ export function useSocial(
         trajectoryBufferRef.current = trajectoryBufferRef.current.slice(-120);
       }
     }
-  }, [userPos, heading, speed, hasLocation]);
+  }, [userPos, heading, speed, hasLocation, isSharingLocation]);
 
   // 4. Emisión Adaptativa (Frecuencia por Zona Dominante)
   useEffect(() => {
@@ -337,6 +357,36 @@ export function useSocial(
 
     return () => clearInterval(senderLoop);
   }, [session, friends, onlineUserIds, userPos, isSharingLocation, hasLocation]);
+
+  // 5. Señal de Privacidad Inmediata
+  useEffect(() => {
+    if (!session?.user || !channelRef.current) return;
+
+    // Emitimos el cambio de estado por Broadcast para que sea instantáneo en otros clientes
+    channelRef.current.send({
+      type: 'broadcast',
+      event: 'SOCIAL_STATUS_UPDATE',
+      payload: { 
+        user_id: session.user.id, 
+        is_sharing_location: isSharingLocation 
+      }
+    });
+
+    // Si volvemos a activar, enviamos un punto de anclaje inicial para que aparezcamos ya
+    if (isSharingLocation && userPos && hasLocation) {
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'PATH_BATCH',
+        payload: { 
+          user_id: session.user.id, 
+          points: [{ lat: userPos[0], lon: userPos[1], t: Date.now(), h: heading, s: speed }], 
+          zone: 'Z1-Anchor',
+          timestamp: Date.now() 
+        }
+      });
+    }
+
+  }, [isSharingLocation, session?.user]);
 
   // Acciones (addFriend, removeFriend, etc. se mantienen igual ya que son DB)
 
