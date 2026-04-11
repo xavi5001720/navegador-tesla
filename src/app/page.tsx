@@ -54,7 +54,13 @@ const DynamicMap = dynamic(() => import('@/components/MapUI'), {
 });
 
 export default function Home() {
-  const sessionClientId = useRef(typeof window !== 'undefined' ? crypto.randomUUID() : '').current;
+  const sessionClientId = useRef(typeof window !== 'undefined' ? (
+    sessionStorage.getItem('tesla_session_id') || (() => {
+      const id = crypto.randomUUID();
+      sessionStorage.setItem('tesla_session_id', id);
+      return id;
+    })()
+  ) : '').current;
   const [viewMode, setViewMode] = useState<'navigation' | 'overview'>('overview');
   const [sessionConflict, setSessionConflict] = useState<'none' | 'warning' | 'kicked'>('none');
   const isSessionMasterRef = useRef(false);
@@ -213,6 +219,12 @@ export default function Home() {
     setIsGarageOpen(false);
     setIsSocialOpen(false);
     setIsSettingsOpen(false);
+    
+    // Al cerrar sesión manualmente, limpiamos el identificador en la DB
+    if (session?.user?.id) {
+       await updateProfile({ last_session_id: null });
+    }
+    
     await supabase.auth.signOut();
   };
 
