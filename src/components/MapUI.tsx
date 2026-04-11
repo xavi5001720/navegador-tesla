@@ -595,16 +595,12 @@ export default function MapUI({
 
         {radars.map((radar) => <Marker key={`radar-${radar.id}`} position={[radar.lat, radar.lon]} icon={radarIcon(radar.speedLimit)} interactive={false} />)}
         {aircrafts.map((aircraft) => (
-          <Marker key={`ac-${aircraft.icao24}`} position={[aircraft.lat, aircraft.lon]} icon={aircraftIcon(aircraft.isSuspect, aircraft.track, aircraft.distanceToUser, viewMode, aircraft.altitude, aircraft.velocity, aircraft.callsign)}>
-            <Popup className="tesla-popup">
-              <div className="p-2 text-gray-900">
-                <p className={`font-bold text-lg ${aircraft.isSuspect ? 'text-blue-500' : 'text-gray-400'} mb-1`}>{aircraft.isSuspect ? 'AERONAVE' : 'VUELO CIVIL'}</p>
-                <p className="text-sm">Altitud: <b>{Math.round(aircraft.altitude || 0)}m</b></p>
-                <p className="text-sm">Llamada: <b>{aircraft.callsign}</b></p>
-                <p className="text-sm">Velocidad: <b>{Math.round(aircraft.velocity * 3.6)} km/h</b></p>
-              </div>
-            </Popup>
-          </Marker>
+          <Marker 
+            key={`ac-${aircraft.icao24}`} 
+            position={[aircraft.lat, aircraft.lon]} 
+            icon={aircraftIcon(aircraft.isSuspect, aircraft.track, aircraft.distanceToUser, viewMode, aircraft.altitude, aircraft.velocity, aircraft.callsign)}
+            interactive={false}
+          />
         ))}
         {chargers.map(charger => <Marker key={`charger-${charger.id}`} position={[charger.lat, charger.lon]} icon={chargerIcon} eventHandlers={{ click: () => { if (onChargerClick) onChargerClick(charger); } }} />)}
         {gasStations.map(station => <Marker key={`gas-${station.id}`} position={[station.lat, station.lon]} icon={gasStationIcon} eventHandlers={{ click: () => { if (onGasStationClick) onGasStationClick(station); } }} />)}
@@ -666,15 +662,9 @@ export default function MapUI({
             key={`yacht-${yacht.mmsi}`} 
             position={[yacht.latitude, yacht.longitude]} 
             icon={yachtIcon(yacht.course || yacht.heading || 0)}
-            zIndexOffset={10000}
+            zIndexOffset={15000}
             interactive={true}
-            riseOnHover={true}
-            eventHandlers={{
-              click: (e) => {
-                L.DomEvent.stopPropagation(e as any);
-                e.target.openPopup();
-              }
-            }}
+            bubblingMouseEvents={false}
           >
             <Popup className="tesla-popup" minWidth={260} offset={[0, -10]}>
               <div className="p-4 bg-black/95 backdrop-blur-3xl border border-blue-500/30 rounded-[28px] flex flex-col gap-4 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
