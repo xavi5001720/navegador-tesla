@@ -123,11 +123,9 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
 
 const yachtIcon = (heading: number) => L.divIcon({
   html: renderToStaticMarkup(
-    <div className="relative flex items-center justify-center h-16 w-16 counter-rotate" style={{ pointerEvents: 'auto' }}>
+    <div className="yacht-icon-container" style={{ transform: `rotate(${heading - 45}deg)` }}>
       <div className="absolute inset-0 rounded-full bg-blue-400/10 blur-2xl scale-150 animate-pulse"></div>
-      <div style={{ transform: `rotate(${heading - 45}deg)` }} className="relative z-10 h-10 w-10">
-        <img src="/yacht-icon.png" alt="Y" className="h-full w-full object-contain drop-shadow-[0_5px_15px_rgba(0,0,0,0.6)]" />
-      </div>
+      <img src="/yacht-icon.png" alt="Y" className="h-10 w-10 object-contain drop-shadow-[0_5px_20px_rgba(0,0,0,0.8)]" />
     </div>
   ),
   className: 'custom-yacht-icon',
@@ -485,8 +483,22 @@ export default function MapUI({
         .leaflet-container { background: #030712 !important; }
         @keyframes aircraft-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.15); } }
         .counter-rotate { transform: rotate(var(--map-heading, 0deg)); }
+        .custom-yacht-icon { 
+          pointer-events: auto !important; 
+          cursor: pointer !important; 
+          z-index: 1000 !important; 
+        }
+        .yacht-icon-container {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 64px;
+          width: 64px;
+          pointer-events: auto;
+        }
       `}</style>
-      <MapContainer center={userPos} zoom={15} className="h-full w-full z-0" zoomControl={false}>
+      <MapContainer center={userPos} zoom={15} className="h-full w-full z-0" zoomControl={false} doubleClickZoom={false}>
         <MapEvents viewMode={viewMode} onViewModeChange={onViewModeChange} onMapClick={onMapClick} />
         <MapRotator heading={snappedHeading} viewMode={viewMode} speed={speed} />
         
