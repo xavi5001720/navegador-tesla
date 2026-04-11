@@ -1329,10 +1329,9 @@ export default function Home() {
         );
       })()}
 
-      {/* Overlay de Información de Yates (Radar de Lujo) */}
       {selectedYacht && (
-        <div className="fixed top-[120px] left-6 right-6 md:left-8 md:w-[332px] md:right-auto z-[100] pointer-events-none animate-in fade-in slide-in-from-left-4 duration-300">
-          <div className="bg-black/90 backdrop-blur-3xl border border-blue-500/30 rounded-[32px] overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.8)] pointer-events-auto">
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 md:p-8 pointer-events-none animate-in fade-in zoom-in-95 duration-300">
+          <div className="w-full max-w-md bg-black/90 backdrop-blur-3xl border border-blue-500/30 rounded-[32px] overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.9)] pointer-events-auto">
             {/* Cabecera del Yate */}
             <div className="p-5 flex items-center gap-4 bg-gradient-to-br from-blue-500/10 to-transparent border-b border-white/5">
               <div className="h-12 w-12 flex items-center justify-center bg-blue-500/10 rounded-2xl border border-blue-500/20 shadow-inner">
