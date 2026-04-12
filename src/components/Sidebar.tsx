@@ -560,21 +560,30 @@ const Sidebar: React.FC<SidebarProps> = ({
                   {yachts.length === 0 ? (
                     <p className="text-[10px] text-gray-500 uppercase text-center py-2">No hay yates detectados en este momento</p>
                   ) : (
-                    yachts.map((yacht) => (
-                      <div key={yacht.mmsi} className="flex items-center justify-between bg-white/5 p-2 rounded-xl border border-white/5 hover:bg-white/10 transition-all group">
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-[11px] font-black text-white italic uppercase truncate">{yacht.name}</span>
-                          <span className="text-[9px] text-gray-500 font-bold truncate tracking-tighter">{yacht.owner}</span>
+                    yachts.map((yacht) => {
+                      const isTesla = yacht.owner === 'Tesla Transport';
+                      return (
+                        <div key={yacht.mmsi} className={`flex items-center justify-between p-2 rounded-xl border transition-all group ${isTesla ? 'bg-blue-600/10 border-blue-500/30 shadow-[0_0_15px_rgba(37,99,235,0.1)]' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[11px] font-black italic uppercase truncate ${isTesla ? 'text-blue-400' : 'text-white'}`}>{yacht.name}</span>
+                              {isTesla && (
+                                <span className="text-[7px] font-black bg-blue-500 text-white px-1 rounded-sm tracking-tighter uppercase whitespace-nowrap">Tesla Carrier</span>
+                              )}
+                            </div>
+                            <span className="text-[9px] text-gray-500 font-bold truncate tracking-tighter">{yacht.owner}</span>
+                          </div>
+                          <button 
+                            onClick={() => onLocateYacht?.(yacht.latitude, yacht.longitude)}
+                            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all text-[9px] font-black uppercase tracking-tighter shrink-0 ${isTesla ? 'bg-blue-500 text-white shadow-lg' : 'bg-blue-600/20 border border-blue-500/30 text-blue-400 hover:bg-blue-600/40'}`}
+                          >
+                            <Navigation className="h-3 w-3" />
+                             Ver
+                          </button>
                         </div>
-                        <button 
-                          onClick={() => onLocateYacht?.(yacht.latitude, yacht.longitude)}
-                          className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-blue-600/20 border border-blue-500/30 text-blue-400 hover:bg-blue-600/40 transition-all text-[9px] font-black uppercase tracking-tighter shrink-0"
-                        >
-                          <Navigation className="h-3 w-3" />
-                           Ver
-                        </button>
-                      </div>
-                    ))
+                      );
+                    })
+
                   )}
                 </div>
               )}

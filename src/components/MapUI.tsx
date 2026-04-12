@@ -121,17 +121,27 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
   });
 };
 
-const yachtIcon = (heading: number) => L.divIcon({
-  html: renderToStaticMarkup(
-    <div className="yacht-icon-container" style={{ transform: `rotate(${heading - 45}deg)` }}>
-      <div className="absolute inset-0 rounded-full bg-blue-400/10 blur-2xl scale-150 animate-pulse"></div>
-      <img src="/yacht-icon.png" alt="Y" className="h-10 w-10 object-contain drop-shadow-[0_5px_20px_rgba(0,0,0,0.8)]" />
-    </div>
-  ),
-  className: 'custom-yacht-icon',
-  iconSize: [64, 64],
-  iconAnchor: [32, 32],
-});
+const TESLA_SHIPS_MMSI = ['366102000', '311001353', '440245000', '311000321', '636023991', '259805000', '636025798'];
+
+const yachtIcon = (heading: number, mmsi?: string) => {
+  const isTeslaShip = mmsi && TESLA_SHIPS_MMSI.includes(mmsi);
+  return L.divIcon({
+    html: renderToStaticMarkup(
+      <div className="yacht-icon-container" style={{ transform: `rotate(${heading - 45}deg)` }}>
+        <div className="absolute inset-0 rounded-full bg-blue-400/10 blur-2xl scale-150 animate-pulse"></div>
+        <img 
+          src={isTeslaShip ? "/barcotesla.png" : "/yacht-icon.png"} 
+          alt="Y" 
+          className="h-10 w-10 object-contain drop-shadow-[0_5px_20px_rgba(0,0,0,0.8)]" 
+        />
+      </div>
+    ),
+    className: 'custom-yacht-icon',
+    iconSize: [64, 64],
+    iconAnchor: [32, 32],
+  });
+};
+
 
 const weatherEmojiMap: Record<string, string> = {
   'Clear': '☀️', 'Clouds': '⛅', 'Rain': '🌧️', 'Drizzle': '🌦️', 'Thunderstorm': '⛈️', 'Snow': '❄️', 'Mist': '🌫️', 'Fog': '🌫️'
@@ -674,8 +684,9 @@ export default function MapUI({
           <Marker 
             key={`yacht-${yacht.mmsi}`} 
             position={[yacht.latitude, yacht.longitude]} 
-            icon={yachtIcon(yacht.course || yacht.heading || 0)}
+            icon={yachtIcon(yacht.course || yacht.heading || 0, yacht.mmsi)}
             zIndexOffset={25000}
+
             interactive={true}
             eventHandlers={{
               click: (e) => {

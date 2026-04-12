@@ -955,6 +955,7 @@ export default function Home() {
               onSearch={handleSearchSubmit} 
               isLoading={loadingRoute} 
               onOpenFavorites={() => setIsFavoritesOpen(true)} 
+              yachts={yachts}
             />
           </motion.div>
         )}

@@ -3,20 +3,25 @@
 import { useState, useEffect, useRef } from 'react';
 import { Star, Search, Loader2, Navigation, MapPin, SlidersHorizontal, ChevronUp } from 'lucide-react';
 
+import { YachtPosition } from '@/hooks/useLuxuryYachts';
+
 interface Suggestion {
   id: string;
   name: string;
   address: string;
   position: [number, number]; // lat, lon
+  type?: 'address' | 'yacht';
 }
 
 interface SearchPanelProps {
   onSearch: (query: string, coords?: [number, number]) => void;
   isLoading?: boolean;
   onOpenFavorites: () => void;
+  yachts?: YachtPosition[];
 }
 
-export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorites }: SearchPanelProps) {
+
+export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorites, yachts = [] }: SearchPanelProps) {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -46,8 +51,24 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(async () => {
+      // 1. Filtrar barcos locales (Búsqueda instantánea)
+      const yachtResults: Suggestion[] = (yachts || [])
+        .filter(y => y.name.toLowerCase().includes(query.toLowerCase()) || y.mmsi.includes(query))
+        .map(y => ({
+          id: `yacht-${y.mmsi}`,
+          name: `⛴️ ${y.name}`,
+          address: `Barco en transporte: ${y.destination || 'Posición en alta mar'}`,
+          position: [y.latitude, y.longitude],
+          type: 'yacht'
+        }));
+
       const TOMTOM_KEY = process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
-      if (!TOMTOM_KEY) return;
+      if (!TOMTOM_KEY) {
+        setSuggestions(yachtResults);
+        setShowDropdown(yachtResults.length > 0);
+        setIsFetchingSuggestions(false);
+        return;
+      }
       
       const advancedQuery = `${query} ${postalFilter} ${cityFilter} ${countryFilter}`.trim();
 
@@ -62,17 +83,26 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
             id: r.id,
             name: r.poi?.name || r.address.streetName || r.address.municipality || r.address.freeformAddress || 'Destino',
             address: r.address.freeformAddress || `${r.address.municipality || ''}, ${r.address.countrySubdivision || ''}`.replace(/^, | , | $/g, ''),
-            position: [r.position.lat, r.position.lon] as [number, number]
+            position: [r.position.lat, r.position.lon] as [number, number],
+            type: 'address'
           }));
-          setSuggestions(formatted);
+          
+          // Combinar resultados (Barcos primero)
+          setSuggestions([...yachtResults, ...formatted]);
           setShowDropdown(true);
+        } else {
+          setSuggestions(yachtResults);
+          setShowDropdown(yachtResults.length > 0);
         }
       } catch (err) {
         console.error('Error fetching autocomplete:', err);
+        setSuggestions(yachtResults);
+        setShowDropdown(yachtResults.length > 0);
       } finally {
         setIsFetchingSuggestions(false);
       }
     }, 400);
+
 
     return () => clearTimeout(debounceRef.current);
   }, [query, postalFilter, cityFilter, countryFilter]);
