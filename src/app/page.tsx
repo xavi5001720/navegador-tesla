@@ -20,6 +20,7 @@ import { usePegasus } from '@/hooks/usePegasus';
 import { useAircraftSimulator } from '@/hooks/useAircraftSimulator';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useRouteSimulator } from '@/hooks/useRouteSimulator';
+import { useVesselSimulator } from '@/hooks/useVesselSimulator';
 
 
 
@@ -184,7 +185,8 @@ export default function Home() {
     hasLocation
   );
 
-  const { yachts, loadingYachts } = useLuxuryYachts(isYachtsEnabled);
+  const { yachts: realYachts, loadingYachts } = useLuxuryYachts(isYachtsEnabled);
+  const yachts = useVesselSimulator(realYachts);
   
   const wasStoppedRef = useRef(true);
   const isManualOverviewRef = useRef(false);
@@ -1369,7 +1371,17 @@ export default function Home() {
               {selectedYacht.destination && (
                 <div className="flex flex-col bg-blue-900/20 border border-blue-500/20 rounded-2xl p-4">
                   <span className="text-[10px] font-black text-blue-400/70 uppercase tracking-widest leading-none mb-2">Destino Reportado</span>
-                  <p className="text-sm font-black text-white italic uppercase tracking-tighter">{selectedYacht.destination}</p>
+                  <p className="text-sm font-black text-white italic uppercase tracking-tighter">
+                    {(() => {
+                      if (!selectedYacht.destination) return 'Alta Mar';
+                      try {
+                        const parsed = JSON.parse(selectedYacht.destination);
+                        return parsed.name || selectedYacht.destination;
+                      } catch (e) {
+                        return selectedYacht.destination;
+                      }
+                    })()}
+                  </p>
                 </div>
               )}
 

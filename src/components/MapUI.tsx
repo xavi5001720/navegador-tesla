@@ -123,11 +123,24 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
 
 const TESLA_SHIPS_MMSI = ['366102000', '311001353', '440245000', '311000321', '636023991', '259805000', '636025798'];
 
+// Cache global para iconos de barcos para evitar renderToStaticMarkup masivo
+const yachtIconCache = new Map<string, L.DivIcon>();
+
 const yachtIcon = (heading: number, mmsi?: string) => {
   const isTeslaShip = mmsi && TESLA_SHIPS_MMSI.includes(mmsi);
-  return L.divIcon({
+  
+  // Normalizamos el heading para mejorar el hit-rate del cache
+  // Un barco no cambia visualmente mucho cada 2 grados
+  const roundedHeading = Math.round(heading / 2) * 2;
+  const cacheKey = `${isTeslaShip ? 'tesla' : 'yacht'}-${roundedHeading}`;
+  
+  if (yachtIconCache.has(cacheKey)) {
+    return yachtIconCache.get(cacheKey)!;
+  }
+
+  const icon = L.divIcon({
     html: renderToStaticMarkup(
-      <div className="yacht-icon-container" style={{ transform: `rotate(${heading - 45}deg)` }}>
+      <div className="yacht-icon-container" style={{ transform: `rotate(${roundedHeading - 45}deg)` }}>
         <div className="absolute inset-0 rounded-full bg-blue-400/10 blur-2xl scale-150 animate-pulse"></div>
         <img 
           src={isTeslaShip ? "/barcotesla.png" : "/yacht-icon.png"} 
@@ -140,6 +153,9 @@ const yachtIcon = (heading: number, mmsi?: string) => {
     iconSize: [64, 64],
     iconAnchor: [32, 32],
   });
+
+  yachtIconCache.set(cacheKey, icon);
+  return icon;
 };
 
 
@@ -226,12 +242,20 @@ interface MapUIProps {
    onUpdateFriendNickname?: (friendId: string, nickname: string) => void;
 }
 
-const getCarIcon = (heading: number, color?: string) => {
-  const key = `owner-${color}`;
+const getCarIcon = (heading: number, color?: string, viewMode: string = 'navigation') => {
+  // Round heading to nearest 5° to keep cache hit rates high without sacrificing accuracy
+  const roundedHeading = Math.round(heading / 5) * 5;
+  const key = `car-${color}-${roundedHeading}-${viewMode}`;
   if (iconCache.has(key)) return iconCache.get(key)!;
 
+  // In navigation mode the map container rotates so we use a CSS variable to counter-rotate the car.
+  // In overview mode the map is north-up, so we bake the heading directly into the transform.
+  const rotationStyle = viewMode === 'navigation'
+    ? `rotate(var(--car-rotation, ${roundedHeading}deg))`
+    : `rotate(${roundedHeading}deg)`;
+
   const iconHtml = renderToStaticMarkup(
-    <div className="relative flex items-center justify-center h-20 w-20 group car-always-up" style={{ transform: `rotate(var(--car-rotation, ${heading}deg))` }}>
+    <div className="relative flex items-center justify-center h-20 w-20 group car-always-up" style={{ transform: rotationStyle }}>
       <div className={`absolute inset-0 rounded-full blur-2xl scale-125 transition-all duration-700 ${color === 'Rojo' ? 'bg-red-500/30' : color === 'Azul' ? 'bg-blue-500/30' : color === 'Negro' ? 'bg-gray-900/40' : 'bg-blue-500/20'}`}></div>
       <img src={getCarImage(color)} className="w-full h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] rotate-180" style={{ filter: getCarFilter(color) }} />
     </div>
@@ -713,7 +737,7 @@ export default function MapUI({
               }
             }
           }
-          return <Marker key="user-car-marker" position={pos} icon={getCarIcon(carHeading, carColor)} zIndexOffset={1000} interactive={true} eventHandlers={{ click: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); }, mousedown: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); } }} />;
+          return <Marker key="user-car-marker" position={pos} icon={getCarIcon(carHeading, carColor, viewMode)} zIndexOffset={1000} interactive={true} eventHandlers={{ click: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); }, mousedown: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); } }} />;
         })()}
       </MapContainer>
     </div>

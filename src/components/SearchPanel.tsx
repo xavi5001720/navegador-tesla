@@ -57,7 +57,15 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
         .map(y => ({
           id: `yacht-${y.mmsi}`,
           name: `⛴️ ${y.name}`,
-          address: `Barco en transporte: ${y.destination || 'Posición en alta mar'}`,
+          address: `Barco en transporte: ${(() => {
+            if (!y.destination) return 'Posición en alta mar';
+            try {
+              const parsed = JSON.parse(y.destination);
+              return parsed.name || y.destination;
+            } catch (e) {
+              return y.destination;
+            }
+          })()}`,
           position: [y.latitude, y.longitude],
           type: 'yacht'
         }));
