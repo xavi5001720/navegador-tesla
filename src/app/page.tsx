@@ -32,7 +32,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { useChargers, ChargerFilters, Charger } from '@/hooks/useChargers';
 import { useGasStations, GasStationFilters, GasStation } from '@/hooks/useGasStations';
 import { useWeather } from '@/hooks/useWeather';
-import { supabase } from '@/lib/supabase';
+import { supabase, clearSupabaseAuthStorage } from '@/lib/supabase';
 import AuthModal from '@/components/AuthModal';
 import UserMenu from '@/components/UserMenu';
 import GarageModal from '@/components/GarageModal';
@@ -146,6 +146,9 @@ export default function Home() {
   const [isSocialOpen, setIsSocialOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
+  // authLoading: true while we don't yet know if there is a valid session.
+  // The UI must NOT render as "logged in" while this is true.
+  const [authLoading, setAuthLoading] = useState(true);
 
   const { favorites, saveFavorite, removeFavorite, isFavorite } = useFavorites();
 
@@ -204,31 +207,59 @@ export default function Home() {
     }
   }, []);
 
-  // Escuchar cambios de autenticación
+  // Auth state management:
+  // We rely on onAuthStateChange rather than calling getSession() separately.
+  // The SDK fires INITIAL_SESSION synchronously (from localStorage) + validates it
+  // against the server. This is the single source of truth.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      console.log('[Auth] Event:', event, '| Has session:', !!newSession);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        setSession(null);
+        clearSupabaseAuthStorage();
+        setAuthLoading(false);
+        return;
+      }
+
+      if (event === 'TOKEN_REFRESHED' && !newSession) {
+        // Token refresh failed → session is corrupted, clean up
+        console.warn('[Auth] Token refresh fallido. Limpiando sesión corrupta.');
+        clearSupabaseAuthStorage();
+        await supabase.auth.signOut();
+        setSession(null);
+        setAuthLoading(false);
+        return;
+      }
+
+      setSession(newSession);
+      setAuthLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   const handleSignOut = async () => {
+    // Close all panels before signing out
     setIsUserMenuOpen(false);
     setIsGarageOpen(false);
     setIsSocialOpen(false);
     setIsSettingsOpen(false);
-    
-    // Al cerrar sesión manualmente, limpiamos el identificador en la DB
+
+    // Clear session_id from the DB so other devices don't detect a conflict
     if (session?.user?.id) {
-       await updateProfile({ last_session_id: null });
+      await updateProfile({ last_session_id: null });
     }
-    
+
+    // Sign out from Supabase (clears token + fires SIGNED_OUT event)
     await supabase.auth.signOut();
+
+    // Belt-and-suspenders: wipe auth storage in case something residual remains
+    clearSupabaseAuthStorage();
+
+    // Reset local auth state immediately (onAuthStateChange will also fire)
+    setSession(null);
+    setAuthLoading(false);
   };
 
   const [prefsLoaded, setPrefsLoaded] = useState(false);
@@ -715,7 +746,12 @@ export default function Home() {
 
       {/* Botón de Perfil / Iniciar Sesión (Top Right) */}
       <div className="fixed top-6 right-6 z-[600] flex flex-col items-end gap-3">
-        {session ? (
+        {authLoading ? (
+          // While auth resolves, show a neutral spinner — never flash a logged-in or logged-out state
+          <div className="h-12 w-12 flex items-center justify-center rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/20 border-t-white/80" />
+          </div>
+        ) : session ? (
           <div className="flex flex-col items-end gap-3">
             <div className="flex items-center gap-2 group">
               <div className="flex flex-col items-end">
