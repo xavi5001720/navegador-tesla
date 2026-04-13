@@ -215,7 +215,7 @@ export default function Home() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       console.log('[Auth] Event:', event, '| Has session:', !!newSession);
 
-      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+      if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !newSession)) {
         setSession(null);
         clearSupabaseAuthStorage();
         setAuthLoading(false);

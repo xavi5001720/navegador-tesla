@@ -269,7 +269,10 @@ const getCarIcon = (heading: number, color?: string, viewMode: string = 'navigat
 const iconCache = new Map<string, L.DivIcon>();
 
 const getFriendIcon = (color?: string, name?: string, nickname?: string, heading: number = 0) => {
-  const key = `${color}-${name}-${nickname}-${heading}`;
+  // Round heading to nearest 2° to maximise cache hits while keeping smooth rotation.
+  // This limits generateIcons to ≤180 variations per friend instead of infinite floats.
+  const roundedHeading = Math.round(heading / 2) * 2;
+  const key = `friend-${color}-${name}-${nickname}-${roundedHeading}`;
   if (iconCache.has(key)) return iconCache.get(key)!;
 
   const displayName = nickname ? `${nickname} (${name})` : name;
@@ -280,7 +283,7 @@ const getFriendIcon = (color?: string, name?: string, nickname?: string, heading
           {displayName}
         </span>
       </div>
-      <div className="relative h-20 w-20" style={{ transform: `rotate(${heading}deg)` }}>
+      <div className="relative h-20 w-20" style={{ transform: `rotate(${roundedHeading}deg)` }}>
         <div className={`absolute inset-0 rounded-full blur-2xl scale-125 ${color === 'Rojo' ? 'bg-red-500/30' : color === 'Azul' ? 'bg-blue-500/30' : 'bg-blue-500/20'}`}></div>
         <img src={getCarImage(color)} className="w-full h-full object-contain rotate-180 opacity-90" style={{ filter: getCarFilter(color) }} />
       </div>
