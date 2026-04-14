@@ -30,6 +30,6 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules", "supabase/functions", "backups"]
+  "exclude": ["node_modules", "supabase/functions", "backups", "private_backups", "API opensky", "API open chargue map", "registros mail", "misimagenes"]
 
 }
