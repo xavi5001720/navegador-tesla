@@ -556,6 +556,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Radar Náutico</span>
                     </div>
+                    {!isYachtsEnabled && (
+                      <span className="text-2xl font-black leading-none text-white/30 uppercase">OFF</span>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-col items-center gap-1.5">
