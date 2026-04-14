@@ -751,12 +751,11 @@ export default function MapUI({
         <motion.div
           drag
           dragConstraints={mapContainerRef}
-          dragElastic={0.1}
+          dragElastic={0.05}
           dragMomentum={false}
-          initial={{ x: 0, y: 0 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="absolute bottom-32 right-8 z-[1000] cursor-grab active:cursor-grabbing"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="absolute bottom-32 right-8 z-[1000] cursor-grab active:cursor-grabbing touch-none select-none"
         >
           <button
             disabled={cooldownRemaining > 0 || isReporting || !userId}
