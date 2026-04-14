@@ -931,6 +931,17 @@ export default function Home() {
                 </div>
               )}
             </motion.div>
+
+            {/* Botón de Reportar Alerta (Alineado debajo de Amigos) */}
+            <div className="mt-2">
+              <IncidentReporter 
+                onReport={(lat, lon, category) => reportRadar(lat, lon, session?.user?.id || '', category)}
+                userPos={userPos as [number, number]}
+                isReporting={isReporting}
+                cooldownRemaining={cooldownRemaining}
+                userId={session?.user?.id}
+              />
+            </div>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-1.5 animate-in fade-in slide-in-from-top-4 duration-700">
@@ -1164,17 +1175,6 @@ export default function Home() {
 
         {/* Panel de Avisos Rápidos y Velocímetro */}
         <div className="absolute bottom-6 right-6 z-[500] flex flex-col items-end gap-3 md:flex-row md:items-center md:gap-4 md:bottom-8 md:right-8">
-
-
-
-          <IncidentReporter 
-            onReport={(lat, lon, category) => reportRadar(lat, lon, session?.user?.id || '', category)}
-            userPos={userPos as [number, number]}
-            isReporting={isReporting}
-            cooldownRemaining={cooldownRemaining}
-            userId={session?.user?.id}
-          />
-
           <Speedometer speed={speed} />
           
           <div className="flex flex-col gap-5">
