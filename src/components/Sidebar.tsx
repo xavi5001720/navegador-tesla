@@ -354,7 +354,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                         </span>
                       ) : (
                         <div className="flex flex-col">
-                          <span className="text-2xl font-black leading-none">{loadingRadars ? '...' : radars.length}</span>
+                          <span className="text-2xl font-black leading-none text-rose-500 drop-shadow-[0_0_4px_rgba(225,29,72,0.5)]">
+                            {loadingRadars ? '...' : radars.length}
+                          </span>
                           {lastRadarUpdate && (
                             <span className="text-[9px] text-gray-500 font-medium mt-1">
                               Actualizado: {new Date(lastRadarUpdate).toLocaleString('es-ES', { 
