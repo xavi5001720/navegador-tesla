@@ -458,6 +458,7 @@ export default function MapUI({
   const [showReportSuccess, setShowReportSuccess] = useState(false);
   const [selectedCommunityRadar, setSelectedCommunityRadar] = useState<Radar | null>(null);
   const errorCountRef = useRef(0);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
 
   // Pre-calculamos distancias acumuladas para lógica de trazada cinemática (GPS Real)
   const routeCumDist = useMemo(() => {
@@ -490,7 +491,7 @@ export default function MapUI({
   }, [viewMode, userPos, heading, routeCoordinates, routeCumDist]);
 
   return (
-    <div className="relative h-full w-full bg-gray-900 overflow-hidden">
+    <div ref={mapContainerRef} className="relative h-full w-full bg-gray-900 overflow-hidden">
       <style jsx global>{`
         .leaflet-container { background: #030712 !important; }
         @keyframes aircraft-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.15); } }
@@ -749,9 +750,13 @@ export default function MapUI({
       <AnimatePresence>
         <motion.div
           drag
+          dragConstraints={mapContainerRef}
+          dragElastic={0.1}
           dragMomentum={false}
           initial={{ x: 0, y: 0 }}
-          className="fixed bottom-32 right-8 z-[1000] cursor-grab active:cursor-grabbing"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="absolute bottom-32 right-8 z-[1000] cursor-grab active:cursor-grabbing"
         >
           <button
             disabled={cooldownRemaining > 0 || isReporting || !userId}
