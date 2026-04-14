@@ -20,7 +20,6 @@ import { usePegasus } from '@/hooks/usePegasus';
 import { useAircraftSimulator } from '@/hooks/useAircraftSimulator';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useRouteSimulator } from '@/hooks/useRouteSimulator';
-import { useVesselSimulator } from '@/hooks/useVesselSimulator';
 
 
 
@@ -188,7 +187,7 @@ export default function Home() {
   );
 
   const { yachts: realYachts, loadingYachts } = useLuxuryYachts(isYachtsEnabled);
-  const yachts = useVesselSimulator(realYachts);
+  const yachts = realYachts;
   
   const wasStoppedRef = useRef(true);
   const isManualOverviewRef = useRef(false);
