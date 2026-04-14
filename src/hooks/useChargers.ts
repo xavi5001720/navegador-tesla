@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { logger } from '@/lib/logger';
 
 export interface ChargerFilters {
   isFree?: boolean;
@@ -20,7 +21,8 @@ export interface Charger {
 
 const CONSTANTS = {
   CHUNK_DISTANCE_M: 50000,
-  API_KEY: process.env.NEXT_PUBLIC_OPENCHARGE_API_KEY || 'fa85c4b7-19c1-4463-a71f-86936f68e0e4',
+  // FIX I3: API key ya NO tiene fallback hardcodeado — debe configurarse en Vercel env vars
+  API_KEY: process.env.NEXT_PUBLIC_OPENCHARGE_API_KEY || '',
   BASE_URL: 'https://api.openchargemap.io/v3/poi',
   CONNECTOR_MAP: {
     'ccs': '33,32',
@@ -84,9 +86,12 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const lastFetchRef = useRef<{ type: 'route'|'local', pos: [number, number], routeLength: number, filtersStr: string } | null>(null);
+  const lastFetchRef = useRef<{ type: 'route'|'local', pos: [number, number], routeKey: string, filtersStr: string } | null>(null);
 
+  // FIX C3: Usar valores primitivos estables como deps en lugar del array completo
   const routeLength = routeCoordinates?.length ?? 0;
+  const routeFirstKey = routeCoordinates?.[0] ? `${routeCoordinates[0][0].toFixed(4)},${routeCoordinates[0][1].toFixed(4)}` : '';
+  const routeLastKey = routeLength > 0 ? `${routeCoordinates![routeLength-1][0].toFixed(4)},${routeCoordinates![routeLength-1][1].toFixed(4)}` : '';
   const filtersStr = JSON.stringify(filters);
 
   useEffect(() => {
@@ -94,22 +99,27 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
       if (!isEnabled && chargers.length > 0) setChargers([]);
       return;
     }
+    if (!CONSTANTS.API_KEY) {
+      logger.warn('useChargers', 'NEXT_PUBLIC_OPENCHARGE_API_KEY no configurada. No se cargarán cargadores.');
+      return;
+    }
 
-    const hasRoute = routeCoordinates && routeCoordinates.length > 0;
+    const hasRoute = routeLength > 0;
     const currentType = hasRoute ? 'route' : 'local';
+    const currentRouteKey = `${routeFirstKey}|${routeLastKey}`;
 
     let shouldFetch = false;
     if (!lastFetchRef.current) {
       shouldFetch = true;
     } else if (lastFetchRef.current.type !== currentType) {
       shouldFetch = true;
-    } else if (currentType === 'route' && lastFetchRef.current.routeLength !== routeLength) {
+    } else if (currentType === 'route' && lastFetchRef.current.routeKey !== currentRouteKey) {
       shouldFetch = true;
     } else if (lastFetchRef.current.filtersStr !== filtersStr) {
       shouldFetch = true;
     } else if (currentType === 'local') {
       const dist = getDist(lastFetchRef.current.pos, userPos);
-      if (dist > 5000) shouldFetch = true; // Refetch every 5km in free mode
+      if (dist > 5000) shouldFetch = true;
     }
 
     if (!shouldFetch) return;
@@ -225,16 +235,18 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
           }
         }
 
-        lastFetchRef.current = { type: currentType, pos: userPos, routeLength, filtersStr };
+        lastFetchRef.current = { type: currentType, pos: userPos, routeKey: currentRouteKey, filtersStr };
       } catch (err) {
-        console.error('[useChargers] Fatal Error:', err);
+        logger.error('useChargers', 'Error al cargar cargadores', err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchChargers();
-  }, [userPos, isEnabled, routeCoordinates, routeLength, filtersStr]);
+  // FIX C3: Deps primitivas estables en lugar de routeCoordinates (array)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userPos, isEnabled, routeLength, routeFirstKey, routeLastKey, filtersStr]);
 
   return { chargers, loading, progress };
 }

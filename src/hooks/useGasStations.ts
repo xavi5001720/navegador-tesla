@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 export interface GasStationFilters {
   fuels?: ('g95' | 'g98' | 'diesel' | 'glp')[];
@@ -126,9 +127,12 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const lastFetchRef = useRef<{ type: 'route'|'local', pos: [number, number], routeLength: number, filtersStr: string } | null>(null);
+  const lastFetchRef = useRef<{ type: 'route'|'local', pos: [number, number], routeKey: string, filtersStr: string } | null>(null);
 
+  // FIX C3: Valores primitivos estables como deps
   const routeLength = routeCoordinates?.length ?? 0;
+  const routeFirstKey = routeCoordinates?.[0] ? `${routeCoordinates[0][0].toFixed(4)},${routeCoordinates[0][1].toFixed(4)}` : '';
+  const routeLastKey = routeLength > 0 ? `${routeCoordinates![routeLength-1][0].toFixed(4)},${routeCoordinates![routeLength-1][1].toFixed(4)}` : '';
   const filtersStr = JSON.stringify(filters);
 
   useEffect(() => {
@@ -137,21 +141,22 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
       return;
     }
 
-    const hasRoute = routeCoordinates && routeCoordinates.length > 0;
+    const hasRoute = routeLength > 0;
     const currentType = hasRoute ? 'route' : 'local';
+    const currentRouteKey = `${routeFirstKey}|${routeLastKey}`;
 
     let shouldFetch = false;
     if (!lastFetchRef.current) {
       shouldFetch = true;
     } else if (lastFetchRef.current.type !== currentType) {
       shouldFetch = true;
-    } else if (currentType === 'route' && lastFetchRef.current.routeLength !== routeLength) {
+    } else if (currentType === 'route' && lastFetchRef.current.routeKey !== currentRouteKey) {
       shouldFetch = true;
     } else if (lastFetchRef.current.filtersStr !== filtersStr) {
       shouldFetch = true;
     } else if (currentType === 'local') {
       const dist = getDist(lastFetchRef.current.pos, userPos);
-      if (dist > 5000) shouldFetch = true; // Refetch auto cada 5km si es local
+      if (dist > 5000) shouldFetch = true;
     }
 
     if (!shouldFetch) return;
@@ -227,9 +232,9 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
           }
         }
 
-        lastFetchRef.current = { type: currentType, pos: userPos, routeLength, filtersStr };
+        lastFetchRef.current = { type: currentType, pos: userPos, routeKey: currentRouteKey, filtersStr };
       } catch (err) {
-        console.error('[useGasStations] Fatal Error:', err);
+        logger.error('useGasStations', 'Error al cargar gasolineras', err);
       } finally {
         setLoading(false);
         setProgress(100);
@@ -237,7 +242,9 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
     };
 
     fetchStations();
-  }, [userPos, isEnabled, routeCoordinates, routeLength, filtersStr]);
+  // FIX C3: Deps primitivas estables
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userPos, isEnabled, routeLength, routeFirstKey, routeLastKey, filtersStr]);
 
   return { stations, loading, progress };
 }

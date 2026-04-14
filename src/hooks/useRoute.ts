@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { findClosestPointOnPolyline, getDistance } from '@/utils/geo';
+import { logger } from '@/lib/logger';
 
 type Coordinates = [number, number]; // [latitud, longitud]
 
@@ -46,6 +47,9 @@ interface RouteResult {
 
 
 const TOMTOM_KEY = process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
+if (!TOMTOM_KEY && typeof window !== 'undefined') {
+  logger.warn('useRoute', 'NEXT_PUBLIC_TOMTOM_API_KEY no configurada. Se usará OSRM sin tráfico.');
+}
 
 // Geocoding: Texto -> Coordenadas (Nominatim / OpenStreetMap)
 const geocodeAddress = async (query: string): Promise<Coordinates | null> => {
@@ -167,6 +171,12 @@ const fetchRouteTomTom = async (allPoints: Coordinates[], key: string, useTraffi
 const fetchRouteOSRM = async (allPoints: Coordinates[]): Promise<RouteResult> => {
   const coordStr = allPoints.map(p => `${p[1]},${p[0]}`).join(';');
   const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=full&geometries=geojson&steps=true`);
+  
+  // FIX C4: Verificar res.ok antes de parsear — OSRM puede devolver 4xx/5xx
+  if (!res.ok) {
+    throw new Error(`OSRM HTTP error: ${res.status} ${res.statusText}`);
+  }
+  
   const data = await res.json();
   if (data.code !== 'Ok' || !data.routes.length) throw new Error('OSRM: no se encontró ruta.');
 
@@ -233,16 +243,11 @@ export function useRoute() {
   const lastTrafficPosRef = useRef<Coordinates | null>(null);
   const lastTrafficTimeRef = useRef<number>(0);
 
-  const getDist = (p1: Coordinates, p2: Coordinates) => {
-    const R = 6371e3;
-    const dLat = (p2[0] - p1[0]) * Math.PI / 180;
-    const dLon = (p2[1] - p1[1]) * Math.PI / 180;
-    const a = Math.sin(dLat / 2) ** 2 + Math.cos(p1[0] * Math.PI / 180) * Math.cos(p2[0] * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  };
-
   const [lastTrafficTime, setLastTrafficTime] = useState(0);
   const [lastTrafficPos, setLastTrafficPos] = useState<Coordinates | null>(null);
+
+  // FIX I8: getDist ahora apunta a getDistance de @/utils/geo (sin duplicar código)
+  const getDist = getDistance;
 
   // Routing principal — TomTom si hay clave, OSRM si no
   const calculateRoute = useCallback(async (origin: Coordinates, destination: Coordinates, stops: Coordinates[] = [], isRecalculation = false, enableTrafficRequested = true) => {
@@ -257,16 +262,15 @@ export function useRoute() {
         try {
           result = await fetchRouteTomTom(allPoints, TOMTOM_KEY, enableTrafficRequested);
           setIsTrafficEnabled(enableTrafficRequested);
-          
           if (!isRecalculation) {
             lastTrafficPosRef.current = origin;
             lastTrafficTimeRef.current = Date.now();
             setLastTrafficPos(origin);
             setLastTrafficTime(Date.now());
           }
-          console.log(`[useRoute V2] Ruta con TomTom ✅ (Tráfico: ${enableTrafficRequested ? 'ON' : 'OFF'})`);
+          logger.info('useRoute', `Ruta con TomTom OK (Tráfico: ${enableTrafficRequested ? 'ON' : 'OFF'})`);
         } catch (ttErr) {
-          console.warn('[useRoute V2] TomTom falló, usando OSRM:', ttErr);
+          logger.warn('useRoute', 'TomTom falló, usando OSRM', ttErr);
           result = await fetchRouteOSRM(allPoints);
           setIsTrafficEnabled(false);
         }

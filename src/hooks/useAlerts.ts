@@ -1,22 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Radar } from './useRadars';
 import { playRadarAlert, VoiceType } from '@/utils/sound';
+import { getDistance } from '@/utils/geo';
 
-// Fórmula de Haversine para distancia en metros entre dos puntos
-function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371e3; // Radio de la tierra en metros
-  const φ1 = lat1 * Math.PI/180;
-  const φ2 = lat2 * Math.PI/180;
-  const Δφ = (lat2-lat1) * Math.PI/180;
-  const Δλ = (lon2-lon1) * Math.PI/180;
-
-  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-          Math.cos(φ1) * Math.cos(φ2) *
-          Math.sin(Δλ/2) * Math.sin(Δλ/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-  return R * c;
-}
+// FIX I7: Eliminada la función Haversine local duplicada. Se importa de utils/geo.
 
 export function useAlerts(
   userPos: [number, number] | null,
@@ -54,8 +41,13 @@ export function useAlerts(
     }
   }, [radars]);
 
+  // FIX C2: Eliminado `isAlertActive` de las dependencias para cortar el bucle infinito.
+  // El estado de alerta se gestiona sólo a través de refs y solo se escribe al estado cuando cambia.
   useEffect(() => {
-    if (!userPos || radars.length === 0) return;
+    if (!userPos || radars.length === 0) {
+      setIsAlertActive(false);
+      return;
+    }
 
     // Filtramos radares que ya hemos pasado
     const pendingRadars = radars.filter(r => !passedRadarIds.has(String(r.id)));
@@ -69,7 +61,7 @@ export function useAlerts(
     let closestRadar: Radar | null = null;
 
     pendingRadars.forEach(radar => {
-      const dist = getDistance(userPos[0], userPos[1], radar.lat, radar.lon);
+      const dist = getDistance(userPos, [radar.lat, radar.lon]);
       if (dist < minDistance) {
         minDistance = dist;
         closestRadar = radar;
@@ -78,7 +70,7 @@ export function useAlerts(
 
     setNearestRadar(closestRadar);
     
-    // Lógica de auto-descarte
+    // Lógica de auto-descarte: si ya pasamos el radar (nos alejamos tras estar muy cerca)
     if (prevDistanceRef.current !== null && closestRadar) {
        if (minDistance > prevDistanceRef.current && prevDistanceRef.current < 100) {
           const radarId = String((closestRadar as Radar).id);
@@ -138,7 +130,8 @@ export function useAlerts(
       setIsAlertActive(false);
     }
 
-  }, [userPos, radars, isSoundEnabled, voiceType, currentSpeed, passedRadarIds, isAlertActive]);
+  // FIX C2: `isAlertActive` eliminado de las deps — era la causa del bucle infinito.
+  }, [userPos, radars, isSoundEnabled, voiceType, currentSpeed, passedRadarIds]);
 
   const remainingRadars = Math.max(0, radars.length - passedRadarIds.size);
   return { nearestRadar, distance, isAlertActive, alertType, remainingRadars };

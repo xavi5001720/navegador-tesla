@@ -75,7 +75,8 @@ export default function Home() {
     setUserPos, 
     heading,
     setHeading,
-    hasLocation, 
+    hasLocation,
+    gpsError,
     requestGPS 
   } = useGeolocation(isSimulatingState);
 
@@ -446,15 +447,7 @@ export default function Home() {
       const now = Date.now();
       const timeSinceLastRequest = now - lastTrafficTime;
       
-      // Calculamos distancia desde la última vez que TomTom dio OK
-      const getDistance = (p1: [number, number], p2: [number, number]) => {
-        const R = 6371e3;
-        const dLat = (p2[0] - p1[0]) * Math.PI / 180;
-        const dLon = (p2[1] - p1[1]) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) ** 2 + Math.cos(p1[0] * Math.PI / 180) * Math.cos(p2[0] * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      };
-      
+      // FIX I8: Eliminada copia local de getDistance — se usa la importada de utils/geo
       const distSinceLastRequest = lastTrafficPos ? getDistance(userPos, lastTrafficPos) : Infinity;
 
       const isTimeOk = timeSinceLastRequest > 1800000; // 30 min
@@ -738,6 +731,19 @@ export default function Home() {
             className="bg-white text-black text-[10px] font-black px-3 py-2 rounded-lg hover:scale-105 transition-all"
           >
             ACTIVAR GPS
+          </button>
+        </div>
+      )}
+
+      {/* FIX I1: Banner de error GPS (reemplaza alert() bloqueante) */}
+      {gpsError && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[600] w-[90%] max-w-md bg-red-700/90 backdrop-blur-md p-3 rounded-2xl border border-white/20 shadow-2xl flex items-center justify-between gap-4">
+          <p className="text-xs font-bold text-white">{gpsError}</p>
+          <button
+            onClick={requestGPS}
+            className="bg-white text-black text-[10px] font-black px-3 py-2 rounded-lg hover:scale-105 transition-all whitespace-nowrap"
+          >
+            REINTENTAR
           </button>
         </div>
       )}

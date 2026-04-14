@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 export interface Aircraft {
@@ -64,10 +65,12 @@ export function usePegasus(
       isFirstFetchAfterEnable.current = true; // Reset para la próxima vez
       if (!isEnabled) {
         setAllAircrafts([]);
-        setIsRateLimited(false); // Limpiamos errores al apagar
+        setIsRateLimited(false);
         if (userPosRef.current) {
           const bboxKey = buildBboxKey(userPosRef.current);
-          supabase.from('opensky_requests').delete().eq('bbox_key', bboxKey).then(() => {});
+          // FIX C6: Await + try/catch en la llamada de limpieza
+          supabase.from('opensky_requests').delete().eq('bbox_key', bboxKey)
+            .then(({ error }) => { if (error) logger.warn('usePegasus', 'Error limpiando opensky_requests', error.message); });
         }
       }
       return;
@@ -78,7 +81,6 @@ export function usePegasus(
       if (!pos) return 0;
 
       setLoading(true);
-      // Siempre reseteamos el error al empezar un fetch nuevo
       setIsRateLimited(false);
 
       try {
@@ -88,7 +90,7 @@ export function usePegasus(
         const sLomax = sLomin + SNAP_SIZE;
         const bboxKey = `${sLamin.toFixed(1)}_${sLomin.toFixed(1)}_${sLamax.toFixed(1)}_${sLomax.toFixed(1)}`;
 
-        console.log(`[usePegasus V12] 📡 Macro-Zona (4.0°): ${bboxKey}`);
+        logger.info('usePegasus', `Macro-Zona (4.0°): ${bboxKey}`);
         
         // 1. Avisar al feeder (Macro-Zona)
         await supabase.from('opensky_requests').upsert({
@@ -174,14 +176,12 @@ export function usePegasus(
           };
         }).filter((a): a is Aircraft => a !== null);
 
-        console.log(`[usePegasus V11-Local] ✅ PROCESADOS ${enriched.length} AVIONES para zona ${bboxKey}`);
+        logger.info('usePegasus', `Procesados ${enriched.length} aviones para zona ${bboxKey}`);
         setAllAircrafts(enriched);
         setLastFetchTime(Date.now());
-
         return enriched.length;
-
       } catch (error) {
-        console.error('[usePegasus] ❌ Error:', error);
+        logger.error('usePegasus', 'Error al obtener aviones', error);
         return 0;
       } finally {
         setLoading(false);

@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 export interface Friend {
   id: string;
@@ -41,6 +42,12 @@ export function useSocial(
   const [livePositions, setLivePositions] = useState<Record<string, LivePosition>>({});
   
   const channelRef = useRef<any>(null);
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => { isMountedRef.current = false; };
+  }, []);
 
   // 1. Cargar lista de amigos
   const fetchFriends = useCallback(async () => {
@@ -115,11 +122,13 @@ export function useSocial(
         is_incoming: false
       }));
 
-      setFriends([...mappedFriends, ...invitedFriends]);
+      if (isMountedRef.current) {
+        setFriends([...mappedFriends, ...invitedFriends]);
+      }
     } catch (err) {
-      console.error('[useSocial] Error loading friends:', err);
+      logger.error('useSocial', 'Error loading friends', err);
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) setLoading(false);
     }
   }, [session]);
 
@@ -127,58 +136,82 @@ export function useSocial(
     if (session?.user) fetchFriends();
   }, [session, fetchFriends]);
 
-  // 2. Canal Realtime (Braodcast y Presencia)
+  // 2. Canal Realtime (Broadcast y Presencia) — FIX C5: guard isMountedRef + FIX I6: reconexión
   useEffect(() => {
     if (!session?.user) return;
 
-    const channel = supabase.channel('garage_social_live', {
-      config: { presence: { key: session.user.id } }
-    });
-
-    channel
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState();
-        const onlineIds = new Set<string>();
-        Object.keys(state).forEach((key: any) => {
-          (state[key] as any[]).forEach((p: any) => onlineIds.add(p.key));
-        });
-        setOnlineUserIds(onlineIds);
-      })
-      .on('broadcast', { event: 'SOCIAL_LOCATION_UPDATE' }, ({ payload }) => {
-        if (payload.user_id === session.user.id) return;
-        
-        setLivePositions(prev => ({
-          ...prev,
-          [payload.user_id]: {
-            lat: payload.lat,
-            lon: payload.lon,
-            heading: payload.heading,
-            timestamp: payload.timestamp
-          }
-        }));
-      })
-      .on('broadcast', { event: 'SOCIAL_STATUS_UPDATE' }, ({ payload }) => {
-        setFriends(prev => prev.map(f => 
-          f.id === payload.user_id 
-            ? { ...f, is_sharing_location: payload.is_sharing_location } 
-            : f
-        ));
-
-        if (payload.is_sharing_location === false) {
-          setLivePositions(prev => {
-            const next = { ...prev };
-            delete next[payload.user_id];
-            return next;
-          });
-        }
-      })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          await channel.track({ key: session.user.id, online_at: new Date().toISOString() });
-        }
+    const setupChannel = () => {
+      const channel = supabase.channel('garage_social_live', {
+        config: { presence: { key: session.user.id } }
       });
 
-    channelRef.current = channel;
+      channel
+        .on('presence', { event: 'sync' }, () => {
+          if (!isMountedRef.current) return;
+          const state = channel.presenceState();
+          const onlineIds = new Set<string>();
+          Object.keys(state).forEach((key: any) => {
+            (state[key] as any[]).forEach((p: any) => onlineIds.add(p.key));
+          });
+          setOnlineUserIds(onlineIds);
+        })
+        .on('broadcast', { event: 'SOCIAL_LOCATION_UPDATE' }, ({ payload }) => {
+          if (!isMountedRef.current || payload.user_id === session.user.id) return;
+          
+          setLivePositions(prev => ({
+            ...prev,
+            [payload.user_id]: {
+              lat: payload.lat,
+              lon: payload.lon,
+              heading: payload.heading ?? 0,
+              timestamp: payload.timestamp
+            }
+          }));
+        })
+        .on('broadcast', { event: 'SOCIAL_STATUS_UPDATE' }, ({ payload }) => {
+          if (!isMountedRef.current) return;
+          setFriends(prev => prev.map(f => 
+            f.id === payload.user_id 
+              ? { ...f, is_sharing_location: payload.is_sharing_location } 
+              : f
+          ));
+          if (payload.is_sharing_location === false) {
+            setLivePositions(prev => {
+              const next = { ...prev };
+              delete next[payload.user_id];
+              return next;
+            });
+          }
+        })
+        .subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            logger.info('useSocial', 'Canal Realtime conectado.');
+            await channel.track({ key: session.user.id, online_at: new Date().toISOString() });
+          } else if (status === 'CHANNEL_ERROR') {
+            // FIX I6: Reconexión automática tras error del canal
+            logger.warn('useSocial', 'Canal Realtime error. Reconectando en 5s...');
+            setTimeout(() => {
+              if (isMountedRef.current) {
+                supabase.removeChannel(channel);
+                channelRef.current = setupChannel();
+              }
+            }, 5000);
+          } else if (status === 'TIMED_OUT') {
+            logger.warn('useSocial', 'Canal Realtime timeout. Reconectando...');
+            setTimeout(() => {
+              if (isMountedRef.current) {
+                supabase.removeChannel(channel);
+                channelRef.current = setupChannel();
+              }
+            }, 5000);
+          }
+        });
+
+      channelRef.current = channel;
+      return channel;
+    };
+
+    const channel = setupChannel();
 
     const dbChannel = supabase.channel('garage_db_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => fetchFriends())
@@ -189,6 +222,7 @@ export function useSocial(
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(dbChannel);
+      channelRef.current = null;
     };
   }, [session, fetchFriends]);
 
@@ -196,40 +230,48 @@ export function useSocial(
   useEffect(() => {
     if (!session?.user || !isSharingLocation || !hasLocation || !userPos) return;
 
-    // Función para enviar y persistir ubicación
     const syncLocation = () => {
-      if (!channelRef.current || channelRef.current.state !== 'joined') return;
+      // FIX C5: Guard para canal nulo
+      if (!channelRef.current || channelRef.current.state !== 'joined') {
+        logger.warn('useSocial', 'Canal no disponible para sync de posición, saltando.');
+        return;
+      }
+      
+      // Validación de coordenadas antes de enviar
+      const [lat, lon] = userPos;
+      if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+        logger.warn('useSocial', 'Coordenadas inválidas, no se envían.', { lat, lon });
+        return;
+      }
       
       const now = Date.now();
-      
-      // 1. Broadcast instantáneo a amigos conectados
       channelRef.current.send({
         type: 'broadcast',
         event: 'SOCIAL_LOCATION_UPDATE',
         payload: { 
           user_id: session.user.id, 
-          lat: userPos[0],
-          lon: userPos[1],
-          heading: heading,
+          lat,
+          lon,
+          heading: isNaN(heading) ? 0 : heading,
           timestamp: now 
         }
       });
-      console.log(`[Social] Enviando ubicación en vivo a amigos conectados.`);
+      logger.info('useSocial', 'Ubicación sincronizada con amigos conectados.');
 
-      // 2. Persistencia en base de datos
+      // Persistencia en base de datos
       supabase.from('profiles').update({
-        last_lat: userPos[0],
-        last_lon: userPos[1],
+        last_lat: lat,
+        last_lon: lon,
         is_online: true,
         is_sharing_location: true
-      }).eq('id', session.user.id).then();
+      }).eq('id', session.user.id).then(({ error }) => {
+        if (error) logger.error('useSocial', 'Error guardando posición en DB', error.message);
+      });
     };
 
-    // Al montar (o re-habilitar), enviamos una posición inicial pasados un par de segundos
-    // para dar tiempo a que se una al canal
+    // Posición inicial tras conectar (espera 3s para que el canal esté listo)
     const initTimer = setTimeout(syncLocation, 3000);
-
-    // Intervalo de 5 minutos (300,000 milisegundos)
+    // Intervalo de 5 minutos
     const senderLoop = setInterval(syncLocation, 300000);
 
     return () => {
@@ -238,70 +280,90 @@ export function useSocial(
     };
   }, [session, userPos, heading, isSharingLocation, hasLocation]);
 
-  // Señal Instantánea al desactivar Privacidad
+  // 4. Señal instantánea al desactivar privacidad
   useEffect(() => {
+    // FIX C5: Guard para canal nulo — este effect puede ejecutarse antes de que el canal esté listo
     if (!session?.user || !channelRef.current) return;
 
-    // Si desactivamos explícitamente compartir
     if (!isSharingLocation) {
       channelRef.current.send({
         type: 'broadcast',
         event: 'SOCIAL_STATUS_UPDATE',
-        payload: { 
-          user_id: session.user.id, 
-          is_sharing_location: false 
-        }
+        payload: { user_id: session.user.id, is_sharing_location: false }
       });
-      // Marcar en la db
-      supabase.from('profiles').update({
-        is_sharing_location: false
-      }).eq('id', session.user.id).then();
+      supabase.from('profiles')
+        .update({ is_sharing_location: false })
+        .eq('id', session.user.id)
+        .then(({ error }) => {
+          if (error) logger.error('useSocial', 'Error actualizando is_sharing_location en DB', error.message);
+        });
     }
   }, [isSharingLocation, session?.user]);
 
-  // Acciones (addFriend, removeFriend, etc. se mantienen igual ya que son DB)
-
-  // 4. Acciones
+  // 5. Acciones CRUD
   const addFriend = async (email: string) => {
     if (!session?.user) return { error: 'No hay sesión' };
     const cleanEmail = email.trim().toLowerCase();
+    // FIX: Validación de formato de email
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) return { error: 'Email no válido.' };
     if (cleanEmail === session.user.email) return { error: 'No puedes añadirte a ti mismo' };
 
-    const { data: profile } = await supabase.from('profiles').select('id').eq('email', cleanEmail).single();
-
-    if (profile) {
-      const { error } = await supabase.from('friendships').insert({ user_id: session.user.id, friend_id: profile.id, status: 'pending' });
-      await fetchFriends();
-      return { success: !error, error };
-    } else {
-      await supabase.from('friend_invitations').upsert({ sender_id: session.user.id, receiver_email: cleanEmail });
-      await fetchFriends();
-      return { success: true, invited: true };
+    try {
+      const { data: profile } = await supabase.from('profiles').select('id').eq('email', cleanEmail).single();
+      if (profile) {
+        const { error } = await supabase.from('friendships').insert({ user_id: session.user.id, friend_id: profile.id, status: 'pending' });
+        await fetchFriends();
+        return { success: !error, error };
+      } else {
+        await supabase.from('friend_invitations').upsert({ sender_id: session.user.id, receiver_email: cleanEmail });
+        await fetchFriends();
+        return { success: true, invited: true };
+      }
+    } catch (err) {
+      logger.error('useSocial', 'Error en addFriend', err);
+      return { error: 'Error al añadir amigo.' };
     }
   };
 
   const removeFriend = async (friendId: string) => {
     if (!session?.user) return { success: false };
-    if (friendId.startsWith('pending-')) {
-      await supabase.from('friend_invitations').delete().match({ sender_id: session.user.id, receiver_email: friendId.replace('pending-', '') });
-    } else {
-      await supabase.from('friendships').delete().or(`and(user_id.eq.${session.user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${session.user.id})`);
+    try {
+      if (friendId.startsWith('pending-')) {
+        await supabase.from('friend_invitations').delete().match({ sender_id: session.user.id, receiver_email: friendId.replace('pending-', '') });
+      } else {
+        await supabase.from('friendships').delete().or(`and(user_id.eq.${session.user.id},friend_id.eq.${friendId}),and(user_id.eq.${friendId},friend_id.eq.${session.user.id})`);
+      }
+      await fetchFriends();
+      return { success: true };
+    } catch (err) {
+      logger.error('useSocial', 'Error en removeFriend', err);
+      return { success: false };
     }
-    await fetchFriends();
-    return { success: true };
   };
 
   const updateFriendNickname = async (friendId: string, nickname: string) => {
     if (!session?.user) return { success: false };
-    await supabase.from('friend_nicknames').upsert({ user_id: session.user.id, friend_id: friendId, nickname: nickname || null });
-    await fetchFriends();
-    return { success: true };
+    // Validación de longitud de apodo
+    if (nickname.length > 30) return { success: false, error: 'El apodo no puede tener más de 30 caracteres.' };
+    try {
+      await supabase.from('friend_nicknames').upsert({ user_id: session.user.id, friend_id: friendId, nickname: nickname.trim() || null });
+      await fetchFriends();
+      return { success: true };
+    } catch (err) {
+      logger.error('useSocial', 'Error en updateFriendNickname', err);
+      return { success: false };
+    }
   };
 
   const acceptFriend = async (friendId: string) => {
-    await supabase.from('friendships').update({ status: 'accepted' }).match({ user_id: friendId, friend_id: session?.user?.id });
-    await fetchFriends();
-    return { success: true };
+    try {
+      await supabase.from('friendships').update({ status: 'accepted' }).match({ user_id: friendId, friend_id: session?.user?.id });
+      await fetchFriends();
+      return { success: true };
+    } catch (err) {
+      logger.error('useSocial', 'Error en acceptFriend', err);
+      return { success: false };
+    }
   };
 
   // Mapeo final para el mapa

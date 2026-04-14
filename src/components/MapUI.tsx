@@ -642,7 +642,8 @@ export default function MapUI({
         {friends.filter(f => f.is_online && f.is_sharing_location !== false).map((friend) => {
           const finalLat = friend.last_lat;
           const finalLon = friend.last_lon;
-          const finalHeading = friend.heading || 0; // Guardamos el heading en friend object opcionalmente
+          // FIX I9: heading || 0 no filtra NaN — usamos comprobación explícita
+          const finalHeading = (friend.heading != null && !isNaN(friend.heading)) ? friend.heading : 0;
 
           if (!finalLat || !finalLon) return null;
 
