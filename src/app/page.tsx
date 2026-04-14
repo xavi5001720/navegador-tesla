@@ -666,15 +666,15 @@ export default function Home() {
 
   const handleChargerClick = useCallback((charger: Charger) => {
     setSelectedPOI({ type: 'charger', data: charger });
-    handleManualViewModeChange('overview');
+    setSelectedYacht(null);
     setContextMenu(null);
-  }, [handleManualViewModeChange]);
+  }, []);
 
   const handleGasStationClick = useCallback((station: GasStation) => {
     setSelectedPOI({ type: 'gasStation', data: station });
-    handleManualViewModeChange('overview');
+    setSelectedYacht(null);
     setContextMenu(null);
-  }, [handleManualViewModeChange]);
+  }, []);
 
   const handleNavigateToPoint = useCallback(() => {
     if (!contextMenu) return;
@@ -1081,10 +1081,7 @@ export default function Home() {
           onZoomChange={setCustomZoom}
           onMapClick={handleMapClick}
           onChargerClick={handleChargerClick}
-          onGasStationClick={(s) => {
-            setSelectedYacht(null);
-            setSelectedPOI({ type: 'gasStation', data: s });
-          }}
+          onGasStationClick={handleGasStationClick}
           onYachtClick={(y) => {
             setSelectedPOI(null);
             setSelectedYacht(y);
