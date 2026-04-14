@@ -553,7 +553,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                     <img src="/yacht-icon.png" alt="Yates" className="h-11 w-11 object-contain drop-shadow-md" />
                   </button>
                   <div className="flex flex-col">
-                     <span className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Flota Exclusiva</span>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Radar Náutico</span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-col items-center gap-1.5">
@@ -588,9 +590,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                         <div key={yacht.mmsi} className="flex items-center justify-between p-2 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all group">
                           <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="text-[11px] font-black italic uppercase truncate text-white">{yacht.name}</span>
+                              <span className="text-[11px] font-black italic uppercase truncate text-white">{yacht.owner}</span>
                             </div>
-                            <span className="text-[9px] text-gray-500 font-bold truncate tracking-tighter">{yacht.owner}</span>
+                            <span className="text-[9px] text-gray-500 font-bold truncate tracking-tighter">{yacht.name}</span>
                           </div>
                           <button 
                             onClick={() => onLocateYacht?.(yacht.latitude, yacht.longitude)}
