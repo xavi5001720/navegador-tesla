@@ -371,35 +371,14 @@ function LocationTracker({
     if (overviewFitTrigger === undefined || lastFitTriggerRef.current === overviewFitTrigger) return;
     lastFitTriggerRef.current = overviewFitTrigger;
     
-    const MAX_DIST = 25000; // 25km
-    
+
     // 1. Puntos Prioritarios (Coche + Ruta)
     const allPoints: [number, number][] = [[position[0], position[1]]];
     if (hasRoute && routeCoordinates) {
       allPoints.push(...routeCoordinates);
     }
     
-    // Función auxiliar para saber si un punto está "cerca" de lo prioritario
-    const isNearRoute = (lat: number, lon: number) => {
-      if (!hasRoute || !routeCoordinates) {
-        // Si no hay ruta, solo miramos si está cerca del coche (50km radio interés)
-        return getDistance([lat, lon], position) < 50000;
-      }
-      const snapped = findClosestPointOnPolyline([lat, lon], routeCoordinates);
-      return snapped.distance < MAX_DIST;
-    };
 
-    // 2. Añadir otros elementos SOLO si están cerca de la ruta
-    if (radars) radars.forEach(r => { if (isNearRoute(r.lat, r.lon)) allPoints.push([r.lat, r.lon]); });
-    if (aircrafts) aircrafts.forEach(a => { if (isNearRoute(a.lat, a.lon)) allPoints.push([a.lat, a.lon]); });
-    if (chargers) chargers.forEach(c => { if (isNearRoute(c.lat, c.lon)) allPoints.push([c.lat, c.lon]); });
-    if (gasStations) gasStations.forEach(g => { if (isNearRoute(g.lat, g.lon)) allPoints.push([g.lat, g.lon]); });
-    if (weatherPoints) weatherPoints.forEach(w => { if (isNearRoute(w.lat, w.lon)) allPoints.push([w.lat, w.lon]); });
-    if (friends) friends.forEach(f => { 
-      if(f.is_sharing_location && f.last_lat && f.last_lon && isNearRoute(f.last_lat, f.last_lon)) {
-        allPoints.push([f.last_lat, f.last_lon]);
-      }
-    });
     try {
       const bounds = L.latLngBounds(allPoints);
       map.fitBounds(bounds, { padding: [100, 100], animate: true, maxZoom: 16, duration: 1.5 });
