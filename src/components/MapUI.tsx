@@ -309,9 +309,18 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
   useEffect(() => {
     const container = map.getContainer();
     const shouldRotate = viewMode === 'navigation';
+    
+    // Al cambiar de modo, sincronizamos el ángulo instantáneamente para evitar el giro
+    if (shouldRotate) {
+      smoothedHeadingRef.current = targetHeadingRef.current;
+    } else {
+      smoothedHeadingRef.current = 0;
+    }
+
     const animate = () => {
-      if (!shouldRotate) {
-        smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, 0, 0.04);
+      const shouldRotateLoop = viewMode === 'navigation';
+      if (!shouldRotateLoop) {
+        smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, 0, 0.08);
         if (Math.abs(smoothedHeadingRef.current) > 0.1) {
           container.style.transform = `rotate(${-smoothedHeadingRef.current}deg) scale(1.42)`;
           container.style.setProperty('--map-heading', `${smoothedHeadingRef.current}deg`);
@@ -325,7 +334,7 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
 
         return;
       }
-      smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, targetHeadingRef.current, 0.04);
+      smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, targetHeadingRef.current, 0.08);
       container.style.transform = `rotate(${-smoothedHeadingRef.current}deg) scale(1.42)`;
       container.style.setProperty('--map-heading', `${smoothedHeadingRef.current}deg`);
       container.style.setProperty('--car-rotation', `${smoothedHeadingRef.current}deg`);
