@@ -748,19 +748,15 @@ export default function MapUI({
 
       {/* Botón Flotante de Reporte (Draggable) */}
       <AnimatePresence>
-        <motion.div
-          drag
-          dragConstraints={mapContainerRef}
-          dragElastic={0.05}
-          dragMomentum={false}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="absolute bottom-80 right-8 z-[1000] cursor-grab active:cursor-grabbing touch-none select-none pointer-events-auto"
-        >
-          <button
-            disabled={cooldownRemaining > 0 || isReporting || !userId}
-            onClick={async () => {
+        {!isReporting && (
+          <motion.button
+            drag
+            dragConstraints={mapContainerRef}
+            dragMomentum={false}
+            dragElastic={0}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={async (e) => {
+              e.stopPropagation();
               if (reportRadar && userId) {
                 try {
                   await reportRadar(userPos[0], userPos[1], userId);
@@ -770,17 +766,26 @@ export default function MapUI({
                 }
               }
             }}
-            className={`h-20 w-20 rounded-3xl flex items-center justify-center border-4 border-white shadow-2xl transition-all active:scale-95 ${
+            disabled={cooldownRemaining > 0 || isReporting || !userId}
+            style={{ 
+              position: 'absolute', 
+              top: '15%', 
+              right: '2rem', 
+              zIndex: 1000 
+            }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className={`h-20 w-20 rounded-3xl flex items-center justify-center border-4 border-white shadow-2xl transition-all cursor-grab active:cursor-grabbing touch-none select-none pointer-events-auto ${
               cooldownRemaining > 0 ? 'bg-gray-600 grayscale opacity-50' : 'bg-blue-600 hover:bg-blue-500 hover:shadow-blue-500/50'
             }`}
           >
             {cooldownRemaining > 0 ? (
               <span className="text-white font-black text-xl">{Math.ceil(cooldownRemaining / 60000)}m</span>
             ) : (
-              <img src="/radarpolicia.png" alt="Reportar" className="h-12 w-12 object-contain" />
+              <img src="/radarpolicia.png" alt="Reportar" className="h-12 w-12 object-contain pointer-events-none" />
             )}
-          </button>
-        </motion.div>
+          </motion.button>
+        )}
       </AnimatePresence>
 
       {/* Modal de Confirmación de Reporte */}
