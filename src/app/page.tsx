@@ -9,7 +9,7 @@ import Sidebar from '@/components/Sidebar';
 import SearchPanel from '@/components/SearchPanel';
 import AlertOverlay from '@/components/AlertOverlay';
 import Speedometer from '@/components/Speedometer';
-import RadarReporter from '@/components/RadarReporter';
+import IncidentReporter from '@/components/IncidentReporter';
 import SessionAlert from '@/components/SessionAlert';
 
 
@@ -1167,8 +1167,8 @@ export default function Home() {
 
 
 
-          <RadarReporter 
-            onReport={(lat, lon) => reportRadar(lat, lon, session?.user?.id || '')}
+          <IncidentReporter 
+            onReport={(lat, lon, category) => reportRadar(lat, lon, session?.user?.id || '', category)}
             userPos={userPos as [number, number]}
             isReporting={isReporting}
             cooldownRemaining={cooldownRemaining}

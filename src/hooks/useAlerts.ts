@@ -104,8 +104,13 @@ export function useAlerts(
     const { minDistance, closestRadar } = pendingRadars.reduce(
       (acc, radar) => {
         // Filtro de Validación Comunitaria
-        if (radar.type === 'community_mobile' && (radar.confirmations || 0) < 2) {
-          return acc;
+        if (radar.type === 'community_mobile') {
+          // Si no es visible para todos (necesita validación) 
+          // y no somos el creador (en el frontend no sabemos 100% si somos el creador aquí,
+          // pero el hook useRadars ya filtra para que solo veamos lo visible o lo nuestro)
+          if (!radar.is_visible && radar.category === 'mobile_radar') {
+            return acc;
+          }
         }
 
         // Filtro Direccional ALGEBRAICO 

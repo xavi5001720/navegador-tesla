@@ -13,6 +13,7 @@ export interface Radar {
   confirmations?: number;
   rejections?: number;
   is_visible?: boolean;
+  category?: string;
 }
 
 export interface RadarZone {
@@ -191,9 +192,10 @@ export function useRadars(
                     lat: r.lat,
                     lon: r.lon,
                     type: 'community_mobile',
-                    confirmations: r.confirmations,
+                     confirmations: r.confirmations,
                     rejections: r.rejections,
-                    is_visible: r.is_visible
+                    is_visible: r.is_visible,
+                    category: r.category
                   });
                 }
               });
@@ -251,9 +253,10 @@ export function useRadars(
                 lat: r.lat,
                 lon: r.lon,
                 type: 'community_mobile',
-                confirmations: r.confirmations,
+                 confirmations: r.confirmations,
                 rejections: r.rejections,
-                is_visible: r.is_visible
+                is_visible: r.is_visible,
+                category: r.category
               });
             });
           }

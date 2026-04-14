@@ -53,9 +53,9 @@ export function useCommunityRadars() {
   }, [cooldownRemaining]);
 
   /**
-   * Reporta un nuevo radar o confirma uno existente
+   * Reporta un nuevo incidente o confirma uno existente
    */
-  const reportRadar = useCallback(async (lat: number, lon: number, userId: string) => {
+  const reportRadar = useCallback(async (lat: number, lon: number, userId: string, category: string = 'mobile_radar') => {
     if (cooldownRemaining > 0) {
       throw new Error(`Debes esperar ${Math.ceil(cooldownRemaining / 60000)} minutos para reportar de nuevo.`);
     }
@@ -65,7 +65,8 @@ export function useCommunityRadars() {
       const { data, error } = await supabase.rpc('report_community_radar', {
         p_lat: lat,
         p_lon: lon,
-        p_user_id: userId
+        p_user_id: userId,
+        p_category: category
       });
 
       if (error) throw error;
