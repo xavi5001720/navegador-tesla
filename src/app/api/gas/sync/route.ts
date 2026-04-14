@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const BATCH_SIZE = 500;
+const BATCH_SIZE = 2500;
 
 export const maxDuration = 60; // Permitir hasta 60s en Vercel
 export const dynamic = 'force-dynamic';
@@ -52,10 +52,13 @@ export async function GET(request: Request) {
     const stations = data.ListaEESSPrecio;
     if (!Array.isArray(stations)) throw new Error('Respuesta inesperada de la API del Ministerio');
 
-    console.log(`[GasSync] ${stations.length} gasolineras descargadas. Insertando en Supabase...`);
+    console.log(`[GasSync] ${stations.length} gasolineras descargadas. Iniciando upsert masivo paralelo...`);
 
     const now = new Date().toISOString();
     let totalInserted = 0;
+    
+    // Preparar todos los batches en memoria primero
+    const promises = [];
 
     for (let i = 0; i < stations.length; i += BATCH_SIZE) {
       const batch = stations.slice(i, i + BATCH_SIZE);
@@ -85,15 +88,22 @@ export async function GET(request: Request) {
         })
         .filter(Boolean);
 
-      if (mapped.length === 0) continue;
-
-      const { error } = await supabase
-        .from('gas_stations')
-        .upsert(mapped, { onConflict: 'id' });
-
-      if (error) throw error;
-      totalInserted += mapped.length;
+      if (mapped.length > 0) {
+        totalInserted += mapped.length;
+        // Lanzamos upserts de forma asíncrona pero sin esperar (await) secuencialmente
+        promises.push(
+          supabase
+            .from('gas_stations')
+            .upsert(mapped, { onConflict: 'id' })
+            .then(({ error }) => {
+              if (error) throw error;
+            })
+        );
+      }
     }
+
+    // Esperar a que TODOS los batches terminen en paralelo (tarda ~2-3s en total en vez de 50s)
+    await Promise.all(promises);
 
     console.log(`[GasSync] Completado: ${totalInserted} gasolineras insertadas/actualizadas.`);
     return NextResponse.json({ success: true, total: totalInserted, timestamp: now });
