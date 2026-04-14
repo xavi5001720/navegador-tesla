@@ -24,6 +24,7 @@ import { useRouteSimulator } from '@/hooks/useRouteSimulator';
 
 
 import { getDistance, distanceToPolyline, findClosestPointOnPolyline } from '@/utils/geo';
+import { logger } from '@/lib/logger';
 import { playPegasusAlert, playWaypointAlert, playTrafficJamAlert, playWeatherAlert, unlockTeslaAudio, VoiceType } from '@/utils/sound';
 import MapContextMenu from '@/components/MapContextMenu';
 import FavoritesPanel from '@/components/FavoritesPanel';
@@ -216,6 +217,7 @@ export default function Home() {
 
       if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !newSession)) {
         setSession(null);
+        logger.clearUser();
         clearSupabaseAuthStorage();
         setAuthLoading(false);
         return;
@@ -225,6 +227,7 @@ export default function Home() {
         // Token refresh failed → session is corrupted, clean up
         console.warn('[Auth] Token refresh fallido. Limpiando sesión corrupta.');
         clearSupabaseAuthStorage();
+        logger.clearUser();
         await supabase.auth.signOut();
         setSession(null);
         setAuthLoading(false);
@@ -232,6 +235,11 @@ export default function Home() {
       }
 
       setSession(newSession);
+      if (newSession?.user) {
+        logger.setUser(newSession.user.id, newSession.user.email);
+      } else {
+        logger.clearUser();
+      }
       setAuthLoading(false);
     });
 

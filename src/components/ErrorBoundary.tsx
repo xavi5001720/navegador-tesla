@@ -1,6 +1,7 @@
 'use client';
 
 import React, { Component, ReactNode } from 'react';
+import * as Sentry from '@sentry/nextjs';
 
 interface Props {
   children: ReactNode;
@@ -24,8 +25,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error('[ErrorBoundary] Componente crasheado:', error, info.componentStack);
-    // Punto de integración futura con Sentry:
-    // Sentry.captureException(error, { extra: { componentStack: info.componentStack } });
+    // Enviar crash a Sentry con el stack trace completo
+    Sentry.captureException(error, {
+      extra: { componentStack: info.componentStack },
+    });
   }
 
   resetError = () => {
