@@ -247,10 +247,7 @@ interface MapUIProps {
    followingFriendId?: string | null;
    onUpdateFriendNickname?: (friendId: string, nickname: string) => void;
    userId?: string;
-   reportRadar?: (lat: number, lon: number, userId: string) => Promise<any>;
    voteRadar?: (radarId: string, userId: string, type: 'confirm' | 'reject') => Promise<void>;
-   isReporting?: boolean;
-   cooldownRemaining?: number;
 }
 
 const getCarIcon = (heading: number, color?: string, viewMode: string = 'navigation') => {
@@ -450,12 +447,10 @@ export default function MapUI({
   userPos, heading, carColor, routeCoordinates, radars = [], aircrafts = [], chargers = [],
   gasStations = [], weatherPoints = [], waypoints = [], yachts = [], speed = 0, hasLocation = false,
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
-  onGasStationClick, onYachtClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [], 
-  centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
-  mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname, radarZones = [],
-  userId, reportRadar, voteRadar, isReporting, cooldownRemaining = 0
+  onGasStationClick, onYachtClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [],   centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
+   mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname, radarZones = [],
+   userId, voteRadar
 }: MapUIProps) {
-  const [showReportSuccess, setShowReportSuccess] = useState(false);
   const [selectedCommunityRadar, setSelectedCommunityRadar] = useState<Radar | null>(null);
   const errorCountRef = useRef(0);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -745,76 +740,6 @@ export default function MapUI({
           return <Marker key="user-car-marker" position={pos} icon={getCarIcon(carHeading, carColor, viewMode)} zIndexOffset={1000} interactive={true} eventHandlers={{ click: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); }, mousedown: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); } }} />;
         })()}
       </MapContainer>
-
-      {/* Botón Flotante de Reporte (Draggable) */}
-      <AnimatePresence>
-        {!isReporting && (
-          <motion.button
-            drag
-            dragConstraints={mapContainerRef}
-            dragMomentum={false}
-            dragElastic={0}
-            onPointerDown={(e) => e.stopPropagation()}
-            onClick={async (e) => {
-              e.stopPropagation();
-              if (reportRadar && userId) {
-                try {
-                  await reportRadar(userPos[0], userPos[1], userId);
-                  setShowReportSuccess(true);
-                } catch (e) {
-                  // Error
-                }
-              }
-            }}
-            disabled={cooldownRemaining > 0 || isReporting || !userId}
-            style={{ 
-              position: 'absolute', 
-              top: '15%', 
-              right: '2rem', 
-              zIndex: 1000 
-            }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            className={`h-20 w-20 rounded-3xl flex items-center justify-center border-4 border-white shadow-2xl transition-all cursor-grab active:cursor-grabbing touch-none select-none pointer-events-auto ${
-              cooldownRemaining > 0 ? 'bg-gray-600 grayscale opacity-50' : 'bg-blue-600 hover:bg-blue-500 hover:shadow-blue-500/50'
-            }`}
-          >
-            {cooldownRemaining > 0 ? (
-              <span className="text-white font-black text-xl">{Math.ceil(cooldownRemaining / 60000)}m</span>
-            ) : (
-              <img src="/radarpolicia.png" alt="Reportar" className="h-12 w-12 object-contain pointer-events-none" />
-            )}
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* Modal de Confirmación de Reporte */}
-      <AnimatePresence>
-        {showReportSuccess && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }} 
-            animate={{ opacity: 1, scale: 1 }} 
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed inset-0 z-[1100] flex items-center justify-center p-6 pointer-events-none"
-          >
-            <div className="bg-black/90 backdrop-blur-2xl border-2 border-blue-500 rounded-[2.5rem] p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(37,99,235,0.3)] pointer-events-auto">
-              <div className="h-20 w-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg">
-                <Check className="h-10 w-10 text-white" />
-              </div>
-              <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">¡Reporte Enviado!</h3>
-              <p className="text-white/70 text-sm font-medium leading-relaxed mb-8">
-                Has informado de un radar móvil en este punto. Muchas gracias por ayudar a la comunidad.
-              </p>
-              <button
-                onClick={() => setShowReportSuccess(false)}
-                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl transition-all shadow-lg uppercase tracking-widest text-sm"
-              >
-                Cerrar
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Modal de Votación Comunitaria */}
       <AnimatePresence>

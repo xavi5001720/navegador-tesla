@@ -9,6 +9,7 @@ import Sidebar from '@/components/Sidebar';
 import SearchPanel from '@/components/SearchPanel';
 import AlertOverlay from '@/components/AlertOverlay';
 import Speedometer from '@/components/Speedometer';
+import RadarReporter from '@/components/RadarReporter';
 import SessionAlert from '@/components/SessionAlert';
 
 
@@ -1135,10 +1136,7 @@ export default function Home() {
             updateFriendNickname(friendId, name);
           }}
           userId={session?.user?.id}
-          reportRadar={reportRadar}
           voteRadar={voteRadar}
-          isReporting={isReporting}
-          cooldownRemaining={cooldownRemaining}
         />
 
 
@@ -1167,6 +1165,15 @@ export default function Home() {
         {/* Panel de Avisos Rápidos y Velocímetro */}
         <div className="absolute bottom-6 right-6 z-[500] flex flex-col items-end gap-3 md:flex-row md:items-center md:gap-4 md:bottom-8 md:right-8">
 
+
+
+          <RadarReporter 
+            onReport={(lat, lon) => reportRadar(lat, lon, session?.user?.id || '')}
+            userPos={userPos as [number, number]}
+            isReporting={isReporting}
+            cooldownRemaining={cooldownRemaining}
+            userId={session?.user?.id}
+          />
 
           <Speedometer speed={speed} />
           
