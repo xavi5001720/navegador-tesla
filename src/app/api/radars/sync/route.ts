@@ -20,21 +20,61 @@ async function fetchRadarsFromOverpass(query: string): Promise<any[]> {
 }
 
 async function upsertRadars(supabase: any, elements: any[]): Promise<number> {
-  const mappedRadars = elements.map((el: any) => ({
-    id: el.id,
-    geom: `POINT(${el.lon} ${el.lat})`,
-    radar_type: (el.tags?.highway === 'speed_camera' || el.tags?.enforcement === 'speed') ? 'fixed' : 'unknown',
-    speed_limit: el.tags?.maxspeed ? parseInt(el.tags.maxspeed) : null,
-    updated_at: new Date().toISOString(),
-  }));
+  const mappedRadars: any[] = [];
+  const mappedZones: any[] = [];
+
+  elements.forEach((el: any) => {
+    // Definir tipo de radar según etiquetas OSM
+    let rType = 'fixed';
+    if (el.tags?.['camera:type'] === 'average_speed') rType = 'section';
+    else if (el.tags?.['camera:type'] === 'red_light' || el.tags?.enforcement === 'traffic_signals') rType = 'camera';
+    else if (el.tags?.['camera:type'] === 'mobile' || el.tags?.enforcement === 'mobile') rType = 'mobile_zone';
+
+    // Parsear dirección
+    let direction = null;
+    if (el.tags?.direction && !isNaN(parseFloat(el.tags.direction))) {
+      direction = parseFloat(el.tags.direction);
+    }
+
+    if (rType === 'mobile_zone') {
+      mappedZones.push({
+        id: el.id,
+        geom: `POINT(${el.lon} ${el.lat})`,
+        radius: 400,
+        confidence: 0.8,
+        updated_at: new Date().toISOString()
+      });
+    } else {
+      mappedRadars.push({
+        id: el.id,
+        geom: `POINT(${el.lon} ${el.lat})`,
+        radar_type: rType,
+        speed_limit: el.tags?.maxspeed ? parseInt(el.tags.maxspeed) : null,
+        direction: direction,
+        road: el.tags?.['addr:street'] || null, // mejor aproximación en nodos
+        updated_at: new Date().toISOString(),
+      });
+    }
+  });
 
   let count = 0;
   for (let i = 0; i < mappedRadars.length; i += BATCH_SIZE) {
     const batch = mappedRadars.slice(i, i + BATCH_SIZE);
     const { error } = await supabase.from('radars').upsert(batch, { onConflict: 'id' });
-    if (error) throw error;
+    if (error) {
+      console.error("[RadarSync] Error upserting radars:", error);
+      throw error;
+    }
     count += batch.length;
   }
+
+  // Insertar zonas móviles generadas por OSM (si las hay)
+  for (let i = 0; i < mappedZones.length; i += BATCH_SIZE) {
+    const batch = mappedZones.slice(i, i + BATCH_SIZE);
+    const { error } = await supabase.from('radar_zones').upsert(batch, { onConflict: 'id' });
+    if (error) console.error("[RadarSync] Error upserting radar zones:", error);
+  }
+
   return count;
 }
 

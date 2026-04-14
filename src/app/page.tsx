@@ -44,6 +44,7 @@ import RouteDashboard from '@/components/RouteDashboard';
 import NavigationPanel from '@/components/NavigationPanel';
 import AboutModal from '@/components/AboutModal';
 import { useLuxuryYachts, YachtPosition } from '@/hooks/useLuxuryYachts';
+import { useCommunityRadars } from '@/hooks/useCommunityRadars';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -127,6 +128,7 @@ export default function Home() {
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [isTrafficWanted, setIsTrafficWanted] = useState(true);
   const [voiceType, setVoiceType] = useState<VoiceType>('mujer');
+  const [audioMode, setAudioMode] = useState<'voice' | 'beep'>('voice');
   const [lastRecalculationTime, setLastRecalculationTime] = useState(0);
   const lastTrafficRequestTimeRef = useRef(0);
   const [customZoom, setCustomZoom] = useState<number | null>(null);
@@ -496,15 +498,21 @@ export default function Home() {
     }
   }, []);
 
-  const { radars: allRadars, loadingRadars, fetchingRouteRadars, lastUpdate, progress } = useRadars(userPos, route?.coordinates, isRadarsEnabled);
+  const { reportRadar, voteRadar, cooldownRemaining, isReporting, hiddenIds } = useCommunityRadars();
+
+  const { radars: allRadars, radarZones: allRadarZones, loadingRadars, fetchingRouteRadars, lastUpdate, progress } = useRadars(userPos, route?.coordinates, isRadarsEnabled, session?.user?.id);
 
   // Filtrar radares:
   // - Sin ruta: solo los próximos (ya se buscan en radio de 10km por useRadars)
   // - Con ruta: solo los que están en la ruta PENDIENTE por delante del usuario
   const radars = useMemo(() => {
     if (!isRadarsEnabled || !userPos) return [];
+    
+    // Si NO hay ruta: Filtramos la burbuja de 60km para renderizar solo los de <20km (Rendimiento UI)
     if (!route || !route.coordinates || route.coordinates.length === 0 || allRadars.length === 0) {
-      return allRadars; // Sin ruta → mostrar los próximos (búsqueda local por radio)
+      return allRadars
+        .filter(r => !hiddenIds.includes(String(r.id))) // Filtrar los ocultos por el usuario
+        .filter(r => getDistance(userPos, [r.lat, r.lon]) < 20000);
     }
 
     // Encontrar el segmento de ruta más cercano al usuario
@@ -513,15 +521,17 @@ export default function Home() {
     // Solo la porción de ruta que queda por delante
     const remainingRoute = route.coordinates.slice(currentSegmentIndex);
 
-    return allRadars.filter(radar => {
-      const radarPos: [number, number] = [radar.lat, radar.lon];
-      // El radar debe estar a <500m del trazado restante
-      const distToPath = distanceToPolyline(radarPos, remainingRoute);
-      return distToPath < 500;
-    });
-  }, [allRadars, route, userPos, isRadarsEnabled]);
+    return allRadars
+      .filter(r => !hiddenIds.includes(String(r.id))) // Filtrar los ocultos por el usuario
+      .filter(radar => {
+        const radarPos: [number, number] = [radar.lat, radar.lon];
+        // El radar debe estar a <500m del trazado restante
+        const distToPath = distanceToPolyline(radarPos, remainingRoute);
+        return distToPath < 500;
+      });
+  }, [allRadars, route, userPos, isRadarsEnabled, hiddenIds]);
 
-  const { nearestRadar, distance, isAlertActive, alertType, remainingRadars } = useAlerts(userPos || [0,0], radars, isSoundEnabled, voiceType, speed);
+  const { nearestRadar, distance, isAlertActive, alertType, remainingRadars, inSectionRadar, sectionAverageSpeed } = useAlerts(userPos || [0,0], radars, isSoundEnabled, voiceType, speed, heading || 0, allRadarZones || [], audioMode);
   const { allAircrafts, aircrafts, visibleAircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos || [0,0], isAircraftsEnabled, route?.coordinates);
  
   // Posiciones interpoladas cada 1 s — movimiento fluido para los aviones visibles (25km máximo)
@@ -710,12 +720,14 @@ export default function Home() {
       
       
       {/* Alerta de Radar */}
-      {isAlertActive && nearestRadar && distance !== null && (
+      {(isAlertActive || inSectionRadar) && (nearestRadar || inSectionRadar) && (
         <AlertOverlay 
-          radar={nearestRadar} 
-          distance={distance} 
+          radar={nearestRadar || ({ id: 0, lat: 0, lon: 0, type: 'section', speedLimit: 120 } as any)} 
+          distance={distance || 0} 
           alertType={alertType}
           currentSpeed={speed}
+          inSectionRadar={inSectionRadar}
+          sectionAverageSpeed={sectionAverageSpeed}
         />
       )}
 
@@ -1038,6 +1050,8 @@ export default function Home() {
           onAddFriend={addFriend as (email: string) => Promise<{ success?: boolean; accepted?: boolean; invited?: boolean; error?: any }>}
           isSoundEnabled={isSoundEnabled}
           setIsSoundEnabled={setIsSoundEnabled}
+          audioMode={audioMode}
+          setAudioMode={setAudioMode}
           voiceType={voiceType}
           setVoiceType={setVoiceType}
           onOpenFavorites={() => setIsFavoritesOpen(true)}
@@ -1082,6 +1096,7 @@ export default function Home() {
           hasLocation={hasLocation}
           routeCoordinates={route?.coordinates} 
           radars={radars}
+          radarZones={isRadarsEnabled ? allRadarZones : []}
           aircrafts={simulatedAircrafts}
           chargers={chargers}
           gasStations={gasStations}
@@ -1116,9 +1131,14 @@ export default function Home() {
                setMapMode('light');
              }
           }}
-          onUpdateFriendNickname={(friendId, name) => {
+           onUpdateFriendNickname={(friendId, name) => {
             updateFriendNickname(friendId, name);
           }}
+          userId={session?.user?.id}
+          reportRadar={reportRadar}
+          voteRadar={voteRadar}
+          isReporting={isReporting}
+          cooldownRemaining={cooldownRemaining}
         />
 
 

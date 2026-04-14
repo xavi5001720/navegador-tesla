@@ -28,8 +28,11 @@ interface SidebarProps {
   onSearch: (query: string) => void;
   isSoundEnabled: boolean;
   setIsSoundEnabled: (enabled: boolean) => void;
+  audioMode?: 'voice' | 'beep';
+  setAudioMode?: (mode: 'voice' | 'beep') => void;
   voiceType: VoiceType;
   setVoiceType: (v: VoiceType) => void;
+
   isRadarsEnabled: boolean;
   setIsRadarsEnabled: (v: boolean) => void;
   isAircraftsEnabled: boolean;
@@ -90,6 +93,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onSearch,
   isSoundEnabled,
   setIsSoundEnabled,
+  audioMode = 'voice',
+  setAudioMode,
   voiceType,
   setVoiceType,
   isRadarsEnabled,
@@ -324,15 +329,46 @@ const Sidebar: React.FC<SidebarProps> = ({
               {showSoundOptions && (
                  <div className="mt-4 pt-4 border-t border-white/10 animate-fade-in flex flex-col gap-3">
                     <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
-                       <span className="text-[10px] text-gray-300 font-bold uppercase tracking-wider">Voz del sistema</span>
-                       <button
-                         onClick={() => playTestSound(voiceType)}
-                         className="flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 text-blue-300 px-3 py-1.5 rounded-xl transition-all active:scale-95 text-[10px] font-bold uppercase"
-                       >
-                         <Play className="h-3 w-3" />
-                         Reproducir Test
-                       </button>
+                       <span className="text-[10px] text-gray-300 font-bold uppercase tracking-wider">Modo Acústico</span>
+                       <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl">
+                         <button
+                           onClick={() => setAudioMode?.('voice')}
+                           className={`px-3 py-1.5 rounded-lg text-[9px] font-bold tracking-wider uppercase transition-all ${
+                             audioMode === 'voice' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400 hover:text-white'
+                           }`}
+                         >Voz</button>
+                         <button
+                           onClick={() => setAudioMode?.('beep')}
+                           className={`px-3 py-1.5 rounded-lg text-[9px] font-bold tracking-wider uppercase transition-all ${
+                             audioMode === 'beep' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400 hover:text-white'
+                           }`}
+                         >Pitidos</button>
+                       </div>
                     </div>
+                    {audioMode === 'voice' && (
+                       <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
+                          <span className="text-[10px] text-gray-300 font-bold uppercase tracking-wider">Voz del sistema</span>
+                          <button
+                            onClick={() => playTestSound(voiceType, audioMode)}
+                            className="flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 text-blue-300 px-3 py-1.5 rounded-xl transition-all active:scale-95 text-[10px] font-bold uppercase"
+                          >
+                            <Play className="h-3 w-3" />
+                            Test Voz
+                          </button>
+                       </div>
+                    )}
+                    {audioMode === 'beep' && (
+                       <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
+                          <span className="text-[10px] text-gray-300 font-bold uppercase tracking-wider">Modo Silencioso</span>
+                          <button
+                            onClick={() => playTestSound(voiceType, audioMode)}
+                            className="flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 text-blue-300 px-3 py-1.5 rounded-xl transition-all active:scale-95 text-[10px] font-bold uppercase"
+                          >
+                            <Play className="h-3 w-3" />
+                            Test Pitidos
+                          </button>
+                       </div>
+                    )}
                  </div>
               )}
            </div>

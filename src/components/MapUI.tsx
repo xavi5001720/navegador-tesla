@@ -6,7 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { Camera, Map as MapIcon } from 'lucide-react'; 
 import { renderToStaticMarkup } from 'react-dom/server';
-import { Radar } from '@/hooks/useRadars';
+import { Radar, RadarZone } from '@/hooks/useRadars';
 import { Aircraft } from '@/hooks/usePegasus';
 import { Charger } from '@/hooks/useChargers';
 import { GasStation } from '@/hooks/useGasStations';
@@ -14,6 +14,9 @@ import { Friend } from '@/hooks/useSocial';
 import { YachtPosition } from '@/hooks/useLuxuryYachts';
 import { RouteSection } from '@/hooks/useRoute';
 import { WeatherPoint } from '@/hooks/useWeather';
+import { Ruler, Radio, Check, Trash2 } from 'lucide-react'; 
+import { motion, AnimatePresence } from 'framer-motion';
+
 import { getCarFilter, getCarImage } from '@/utils/carStyles';
 import { getDistance, getBearing, findClosestPointOnPolyline } from '@/utils/geo';
 
@@ -26,14 +29,19 @@ const endMarkerIcon = L.divIcon({
    iconAnchor: [12, 12],
 });
 
-const radarIcon = (speedLimit?: number) => L.divIcon({
+const radarIcon = (type: string = 'fixed', speedLimit?: number) => L.divIcon({
   html: renderToStaticMarkup(
     <div className="relative h-10 w-10 flex flex-col items-center counter-rotate">
-      <div className="h-8 w-8 flex items-center justify-center rounded-full bg-rose-600 border-2 border-white shadow-lg animate-pulse z-10">
-         <Camera className="h-4 w-4 text-white" />
+      <div className={`h-8 w-8 flex items-center justify-center rounded-full border-2 border-white shadow-lg animate-pulse z-10 ${
+        type === 'section' ? 'bg-orange-600' : (type === 'camera' ? 'bg-blue-600' : 'bg-rose-600')
+      }`}>
+         {type === 'section' ? <Ruler className="h-4 w-4 text-white" /> : 
+          (type === 'camera' ? <Radio className="h-4 w-4 text-white" /> : <Camera className="h-4 w-4 text-white" />)}
       </div>
       {speedLimit && (
-        <div className="absolute -bottom-1 bg-white border-2 border-rose-600 rounded-full h-5 w-5 flex items-center justify-center shadow-md z-20">
+        <div className={`absolute -bottom-1 bg-white border-2 rounded-full h-5 w-5 flex items-center justify-center shadow-md z-20 ${
+          type === 'section' ? 'border-orange-600' : (type === 'camera' ? 'border-blue-600' : 'border-rose-600')
+        }`}>
           <span className="text-[10px] font-black text-black leading-none">{speedLimit}</span>
         </div>
       )}
@@ -43,7 +51,6 @@ const radarIcon = (speedLimit?: number) => L.divIcon({
   iconSize: [40, 44],
   iconAnchor: [20, 32],
 });
-
 const chargerIcon = L.divIcon({
   html: renderToStaticMarkup(
     <div className="h-8 w-8 flex items-center justify-center rounded-full bg-emerald-600 border-2 border-white shadow-[0_0_15px_rgba(5,150,105,0.8)] counter-rotate">
@@ -230,6 +237,7 @@ interface MapUIProps {
    onOpenGarage?: () => void;
    onCurrentZoomChange?: (zoom: number) => void;
    routeSections?: RouteSection[];
+   radarZones?: RadarZone[];
    centerOverride?: [number, number] | null;
    overviewFitTrigger?: number;
    distanceToNextInstruction?: number | null;
@@ -238,6 +246,11 @@ interface MapUIProps {
    onMapError?: () => void;
    followingFriendId?: string | null;
    onUpdateFriendNickname?: (friendId: string, nickname: string) => void;
+   userId?: string;
+   reportRadar?: (lat: number, lon: number, userId: string) => Promise<any>;
+   voteRadar?: (radarId: string, userId: string, type: 'confirm' | 'reject') => Promise<void>;
+   isReporting?: boolean;
+   cooldownRemaining?: number;
 }
 
 const getCarIcon = (heading: number, color?: string, viewMode: string = 'navigation') => {
@@ -247,7 +260,6 @@ const getCarIcon = (heading: number, color?: string, viewMode: string = 'navigat
   if (iconCache.has(key)) return iconCache.get(key)!;
 
   // In navigation mode the map container rotates so we use a CSS variable to counter-rotate the car.
-  // In overview mode the map is north-up, so we bake the heading directly into the transform.
   const rotationStyle = viewMode === 'navigation'
     ? `rotate(var(--car-rotation, ${roundedHeading}deg))`
     : `rotate(${roundedHeading}deg)`;
@@ -267,8 +279,6 @@ const getCarIcon = (heading: number, color?: string, viewMode: string = 'navigat
 const iconCache = new Map<string, L.DivIcon>();
 
 const getFriendIcon = (color?: string, name?: string, nickname?: string, heading: number = 0) => {
-  // Round heading to nearest 2° to maximise cache hits while keeping smooth rotation.
-  // This limits generateIcons to ≤180 variations per friend instead of infinite floats.
   const roundedHeading = Math.round(heading / 2) * 2;
   const key = `friend-${color}-${name}-${nickname}-${roundedHeading}`;
   if (iconCache.has(key)) return iconCache.get(key)!;
@@ -308,15 +318,6 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
 
   useEffect(() => {
     const container = map.getContainer();
-    const shouldRotate = viewMode === 'navigation';
-    
-    // Al cambiar de modo, sincronizamos el ángulo instantáneamente para evitar el giro
-    if (shouldRotate) {
-      smoothedHeadingRef.current = targetHeadingRef.current;
-    } else {
-      smoothedHeadingRef.current = 0;
-    }
-
     const animate = () => {
       const shouldRotateLoop = viewMode === 'navigation';
       if (!shouldRotateLoop) {
@@ -331,7 +332,6 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
           container.style.setProperty('--map-heading', '0deg');
           container.style.removeProperty('--car-rotation');
         }
-
         return;
       }
       smoothedHeadingRef.current = lerpAngle(smoothedHeadingRef.current, targetHeadingRef.current, 0.08);
@@ -340,7 +340,6 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
       container.style.setProperty('--car-rotation', `${smoothedHeadingRef.current}deg`);
       rafRef.current = requestAnimationFrame(animate);
     };
-
     rafRef.current = requestAnimationFrame(animate);
     return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current); };
   }, [map, viewMode]);
@@ -350,7 +349,7 @@ function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMod
 function LocationTracker({ 
   position, viewMode, hasRoute, speed = 0, routeCoordinates, customZoom, hasLocation, centerOverride,
   overviewFitTrigger, radars, aircrafts, chargers, gasStations, weatherPoints, friends, distanceToNextInstruction,
-  isSimulating, onCurrentZoomChange
+  isSimulating, onCurrentZoomChange, radarZones
 }: { 
   position: [number, number], viewMode: string, hasRoute: boolean, speed?: number, 
   routeCoordinates?: [number, number][], customZoom?: number | null, hasLocation?: boolean, 
@@ -358,7 +357,8 @@ function LocationTracker({
   overviewFitTrigger?: number, radars?: Radar[], aircrafts?: Aircraft[], chargers?: Charger[],
   gasStations?: GasStation[], weatherPoints?: WeatherPoint[], friends?: Friend[],
   distanceToNextInstruction?: number | null, isSimulating?: boolean,
-  onCurrentZoomChange?: (zoom: number) => void
+  onCurrentZoomChange?: (zoom: number) => void,
+  radarZones?: RadarZone[]
 }) {
   const map = useMap();
   const lastFitTriggerRef = useRef<number>(-1);
@@ -379,81 +379,72 @@ function LocationTracker({
     if (viewMode !== 'overview') return;
     if (overviewFitTrigger === undefined || lastFitTriggerRef.current === overviewFitTrigger) return;
     lastFitTriggerRef.current = overviewFitTrigger;
-    
-
-    // 1. Puntos Prioritarios (Coche + Ruta)
     const allPoints: [number, number][] = [[position[0], position[1]]];
-    if (hasRoute && routeCoordinates) {
-      allPoints.push(...routeCoordinates);
-    }
-    
-
+    if (hasRoute && routeCoordinates) allPoints.push(...routeCoordinates);
     try {
       const bounds = L.latLngBounds(allPoints);
       map.fitBounds(bounds, { padding: [100, 100], animate: true, maxZoom: 16, duration: 1.5 });
     } catch (e) {
       map.setView(position, 13, { animate: true, duration: 1.5 });
     }
-  }, [viewMode, overviewFitTrigger, routeCoordinates, hasRoute, map, position, radars, aircrafts, chargers, gasStations, weatherPoints, friends]);
+  }, [viewMode, overviewFitTrigger, routeCoordinates, hasRoute, map, position]);
 
   useEffect(() => {
     if (viewMode !== 'navigation') return;
-    
-    const speedKmh = speed;
     let newTargetZoom: number;
-
     if (customZoom != null) {
       newTargetZoom = customZoom;
     } else {
-      if (speedKmh < 50) newTargetZoom = 20; 
-      else if (speedKmh < 90) newTargetZoom = 18.5;
-      else if (speedKmh < 125) newTargetZoom = 17;
+      if (speed < 50) newTargetZoom = 20; 
+      else if (speed < 90) newTargetZoom = 18.5;
+      else if (speed < 125) newTargetZoom = 17;
       else newTargetZoom = 16;
-
       if (hasRoute && typeof distanceToNextInstruction === 'number' && distanceToNextInstruction < 350) {
         newTargetZoom = Math.max(newTargetZoom, 19.5);
       }
     }
-
     const zoomDiff = Math.abs(newTargetZoom - currentZoomRef.current);
-    const shouldAnimateZoom = zoomDiff > 0.2;
-
-    if (shouldAnimateZoom) {
-      targetZoomRef.current = newTargetZoom;
+    if (zoomDiff > 0.2) {
       currentZoomRef.current = newTargetZoom;
       map.setView(position, newTargetZoom, { 
-        animate: !isSimulating, // Desactivamos animaciones Leaflet si estamos simulando para evitar jitter
+        animate: !isSimulating, 
         duration: isSimulating ? 0 : 2, 
         easeLinearity: 0.1 
       });
     } else {
-      map.setView(position, currentZoomRef.current, { 
-        animate: false 
-      });
+      map.setView(position, currentZoomRef.current, { animate: false });
     }
-
   }, [position, viewMode, speed, map, customZoom, hasRoute, distanceToNextInstruction, isSimulating]);
 
-  // Sensor de Zoom Realtime para la UI
   useEffect(() => {
     if (!map || !onCurrentZoomChange) return;
-    
-    const handleZoom = () => {
-      onCurrentZoomChange(map.getZoom());
-    };
-
+    const handleZoom = () => onCurrentZoomChange(map.getZoom());
     map.on('zoomend', handleZoom);
     map.on('moveend', handleZoom);
-    handleZoom(); // Llamada inicial
-
-    return () => {
-      map.off('zoomend', handleZoom);
-      map.off('moveend', handleZoom);
-    };
+    handleZoom();
+    return () => { map.off('zoomend', handleZoom); map.off('moveend', handleZoom); };
   }, [map, onCurrentZoomChange]);
 
   return null;
 }
+
+const communityRadarIcon = (isVisible: boolean, isMine: boolean) => L.divIcon({
+  html: renderToStaticMarkup(
+    <div className={`relative h-12 w-12 flex flex-col items-center counter-rotate transition-all duration-500 ${!isVisible && isMine ? 'opacity-60 scale-90' : 'opacity-100 scale-110'}`}>
+      <div className={`h-10 w-10 flex items-center justify-center rounded-full border-2 border-white shadow-xl z-10 ${isVisible ? 'bg-blue-600' : 'bg-gray-600'}`}>
+         <img src="/radarpolicia.png" alt="P" className="h-7 w-7 object-contain" />
+      </div>
+      {!isVisible && isMine && (
+        <div className="absolute -top-1 bg-amber-500 border border-white rounded-md px-1 py-0.5 z-20 shadow-sm">
+          <span className="text-[8px] font-bold text-white uppercase whitespace-nowrap">Pendiente</span>
+        </div>
+      )}
+    </div>
+  ),
+  className: 'custom-community-icon',
+  iconSize: [48, 48],
+  iconAnchor: [24, 24],
+});
 
 export default function MapUI({ 
   userPos, heading, carColor, routeCoordinates, radars = [], aircrafts = [], chargers = [],
@@ -461,9 +452,11 @@ export default function MapUI({
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
   onGasStationClick, onYachtClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [], 
   centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
-  mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname
+  mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname, radarZones = [],
+  userId, reportRadar, voteRadar, isReporting, cooldownRemaining = 0
 }: MapUIProps) {
-  // Ref para contar errores de carga del mapa (para fallback automático)
+  const [showReportSuccess, setShowReportSuccess] = useState(false);
+  const [selectedCommunityRadar, setSelectedCommunityRadar] = useState<Radar | null>(null);
   const errorCountRef = useRef(0);
 
   // Pre-calculamos distancias acumuladas para lógica de trazada cinemática (GPS Real)
@@ -565,6 +558,7 @@ export default function MapUI({
           gasStations={gasStations} 
           weatherPoints={weatherPoints} 
           friends={friends} 
+          radarZones={radarZones}
           distanceToNextInstruction={distanceToNextInstruction} 
           isSimulating={isSimulating}
           onCurrentZoomChange={onCurrentZoomChange}
@@ -578,8 +572,6 @@ export default function MapUI({
           let currentSnappedPoint = userPos;
 
           if (isSimulating) {
-            // En simulación, el index se puede aproximar mejor pero para la linea azul
-            // simplemente buscamos el punto más cercano para "comerse" la línea
             const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
             currentIndex = snapped.segmentIndex;
             currentSnappedPoint = userPos; 
@@ -612,7 +604,7 @@ export default function MapUI({
                   positions={p.coords} 
                   pathOptions={{ 
                     color: p.color, 
-                    weight: viewMode === 'overview' ? 12 : 8, // Más grueso en vista general
+                    weight: viewMode === 'overview' ? 12 : 8,
                     opacity: 0.95, 
                     lineCap: 'round', 
                     lineJoin: 'round'
@@ -625,13 +617,43 @@ export default function MapUI({
           );
         })()}
 
-        {radars.map((radar) => <Marker key={`radar-${radar.id}`} position={[radar.lat, radar.lon]} icon={radarIcon(radar.speedLimit)} interactive={false} />)}
+        {radarZones.map(zone => (
+          <Circle 
+            key={`zone-${zone.id}`}
+            center={[zone.lat, zone.lon]}
+            radius={zone.radius}
+            pathOptions={{
+              color: zone.confidence > 0.7 ? '#f97316' : '#94a3b8',
+              fillColor: zone.confidence > 0.7 ? '#fb923c' : '#cbd5e1',
+              fillOpacity: 0.2,
+              weight: 2,
+              dashArray: '5, 10'
+            }}
+          />
+        ))}
+
+        {radars.map((radar) => {
+          if (radar.type === 'community_mobile') {
+            return (
+              <Marker 
+                key={`comm-${radar.id}`} 
+                position={[radar.lat, radar.lon]} 
+                icon={communityRadarIcon(!!radar.is_visible, !!(userId && radar.id.toString().startsWith(userId)))}
+                eventHandlers={{
+                  click: () => setSelectedCommunityRadar(radar)
+                }}
+              />
+            );
+          }
+          return <Marker key={`radar-${radar.id}`} position={[radar.lat, radar.lon]} icon={radarIcon(radar.type, radar.speedLimit)} interactive={false} />;
+        })}
+
         {aircrafts.map((aircraft) => (
           <Marker 
             key={`ac-${aircraft.icao24}`} 
             position={[aircraft.lat, aircraft.lon]} 
-            icon={aircraftIcon(aircraft.isSuspect, aircraft.track, aircraft.distanceToUser, viewMode, aircraft.altitude, aircraft.velocity, aircraft.callsign)}
-            interactive={false}
+            icon={aircraftIcon(aircraft.isSuspect, aircraft.track || 0, getDistance(userPos, [aircraft.lat, aircraft.lon]), viewMode, aircraft.altitude, aircraft.velocity, aircraft.callsign)} 
+            interactive={false} 
           />
         ))}
         {chargers.map(charger => <Marker key={`charger-${charger.id}`} position={[charger.lat, charger.lon]} icon={chargerIcon} eventHandlers={{ click: () => { if (onChargerClick) onChargerClick(charger); } }} />)}
@@ -642,7 +664,6 @@ export default function MapUI({
         {friends.filter(f => f.is_online && f.is_sharing_location !== false).map((friend) => {
           const finalLat = friend.last_lat;
           const finalLon = friend.last_lon;
-          // FIX I9: heading || 0 no filtra NaN — usamos comprobación explícita
           const finalHeading = (friend.heading != null && !isNaN(friend.heading)) ? friend.heading : 0;
 
           if (!finalLat || !finalLon) return null;
@@ -723,6 +744,127 @@ export default function MapUI({
           return <Marker key="user-car-marker" position={pos} icon={getCarIcon(carHeading, carColor, viewMode)} zIndexOffset={1000} interactive={true} eventHandlers={{ click: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); }, mousedown: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); } }} />;
         })()}
       </MapContainer>
+
+      {/* Botón Flotante de Reporte (Draggable) */}
+      <AnimatePresence>
+        <motion.div
+          drag
+          dragMomentum={false}
+          initial={{ x: 0, y: 0 }}
+          className="fixed bottom-32 right-8 z-[1000] cursor-grab active:cursor-grabbing"
+        >
+          <button
+            disabled={cooldownRemaining > 0 || isReporting || !userId}
+            onClick={async () => {
+              if (reportRadar && userId) {
+                try {
+                  await reportRadar(userPos[0], userPos[1], userId);
+                  setShowReportSuccess(true);
+                } catch (e) {
+                  // Error
+                }
+              }
+            }}
+            className={`h-20 w-20 rounded-3xl flex items-center justify-center border-4 border-white shadow-2xl transition-all active:scale-95 ${
+              cooldownRemaining > 0 ? 'bg-gray-600 grayscale opacity-50' : 'bg-blue-600 hover:bg-blue-500 hover:shadow-blue-500/50'
+            }`}
+          >
+            {cooldownRemaining > 0 ? (
+              <span className="text-white font-black text-xl">{Math.ceil(cooldownRemaining / 60000)}m</span>
+            ) : (
+              <img src="/radarpolicia.png" alt="Reportar" className="h-12 w-12 object-contain" />
+            )}
+          </button>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Modal de Confirmación de Reporte */}
+      <AnimatePresence>
+        {showReportSuccess && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 z-[1100] flex items-center justify-center p-6 pointer-events-none"
+          >
+            <div className="bg-black/90 backdrop-blur-2xl border-2 border-blue-500 rounded-[2.5rem] p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(37,99,235,0.3)] pointer-events-auto">
+              <div className="h-20 w-20 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-white shadow-lg">
+                <Check className="h-10 w-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">¡Reporte Enviado!</h3>
+              <p className="text-white/70 text-sm font-medium leading-relaxed mb-8">
+                Has informado de un radar móvil en este punto. Muchas gracias por ayudar a la comunidad.
+              </p>
+              <button
+                onClick={() => setShowReportSuccess(false)}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-4 rounded-2xl transition-all shadow-lg uppercase tracking-widest text-sm"
+              >
+                Cerrar
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Votación Comunitaria */}
+      <AnimatePresence>
+        {selectedCommunityRadar && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed inset-x-0 bottom-0 z-[1100] p-6 lg:p-12 pointer-events-none flex justify-center"
+          >
+            <div className="bg-black/90 backdrop-blur-2xl border-2 border-white/20 rounded-[2.5rem] p-8 max-w-lg w-full shadow-2xl pointer-events-auto">
+              <div className="flex items-center gap-6 mb-8">
+                <div className="h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center border-2 border-white shrink-0">
+                  <img src="/radarpolicia.png" alt="P" className="h-10 w-10 object-contain" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-black text-white uppercase tracking-tighter">¿Sigue ahí el radar?</h4>
+                  <p className="text-white/50 text-xs font-bold uppercase tracking-widest mt-1">
+                    {selectedCommunityRadar.confirmations || 1} Confirmaciones · {selectedCommunityRadar.rejections || 0} Negativos
+                  </p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={async () => {
+                    if (voteRadar && userId) {
+                      await voteRadar(String(selectedCommunityRadar.id), userId, 'confirm');
+                      setSelectedCommunityRadar(null);
+                    }
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-black py-5 rounded-3xl transition-all shadow-lg flex flex-col items-center gap-1 uppercase tracking-tighter"
+                >
+                  <Check className="h-6 w-6" />
+                  <span>Sí, sigue ahí</span>
+                </button>
+                <button
+                  onClick={async () => {
+                    if (voteRadar && userId) {
+                      await voteRadar(String(selectedCommunityRadar.id), userId, 'reject');
+                      setSelectedCommunityRadar(null);
+                    }
+                  }}
+                  className="bg-rose-600 hover:bg-rose-500 text-white font-black py-5 rounded-3xl transition-all shadow-lg flex flex-col items-center gap-1 uppercase tracking-tighter"
+                >
+                  <Trash2 className="h-6 w-6" />
+                  <span>No, ya no está</span>
+                </button>
+              </div>
+              
+              <button 
+                onClick={() => setSelectedCommunityRadar(null)}
+                className="w-full mt-4 text-white/30 hover:text-white/60 font-bold uppercase text-[10px] tracking-widest transition-colors py-2"
+              >
+                Ignorar
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

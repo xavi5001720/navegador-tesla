@@ -1,4 +1,4 @@
-import { AlertTriangle, MapPin } from 'lucide-react';
+import { AlertTriangle, MapPin, Ruler } from 'lucide-react';
 import { Radar } from '@/hooks/useRadars';
 
 interface AlertOverlayProps {
@@ -6,9 +6,13 @@ interface AlertOverlayProps {
   distance: number;
   alertType: 'safe' | 'danger';
   currentSpeed: number;
+  inSectionRadar?: boolean;
+  sectionAverageSpeed?: number | null;
 }
 
-export default function AlertOverlay({ radar, distance, alertType, currentSpeed }: AlertOverlayProps) {
+export default function AlertOverlay({ 
+  radar, distance, alertType, currentSpeed, inSectionRadar, sectionAverageSpeed 
+}: AlertOverlayProps) {
   const isDanger = alertType === 'danger';
   
   return (
@@ -20,19 +24,37 @@ export default function AlertOverlay({ radar, distance, alertType, currentSpeed 
       }`}>
         <div className="flex items-center gap-4">
           <div className={`h-16 w-16 rounded-full bg-white flex items-center justify-center shadow-lg ${isDanger ? 'animate-pulse' : ''}`}>
-             {isDanger 
-               ? <AlertTriangle className="h-8 w-8 text-rose-600" />
-               : <MapPin className="h-8 w-8 text-blue-600" />
+             {inSectionRadar 
+               ? <Ruler className={`h-8 w-8 ${isDanger ? 'text-rose-600' : 'text-blue-600'}`} />
+               : (isDanger 
+                 ? <AlertTriangle className="h-8 w-8 text-rose-600" />
+                 : <MapPin className="h-8 w-8 text-blue-600" />
+               )
              }
           </div>
           <div className="flex-1 text-white">
             <h2 className="text-xl font-black uppercase tracking-tighter">
-              {isDanger ? '¡ALERTA VELOCIDAD!' : 'Radar Próximo'}
+              {inSectionRadar ? 'Radar de Tramo' : (isDanger ? '¡ALERTA VELOCIDAD!' : 'Radar Próximo')}
             </h2>
-            <div className="flex items-center gap-2 mt-1">
-               <span className="font-bold">{Math.round(distance)} metros</span>
-               <span className="opacity-60">|</span>
-               <span className="font-medium text-xs">Vas a {Math.round(currentSpeed)} km/h</span>
+            {radar.road && (
+              <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest -mt-1 block">
+                {radar.road} {radar.pk ? `· PK ${radar.pk}` : ''}
+              </span>
+            )}
+            <div className="flex flex-col gap-0.5 mt-1">
+               <div className="flex items-center gap-2">
+                 <span className="font-bold">{Math.round(distance)} metros</span>
+                 <span className="opacity-60">|</span>
+                 <span className="font-medium text-xs">Vas a {Math.round(currentSpeed)} km/h</span>
+               </div>
+               {inSectionRadar && typeof sectionAverageSpeed === 'number' && (
+                 <div className="flex items-center gap-2 mt-1 px-3 py-1 bg-black/30 rounded-full w-fit border border-white/20">
+                   <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Media:</span>
+                   <span className={`text-sm font-black ${sectionAverageSpeed > (radar.speedLimit || 120) ? 'text-rose-400' : 'text-emerald-400'}`}>
+                     {sectionAverageSpeed} km/h
+                   </span>
+                 </div>
+               )}
             </div>
           </div>
           {radar.speedLimit && (

@@ -2,17 +2,37 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 
 export interface Radar {
+  id: string | number;
+  lat: number;
+  lon: number;
+  type: 'fixed' | 'mobile' | 'traffic_signals' | 'unknown' | 'section' | 'camera' | 'mobile_zone' | 'community_mobile';
+  speedLimit?: number;
+  direction?: number;
+  road?: string;
+  pk?: string;
+  confirmations?: number;
+  rejections?: number;
+  is_visible?: boolean;
+}
+
+export interface RadarZone {
   id: number;
   lat: number;
   lon: number;
-  type: 'fixed' | 'mobile' | 'traffic_signals' | 'unknown';
-  speedLimit?: number;
+  radius: number;
+  confidence: number;
 }
 
 const CHUNK_DISTANCE_M = 50000; // 50 km per chunk
 
-export function useRadars(userPos: [number, number] | null, routeCoordinates?: [number, number][], isEnabled: boolean = false) {
+export function useRadars(
+  userPos: [number, number] | null, 
+  routeCoordinates?: [number, number][], 
+  isEnabled: boolean = true,
+  userId?: string | null
+) {
   const [radars, setRadars] = useState<Radar[]>([]);
+  const [radarZones, setRadarZones] = useState<RadarZone[]>([]);
   const [loadingRadars, setLoadingRadars] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
@@ -78,7 +98,7 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
       shouldFetch = true;
     } else if (currentType === 'local') {
       const dist = getDist(lastFetchRef.current.pos, userPos);
-      if (dist > 5000) shouldFetch = true; // Solo buscar si se ha movido 5km en modo libre
+      if (dist > 25000) shouldFetch = true; // Solo buscar si se ha movido 25km (Ahorro de API)
     }
 
     if (!shouldFetch) return;
@@ -121,6 +141,7 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
 
           for (let i = 0; i < chunks.length; i++) {
             const chunk = chunks[i];
+            const coord = chunk[Math.floor(chunk.length / 2)];
             // Convertimos el tramo a WKT
             const wktPoints = chunk.map(pt => `${pt[1]} ${pt[0]}`).join(', ');
             const routeWkt = `LINESTRING(${wktPoints})`;
@@ -144,35 +165,126 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
                     lat: r.lat,
                     lon: r.lon,
                     type: r.radar_type || 'fixed',
-                    speedLimit: r.speed_limit || undefined
+                    speedLimit: r.speed_limit || undefined,
+                    direction: r.direction,
+                    road: r.road,
+                    pk: r.pk
                   });
                 }
               });
-              // Actualizamos el estado de forma incremental para que se vayan dibujando
-              setRadars([...accumulatedRadars]);
             }
+
+            // TAMBIÉN: Radares Comunitarios en esta zona
+            const { data: commData } = await supabase.rpc('get_community_radars_nearby', {
+              p_lat: coord[0],
+              p_lon: coord[1],
+              p_radius_meters: 10000,
+              p_viewer_id: userId || null
+            });
+
+            if (commData) {
+              commData.forEach((r: any) => {
+                if (!uniqueRadarIds.has(r.id)) {
+                  uniqueRadarIds.add(r.id);
+                  accumulatedRadars.push({
+                    id: r.id,
+                    lat: r.lat,
+                    lon: r.lon,
+                    type: 'community_mobile',
+                    confirmations: r.confirmations,
+                    rejections: r.rejections,
+                    is_visible: r.is_visible
+                  });
+                }
+              });
+            }
+
+            // Actualizamos el estado de forma incremental
+            setRadars([...accumulatedRadars]);
             
-            // Actualizamos progreso
             setProgress(Math.round(((i + 1) / chunks.length) * 100));
           }
         } else {
-          // MODO LOCAL: Búsqueda circular de 15km (Solo 1 petición)
-          console.log(`[useRadars] Consultando radares cercanos via Supabase RPC...`);
-          const { data, error } = await supabase.rpc('get_radars_nearby', {
+          // MODO LOCAL: Búsqueda circular de 60km
+          console.log(`[useRadars] Consultando burbuja de 60km de radares...`);
+          
+          // 1. Radares Fijos/OSM
+          const { data: fixedData, error: fixedError } = await supabase.rpc('get_radars_nearby', {
             p_lat: userPos[0],
             p_lon: userPos[1],
-            p_radius_meters: 15000
+            p_radius_meters: 60000
           });
 
-          if (error) throw error;
-          const mappedRadars: Radar[] = (data || []).map((r: any) => ({
-            id: r.id,
-            lat: r.lat,
-            lon: r.lon,
-            type: r.radar_type || 'fixed',
-            speedLimit: r.speed_limit || undefined
-          }));
+          if (fixedError) throw fixedError;
+
+          // 2. Radares Comunitarios
+          const { data: commData, error: commError } = await supabase.rpc('get_community_radars_nearby', {
+            p_lat: userPos[0],
+            p_lon: userPos[1],
+            p_radius_meters: 60000,
+            p_viewer_id: userId || null
+          });
+
+          if (commError) throw commError;
+
+          const mappedRadars: Radar[] = [];
+          
+          if (fixedData) {
+            fixedData.forEach((r: any) => {
+              mappedRadars.push({
+                id: r.id,
+                lat: r.lat,
+                lon: r.lon,
+                type: r.radar_type || 'fixed',
+                speedLimit: r.speed_limit || undefined,
+                direction: r.direction,
+                road: r.road,
+                pk: r.pk
+              });
+            });
+          }
+
+          if (commData) {
+            commData.forEach((r: any) => {
+              mappedRadars.push({
+                id: r.id,
+                lat: r.lat,
+                lon: r.lon,
+                type: 'community_mobile',
+                confirmations: r.confirmations,
+                rejections: r.rejections,
+                is_visible: r.is_visible
+              });
+            });
+          }
+
           setRadars(mappedRadars);
+        }
+
+        // Cargar Zonas Móviles Históricas (todo España, son ligeras)
+        const { data: zonesData, error: zonesError } = await supabase
+          .from('radar_zones')
+          .select('id, geom, radius, confidence');
+          
+        if (!zonesError && zonesData) {
+          const mappedZones = zonesData.map((z: any) => {
+            let lat = 0; let lon = 0;
+            if (z.geom && z.geom.coordinates) {
+               lon = z.geom.coordinates[0];
+               lat = z.geom.coordinates[1];
+            } else if (typeof z.geom === 'string' && z.geom.startsWith('POINT')) {
+               const match = z.geom.match(/POINT\(([^ ]+) ([^)]+)\)/);
+               if (match) { lon = parseFloat(match[1]); lat = parseFloat(match[2]); }
+            }
+            return {
+               id: z.id,
+               lat,
+               lon,
+               radius: z.radius || 500,
+               confidence: z.confidence || 0.5
+            };
+          }).filter(z => z.lat !== 0);
+          setRadarZones(mappedZones);
         }
 
         lastFetchRef.current = {
@@ -194,5 +306,5 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEnabled, userPos?.[0], userPos?.[1], routeLength, routeFirstLat, routeFirstLon, routeLastLat, routeLastLon]);
 
-  return { radars, loadingRadars, fetchingRouteRadars, lastUpdate, progress };
+  return { radars, radarZones, loadingRadars, fetchingRouteRadars, lastUpdate, progress };
 }

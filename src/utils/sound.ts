@@ -59,15 +59,42 @@ const playVoice = async (msg: string, voiceType: VoiceType) => {
 };
 
 // ── Public API ────────────────────────────────────────────────────────────────
-export const playRadarAlert = (voiceType: VoiceType, type: 'safe_first' | 'safe_second' | 'danger') => {
+export const playRadarAlert = (
+  voiceType: VoiceType, 
+  type: 'safe_first' | 'safe_second' | 'danger' | 'info', 
+  radarType: 'fixed' | 'mobile_zone' | 'camera' | 'section' = 'fixed',
+  audioMode: 'voice' | 'beep' = 'voice'
+) => {
   if (typeof window === 'undefined') return;
   try {
+    // Modo Pitido (Beep Mode)
+    if (audioMode === 'beep') {
+      if (type === 'danger') playBeep('alarm_clock_beeping');
+      else if (type === 'info') playBeep('beep_short'); // Tono simple para zonas
+      else {
+        // Doble pitido simple para fija/tramo correctos
+        playBeep('beep_short');
+        setTimeout(() => playBeep('beep_short'), 400);
+      }
+      return; 
+    }
+
+    // Modo Voz Defecto
     playBeep(type === 'danger' ? 'alarm_clock_beeping' : 'beep_short');
 
     let msg = '';
-    if (type === 'danger')        msg = 'Peligro. Exceso de velocidad en radar próximo. Reduzca la velocidad.';
-    else if (type === 'safe_first')   msg = 'Atención, radar próximo. Velocidad correcta.';
-    else if (type === 'safe_second')  msg = 'Radar muy cercano. Velocidad correcta.';
+    let radarStr = 'radar';
+    if (radarType === 'section') radarStr = 'radar de tramo';
+    else if (radarType === 'camera') radarStr = 'cámara de vigilancia';
+    else if (radarType === 'mobile_zone') radarStr = 'zona de radar móvil';
+
+    if (type === 'danger')        msg = `Peligro. Exceso de velocidad en ${radarStr} próximo. Reduzca la velocidad.`;
+    else if (type === 'safe_first') {
+      if (radarType === 'mobile_zone') msg = 'Atención, entrando en zona probable de radar móvil.';
+      else msg = `Atención, ${radarStr} próximo. Velocidad correcta.`;
+    }
+    else if (type === 'safe_second')  msg = `${radarStr} muy cercano. Velocidad correcta.`;
+    else if (type === 'info') msg = `Atención, ${radarStr}.`;
 
     if (msg) playVoice(msg, voiceType);
   } catch (err) {
@@ -75,9 +102,15 @@ export const playRadarAlert = (voiceType: VoiceType, type: 'safe_first' | 'safe_
   }
 };
 
-export const playTestSound = (voiceType: VoiceType) => {
+export const playTestSound = (voiceType: VoiceType, audioMode: 'voice' | 'beep' = 'voice') => {
   if (typeof window === 'undefined') return;
   try {
+    if (audioMode === 'beep') {
+      playBeep('beep_short');
+      setTimeout(() => playBeep('beep_short'), 400);
+      setTimeout(() => playBeep('alarm_clock_beeping'), 800);
+      return;
+    }
     playBeep('beep_short');
     playVoice('Prueba de sonido completada. Sistema de alertas activo.', voiceType);
   } catch (err) {
