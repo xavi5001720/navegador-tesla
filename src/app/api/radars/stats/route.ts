@@ -29,8 +29,7 @@ export async function GET() {
     }
 
     let es = { count: 0, lastUpdate: 0 };
-    let frS = { count: 0, lastUpdate: 0 };
-    let frN = { count: 0, lastUpdate: 0 };
+    let fr = { count: 0, lastUpdate: 0 };
 
     allData.forEach((r: any) => {
       if (!r.geom) return;
@@ -38,7 +37,7 @@ export async function GET() {
       let lon: number | null = null;
       let lat: number | null = null;
 
-      // Intentamos parsear WKT (por si viene como texto)
+      // 1. Si es formato antiguo de texto (POINT)
       if (typeof r.geom === 'string' && r.geom.startsWith('POINT')) {
         const match = r.geom.match(/POINT\(([^ ]+) ([^)]+)\)/);
         if (match) {
@@ -46,42 +45,44 @@ export async function GET() {
           lat = parseFloat(match[2]);
         }
       } 
-      // Parsear formato hexadecimal EWKB por defecto de Supabase (e.g. 0101000020E6100000...)
+      // 2. Si es formato antiguo binario EWKB
       else if (typeof r.geom === 'string' && r.geom.startsWith('0101')) {
         try {
           const buffer = Buffer.from(r.geom, 'hex');
-          // En EWKB Point: 1 byte endianness, 4 bytes type, 4 bytes SRID = 9 bytes offset
           lon = buffer.readDoubleLE(9);
           lat = buffer.readDoubleLE(17);
         } catch (e) {
           lon = null;
         }
       }
+      // 3. NUEVO: Si Supabase ya lo devuelve serializado como GeoJSON (PostGIS geo format)
+      else if (r.geom.type === 'Point' && Array.isArray(r.geom.coordinates)) {
+        lon = r.geom.coordinates[0];
+        lat = r.geom.coordinates[1];
+      }
 
       if (lon !== null && lat !== null) {
         const updatedTime = new Date(r.updated_at).getTime();
 
-        // España: bbox de la query Overpass (lat 27-44, lon -19 a 5)
+        // ESPAÑA: lat 27 a 44, lon -19 a 5
         if (lat >= 27 && lat <= 44 && lon >= -19 && lon <= 5) {
           es.count++;
           if (updatedTime > es.lastUpdate) es.lastUpdate = updatedTime;
-        // Francia Sur: bbox de la query Overpass (lat 41-46, lon -5 a 10)
-        // Nota: hay solapamiento con España en 41-44 pero en la práctica
-        // los puntos en esa banda lon>5 son Francia
-        } else if (lat >= 41 && lat <= 46 && lon > 5 && lon <= 10) {
-          frS.count++;
-          if (updatedTime > frS.lastUpdate) frS.lastUpdate = updatedTime;
-        } else if (lat > 46 && lat <= 51 && lon >= -5 && lon <= 10) {
-          frN.count++;
-          if (updatedTime > frN.lastUpdate) frN.lastUpdate = updatedTime;
+        } 
+        // FRANCIA: lat 41 a 52, lon -5 a 10 (con lon > 5 entre lat 41-44 para no pisar Cataluña)
+        else if (
+          (lat >= 41 && lat <= 44 && lon > 5 && lon <= 10) || 
+          (lat > 44 && lat <= 52 && lon >= -5 && lon <= 10)
+        ) {
+          fr.count++;
+          if (updatedTime > fr.lastUpdate) fr.lastUpdate = updatedTime;
         }
       }
     });
 
     return NextResponse.json({
       es: { count: es.count, lastUpdate: es.lastUpdate > 0 ? new Date(es.lastUpdate).toISOString() : null },
-      fr_south: { count: frS.count, lastUpdate: frS.lastUpdate > 0 ? new Date(frS.lastUpdate).toISOString() : null },
-      fr_north: { count: frN.count, lastUpdate: frN.lastUpdate > 0 ? new Date(frN.lastUpdate).toISOString() : null },
+      fr: { count: fr.count, lastUpdate: fr.lastUpdate > 0 ? new Date(fr.lastUpdate).toISOString() : null },
       total: allData.length
     });
   } catch (error: any) {

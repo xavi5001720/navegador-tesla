@@ -418,22 +418,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                         </span>
                       </div>
                       <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
-                        <span className="text-xs text-gray-300 font-medium tracking-wide">🇫🇷 Francia Sur ({radarStatsData.fr_south.count})</span>
+                        <span className="text-xs text-gray-300 font-medium tracking-wide">🇫🇷 Francia ({radarStatsData.fr.count})</span>
                         <span className="text-[9px] text-gray-500 font-bold bg-black/40 px-2 py-0.5 rounded-full">
-                          {radarStatsData.fr_south.lastUpdate 
-                            ? new Date(radarStatsData.fr_south.lastUpdate).toLocaleString('es-ES', { 
-                                timeZone: 'Europe/Madrid',
-                                day: '2-digit', month: '2-digit', year: 'numeric',
-                                hour: '2-digit', minute: '2-digit'
-                              }) 
-                            : 'Sin datos'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
-                        <span className="text-xs text-gray-300 font-medium tracking-wide">🇫🇷 Francia Norte ({radarStatsData.fr_north.count})</span>
-                        <span className="text-[9px] text-gray-500 font-bold bg-black/40 px-2 py-0.5 rounded-full">
-                          {radarStatsData.fr_north.lastUpdate 
-                            ? new Date(radarStatsData.fr_north.lastUpdate).toLocaleString('es-ES', { 
+                          {radarStatsData.fr.lastUpdate 
+                            ? new Date(radarStatsData.fr.lastUpdate).toLocaleString('es-ES', { 
                                 timeZone: 'Europe/Madrid',
                                 day: '2-digit', month: '2-digit', year: 'numeric',
                                 hour: '2-digit', minute: '2-digit'

@@ -55,31 +55,14 @@ export async function GET(request: Request) {
   const results: Record<string, number> = {};
 
   try {
-    // ── España ── (cron 3:00 AM)
-    // ── España Norte ── (bbox: lat 40-44, lon -10-5)
-    if (country === 'all' || country === 'es' || country === 'es_north') {
-      console.log('[RadarSync] Sincronizando España Norte...');
-      const queryESN = `
-        [out:json][timeout:90];
-        (
-          node["highway"="speed_camera"](40.0,-10.0,44.0,5.0);
-          node["enforcement"="speed"](40.0,-10.0,44.0,5.0);
-        );
-        out body;
-      `;
-      const elementsESN = await fetchRadarsFromOverpass(queryESN);
-      console.log(`[RadarSync] España Norte: ${elementsESN.length} elementos.`);
-      results.españa_norte = await upsertRadars(supabase, elementsESN);
-    }
-
-    // ── España Sur ── (bbox: lat 35-40, lon -10-5)
+    // ── España Sur ── (lat 27-39, lon -19-5) -> crons: 01:00 AM
     if (country === 'all' || country === 'es' || country === 'es_south') {
       console.log('[RadarSync] Sincronizando España Sur...');
       const queryESS = `
         [out:json][timeout:90];
         (
-          node["highway"="speed_camera"](35.0,-10.0,40.0,5.0);
-          node["enforcement"="speed"](35.0,-10.0,40.0,5.0);
+          node["highway"="speed_camera"](27.0,-19.0,39.0,5.0);
+          node["enforcement"="speed"](27.0,-19.0,39.0,5.0);
         );
         out body;
       `;
@@ -88,36 +71,68 @@ export async function GET(request: Request) {
       results.españa_sur = await upsertRadars(supabase, elementsESS);
     }
 
-    // ── Francia Norte ── (cron 4:00 AM) bbox: lat 46-51, lon -5-10
-    if (country === 'all' || country === 'fr' || country === 'fr_north') {
-      console.log('[RadarSync] Sincronizando Francia Norte...');
-      const queryFRN = `
+    // ── España Norte ── (lat 39-44, lon -10-5) -> crons: 02:00 AM
+    if (country === 'all' || country === 'es' || country === 'es_north') {
+      console.log('[RadarSync] Sincronizando España Norte...');
+      const queryESN = `
         [out:json][timeout:90];
         (
-          node["highway"="speed_camera"](46,-5,51,10);
-          node["enforcement"="speed"](46,-5,51,10);
+          node["highway"="speed_camera"](39.0,-10.0,44.0,5.0);
+          node["enforcement"="speed"](39.0,-10.0,44.0,5.0);
         );
         out body;
       `;
-      const elementsFRN = await fetchRadarsFromOverpass(queryFRN);
-      console.log(`[RadarSync] Francia Norte: ${elementsFRN.length} elementos.`);
-      results.francia_norte = await upsertRadars(supabase, elementsFRN);
+      const elementsESN = await fetchRadarsFromOverpass(queryESN);
+      console.log(`[RadarSync] España Norte: ${elementsESN.length} elementos.`);
+      results.españa_norte = await upsertRadars(supabase, elementsESN);
     }
 
-    // ── Francia Sur ── (cron 5:00 AM) bbox: lat 41-46, lon -5-10
+    // ── Francia Sur ── (lat 41-45, lon -5-10) -> crons: 03:00 AM
     if (country === 'all' || country === 'fr' || country === 'fr_south') {
       console.log('[RadarSync] Sincronizando Francia Sur...');
       const queryFRS = `
         [out:json][timeout:90];
         (
-          node["highway"="speed_camera"](41,-5,46,10);
-          node["enforcement"="speed"](41,-5,46,10);
+          node["highway"="speed_camera"](41.0,-5.0,45.0,10.0);
+          node["enforcement"="speed"](41.0,-5.0,45.0,10.0);
         );
         out body;
       `;
       const elementsFRS = await fetchRadarsFromOverpass(queryFRS);
       console.log(`[RadarSync] Francia Sur: ${elementsFRS.length} elementos.`);
       results.francia_sur = await upsertRadars(supabase, elementsFRS);
+    }
+
+    // ── Francia Centro ── (lat 45-48, lon -5-10) -> crons: 04:00 AM
+    if (country === 'all' || country === 'fr' || country === 'fr_mid') {
+      console.log('[RadarSync] Sincronizando Francia Centro...');
+      const queryFRM = `
+        [out:json][timeout:90];
+        (
+          node["highway"="speed_camera"](45.0,-5.0,48.0,10.0);
+          node["enforcement"="speed"](45.0,-5.0,48.0,10.0);
+        );
+        out body;
+      `;
+      const elementsFRM = await fetchRadarsFromOverpass(queryFRM);
+      console.log(`[RadarSync] Francia Centro: ${elementsFRM.length} elementos.`);
+      results.francia_centro = await upsertRadars(supabase, elementsFRM);
+    }
+
+    // ── Francia Norte ── (lat 48-52, lon -5-10) -> crons: 05:00 AM
+    if (country === 'all' || country === 'fr' || country === 'fr_north') {
+      console.log('[RadarSync] Sincronizando Francia Norte...');
+      const queryFRN = `
+        [out:json][timeout:90];
+        (
+          node["highway"="speed_camera"](48.0,-5.0,52.0,10.0);
+          node["enforcement"="speed"](48.0,-5.0,52.0,10.0);
+        );
+        out body;
+      `;
+      const elementsFRN = await fetchRadarsFromOverpass(queryFRN);
+      console.log(`[RadarSync] Francia Norte: ${elementsFRN.length} elementos.`);
+      results.francia_norte = await upsertRadars(supabase, elementsFRN);
     }
 
     const total = Object.values(results).reduce((a, b) => a + b, 0);
