@@ -553,10 +553,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     <img src="/yacht-icon.png" alt="Yates" className="h-11 w-11 object-contain drop-shadow-md" />
                   </button>
                   <div className="flex flex-col">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Radar Marítimo</span>
-                    </div>
-                    <span className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Yates de Lujo</span>
+                     <span className="text-xl font-black text-white italic tracking-tighter uppercase leading-none">Flota Exclusiva</span>
                   </div>
                 </div>
                 <div className="flex flex-col items-center gap-1.5">
@@ -587,21 +584,17 @@ const Sidebar: React.FC<SidebarProps> = ({
                     <p className="text-[10px] text-gray-500 uppercase text-center py-2">No hay yates detectados en este momento</p>
                   ) : (
                     yachts.map((yacht) => {
-                      const isTesla = yacht.owner === 'Tesla Transport';
                       return (
-                        <div key={yacht.mmsi} className={`flex items-center justify-between p-2 rounded-xl border transition-all group ${isTesla ? 'bg-blue-600/10 border-blue-500/30 shadow-[0_0_15px_rgba(37,99,235,0.1)]' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
+                        <div key={yacht.mmsi} className="flex items-center justify-between p-2 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 transition-all group">
                           <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className={`text-[11px] font-black italic uppercase truncate ${isTesla ? 'text-blue-400' : 'text-white'}`}>{yacht.name}</span>
-                              {isTesla && (
-                                <span className="text-[7px] font-black bg-blue-500 text-white px-1 rounded-sm tracking-tighter uppercase whitespace-nowrap">Tesla Carrier</span>
-                              )}
+                              <span className="text-[11px] font-black italic uppercase truncate text-white">{yacht.name}</span>
                             </div>
                             <span className="text-[9px] text-gray-500 font-bold truncate tracking-tighter">{yacht.owner}</span>
                           </div>
                           <button 
                             onClick={() => onLocateYacht?.(yacht.latitude, yacht.longitude)}
-                            className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all text-[9px] font-black uppercase tracking-tighter shrink-0 ${isTesla ? 'bg-blue-500 text-white shadow-lg' : 'bg-blue-600/20 border border-blue-500/30 text-blue-400 hover:bg-blue-600/40'}`}
+                            className="flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all text-[9px] font-black uppercase tracking-tighter shrink-0 bg-blue-600/20 border border-blue-500/30 text-blue-400 hover:bg-blue-600/40"
                           >
                             <Navigation className="h-3 w-3" />
                              Ver
