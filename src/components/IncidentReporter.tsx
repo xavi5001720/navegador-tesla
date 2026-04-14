@@ -76,24 +76,29 @@ export default function IncidentReporter({
       >
         <AnimatePresence mode="wait">
           {!isOpen ? (
-            <motion.button
-              key="main-button"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              onPointerDown={onPointerDown}
-              onTap={onClickButton}
-              disabled={cooldownRemaining > 0 || isReporting}
-              className={`h-20 w-20 rounded-3xl flex items-center justify-center border-4 border-white shadow-2xl transition-all cursor-grab active:cursor-grabbing select-none ${
-                cooldownRemaining > 0 ? 'bg-gray-600 grayscale opacity-50' : 'bg-blue-600 hover:bg-blue-500 hover:shadow-blue-500/50'
-              }`}
-            >
-              {cooldownRemaining > 0 ? (
-                <span className="text-white font-black text-xl">{Math.ceil(cooldownRemaining / 60000)}m</span>
-              ) : (
-                <img src="/radarpolicia.png" alt="Incidencia" className="h-12 w-12 object-contain pointer-events-none" />
-              )}
-            </motion.button>
+            <div className="flex flex-col items-center gap-2">
+              <motion.button
+                key="main-button"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                onPointerDown={onPointerDown}
+                onTap={onClickButton}
+                disabled={cooldownRemaining > 0 || isReporting}
+                className={`h-20 w-20 rounded-3xl flex items-center justify-center border-4 border-white shadow-2xl transition-all cursor-grab active:cursor-grabbing select-none ${
+                  cooldownRemaining > 0 ? 'bg-gray-600 grayscale opacity-50' : 'bg-blue-700 hover:bg-blue-600 hover:shadow-blue-500/50'
+                }`}
+              >
+                {cooldownRemaining > 0 ? (
+                  <span className="text-white font-black text-xl">{Math.ceil(cooldownRemaining / 60000)}m</span>
+                ) : (
+                  <img src="/ALERTAS.png" alt="Informar" className="h-14 w-14 object-contain pointer-events-none drop-shadow-lg" />
+                )}
+              </motion.button>
+              <span className="text-[10px] font-black text-white uppercase tracking-widest text-center shadow-black drop-shadow-xl whitespace-nowrap">
+                Informar de Alerta
+              </span>
+            </div>
           ) : (
             <motion.div
               key="incident-menu"
