@@ -756,7 +756,7 @@ export default function MapUI({
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onPointerDown={(e) => e.stopPropagation()}
-          className="absolute bottom-32 right-8 z-[1000] cursor-grab active:cursor-grabbing touch-none select-none pointer-events-auto"
+          className="absolute bottom-80 right-8 z-[1000] cursor-grab active:cursor-grabbing touch-none select-none pointer-events-auto"
         >
           <button
             disabled={cooldownRemaining > 0 || isReporting || !userId}
