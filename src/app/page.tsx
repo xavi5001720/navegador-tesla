@@ -176,8 +176,7 @@ export default function Home() {
     acceptFriend,
     removeFriend,
     updateFriendNickname,
-    refreshFriends: fetchFriends,
-    friendBatches
+    refreshFriends: fetchFriends
   } = useSocial(
     session, 
     userPos as [number, number], 
@@ -1095,7 +1094,6 @@ export default function Home() {
           routeSections={route?.sections}
           carColor={profile?.car_color}
           friends={friends}
-          friendBatches={friendBatches}
           centerOverride={mapCenterOverride}
           overviewFitTrigger={overviewFitTrigger}
           distanceToNextInstruction={distanceToNextInstruction}

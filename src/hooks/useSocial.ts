@@ -4,7 +4,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
-import { getDistance } from '@/utils/geo';
 
 export interface Friend {
   id: string;
@@ -14,25 +13,17 @@ export interface Friend {
   is_online: boolean;
   last_lat?: number;
   last_lon?: number;
+  heading?: number;
   is_sharing_location: boolean;
   friendship_status: 'pending' | 'accepted';
   is_incoming: boolean;
   nickname?: string;
-  current_destination?: any;
-  current_waypoints?: any[];
-}
-
-export interface Breadcrumb {
-  lat: number;
-  lon: number;
-  t: number;      // Timestamp
-  h?: number;     // Heading (opcional)
-  s?: number;     // Speed (opcional)
 }
 
 export interface LivePosition {
   lat: number;
   lon: number;
+  heading: number;
   timestamp: number;
 }
 
@@ -48,17 +39,8 @@ export function useSocial(
   const [loading, setLoading] = useState(true);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [livePositions, setLivePositions] = useState<Record<string, LivePosition>>({});
-  const [friendBatches, setFriendBatches] = useState<Record<string, Breadcrumb[]>>({});
   
-  // Refs para el sistema adaptativo
-  const lastDbUpdateRef = useRef<number>(0);
   const channelRef = useRef<any>(null);
-  const lastBroadcastTimeRef = useRef<number>(0);
-  const trajectoryBufferRef = useRef<Breadcrumb[]>([]);
-  const lastCapturedPosRef = useRef<[number, number] | null>(null);
-
-  // Estadísticas de observabilidad (desarrollo)
-  const messageCounterRef = useRef({ total: 0, z1: 0, z3: 0 });
 
   // 1. Cargar lista de amigos
   const fetchFriends = useCallback(async () => {
@@ -162,56 +144,27 @@ export function useSocial(
         });
         setOnlineUserIds(onlineIds);
       })
-      .on('broadcast', { event: 'PATH_BATCH' }, ({ payload }) => {
+      .on('broadcast', { event: 'SOCIAL_LOCATION_UPDATE' }, ({ payload }) => {
         if (payload.user_id === session.user.id) return;
         
-        if (payload.points && payload.points.length > 0) {
-          setFriendBatches(prev => {
-            const current = prev[payload.user_id] || [];
-            const lastT = current.length > 0 ? current[current.length - 1].t : 0;
-            
-            // Solo añadimos los puntos que sean nuevos (timestamp mayor que el último)
-            const newPoints = payload.points.filter((p: Breadcrumb) => p.t > lastT);
-            
-            if (newPoints.length === 0) return prev;
-
-            const next = [...current, ...newPoints];
-            
-            // Limitamos a los últimos 60 segundos de datos recibidos para el buffer de reproducción
-            const now = Date.now();
-            return {
-              ...prev,
-              [payload.user_id]: next.filter(p => p.t > now - 60000)
-            };
-          });
-
-          // Compatibilidad básica
-          const lastPoint = payload.points[payload.points.length - 1];
-          setLivePositions(prev => ({
-            ...prev,
-            [payload.user_id]: {
-              lat: lastPoint.lat,
-              lon: lastPoint.lon,
-              timestamp: lastPoint.t
-            }
-          }));
-        }
+        setLivePositions(prev => ({
+          ...prev,
+          [payload.user_id]: {
+            lat: payload.lat,
+            lon: payload.lon,
+            heading: payload.heading,
+            timestamp: payload.timestamp
+          }
+        }));
       })
       .on('broadcast', { event: 'SOCIAL_STATUS_UPDATE' }, ({ payload }) => {
-        // Actualizamos el estado de compartición de un amigo en tiempo real
         setFriends(prev => prev.map(f => 
           f.id === payload.user_id 
             ? { ...f, is_sharing_location: payload.is_sharing_location } 
             : f
         ));
 
-        // Si el amigo deja de compartir, limpiamos sus buffers locales para liberar memoria
         if (payload.is_sharing_location === false) {
-          setFriendBatches(prev => {
-            const next = { ...prev };
-            delete next[payload.user_id];
-            return next;
-          });
           setLivePositions(prev => {
             const next = { ...prev };
             delete next[payload.user_id];
@@ -239,153 +192,71 @@ export function useSocial(
     };
   }, [session, fetchFriends]);
 
-  // 3. Captura continua de Trayectoria (Buffer)
-  useEffect(() => {
-    // OPTIMIZACIÓN: No capturar nada si no estamos compartiendo
-    if (!hasLocation || !userPos || !isSharingLocation) {
-      trajectoryBufferRef.current = []; // Limpiamos buffer si se apaga
-      return;
-    }
-
-    const now = Date.now();
-    
-    // Capturamos un punto si ha pasado al menos 1 segundo o nos hemos movido algo
-    const lastPos = lastCapturedPosRef.current;
-    const dist = lastPos ? getDistance(userPos, lastPos) : Infinity;
-
-    if (dist > 1 || !lastPos) {
-      trajectoryBufferRef.current.push({
-        lat: userPos[0],
-        lon: userPos[1],
-        t: now,
-        h: heading,
-        s: speed
-      });
-      lastCapturedPosRef.current = userPos;
-
-      // Limmitamos el buffer local a los últimos 2 minutos para no saturar memoria
-      if (trajectoryBufferRef.current.length > 120) {
-        trajectoryBufferRef.current = trajectoryBufferRef.current.slice(-120);
-      }
-    }
-  }, [userPos, heading, speed, hasLocation, isSharingLocation]);
-
-  // 4. Emisión Adaptativa (Frecuencia por Zona Dominante)
+  // 3. Emisión de Posición (Cada 5 minutos)
   useEffect(() => {
     if (!session?.user || !isSharingLocation || !hasLocation || !userPos) return;
 
-    const senderLoop = setInterval(() => {
-      const now = Date.now();
-      const onlineFriends = friends.filter(f => onlineUserIds.has(f.id));
-      
-      // Si no hay amigos online, mandamos cada 60s forzado para actualizar presencia en DB
-      if (onlineFriends.length === 0) {
-        if (now - lastBroadcastTimeRef.current > 60000) {
-          flushBatch(60000, 'Z3 (Idle)');
-        }
-        return;
-      }
-
-      // 1. Encontrar la zona dominante (amigo más cercano)
-      let minDist = Infinity;
-      onlineFriends.forEach(f => {
-        if (f.last_lat && f.last_lon) {
-          const d = getDistance(userPos, [f.last_lat, f.last_lon]);
-          if (d < minDist) minDist = d;
-        }
-      });
-
-      // 2. Determinar intervalo
-      let interval = 20000; // Zona 3 por defecto
-      let zoneLabel = 'Z3';
-      
-      if (minDist < 200) {
-        interval = 4000;
-        zoneLabel = 'Z1';
-      } else if (minDist < 2000) {
-        interval = 12000;
-        zoneLabel = 'Z2';
-      }
-
-      // 3. Verificar si toca enviar
-      if (now - lastBroadcastTimeRef.current >= interval) {
-        flushBatch(interval, zoneLabel);
-      }
-
-    }, 1000);
-
-    function flushBatch(interval: number, zone: string) {
+    // Función para enviar y persistir ubicación
+    const syncLocation = () => {
       if (!channelRef.current || channelRef.current.state !== 'joined') return;
       
       const now = Date.now();
-      // Ventana: desde el último envío menos 5 segundos de solapamiento
-      const windowStart = lastBroadcastTimeRef.current - 5000;
-      const batch = trajectoryBufferRef.current.filter(p => p.t >= windowStart);
-
-      if (batch.length > 0) {
-        channelRef.current.send({
-          type: 'broadcast',
-          event: 'PATH_BATCH',
-          payload: { 
-            user_id: session?.user?.id, 
-            points: batch, 
-            zone: zone,
-            timestamp: now 
-          }
-        });
-
-        // Telemetría
-        messageCounterRef.current.total++;
-        if (zone === 'Z1') messageCounterRef.current.z1++;
-        else messageCounterRef.current.z3++;
-        console.log(`[Realtime Opt] Batch ${zone} enviado (${batch.length} pts). Total msgs: ${messageCounterRef.current.total}`);
-        
-        lastBroadcastTimeRef.current = now;
-
-        // Persistencia lenta en DB (cada 2 minutos)
-        if (now - lastDbUpdateRef.current > 120000) {
-          supabase.from('profiles').update({
-            last_lat: userPos[0],
-            last_lon: userPos[1],
-            is_online: true,
-            is_sharing_location: true
-          }).eq('id', session?.user?.id).then();
-          lastDbUpdateRef.current = now;
+      
+      // 1. Broadcast instantáneo a amigos conectados
+      channelRef.current.send({
+        type: 'broadcast',
+        event: 'SOCIAL_LOCATION_UPDATE',
+        payload: { 
+          user_id: session.user.id, 
+          lat: userPos[0],
+          lon: userPos[1],
+          heading: heading,
+          timestamp: now 
         }
-      }
-    }
+      });
+      console.log(`[Social] Enviando ubicación en vivo a amigos conectados.`);
 
-    return () => clearInterval(senderLoop);
-  }, [session, friends, onlineUserIds, userPos, isSharingLocation, hasLocation]);
+      // 2. Persistencia en base de datos
+      supabase.from('profiles').update({
+        last_lat: userPos[0],
+        last_lon: userPos[1],
+        is_online: true,
+        is_sharing_location: true
+      }).eq('id', session.user.id).then();
+    };
 
-  // 5. Señal de Privacidad Inmediata
+    // Al montar (o re-habilitar), enviamos una posición inicial pasados un par de segundos
+    // para dar tiempo a que se una al canal
+    const initTimer = setTimeout(syncLocation, 3000);
+
+    // Intervalo de 5 minutos (300,000 milisegundos)
+    const senderLoop = setInterval(syncLocation, 300000);
+
+    return () => {
+      clearInterval(senderLoop);
+      clearTimeout(initTimer);
+    };
+  }, [session, userPos, heading, isSharingLocation, hasLocation]);
+
+  // Señal Instantánea al desactivar Privacidad
   useEffect(() => {
     if (!session?.user || !channelRef.current) return;
 
-    // Emitimos el cambio de estado por Broadcast para que sea instantáneo en otros clientes
-    channelRef.current.send({
-      type: 'broadcast',
-      event: 'SOCIAL_STATUS_UPDATE',
-      payload: { 
-        user_id: session.user.id, 
-        is_sharing_location: isSharingLocation 
-      }
-    });
-
-    // Si volvemos a activar, enviamos un punto de anclaje inicial para que aparezcamos ya
-    if (isSharingLocation && userPos && hasLocation) {
+    // Si desactivamos explícitamente compartir
+    if (!isSharingLocation) {
       channelRef.current.send({
         type: 'broadcast',
-        event: 'PATH_BATCH',
+        event: 'SOCIAL_STATUS_UPDATE',
         payload: { 
           user_id: session.user.id, 
-          points: [{ lat: userPos[0], lon: userPos[1], t: Date.now(), h: heading, s: speed }], 
-          zone: 'Z1-Anchor',
-          timestamp: Date.now() 
+          is_sharing_location: false 
         }
       });
+      // Marcar en la db
+      supabase.from('profiles').update({
+        is_sharing_location: false
+      }).eq('id', session.user.id).then();
     }
-
   }, [isSharingLocation, session?.user]);
 
   // Acciones (addFriend, removeFriend, etc. se mantienen igual ya que son DB)
@@ -439,6 +310,7 @@ export function useSocial(
     is_online: f.friendship_status === 'accepted' && onlineUserIds.has(f.id),
     last_lat: livePositions[f.id]?.lat ?? f.last_lat,
     last_lon: livePositions[f.id]?.lon ?? f.last_lon,
+    heading: livePositions[f.id]?.heading ?? 0
   }));
 
   return { 
@@ -448,7 +320,6 @@ export function useSocial(
     removeFriend, 
     acceptFriend, 
     updateFriendNickname, 
-    refreshFriends: fetchFriends,
-    friendBatches 
+    refreshFriends: fetchFriends
   };
 }

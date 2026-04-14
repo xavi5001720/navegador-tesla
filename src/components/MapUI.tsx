@@ -10,13 +10,12 @@ import { Radar } from '@/hooks/useRadars';
 import { Aircraft } from '@/hooks/usePegasus';
 import { Charger } from '@/hooks/useChargers';
 import { GasStation } from '@/hooks/useGasStations';
-import { Friend, Breadcrumb } from '@/hooks/useSocial';
+import { Friend } from '@/hooks/useSocial';
 import { YachtPosition } from '@/hooks/useLuxuryYachts';
 import { RouteSection } from '@/hooks/useRoute';
 import { WeatherPoint } from '@/hooks/useWeather';
 import { getCarFilter, getCarImage } from '@/utils/carStyles';
 import { getDistance, getBearing, findClosestPointOnPolyline } from '@/utils/geo';
-import { useFriendPlayback } from '@/hooks/useFriendPlayback';
 
 const endMarkerIcon = L.divIcon({
    html: renderToStaticMarkup(
@@ -213,7 +212,6 @@ interface MapUIProps {
    radars: Radar[];
    aircrafts?: Aircraft[];
    friends?: Friend[];
-   friendBatches?: Record<string, Breadcrumb[]>;
    chargers?: Charger[];
    gasStations?: GasStation[];
    weatherPoints?: WeatherPoint[];
@@ -474,15 +472,11 @@ export default function MapUI({
   gasStations = [], weatherPoints = [], waypoints = [], yachts = [], speed = 0, hasLocation = false,
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
   onGasStationClick, onYachtClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [], 
-  friendBatches = {},
   centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
   mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname
 }: MapUIProps) {
   // Ref para contar errores de carga del mapa (para fallback automático)
   const errorCountRef = useRef(0);
-  
-  // Motor de Reproducción de Amigos (Interpolación Suave)
-  const interpolatedFriendPositions = useFriendPlayback(friends, friendBatches);
 
   // Pre-calculamos distancias acumuladas para lógica de trazada cinemática (GPS Real)
   const routeCumDist = useMemo(() => {
@@ -656,14 +650,11 @@ export default function MapUI({
         {gasStations.map(station => <Marker key={`gas-${station.id}`} position={[station.lat, station.lon]} icon={gasStationIcon} eventHandlers={{ click: () => { if (onGasStationClick) onGasStationClick(station); } }} />)}
         {weatherPoints.map(wp => <Marker key={`weather-${wp.id}`} position={[wp.lat, wp.lon]} icon={createWeatherIcon(wp.temp, wp.condition)} interactive={false} />)}
         
-        {/* Amigos (Marcadores con Movimiento Fluido) */}
+        {/* Amigos (Marcadores con Posición Real) */}
         {friends.filter(f => f.is_online && f.is_sharing_location !== false).map((friend) => {
-          const pos = interpolatedFriendPositions[friend.id];
-          
-          // Fallback a static pos if playback not yet available
-          const finalLat = pos ? pos.lat : friend.last_lat;
-          const finalLon = pos ? pos.lon : friend.last_lon;
-          const finalHeading = pos ? pos.heading : 0;
+          const finalLat = friend.last_lat;
+          const finalLon = friend.last_lon;
+          const finalHeading = friend.heading || 0; // Guardamos el heading en friend object opcionalmente
 
           if (!finalLat || !finalLon) return null;
 
