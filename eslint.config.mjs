@@ -5,6 +5,13 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
+  {
+    settings: {
+      react: {
+        version: "19.2.5",
+      },
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
@@ -12,6 +19,17 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "private_backups/**",
+    "backups/**",
+    "misimagenes/**",
+    "registros mail/**",
+    "supabase/functions/**",
+    "*.js",
+    "*.mjs",
+    "test-*.js",
+    "test-*.mjs",
+    "API opensky/**",
+    "API open chargue map/**"
   ]),
 ]);
 
