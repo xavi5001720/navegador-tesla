@@ -289,7 +289,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="py-4">
         <div className="grid grid-cols-1 gap-3">
 
-           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isSoundEnabled && 'opacity-70'}`}>
+           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <button onClick={() => setShowSoundOptions(!showSoundOptions)} className={`p-1 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isSoundEnabled ? 'bg-blue-500/20 hover:bg-blue-500/30 cursor-pointer' : 'bg-gray-500/20'}`}>
@@ -373,7 +373,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               )}
            </div>
 
-           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isRadarsEnabled && 'opacity-70'}`}>
+           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <button onClick={handleToggleRadarStats} className={`p-1 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isRadarsEnabled ? 'bg-rose-500/20 hover:bg-rose-500/30 cursor-pointer' : 'bg-gray-500/20'}`}>
@@ -616,7 +616,7 @@ const Sidebar: React.FC<SidebarProps> = ({
            </div>
 
            {/* Bloque Cargadores */}
-           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isChargersEnabled && 'opacity-70'}`}>
+           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                    <button 
@@ -720,7 +720,7 @@ const Sidebar: React.FC<SidebarProps> = ({
            </div>
 
            {/* Bloque Gasolineras */}
-           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isGasStationsEnabled && 'opacity-70'}`}>
+           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                    <button 
@@ -843,7 +843,7 @@ const Sidebar: React.FC<SidebarProps> = ({
            </div>
 
            {/* Bloque de Sistema de Tráfico (Nuevo) */}
-           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isTrafficWanted && 'opacity-70'}`}>
+           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className={`p-1 rounded-xl flex items-center justify-center ${isTrafficWanted ? 'bg-amber-500/20' : 'bg-gray-500/20'}`}>
@@ -886,7 +886,7 @@ const Sidebar: React.FC<SidebarProps> = ({
            </div>
 
            {/* Bloque Meteorológico (Clima) */}
-           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors ${!isWeatherEnabled && 'opacity-70'}`}>
+           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className={`p-1 rounded-xl flex items-center justify-center ${isWeatherEnabled ? 'bg-sky-500/20' : 'bg-gray-500/20'}`}>
