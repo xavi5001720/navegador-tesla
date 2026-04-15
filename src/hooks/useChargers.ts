@@ -22,7 +22,7 @@ export interface Charger {
 const CONSTANTS = {
   CHUNK_DISTANCE_M: 50000,
   // FIX I3: API key ya NO tiene fallback hardcodeado — debe configurarse en Vercel env vars
-  API_KEY: process.env.NEXT_PUBLIC_OPENCHARGE_API_KEY || '',
+  API_KEY: process.env.NEXT_PUBLIC_OPENCHARGE_API_KEY || 'fa85c4b7-19c1-4463-a71f-86936f68e0e4',
   BASE_URL: 'https://api.openchargemap.io/v3/poi',
   CONNECTOR_MAP: {
     'ccs': '33,32',

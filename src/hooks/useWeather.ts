@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { logger } from '@/lib/logger';
 
 // Usando nueva key OWM: teslaapp
-const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || '';
+const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'd78521d9d03fc712e2a7ec84c6b58de2';
 const API_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
 export interface WeatherPoint {

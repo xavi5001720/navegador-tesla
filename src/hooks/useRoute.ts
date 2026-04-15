@@ -46,7 +46,7 @@ interface RouteResult {
 }
 
 
-const TOMTOM_KEY = process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
+const TOMTOM_KEY = process.env.NEXT_PUBLIC_TOMTOM_API_KEY || 'DvoGdJnTAqVFKyqem1NBUv77xJ0CLcny';
 if (!TOMTOM_KEY && typeof window !== 'undefined') {
   logger.warn('useRoute', 'NEXT_PUBLIC_TOMTOM_API_KEY no configurada. Se usará OSRM sin tráfico.');
 }
