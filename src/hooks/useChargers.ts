@@ -37,17 +37,14 @@ const getDist = (p1: [number, number], p2: [number, number]) => {
   return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
 };
 
-// Polyline encoder simplificado para enviar rutas a OpenChargeMap
 function encodePolyline(coordinates: [number, number][]) {
   let result = '';
   let prevLat = 0;
   let prevLon = 0;
 
   for (let i = 0; i < coordinates.length; i++) {
-    // OpenChargeMap espera [lat, lon] en Google Polyline 
     const lat = Math.round(coordinates[i][0] * 1e5);
     const lon = Math.round(coordinates[i][1] * 1e5);
-
     const dLat = lat - prevLat;
     const dLon = lon - prevLon;
     prevLat = lat;
@@ -63,19 +60,16 @@ function encodePolyline(coordinates: [number, number][]) {
       chunk += String.fromCharCode(value + 63);
       return chunk;
     };
-
     result += encode(dLat) + encode(dLon);
   }
   return result;
 }
 
 function isFreeCharger(costStr: string | null | undefined): boolean {
-  if (!costStr) return true; // OCM api suele dejarlo vacío si es gratis usagetype=1
+  if (!costStr) return true;
   const s = costStr.toLowerCase();
-  
   if (s.includes('free') || s.includes('gratis') || s.includes('sin coste') || s.includes('0.00') || s.includes('0,00')) return true;
   if (s.includes('€') || s.includes('$') || s.includes('£') || s.includes('0,') || s.includes('0.') || s.match(/[1-9],/) || s.includes('kw') || s.includes('min') || s.match(/[0-9] céntimos/)) return false;
-
   return true;
 }
 
@@ -86,37 +80,51 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
 
   const lastFetchRef = useRef<{ type: 'route'|'local', pos: [number, number], routeKey: string, filtersStr: string } | null>(null);
 
-  // FIX C3: Usar valores primitivos estables como deps en lugar del array completo
   const routeLength = routeCoordinates?.length ?? 0;
   const routeFirstKey = routeCoordinates?.[0] ? `${routeCoordinates[0][0].toFixed(4)},${routeCoordinates[0][1].toFixed(4)}` : '';
   const routeLastKey = routeLength > 0 ? `${routeCoordinates![routeLength-1][0].toFixed(4)},${routeCoordinates![routeLength-1][1].toFixed(4)}` : '';
   const filtersStr = JSON.stringify(filters);
 
   useEffect(() => {
+    console.log('[useChargers] Hook Effect Triggered', { isEnabled, userPos: !!userPos, route: routeLength > 0 });
+
     if (!isEnabled || !userPos) {
-      if (!isEnabled && chargers.length > 0) setChargers([]);
+      if (!isEnabled && chargers.length > 0) {
+        setChargers([]);
+      }
       return;
     }
+
     const hasRoute = routeLength > 0;
     const currentType = hasRoute ? 'route' : 'local';
     const currentRouteKey = `${routeFirstKey}|${routeLastKey}`;
 
     let shouldFetch = false;
     if (!lastFetchRef.current) {
+      console.log('[useChargers] First fetch attempt');
       shouldFetch = true;
     } else if (lastFetchRef.current.type !== currentType) {
+      console.log('[useChargers] Type change:', lastFetchRef.current.type, '->', currentType);
       shouldFetch = true;
     } else if (currentType === 'route' && lastFetchRef.current.routeKey !== currentRouteKey) {
+      console.log('[useChargers] Route changed');
       shouldFetch = true;
     } else if (lastFetchRef.current.filtersStr !== filtersStr) {
+      console.log('[useChargers] Filters changed');
       shouldFetch = true;
     } else if (currentType === 'local') {
       const dist = getDist(lastFetchRef.current.pos, userPos);
-      // Re-fetch si nos hemos movido 5km O si la última vez no encontramos nada (reintento)
-      if (dist > 5000 || chargers.length === 0) shouldFetch = true;
+      console.log('[useChargers] Distance check:', Math.round(dist), 'm');
+      if (dist > 5000 || chargers.length === 0) {
+        console.log('[useChargers] Fetching due to distance or empty state');
+        shouldFetch = true;
+      }
     }
 
-    if (!shouldFetch) return;
+    if (!shouldFetch) {
+      console.log('[useChargers] Skipping fetch (no changes)');
+      return;
+    }
 
     const fetchChargers = async () => {
       setLoading(true);
@@ -126,12 +134,11 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
       }
 
       try {
-        // Construimos params base
         const params = new URLSearchParams({
-          statustypeid: '0', // 0 = Todo (incluye los que no tienen estado definido)
-          usagetypeid: '1,4,5,7', // Siempre buscamos públicos para filtrar por texto después
+          statustypeid: '0',
+          usagetypeid: '1,4,5,7',
           distanceunit: 'KM',
-          maxresults: '250' // Aumentar resultados para cubrir más área
+          maxresults: '250'
         });
 
         if (filters.minPower && filters.minPower > 0) {
@@ -144,7 +151,6 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
         }
 
         if (hasRoute && routeCoordinates) {
-          // Chunk route into 50km pieces to avoid massive polyline requests and 414 URI Too Long
           const chunks: [number, number][][] = [];
           let currentChunk: [number, number][] = [routeCoordinates[0]];
           let currentDist = 0;
@@ -153,7 +159,6 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
             const d = getDist(routeCoordinates[i-1], routeCoordinates[i]);
             currentDist += d;
             currentChunk.push(routeCoordinates[i]);
-
             if (currentDist >= CONSTANTS.CHUNK_DISTANCE_M) {
               chunks.push(currentChunk);
               currentChunk = [routeCoordinates[i]];
@@ -168,15 +173,14 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
           for (let i = 0; i < chunks.length; i++) {
             const polyline = encodePolyline(chunks[i]);
             params.set('polyline', polyline);
-            params.set('distance', '5'); // Buscar a max 5km del trazo invertido
+            params.set('distance', '5');
             
             try {
               const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
               const data = await res.json();
               if (Array.isArray(data)) {
                 data.forEach(c => {
-                  if (filters.isFree && !isFreeCharger(c.UsageCost)) return; // <-- Filtro estricto de texto para falsos positivos
-
+                  if (filters.isFree && !isFreeCharger(c.UsageCost)) return;
                   if (!uniqueIds.has(c.ID)) {
                     uniqueIds.add(c.ID);
                     const power = c.Connections?.reduce((max: number, conn: any) => Math.max(max, conn.PowerKW || 0), 0) || 0;
@@ -201,7 +205,6 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
             setProgress(Math.round(((i + 1) / chunks.length) * 100));
           }
         } else {
-          // Busqueda radial de 25km
           params.set('latitude', userPos[0].toString());
           params.set('longitude', userPos[1].toString());
           params.set('distance', '25');
@@ -211,24 +214,19 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
           if (Array.isArray(data)) {
             const parsed: Charger[] = [];
             data.forEach(c => {
-               if (filters.isFree && !isFreeCharger(c.UsageCost)) return; // <-- Filtro estricto de texto
+               if (filters.isFree && !isFreeCharger(c.UsageCost)) return;
                const power = c.Connections?.reduce((max: number, conn: any) => Math.max(max, conn.PowerKW || 0), 0) || 0;
                parsed.push({
-                  id: c.ID,
-                  lat: c.AddressInfo.Latitude,
-                  lon: c.AddressInfo.Longitude,
-                  title: c.AddressInfo.Title,
-                  address: c.AddressInfo.AddressLine1 || c.AddressInfo.Town || 'Ubicación Desconocida',
+                  id: c.ID, lat: c.AddressInfo.Latitude, lon: c.AddressInfo.Longitude,
+                  title: c.AddressInfo.Title, address: c.AddressInfo.AddressLine1 || c.AddressInfo.Town || 'Ubicación Desconocida',
                   operator: c.OperatorInfo?.Title || 'Operador Desconocido',
                   usageCost: c.UsageCost || (filters.isFree ? 'Gratuito' : 'Desconocido'),
-                  maxPower: power,
-                  connections: c.Connections || []
+                  maxPower: power, connections: c.Connections || []
                });
             });
             setChargers(parsed);
           }
         }
-
         lastFetchRef.current = { type: currentType, pos: userPos, routeKey: currentRouteKey, filtersStr };
       } catch (err) {
         logger.error('useChargers', 'Error al cargar cargadores', err);
@@ -238,9 +236,15 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
     };
 
     fetchChargers();
-  // FIX C3: Deps primitivas estables en lugar de routeCoordinates (array)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userPos, isEnabled, routeLength, routeFirstKey, routeLastKey, filtersStr]);
 
-  return { chargers, loading, progress };
+  const refreshChargers = () => {
+    console.log('[useChargers] Manual refresh called');
+    lastFetchRef.current = null;
+    // We can't call fetchChargers directly here because it's in useEffect,
+    // but clearing the ref and triggering a state change would work.
+    setChargers(prev => [...prev]); 
+  };
+
+  return { chargers, loading, progress, refreshChargers };
 }

@@ -16,9 +16,9 @@ export const unlockTeslaAudio = () => {
       beepPlayer = new Audio();
       beepPlayer.preload = 'auto';
     }
-    const silentMp3 =
-      'data:audio/mp3;base64,//OExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq';
-    beepPlayer.src = silentMp3;
+    // Silent WAV (previo MP3 estaba roto y causaba errores de metadatos)
+    const silentAudio = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==';
+    beepPlayer.src = silentAudio;
     beepPlayer.play().then(() => beepPlayer?.pause()).catch(() => {});
     audioUnlocked = true;
     console.log('[Sound] Audio unlocked');

@@ -301,26 +301,34 @@ export default function Home() {
 
   // 2. Guardar preferencias explícitamente cuando el usuario pulse el botón Guardar
   const handleSavePreferences = useCallback(async () => {
-    if (!session) return;
+    if (!session || !profile) return;
+    
+    // Solo guardamos si realmente hay cambios respecto al perfil cargado
+    const newPrefs = {
+      isRadarsEnabled,
+      isAircraftsEnabled,
+      isChargersEnabled,
+      chargerFilters,
+      isGasStationsEnabled,
+      gasStationFilters,
+      isWeatherEnabled,
+      isSoundEnabled,
+      voiceType
+    };
+
+    if (JSON.stringify(profile.preferences) === JSON.stringify(newPrefs)) {
+      return;
+    }
+
     const res = await updateProfile({
-      preferences: {
-        isRadarsEnabled,
-        isAircraftsEnabled,
-        isChargersEnabled,
-        chargerFilters,
-        isGasStationsEnabled,
-        gasStationFilters,
-        isWeatherEnabled,
-        isSoundEnabled,
-        voiceType
-      }
+      preferences: newPrefs
     });
     
     if (res.success) {
       console.log('[Prefs] Configuración guardada correctamente');
     }
   }, [
-    session, updateProfile, isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, 
+    session, profile, updateProfile, isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, 
     chargerFilters, isGasStationsEnabled, gasStationFilters, isWeatherEnabled, 
     isSoundEnabled, voiceType
   ]);
