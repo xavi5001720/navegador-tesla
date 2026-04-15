@@ -127,6 +127,7 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
     }
 
     const fetchChargers = async () => {
+      console.log('[useChargers] fetchChargers function started');
       setLoading(true);
       if (hasRoute) {
         setProgress(0);
@@ -151,6 +152,7 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
         }
 
         if (hasRoute && routeCoordinates) {
+          console.log('[useChargers] In Route Mode');
           const chunks: [number, number][][] = [];
           let currentChunk: [number, number][] = [routeCoordinates[0]];
           let currentDist = 0;
@@ -175,10 +177,12 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
             params.set('polyline', polyline);
             params.set('distance', '5');
             
-            try {
-              const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
-              const data = await res.json();
-              if (Array.isArray(data)) {
+            console.log(`[useChargers] Fetching chunk ${i+1}/${chunks.length}...`);
+            const chunkRes = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
+            const data = await chunkRes.json();
+            
+            if (Array.isArray(data)) {
+                console.log(`[useChargers] Chunk ${i+1} returned ${data.length} results`);
                 data.forEach(c => {
                   if (filters.isFree && !isFreeCharger(c.UsageCost)) return;
                   if (!uniqueIds.has(c.ID)) {
@@ -199,19 +203,21 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
                 });
                 setChargers([...accumulated]);
               }
-            } catch (err) {
-              console.error(`[useChargers] Fallo chunk ${i}:`, err);
-            }
             setProgress(Math.round(((i + 1) / chunks.length) * 100));
           }
         } else {
+          console.log('[useChargers] In Local Mode (Radial)');
           params.set('latitude', userPos[0].toString());
           params.set('longitude', userPos[1].toString());
           params.set('distance', '25');
           
+          console.log('[useChargers] Fetching radial from proxy...');
           const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
+          console.log('[useChargers] Proxy response status:', res.status);
           const data = await res.json();
+          
           if (Array.isArray(data)) {
+            console.log('[useChargers] Received', data.length, 'chargers');
             const parsed: Charger[] = [];
             data.forEach(c => {
                if (filters.isFree && !isFreeCharger(c.UsageCost)) return;
@@ -225,10 +231,14 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
                });
             });
             setChargers(parsed);
+          } else {
+            console.warn('[useChargers] Response data is NOT an array:', data);
           }
         }
         lastFetchRef.current = { type: currentType, pos: userPos, routeKey: currentRouteKey, filtersStr };
+        console.log('[useChargers] fetchChargers finished successfully');
       } catch (err) {
+        console.error('[useChargers] fetchChargers Error:', err);
         logger.error('useChargers', 'Error al cargar cargadores', err);
       } finally {
         setLoading(false);
@@ -236,13 +246,11 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
     };
 
     fetchChargers();
-  }, [userPos, isEnabled, routeLength, routeFirstKey, routeLastKey, filtersStr]);
+  }, [userPos?.[0], userPos?.[1], isEnabled, routeLength, routeFirstKey, routeLastKey, filtersStr]);
 
   const refreshChargers = () => {
     console.log('[useChargers] Manual refresh called');
     lastFetchRef.current = null;
-    // We can't call fetchChargers directly here because it's in useEffect,
-    // but clearing the ref and triggering a state change would work.
     setChargers(prev => [...prev]); 
   };
 
