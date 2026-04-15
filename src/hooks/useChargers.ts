@@ -115,8 +115,9 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
     } else if (currentType === 'local') {
       const dist = getDist(lastFetchRef.current.pos, userPos);
       console.log('[useChargers] Distance check:', Math.round(dist), 'm');
-      if (dist > 5000 || chargers.length === 0) {
-        console.log('[useChargers] Fetching due to distance or empty state');
+      // Re-fetch si nos hemos movido 10km O si la última vez no encontramos nada (reintento)
+      if (dist > 10000 || chargers.length === 0) {
+        console.log('[useChargers] Fetching due to distance (10km threshold) or empty state');
         shouldFetch = true;
       }
     }
@@ -209,7 +210,7 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
           console.log('[useChargers] In Local Mode (Radial)');
           params.set('latitude', userPos[0].toString());
           params.set('longitude', userPos[1].toString());
-          params.set('distance', '25');
+          params.set('distance', '30');
           
           console.log('[useChargers] Fetching radial from proxy...');
           const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
