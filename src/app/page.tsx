@@ -58,9 +58,9 @@ const DynamicMap = dynamic(() => import('@/components/MapUI'), {
 
 export default function Home() {
   const sessionClientId = useRef(typeof window !== 'undefined' ? (
-    sessionStorage.getItem('tesla_session_id') || (() => {
+    localStorage.getItem('tesla_session_id') || (() => {
       const id = crypto.randomUUID();
-      sessionStorage.setItem('tesla_session_id', id);
+      localStorage.setItem('tesla_session_id', id);
       return id;
     })()
   ) : '').current;
@@ -501,7 +501,7 @@ export default function Home() {
 
   const { reportRadar, voteRadar, cooldownRemaining, isReporting, hiddenIds } = useCommunityRadars();
 
-  const { radars: allRadars, radarZones: allRadarZones, loadingRadars, fetchingRouteRadars, lastUpdate, progress } = useRadars(userPos, route?.coordinates, isRadarsEnabled, session?.user?.id);
+  const { radars: allRadars, radarZones: allRadarZones, loadingRadars, fetchingRouteRadars, lastUpdate, progress, refreshRadars } = useRadars(userPos, route?.coordinates, isRadarsEnabled, session?.user?.id);
 
   // Filtrar radares:
   // - Sin ruta: solo los próximos (ya se buscan en radio de 10km por useRadars)
@@ -935,7 +935,10 @@ export default function Home() {
             {/* Botón de Reportar Alerta (Alineado debajo de Amigos) */}
             <div className="mt-2">
               <IncidentReporter 
-                onReport={(lat, lon, category) => reportRadar(lat, lon, session?.user?.id || '', category)}
+                onReport={async (lat, lon, category) => {
+                  await reportRadar(lat, lon, session?.user?.id || '', category);
+                  refreshRadars(); // Refrescar mapa inmediatamente tras el reporte
+                }}
                 userPos={userPos as [number, number]}
                 isReporting={isReporting}
                 cooldownRemaining={cooldownRemaining}

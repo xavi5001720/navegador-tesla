@@ -22,6 +22,7 @@ function parseCoord(val: string | undefined): number | null {
 }
 
 export async function GET(request: Request) {
+  const startTime = Date.now();
   const { searchParams } = new URL(request.url);
   const secret = searchParams.get('secret');
 
@@ -52,14 +53,13 @@ export async function GET(request: Request) {
     const stations = data.ListaEESSPrecio;
     if (!Array.isArray(stations)) throw new Error('Respuesta inesperada de la API del Ministerio');
 
-    console.log(`[GasSync] ${stations.length} gasolineras descargadas. Iniciando upsert masivo paralelo...`);
+    console.log(`[GasSync] ${stations.length} gasolineras descargadas. Iniciando upsert secuencial...`);
 
     const now = new Date().toISOString();
     let totalInserted = 0;
     
-    // Preparar todos los batches en memoria primero
-    const promises = [];
-
+    // Procesar en batches secuenciales para no saturar la conexión ni la memoria
+    const BATCH_SIZE = 1000;
     for (let i = 0; i < stations.length; i += BATCH_SIZE) {
       const batch = stations.slice(i, i + BATCH_SIZE);
 
@@ -89,23 +89,24 @@ export async function GET(request: Request) {
         .filter(Boolean);
 
       if (mapped.length > 0) {
+        const { error } = await supabase.from('gas_stations').upsert(mapped, { onConflict: 'id' });
+        if (error) {
+          console.error(`[GasSync] Error en batch ${i}:`, error);
+          throw error;
+        }
         totalInserted += mapped.length;
-        // Lanzamos upserts de forma asíncrona pero sin esperar (await) secuencialmente
-        promises.push(
-          supabase
-            .from('gas_stations')
-            .upsert(mapped, { onConflict: 'id' })
-            .then(({ error }) => {
-              if (error) throw error;
-            })
-        );
+      }
+      
+      // Si llevamos más de 50 segundos, paramos para no dar timeout fatal y devolver éxito parcial
+      // (Útil en Vercel Pro con 60s)
+      if (Date.now() - startTime > 55000) {
+        console.warn('[GasSync] Límite de tiempo alcanzado. Sincronización parcial.');
+        break;
       }
     }
 
-    // Esperar a que TODOS los batches terminen en paralelo (tarda ~2-3s en total en vez de 50s)
-    await Promise.all(promises);
-
-    console.log(`[GasSync] Completado: ${totalInserted} gasolineras insertadas/actualizadas.`);
+    console.log(`[GasSync] Finalizado. Total actualizado: ${totalInserted}`);
+    return NextResponse.json({ success: true, total: totalInserted, timestamp: now, partial: totalInserted < stations.length });
     return NextResponse.json({ success: true, total: totalInserted, timestamp: now });
 
   } catch (error: any) {

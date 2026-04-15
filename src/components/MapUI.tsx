@@ -664,7 +664,7 @@ export default function MapUI({
               <Marker 
                 key={`comm-${radar.id}`} 
                 position={[radar.lat, radar.lon]} 
-                icon={communityRadarIcon(!!radar.is_visible, !!(userId && radar.id.toString().startsWith(userId)), radar.category)}
+                icon={communityRadarIcon(!!radar.is_visible, !!(userId && radar.user_id === userId), radar.category)}
                 eventHandlers={{
                   click: () => setSelectedCommunityRadar(radar)
                 }}

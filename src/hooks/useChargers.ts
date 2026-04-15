@@ -119,7 +119,8 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
       shouldFetch = true;
     } else if (currentType === 'local') {
       const dist = getDist(lastFetchRef.current.pos, userPos);
-      if (dist > 5000) shouldFetch = true;
+      // Re-fetch si nos hemos movido 5km O si la última vez no encontramos nada (reintento)
+      if (dist > 5000 || chargers.length === 0) shouldFetch = true;
     }
 
     if (!shouldFetch) return;
@@ -134,11 +135,10 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
       try {
         // Construimos params base
         const params = new URLSearchParams({
-          key: CONSTANTS.API_KEY,
-          statustypeid: '50', // Operativo
-          usagetypeid: filters.isFree ? '1' : '1,4,5,7', // 1: Public, 4: Public Pay
+          statustypeid: '0', // 0 = Todo (incluye los que no tienen estado definido)
+          usagetypeid: '1,4,5,7', // Siempre buscamos públicos para filtrar por texto después
           distanceunit: 'KM',
-          maxresults: '100'
+          maxresults: '250' // Aumentar resultados para cubrir más área
         });
 
         if (filters.minPower && filters.minPower > 0) {
@@ -178,7 +178,12 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
             params.set('distance', '5'); // Buscar a max 5km del trazo invertido
             
             try {
-              const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
+              const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`, {
+                headers: {
+                  'X-OpenChargeMap-Key': CONSTANTS.API_KEY,
+                  'Accept': 'application/json'
+                }
+              });
               const data = await res.json();
               if (Array.isArray(data)) {
                 data.forEach(c => {
@@ -208,11 +213,17 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
             setProgress(Math.round(((i + 1) / chunks.length) * 100));
           }
         } else {
-          // Busqueda radial de 15km
+          // Busqueda radial de 25km
           params.set('latitude', userPos[0].toString());
           params.set('longitude', userPos[1].toString());
-          params.set('distance', '15');
-          const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
+          params.set('distance', '25');
+          
+          const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`, {
+            headers: {
+              'X-OpenChargeMap-Key': CONSTANTS.API_KEY,
+              'Accept': 'application/json'
+            }
+          });
           const data = await res.json();
           if (Array.isArray(data)) {
             const parsed: Charger[] = [];

@@ -95,36 +95,36 @@ export async function GET(request: Request) {
   const results: Record<string, number> = {};
 
   try {
-    // ── España Sur ── (lat 27-39, lon -19-5) -> crons: 01:00 AM
-    if (country === 'all' || country === 'es' || country === 'es_south') {
-      console.log('[RadarSync] Sincronizando España Sur...');
-      const queryESS = `
-        [out:json][timeout:90];
-        (
-          node["highway"="speed_camera"](27.0,-19.0,39.0,5.0);
-          node["enforcement"="speed"](27.0,-19.0,39.0,5.0);
-        );
-        out body;
-      `;
-      const elementsESS = await fetchRadarsFromOverpass(queryESS);
-      console.log(`[RadarSync] España Sur: ${elementsESS.length} elementos.`);
-      results.españa_sur = await upsertRadars(supabase, elementsESS);
+    // ── España Sur-Oeste ── (lat 27-39, lon -19 a -3)
+    if (country === 'all' || country === 'es' || country === 'es_south_west') {
+      console.log('[RadarSync] Sincronizando España Sur-Oeste...');
+      const query = `[out:json][timeout:90];(node["highway"="speed_camera"](27.0,-19.0,39.0,-3.0);node["enforcement"="speed"](27.0,-19.0,39.0,-3.0););out body;`;
+      const elements = await fetchRadarsFromOverpass(query);
+      results.es_south_west = await upsertRadars(supabase, elements);
     }
 
-    // ── España Norte ── (lat 39-44, lon -10-5) -> crons: 02:00 AM
-    if (country === 'all' || country === 'es' || country === 'es_north') {
-      console.log('[RadarSync] Sincronizando España Norte...');
-      const queryESN = `
-        [out:json][timeout:90];
-        (
-          node["highway"="speed_camera"](39.0,-10.0,44.0,5.0);
-          node["enforcement"="speed"](39.0,-10.0,44.0,5.0);
-        );
-        out body;
-      `;
-      const elementsESN = await fetchRadarsFromOverpass(queryESN);
-      console.log(`[RadarSync] España Norte: ${elementsESN.length} elementos.`);
-      results.españa_norte = await upsertRadars(supabase, elementsESN);
+    // ── España Sur-Este ── (lat 27-39, lon -3 a 5)
+    if (country === 'all' || country === 'es' || country === 'es_south_east') {
+      console.log('[RadarSync] Sincronizando España Sur-Este...');
+      const query = `[out:json][timeout:90];(node["highway"="speed_camera"](27.0,-3.0,39.0,5.0);node["enforcement"="speed"](27.0,-3.0,39.0,5.0););out body;`;
+      const elements = await fetchRadarsFromOverpass(query);
+      results.es_south_east = await upsertRadars(supabase, elements);
+    }
+
+    // ── España Norte-Oeste ── (lat 39-44, lon -10 a -3)
+    if (country === 'all' || country === 'es' || country === 'es_north_west') {
+      console.log('[RadarSync] Sincronizando España Norte-Oeste...');
+      const query = `[out:json][timeout:90];(node["highway"="speed_camera"](39.0,-10.0,44.0,-3.0);node["enforcement"="speed"](39.0,-10.0,44.0,-3.0););out body;`;
+      const elements = await fetchRadarsFromOverpass(query);
+      results.es_north_west = await upsertRadars(supabase, elements);
+    }
+
+    // ── España Norte-Este ── (lat 39-44, lon -3 a 5)
+    if (country === 'all' || country === 'es' || country === 'es_north_east') {
+      console.log('[RadarSync] Sincronizando España Norte-Este...');
+      const query = `[out:json][timeout:90];(node["highway"="speed_camera"](39.0,-3.0,44.0,5.0);node["enforcement"="speed"](39.0,-3.0,44.0,5.0););out body;`;
+      const elements = await fetchRadarsFromOverpass(query);
+      results.es_north_east = await upsertRadars(supabase, elements);
     }
 
     // ── Francia Sur ── (lat 41-45, lon -5-10) -> crons: 03:00 AM

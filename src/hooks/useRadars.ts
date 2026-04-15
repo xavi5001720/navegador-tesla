@@ -14,6 +14,7 @@ export interface Radar {
   rejections?: number;
   is_visible?: boolean;
   category?: string;
+  user_id?: string;
 }
 
 export interface RadarZone {
@@ -39,7 +40,8 @@ export function useRadars(
   const [progress, setProgress] = useState(0);
 
   const [fetchingRouteRadars, setFetchingRouteRadars] = useState(false);
-  const lastFetchRef = useRef<{ type: 'route'|'local', pos: [number, number], routeLength: number } | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const lastFetchRef = useRef<{ type: 'route'|'local', pos: [number, number], routeLength: number, userId?: string | null } | null>(null);
 
   // Creamos dependencias primitivas estables para detectar cambios reales en la ruta
   const routeLength = routeCoordinates?.length ?? 0;
@@ -99,7 +101,12 @@ export function useRadars(
       shouldFetch = true;
     } else if (currentType === 'local') {
       const dist = getDist(lastFetchRef.current.pos, userPos);
-      if (dist > 25000) shouldFetch = true; // Solo buscar si se ha movido 25km (Ahorro de API)
+      if (dist > 25000 || lastFetchRef.current.userId !== userId) shouldFetch = true; // Solo buscar si se ha movido 25km O cambia el usuario
+    }
+    
+    // Si hay un trigger manual, forzamos
+    if (refreshTrigger > 0 && lastFetchRef.current?.pos === userPos) {
+       shouldFetch = true;
     }
 
     if (!shouldFetch) return;
@@ -195,7 +202,8 @@ export function useRadars(
                      confirmations: r.confirmations,
                     rejections: r.rejections,
                     is_visible: r.is_visible,
-                    category: r.category
+                    category: r.category,
+                    user_id: r.user_id
                   });
                 }
               });
@@ -256,7 +264,8 @@ export function useRadars(
                  confirmations: r.confirmations,
                 rejections: r.rejections,
                 is_visible: r.is_visible,
-                category: r.category
+                category: r.category,
+                user_id: r.user_id
               });
             });
           }
@@ -293,8 +302,10 @@ export function useRadars(
         lastFetchRef.current = {
           type: currentType,
           pos: userPos,
-          routeLength: routeLength
+          routeLength: routeLength,
+          userId: userId
         };
+        setRefreshTrigger(0);
         
       } catch (error) {
         console.error("[useRadars] Erro al obtener radares de Supabase:", error);
@@ -307,7 +318,9 @@ export function useRadars(
 
     fetchRadars();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEnabled, userPos?.[0], userPos?.[1], routeLength, routeFirstLat, routeFirstLon, routeLastLat, routeLastLon]);
+  }, [isEnabled, userPos?.[0], userPos?.[1], routeLength, routeFirstLat, routeFirstLon, routeLastLat, routeLastLon, userId, refreshTrigger]);
 
-  return { radars, radarZones, loadingRadars, fetchingRouteRadars, lastUpdate, progress };
+  const refreshRadars = () => setRefreshTrigger(prev => prev + 1);
+
+  return { radars, radarZones, loadingRadars, fetchingRouteRadars, lastUpdate, progress, refreshRadars };
 }
