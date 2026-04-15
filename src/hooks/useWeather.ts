@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { logger } from '@/lib/logger';
 
-// Usando nueva key OWM: teslaapp
-const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || 'd78521d9d03fc712e2a7ec84c6b58de2';
-const API_URL = 'https://api.openweathermap.org/data/2.5/weather';
+const API_URL = '/api/weather';
 
 export interface WeatherPoint {
   id: string; // lat,lon key
@@ -59,10 +57,7 @@ export function useWeather(userPos: [number, number] | null, routeCoordinates?: 
       }
     }
 
-    if (!API_KEY) {
-      logger.warn('useWeather', 'NEXT_PUBLIC_OPENWEATHER_API_KEY no configurada en variables de entorno.');
-      return;
-    }
+    isFetchingRef.current = true;
 
     isFetchingRef.current = true;
     setLoading(true);
@@ -90,7 +85,6 @@ export function useWeather(userPos: [number, number] | null, routeCoordinates?: 
         const params = new URLSearchParams({
           lat: point[0].toString(),
           lon: point[1].toString(),
-          appid: API_KEY,
           units: 'metric',
           lang: 'es'
         });

@@ -46,10 +46,7 @@ interface RouteResult {
 }
 
 
-const TOMTOM_KEY = process.env.NEXT_PUBLIC_TOMTOM_API_KEY || 'DvoGdJnTAqVFKyqem1NBUv77xJ0CLcny';
-if (!TOMTOM_KEY && typeof window !== 'undefined') {
-  logger.warn('useRoute', 'NEXT_PUBLIC_TOMTOM_API_KEY no configurada. Se usará OSRM sin tráfico.');
-}
+const TOMTOM_PROXY_URL = '/api/route';
 
 // Geocoding: Texto -> Coordenadas (Nominatim / OpenStreetMap)
 const geocodeAddress = async (query: string): Promise<Coordinates | null> => {
@@ -67,13 +64,11 @@ const geocodeAddress = async (query: string): Promise<Coordinates | null> => {
 };
 
 // Ruta con TomTom (tráfico en tiempo real)
-const fetchRouteTomTom = async (allPoints: Coordinates[], key: string, useTraffic: boolean): Promise<RouteResult> => {
+const fetchRouteTomTom = async (allPoints: Coordinates[], useTraffic: boolean): Promise<RouteResult> => {
   const coordStr = allPoints.map(p => `${p[0]},${p[1]}`).join(':');
   
-  // 1. TomTom prefiere parámetros repetidos para sectionType en lugar de comas
-  // 2. Mantenemos departAt=now para tráfico real
-  // 3. Eliminamos lanes y laneGuidance por incompatibilidad con el plan de API
-  let url = `https://api.tomtom.com/routing/1/calculateRoute/${coordStr}/json?key=${key}&report=effectiveSettings&instructionsType=text&language=es-ES&departAt=now`;
+  // Usamos el proxy para ocultar la clave y manejar la cuota en el servidor
+  let url = `${TOMTOM_PROXY_URL}?coords=${coordStr}&report=effectiveSettings&instructionsType=text&language=es-ES&departAt=now`;
   
   if (useTraffic) {
     url += `&traffic=true&routeType=fastest&sectionType=traffic`;
@@ -258,10 +253,10 @@ export function useRoute() {
     try {
       let result: RouteResult;
 
-      if (TOMTOM_KEY) {
-        try {
-          result = await fetchRouteTomTom(allPoints, TOMTOM_KEY, enableTrafficRequested);
-          setIsTrafficEnabled(enableTrafficRequested);
+      // Siempre intentamos el proxy primero
+      try {
+        result = await fetchRouteTomTom(allPoints, enableTrafficRequested);
+        setIsTrafficEnabled(enableTrafficRequested);
           if (!isRecalculation) {
             lastTrafficPosRef.current = origin;
             lastTrafficTimeRef.current = Date.now();
@@ -269,13 +264,8 @@ export function useRoute() {
             setLastTrafficTime(Date.now());
           }
           logger.info('useRoute', `Ruta con TomTom OK (Tráfico: ${enableTrafficRequested ? 'ON' : 'OFF'})`);
-        } catch (ttErr) {
-          logger.warn('useRoute', 'TomTom falló, usando OSRM', ttErr);
-          result = await fetchRouteOSRM(allPoints);
-          setIsTrafficEnabled(false);
-        }
-      } else {
-        console.log('[useRoute] Sin clave TomTom, usando OSRM.');
+      } catch (ttErr) {
+        logger.warn('useRoute', 'Proxy de TomTom falló, usando OSRM', ttErr);
         result = await fetchRouteOSRM(allPoints);
         setIsTrafficEnabled(false);
       }

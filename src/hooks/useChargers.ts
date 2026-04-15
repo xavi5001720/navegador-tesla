@@ -21,9 +21,7 @@ export interface Charger {
 
 const CONSTANTS = {
   CHUNK_DISTANCE_M: 50000,
-  // FIX I3: API key ya NO tiene fallback hardcodeado — debe configurarse en Vercel env vars
-  API_KEY: process.env.NEXT_PUBLIC_OPENCHARGE_API_KEY || 'fa85c4b7-19c1-4463-a71f-86936f68e0e4',
-  BASE_URL: 'https://api.openchargemap.io/v3/poi',
+  BASE_URL: '/api/chargers',
   CONNECTOR_MAP: {
     'ccs': '33,32',
     'tipo2': '25,1036',
@@ -99,11 +97,6 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
       if (!isEnabled && chargers.length > 0) setChargers([]);
       return;
     }
-    if (!CONSTANTS.API_KEY) {
-      logger.warn('useChargers', 'NEXT_PUBLIC_OPENCHARGE_API_KEY no configurada. No se cargarán cargadores.');
-      return;
-    }
-
     const hasRoute = routeLength > 0;
     const currentType = hasRoute ? 'route' : 'local';
     const currentRouteKey = `${routeFirstKey}|${routeLastKey}`;
@@ -135,7 +128,6 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
       try {
         // Construimos params base
         const params = new URLSearchParams({
-          key: CONSTANTS.API_KEY,
           statustypeid: '0', // 0 = Todo (incluye los que no tienen estado definido)
           usagetypeid: '1,4,5,7', // Siempre buscamos públicos para filtrar por texto después
           distanceunit: 'KM',
@@ -179,11 +171,7 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
             params.set('distance', '5'); // Buscar a max 5km del trazo invertido
             
             try {
-              const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`, {
-                headers: {
-                  'Accept': 'application/json'
-                }
-              });
+              const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
               const data = await res.json();
               if (Array.isArray(data)) {
                 data.forEach(c => {
@@ -218,11 +206,7 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
           params.set('longitude', userPos[1].toString());
           params.set('distance', '25');
           
-          const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`, {
-            headers: {
-              'Accept': 'application/json'
-            }
-          });
+          const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
           const data = await res.json();
           if (Array.isArray(data)) {
             const parsed: Charger[] = [];
