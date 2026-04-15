@@ -137,8 +137,6 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
 
       try {
         const params = new URLSearchParams({
-          statustypeid: '0',
-          usagetypeid: '1,4,5,7',
           distanceunit: 'KM',
           maxresults: '250'
         });
