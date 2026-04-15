@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const key = process.env.TOMTOM_API_KEY || process.env.NEXT_PUBLIC_TOMTOM_API_KEY;
+  const key = process.env.TOMTOM_API_KEY || process.env.NEXT_PUBLIC_TOMTOM_API_KEY || 'DvoGdJnTAqVFKyqem1NBUv77xJ0CLcny';
 
   if (!key) {
     return NextResponse.json({ error: 'TomTom API Key not configured' }, { status: 500 });

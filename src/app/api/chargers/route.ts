@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const key = process.env.OPENCHARGE_API_KEY || process.env.NEXT_PUBLIC_OPENCHARGE_API_KEY;
+  const key = process.env.OPENCHARGE_API_KEY || process.env.NEXT_PUBLIC_OPENCHARGE_API_KEY || 'fa85c4b7-19c1-4463-a71f-86936f68e0e4';
 
   if (!key) {
     return NextResponse.json({ error: 'API Key not configured' }, { status: 500 });
