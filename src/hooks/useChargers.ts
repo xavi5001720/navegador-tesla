@@ -135,6 +135,7 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
       try {
         // Construimos params base
         const params = new URLSearchParams({
+          key: CONSTANTS.API_KEY,
           statustypeid: '0', // 0 = Todo (incluye los que no tienen estado definido)
           usagetypeid: '1,4,5,7', // Siempre buscamos públicos para filtrar por texto después
           distanceunit: 'KM',
@@ -180,7 +181,6 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
             try {
               const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`, {
                 headers: {
-                  'X-OpenChargeMap-Key': CONSTANTS.API_KEY,
                   'Accept': 'application/json'
                 }
               });
@@ -220,7 +220,6 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
           
           const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`, {
             headers: {
-              'X-OpenChargeMap-Key': CONSTANTS.API_KEY,
               'Accept': 'application/json'
             }
           });
