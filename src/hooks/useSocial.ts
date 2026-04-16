@@ -309,13 +309,56 @@ export function useSocial(
     if (cleanEmail === session.user.email) return { error: 'No puedes añadirte a ti mismo' };
 
     try {
-      const { data: profile } = await supabase.from('profiles').select('id').eq('email', cleanEmail).single();
+      // FIX: Evitamos .single()/.maybeSingle() que a veces causa error 406 (Not Acceptable)
+      // Usamos .select().limit(1) para una respuesta JSON estándar.
+      console.log('[useSocial] Buscando perfil para:', cleanEmail);
+      const { data, error: pError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', cleanEmail)
+        .limit(1);
+      
+      if (pError) {
+        console.error('[useSocial] Error buscando perfil:', pError);
+        // Si hay error de permisos (406 u otro), seguimos el flujo para invitar
+      }
+
+      const profile = data && data.length > 0 ? data[0] : null;
+      
       if (profile) {
+        console.log('[useSocial] Perfil encontrado:', profile.id);
         const { error } = await supabase.from('friendships').insert({ user_id: session.user.id, friend_id: profile.id, status: 'pending' });
         await fetchFriends();
         return { success: !error, error };
       } else {
-        await supabase.from('friend_invitations').upsert({ sender_id: session.user.id, receiver_email: cleanEmail });
+        console.log('[useSocial] Perfil no encontrado, enviando invitación a:', cleanEmail);
+        // Registrar la invitación en la base de datos
+        const { error: invError } = await supabase.from('friend_invitations').upsert({ 
+          sender_id: session.user.id, 
+          receiver_email: cleanEmail 
+        }, { onConflict: 'sender_id, receiver_email' });
+
+        if (invError) {
+          console.error('[useSocial] Error al registrar invitación:', invError);
+          // Si el error es 409 (Conflicto), probablemente ya existe, pero intentamos enviar el mail igual
+        }
+        
+        // Disparar el envío de correo mediante la Edge Function
+        const senderName = session.user.user_metadata?.nickname 
+          || session.user.user_metadata?.full_name 
+          || session.user.email?.split('@')[0] 
+          || 'Un amigo';
+          
+        logger.info('useSocial', 'Invocando invite-friend para:', cleanEmail);
+        
+        const { error: fnError } = await supabase.functions.invoke('invite-friend', {
+          body: { senderName, receiverEmail: cleanEmail }
+        });
+
+        if (fnError) {
+          logger.error('useSocial', 'Error al invocar invite-friend', fnError);
+        }
+
         await fetchFriends();
         return { success: true, invited: true };
       }
