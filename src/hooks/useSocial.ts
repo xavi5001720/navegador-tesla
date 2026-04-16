@@ -137,6 +137,59 @@ export function useSocial(
   }, [session, fetchFriends]);
 
   // 2. Canal Realtime (Broadcast y Presencia) — FIX C5: guard isMountedRef + FIX I6: reconexión
+  // 3. Función de Sincronización de Ubicación
+  const syncLocation = useCallback(async (isInitial = false) => {
+    // FIX I10: Comprobación robusta de requisitos para compartir
+    if (!session?.user || !isSharingLocation || !hasLocation || !userPos) return;
+
+    // FIX C5: Guard para canal nulo o no conectado
+    if (!channelRef.current || channelRef.current.state !== 'joined') {
+      if (!isInitial) logger.warn('useSocial', 'Canal no disponible para sync de posición, saltando.');
+      return;
+    }
+    
+    const [lat, lon] = userPos;
+    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+      logger.warn('useSocial', 'Coordenadas inválidas, no se envían.', { lat, lon });
+      return;
+    }
+    
+    const now = Date.now();
+    
+    // Broadcast a amigos conectados
+    channelRef.current.send({
+      type: 'broadcast',
+      event: 'SOCIAL_LOCATION_UPDATE',
+      payload: { 
+        user_id: session.user.id, 
+        lat,
+        lon,
+        heading: isNaN(heading) ? 0 : heading,
+        timestamp: now 
+      }
+    });
+
+    // Aseguramos que el estado de compartir también se envíe en el broadcast
+    channelRef.current.send({
+      type: 'broadcast',
+      event: 'SOCIAL_STATUS_UPDATE',
+      payload: { user_id: session.user.id, is_sharing_location: true }
+    });
+
+    logger.info('useSocial', `Ubicación sincronizada (${isInitial ? 'Inicio/Toggle' : 'Bucle'}).`);
+
+    // Persistencia en base de datos
+    const { error } = await supabase.from('profiles').update({
+      last_lat: lat,
+      last_lon: lon,
+      is_online: true,
+      is_sharing_location: true
+    }).eq('id', session.user.id);
+
+    if (error) logger.error('useSocial', 'Error guardando posición en DB', error.message);
+  }, [session, isSharingLocation, hasLocation, userPos, heading]);
+
+  // 4. Ciclo de Vida del Canal Social
   useEffect(() => {
     if (!session?.user) return;
 
@@ -187,8 +240,9 @@ export function useSocial(
           if (status === 'SUBSCRIBED') {
             logger.info('useSocial', 'Canal Realtime conectado.');
             await channel.track({ key: session.user.id, online_at: new Date().toISOString() });
+            // FIX I10: Sincronización instantánea tras suscripción exitosa
+            syncLocation(true);
           } else if (status === 'CHANNEL_ERROR') {
-            // FIX I6: Reconexión automática tras error del canal
             logger.warn('useSocial', 'Canal Realtime error. Reconectando en 5s...');
             setTimeout(() => {
               if (isMountedRef.current) {
@@ -224,68 +278,24 @@ export function useSocial(
       supabase.removeChannel(dbChannel);
       channelRef.current = null;
     };
-  }, [session, fetchFriends]);
+  }, [session, fetchFriends, syncLocation]);
 
-  // 3. Emisión de Posición (Cada 5 minutos)
+  // 5. Emisión de Posición Periódica (Cada 5 minutos)
   useEffect(() => {
     if (!session?.user || !isSharingLocation || !hasLocation || !userPos) return;
 
-    const syncLocation = () => {
-      // FIX C5: Guard para canal nulo
-      if (!channelRef.current || channelRef.current.state !== 'joined') {
-        logger.warn('useSocial', 'Canal no disponible para sync de posición, saltando.');
-        return;
-      }
-      
-      // Validación de coordenadas antes de enviar
-      const [lat, lon] = userPos;
-      if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-        logger.warn('useSocial', 'Coordenadas inválidas, no se envían.', { lat, lon });
-        return;
-      }
-      
-      const now = Date.now();
-      channelRef.current.send({
-        type: 'broadcast',
-        event: 'SOCIAL_LOCATION_UPDATE',
-        payload: { 
-          user_id: session.user.id, 
-          lat,
-          lon,
-          heading: isNaN(heading) ? 0 : heading,
-          timestamp: now 
-        }
-      });
-      logger.info('useSocial', 'Ubicación sincronizada con amigos conectados.');
+    // Intervalo de 5 minutos (respetado como solicitó el usuario)
+    const senderLoop = setInterval(() => syncLocation(), 300000);
 
-      // Persistencia en base de datos
-      supabase.from('profiles').update({
-        last_lat: lat,
-        last_lon: lon,
-        is_online: true,
-        is_sharing_location: true
-      }).eq('id', session.user.id).then(({ error }) => {
-        if (error) logger.error('useSocial', 'Error guardando posición en DB', error.message);
-      });
-    };
+    return () => clearInterval(senderLoop);
+  }, [session, userPos, heading, isSharingLocation, hasLocation, syncLocation]);
 
-    // Posición inicial tras conectar (espera 3s para que el canal esté listo)
-    const initTimer = setTimeout(syncLocation, 3000);
-    // Intervalo de 5 minutos
-    const senderLoop = setInterval(syncLocation, 300000);
-
-    return () => {
-      clearInterval(senderLoop);
-      clearTimeout(initTimer);
-    };
-  }, [session, userPos, heading, isSharingLocation, hasLocation]);
-
-  // 4. Señal instantánea al desactivar privacidad
+  // 6. Señal instantánea al CAMBIAR privacidad
   useEffect(() => {
-    // FIX C5: Guard para canal nulo — este effect puede ejecutarse antes de que el canal esté listo
     if (!session?.user || !channelRef.current) return;
 
     if (!isSharingLocation) {
+      // Notificar apagado instantáneo
       channelRef.current.send({
         type: 'broadcast',
         event: 'SOCIAL_STATUS_UPDATE',
@@ -297,8 +307,12 @@ export function useSocial(
         .then(({ error }) => {
           if (error) logger.error('useSocial', 'Error actualizando is_sharing_location en DB', error.message);
         });
+    } else {
+      // FIX I10: Notificar encendido instantáneo
+      syncLocation(true);
     }
-  }, [isSharingLocation, session?.user]);
+  }, [isSharingLocation, session?.user, syncLocation]);
+
 
   // 5. Acciones CRUD
   const addFriend = async (email: string) => {
