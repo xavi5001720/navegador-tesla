@@ -331,16 +331,17 @@ export function useSocial(
         await fetchFriends();
         return { success: !error, error };
       } else {
-        console.log('[useSocial] Perfil no encontrado, enviando invitación a:', cleanEmail);
+        console.log('[useSocial] Perfil no encontrado, registrando invitación para:', cleanEmail);
         // Registrar la invitación en la base de datos
+        // NOTA: Si este paso falla, asegúrate de haber ejecutado el SQL del parche.
         const { error: invError } = await supabase.from('friend_invitations').upsert({ 
           sender_id: session.user.id, 
           receiver_email: cleanEmail 
         }, { onConflict: 'sender_id, receiver_email' });
 
         if (invError) {
-          console.error('[useSocial] Error al registrar invitación:', invError);
-          // Si el error es 409 (Conflicto), probablemente ya existe, pero intentamos enviar el mail igual
+          console.warn('[useSocial] Aviso/Error en upsert invitación:', invError.message);
+          // Continuamos de todos modos por si la invitación ya existía
         }
         
         // Disparar el envío de correo mediante la Edge Function
@@ -349,21 +350,27 @@ export function useSocial(
           || session.user.email?.split('@')[0] 
           || 'Un amigo';
           
-        logger.info('useSocial', 'Invocando invite-friend para:', cleanEmail);
+        console.log('[useSocial] Invocando invite-friend para:', cleanEmail, 'Remitente:', senderName);
         
-        const { error: fnError } = await supabase.functions.invoke('invite-friend', {
-          body: { senderName, receiverEmail: cleanEmail }
-        });
+        try {
+          const { data: fnData, error: fnError } = await supabase.functions.invoke('invite-friend', {
+            body: { senderName, receiverEmail: cleanEmail }
+          });
 
-        if (fnError) {
-          logger.error('useSocial', 'Error al invocar invite-friend', fnError);
+          if (fnError) {
+            console.error('[useSocial] Error desde la Edge Function:', fnError);
+          } else {
+            console.log('[useSocial] Función invite-friend ejecutada con éxito:', fnData);
+          }
+        } catch (fErr) {
+          console.error('[useSocial] Error crítico al llamar a la función:', fErr);
         }
 
         await fetchFriends();
         return { success: true, invited: true };
       }
     } catch (err) {
-      logger.error('useSocial', 'Error en addFriend', err);
+      console.error('[useSocial] Error general en addFriend:', err);
       return { error: 'Error al añadir amigo.' };
     }
   };
