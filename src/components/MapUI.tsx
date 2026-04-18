@@ -558,7 +558,7 @@ export default function MapUI({
                 }
               }}
             />
-            <TileLayer attribution="&copy; Google Maps" url="https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}&apistyle=s.t:3|p.v:off|s.t:4|p.v:off" />
+            <TileLayer attribution="&copy; Google Maps" url="https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}" />
           </>
         ) : (
           <TileLayer 

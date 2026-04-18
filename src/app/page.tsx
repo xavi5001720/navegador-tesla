@@ -216,7 +216,6 @@ export default function Home() {
   // against the server. This is the single source of truth.
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      console.log('[Auth] Event:', event, '| Has session:', !!newSession);
 
       if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !newSession)) {
         setSession(null);
@@ -303,7 +302,6 @@ export default function Home() {
   const handleSavePreferences = useCallback(async () => {
     if (!session || !profile) return;
     
-    // Solo guardamos si realmente hay cambios respecto al perfil cargado
     const newPrefs = {
       isRadarsEnabled,
       isAircraftsEnabled,
@@ -316,6 +314,7 @@ export default function Home() {
       voiceType
     };
 
+    // Solo guardamos si realmente hay cambios respecto al perfil cargado
     if (JSON.stringify(profile.preferences) === JSON.stringify(newPrefs)) {
       return;
     }
@@ -325,10 +324,10 @@ export default function Home() {
     });
     
     if (res.success) {
-      console.log('[Prefs] Configuración guardada correctamente');
+      // Éxito
     }
   }, [
-    session, profile, updateProfile, isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, 
+    session, profile?.preferences, updateProfile, isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, 
     chargerFilters, isGasStationsEnabled, gasStationFilters, isWeatherEnabled, 
     isSoundEnabled, voiceType
   ]);
@@ -339,7 +338,6 @@ export default function Home() {
     if (!session || !prefsLoaded || sessionConflict !== 'none') return;
 
     const timer = setTimeout(() => {
-      console.log('[Prefs] Auto-guardando cambios detectados...');
       handleSavePreferences();
     }, 2000);
 
@@ -375,7 +373,6 @@ export default function Home() {
         isSessionMasterRef.current = false;
       } else {
         // No hay sesión activa o es la nuestra, tomamos control oficialmente
-        console.log('[Auth] Tomando control de la sesión:', sessionClientId);
         updateProfile({ last_session_id: sessionClientId });
         isSessionMasterRef.current = true;
         setSessionConflict('none');
@@ -408,9 +405,6 @@ export default function Home() {
             setSessionConflict('kicked');
             isSessionMasterRef.current = false;
           }
-          
-          // Debug para trazabilidad
-          console.log('[Auth] Cambio de perfil detectado. last_session_id en DB:', newSessionId);
         }
       )
       .subscribe();

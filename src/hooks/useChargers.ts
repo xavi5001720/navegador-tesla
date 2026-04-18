@@ -86,8 +86,6 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
   const filtersStr = JSON.stringify(filters);
 
   useEffect(() => {
-    console.log('[useChargers] Hook Effect Triggered', { isEnabled, userPos: !!userPos, route: routeLength > 0 });
-
     if (!isEnabled || !userPos) {
       if (!isEnabled && chargers.length > 0) {
         setChargers([]);
@@ -95,13 +93,12 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
       return;
     }
 
-    const hasRoute = routeLength > 0;
+    const hasRoute = routeCoordinates && routeLength > 0;
     const currentType = hasRoute ? 'route' : 'local';
     const currentRouteKey = `${routeFirstKey}|${routeLastKey}`;
 
     let shouldFetch = false;
     if (!lastFetchRef.current) {
-      console.log('[useChargers] First fetch attempt');
       shouldFetch = true;
     } else if (lastFetchRef.current.type !== currentType) {
       console.log('[useChargers] Type change:', lastFetchRef.current.type, '->', currentType);
@@ -122,13 +119,7 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
       }
     }
 
-    if (!shouldFetch) {
-      console.log('[useChargers] Skipping fetch (no changes)');
-      return;
-    }
-
     const fetchChargers = async () => {
-      console.log('[useChargers] fetchChargers function started');
       setLoading(true);
       if (hasRoute) {
         setProgress(0);
@@ -176,12 +167,10 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
             params.set('polyline', polyline);
             params.set('distance', '5');
             
-            console.log(`[useChargers] Fetching chunk ${i+1}/${chunks.length}...`);
             const chunkRes = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
             const data = await chunkRes.json();
             
             if (Array.isArray(data)) {
-                console.log(`[useChargers] Chunk ${i+1} returned ${data.length} results`);
                 data.forEach(c => {
                   if (filters.isFree && !isFreeCharger(c.UsageCost)) return;
                   if (!uniqueIds.has(c.ID)) {
@@ -210,13 +199,10 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
           params.set('longitude', userPos[1].toString());
           params.set('distance', '15');
           
-          console.log('[useChargers] Fetching radial from proxy...');
           const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
-          console.log('[useChargers] Proxy response status:', res.status);
           const data = await res.json();
           
           if (Array.isArray(data)) {
-            console.log('[useChargers] Received', data.length, 'chargers');
             const parsed: Charger[] = [];
             data.forEach(c => {
                if (filters.isFree && !isFreeCharger(c.UsageCost)) return;
@@ -235,7 +221,6 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
           }
         }
         lastFetchRef.current = { type: currentType, pos: userPos, routeKey: currentRouteKey, filtersStr };
-        console.log('[useChargers] fetchChargers finished successfully');
       } catch (err) {
         console.error('[useChargers] fetchChargers Error:', err);
         logger.error('useChargers', 'Error al cargar cargadores', err);

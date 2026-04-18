@@ -8,7 +8,7 @@ const BATCH_SIZE = 500;
 export const maxDuration = 300; // Aumentar al máximo en Vercel Pro (o 60s en Hobby)
 export const dynamic = 'force-dynamic';
 
-async function fetchRadarsFromOverpass(query: string, retries = 2): Promise<any[]> {
+async function fetchRadarsFromOverpass(query: string, retries = 5): Promise<any[]> {
   const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
   const servers = [
     'https://overpass-api.de/api/interpreter',
@@ -155,26 +155,26 @@ export async function GET(request: Request) {
 
     // ── Francia Sur ── (lat 41-45, lon -5-10) -> crons: 03:00 AM
     // ── FRANCIA: División en 6 cuadrantes para evitar Timeouts ──
-    // Francia (Zonas extra-pequeñas para evitar Timeouts)
+    // Francia (Micro-cuadrícula de 36 zonas para evitar Timeouts)
     const frZones = [
-      { name: 'fr_s_1', bbox: '41.0,-5.0,43.5,-2.0' },
-      { name: 'fr_s_2a', bbox: '41.0,-2.0,43.5,0.0' },
-      { name: 'fr_s_2b', bbox: '41.0,0.0,43.5,1.5' },
-      { name: 'fr_s_3', bbox: '41.0,1.5,43.5,4.0' },
-      { name: 'fr_s_4', bbox: '41.0,4.0,43.5,7.0' },
-      { name: 'fr_s_5', bbox: '41.0,7.0,43.5,10.0' },
-      { name: 'fr_m_1', bbox: '43.5,-5.0,48.0,-2.0' },
-      { name: 'fr_m_2', bbox: '43.5,-2.0,48.0,1.0' },
-      { name: 'fr_m_3', bbox: '43.5,1.0,48.0,4.0' },
-      { name: 'fr_m_4', bbox: '43.5,4.0,48.0,7.0' },
-      { name: 'fr_m_5', bbox: '43.5,7.0,48.0,10.0' },
-      { name: 'fr_n_1', bbox: '48.0,-5.0,52.0,-2.0' },
-      { name: 'fr_n_2', bbox: '48.0,-2.0,52.0,0.5' },
-      { name: 'fr_n_3a', bbox: '48.0,0.5,52.0,1.5' },
-      { name: 'fr_n_3b', bbox: '48.0,1.5,52.0,2.5' },
-      { name: 'fr_n_4', bbox: '48.0,2.5,52.0,5.0' },
-      { name: 'fr_n_5', bbox: '48.0,5.0,52.0,7.5' },
-      { name: 'fr_n_6', bbox: '48.0,7.5,52.0,10.0' }
+      // SUR (12 micro-zonas)
+      { name: 'fr_s_1', bbox: '41.0,-5.0,43.5,-3.0' }, { name: 'fr_s_2', bbox: '41.0,-3.0,43.5,-1.5' },
+      { name: 'fr_s_3', bbox: '41.0,-1.5,43.5,0.0' },  { name: 'fr_s_4', bbox: '41.0,0.0,43.5,1.5' },
+      { name: 'fr_s_5', bbox: '41.0,1.5,43.5,3.0' },  { name: 'fr_s_6', bbox: '41.0,3.0,43.5,4.5' },
+      { name: 'fr_s_7', bbox: '41.0,4.5,43.5,6.0' },  { name: 'fr_s_8', bbox: '41.0,6.0,43.5,7.5' },
+      { name: 'fr_s_9', bbox: '41.0,7.5,43.5,10.0' },
+      // CENTRO (12 micro-zonas)
+      { name: 'fr_m_1', bbox: '43.5,-5.0,48.0,-3.0' }, { name: 'fr_m_2', bbox: '43.5,-3.0,48.0,-1.5' },
+      { name: 'fr_m_3', bbox: '43.5,-1.5,48.0,0.0' },  { name: 'fr_m_4', bbox: '43.5,0.0,48.0,1.5' },
+      { name: 'fr_m_5', bbox: '43.5,1.5,48.0,3.0' },  { name: 'fr_m_6', bbox: '43.5,3.0,48.0,4.5' },
+      { name: 'fr_m_7', bbox: '43.5,4.5,48.0,6.0' },  { name: 'fr_m_8', bbox: '43.5,6.0,48.0,7.5' },
+      { name: 'fr_m_9', bbox: '43.5,7.5,48.0,10.0' },
+      // NORTE (12 micro-zonas)
+      { name: 'fr_n_1', bbox: '48.0,-5.0,52.0,-3.0' }, { name: 'fr_n_2', bbox: '48.0,-3.0,52.0,-1.5' },
+      { name: 'fr_n_3', bbox: '48.0,-1.5,52.0,0.0' },  { name: 'fr_n_4', bbox: '48.0,0.0,52.0,1.0' },
+      { name: 'fr_n_5', bbox: '48.0,1.0,52.0,2.0' },  { name: 'fr_n_6', bbox: '48.0,2.0,52.0,3.0' },
+      { name: 'fr_n_7', bbox: '48.0,3.0,52.0,4.5' },  { name: 'fr_n_8', bbox: '48.0,4.5,52.0,6.0' },
+      { name: 'fr_n_9', bbox: '48.0,6.0,52.0,8.0' },  { name: 'fr_n_10', bbox: '48.0,8.0,52.0,10.0' }
     ];
 
     const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));

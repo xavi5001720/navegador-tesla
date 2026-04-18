@@ -142,7 +142,6 @@ export function useRadars(
           if (currentChunk.length > 1) chunks.push(currentChunk);
 
           // 2. Cargar cada tramo de forma secuencial
-          console.log(`[useRadars] Iniciando carga de ${chunks.length} tramos (50km cada uno)...`);
           
           const uniqueRadarIds = new Set<number>();
           const accumulatedRadars: Radar[] = [];
@@ -216,7 +215,6 @@ export function useRadars(
           }
         } else {
           // MODO LOCAL: Búsqueda circular de 60km
-          console.log(`[useRadars] Consultando burbuja de 60km de radares...`);
           
           // 1. Radares Fijos/OSM
           const { data: fixedData, error: fixedError } = await supabase.rpc('get_radars_nearby', {
