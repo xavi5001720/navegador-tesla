@@ -132,22 +132,29 @@ export async function GET(request: Request) {
     // ── Francia Sur ── (lat 41-45, lon -5-10) -> crons: 03:00 AM
     // ── FRANCIA: División en 6 cuadrantes para evitar Timeouts ──
     const frZones = [
-      // SUR (4 zonas)
-      { name: 'fr_s_w1', bbox: '41.0,-5.0,43.5,-1.0' },
-      { name: 'fr_s_w2', bbox: '41.0,-1.0,43.5,2.5' },
-      { name: 'fr_s_e1', bbox: '41.0,2.5,43.5,6.0' },
-      { name: 'fr_s_e2', bbox: '41.0,6.0,43.5,10.0' },
-      // CENTRO (4 zonas)
-      { name: 'fr_m_w1', bbox: '43.5,-5.0,48.0,-1.0' },
-      { name: 'fr_m_w2', bbox: '43.5,-1.0,48.0,2.5' },
-      { name: 'fr_m_e1', bbox: '43.5,2.5,48.0,6.0' },
-      { name: 'fr_m_e2', bbox: '43.5,6.0,48.0,10.0' },
-      // NORTE (4 zonas)
-      { name: 'fr_n_w1', bbox: '48.0,-5.0,52.0,-1.0' },
-      { name: 'fr_n_w2', bbox: '48.0,-1.0,52.0,2.5' },
-      { name: 'fr_n_e1', bbox: '48.0,2.5,52.0,6.0' },
-      { name: 'fr_n_e2', bbox: '48.0,6.0,52.0,10.0' }
+      // SUR (6 zonas más pequeñas)
+      { name: 'fr_s_1', bbox: '41.0,-5.0,43.5,-2.0' },
+      { name: 'fr_s_2', bbox: '41.0,-2.0,43.5,1.0' },
+      { name: 'fr_s_3', bbox: '41.0,1.0,43.5,4.0' },
+      { name: 'fr_s_4', bbox: '41.0,4.0,43.5,7.0' },
+      { name: 'fr_s_5', bbox: '41.0,7.0,43.5,10.0' },
+      // CENTRO (6 zonas)
+      { name: 'fr_m_1', bbox: '43.5,-5.0,48.0,-2.0' },
+      { name: 'fr_m_2', bbox: '43.5,-2.0,48.0,1.0' },
+      { name: 'fr_m_3', bbox: '43.5,1.0,48.0,4.0' },
+      { name: 'fr_m_4', bbox: '43.5,4.0,48.0,7.0' },
+      { name: 'fr_m_5', bbox: '43.5,7.0,48.0,10.0' },
+      // NORTE (6 zonas - París es densa)
+      { name: 'fr_n_1', bbox: '48.0,-5.0,52.0,-2.0' },
+      { name: 'fr_n_2', bbox: '48.0,-2.0,52.0,0.5' },
+      { name: 'fr_n_3', bbox: '48.0,0.5,52.0,2.5' }, // París y alrededores
+      { name: 'fr_n_4', bbox: '48.0,2.5,52.0,5.0' },
+      { name: 'fr_n_5', bbox: '48.0,5.0,52.0,7.5' },
+      { name: 'fr_n_6', bbox: '48.0,7.5,52.0,10.0' }
     ];
+
+    // Función para esperar X milisegundos
+    const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
 
     for (const zone of frZones) {
       // Mapeo de compatibilidad: fr_south incluye zonas s, fr_mid incluye zonas m, fr_north incluye zonas n
@@ -157,6 +164,7 @@ export async function GET(request: Request) {
         (country === 'fr_north' && zone.name.startsWith('fr_n'));
 
       if (country === 'all' || country === 'fr' || country === zone.name || isLegacyMatch) {
+        if (Object.keys(results).length > 0) await sleep(2000); // Pausa de 2 segundos entre zonas
         console.log(`[RadarSync] Sincronizando ${zone.name}...`);
         const query = `[out:json][timeout:90];(node["highway"="speed_camera"](${zone.bbox});node["enforcement"="speed"](${zone.bbox}););out body;`;
         try {
