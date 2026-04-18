@@ -116,7 +116,6 @@ export function usePegasus(
           .single();
 
         if (error) {
-          console.warn('[usePegasus] Error consultando caché:', error.message);
           return 0;
         }
 

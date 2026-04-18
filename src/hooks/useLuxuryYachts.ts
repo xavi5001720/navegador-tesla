@@ -26,10 +26,8 @@ export function useLuxuryYachts(isEnabled: boolean = false) {
     setLoadingYachts(true);
     try {
       if (triggerSync) {
-        console.log('[useLuxuryYachts] Iniciando sincronización con API externa...');
         const { data: syncData, error: syncError } = await supabase.functions.invoke('sync-luxury-yachts');
-        if (syncError) console.error('[useLuxuryYachts] Error en sync function:', syncError);
-        else console.log('[useLuxuryYachts] Sincronización completada:', syncData);
+        if (syncError) {} 
       }
 
       // Consulta con Join para traer datos del yate y su posición

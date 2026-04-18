@@ -325,7 +325,6 @@ export function useSocial(
     try {
       // FIX: Evitamos .single()/.maybeSingle() que a veces causa error 406 (Not Acceptable)
       // Usamos .select().limit(1) para una respuesta JSON estándar.
-      console.log('[useSocial] Buscando perfil para:', cleanEmail);
       const { data, error: pError } = await supabase
         .from('profiles')
         .select('id')
@@ -340,12 +339,10 @@ export function useSocial(
       const profile = data && data.length > 0 ? data[0] : null;
       
       if (profile) {
-        console.log('[useSocial] Perfil encontrado:', profile.id);
         const { error } = await supabase.from('friendships').insert({ user_id: session.user.id, friend_id: profile.id, status: 'pending' });
         await fetchFriends();
         return { success: !error, error };
       } else {
-        console.log('[useSocial] Perfil no encontrado, registrando invitación para:', cleanEmail);
         // Registrar la invitación en la base de datos
         // NOTA: Si este paso falla, asegúrate de haber ejecutado el SQL del parche.
         const { error: invError } = await supabase.from('friend_invitations').upsert({ 
@@ -370,15 +367,7 @@ export function useSocial(
           const { data: fnData, error: fnError } = await supabase.functions.invoke('invite-friend', {
             body: { senderName, receiverEmail: cleanEmail }
           });
-
-          if (fnError) {
-            console.error('[useSocial] Error desde la Edge Function:', fnError);
-          } else {
-            console.log('[useSocial] Función invite-friend ejecutada con éxito:', fnData);
-          }
-        } catch (fErr) {
-          console.error('[useSocial] Error crítico al llamar a la función:', fErr);
-        }
+        } catch (fErr) {}
 
         await fetchFriends();
         return { success: true, invited: true };

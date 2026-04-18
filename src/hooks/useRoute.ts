@@ -344,7 +344,6 @@ export function useRoute() {
       
       // Solo lanzamos API si nos hemos alejado al menos 1 kilómetro (1000m)
       if (distSinceLastFetch > 1000) {
-        console.log(`[useRoute] 30m superados y 1km recorrido (${Math.round(distSinceLastFetch)}m). Repintando ruta para recaucular tráfico TomTom...`);
         lastTrafficTimeRef.current = now;
         lastTrafficPosRef.current = currentPos;
         calculateRoute(currentPos, destination, waypoints, true, isTrafficEnabled);

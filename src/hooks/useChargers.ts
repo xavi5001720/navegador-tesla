@@ -101,20 +101,14 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
     if (!lastFetchRef.current) {
       shouldFetch = true;
     } else if (lastFetchRef.current.type !== currentType) {
-      console.log('[useChargers] Type change:', lastFetchRef.current.type, '->', currentType);
       shouldFetch = true;
     } else if (currentType === 'route' && lastFetchRef.current.routeKey !== currentRouteKey) {
-      console.log('[useChargers] Route changed');
       shouldFetch = true;
     } else if (lastFetchRef.current.filtersStr !== filtersStr) {
-      console.log('[useChargers] Filters changed');
       shouldFetch = true;
     } else if (currentType === 'local') {
       const dist = getDist(lastFetchRef.current.pos, userPos);
-      console.log('[useChargers] Distance check:', Math.round(dist), 'm');
-      // Re-fetch si nos hemos movido 5km O si la última vez no encontramos nada (reintento)
       if (dist > 5000 || chargers.length === 0) {
-        console.log('[useChargers] Fetching due to distance (5km threshold) or empty state');
         shouldFetch = true;
       }
     }
@@ -142,7 +136,6 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
         }
 
         if (hasRoute && routeCoordinates) {
-          console.log('[useChargers] In Route Mode');
           const chunks: [number, number][][] = [];
           let currentChunk: [number, number][] = [routeCoordinates[0]];
           let currentDist = 0;
@@ -194,7 +187,6 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
             setProgress(Math.round(((i + 1) / chunks.length) * 100));
           }
         } else {
-          console.log('[useChargers] In Local Mode (Radial)');
           params.set('latitude', userPos[0].toString());
           params.set('longitude', userPos[1].toString());
           params.set('distance', '15');
@@ -233,7 +225,6 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
   }, [userPos?.[0], userPos?.[1], isEnabled, routeLength, routeFirstKey, routeLastKey, filtersStr]);
 
   const refreshChargers = () => {
-    console.log('[useChargers] Manual refresh called');
     lastFetchRef.current = null;
     setChargers(prev => [...prev]); 
   };
