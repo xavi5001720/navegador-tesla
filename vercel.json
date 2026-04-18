@@ -5,8 +5,16 @@
       "schedule": "0 1 * * *"
     },
     {
-      "path": "/api/radars/sync?country=fr",
+      "path": "/api/radars/sync?country=fr_south",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/radars/sync?country=fr_mid",
+      "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/radars/sync?country=fr_north",
+      "schedule": "0 4 * * *"
     },
     {
       "path": "/api/gas/sync",

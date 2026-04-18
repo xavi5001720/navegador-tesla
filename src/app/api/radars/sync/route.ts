@@ -8,30 +8,36 @@ const BATCH_SIZE = 500;
 export const maxDuration = 300; // Aumentar al máximo en Vercel Pro (o 60s en Hobby)
 export const dynamic = 'force-dynamic';
 
-async function fetchRadarsFromOverpass(query: string, retries = 3): Promise<any[]> {
+async function fetchRadarsFromOverpass(query: string, retries = 2): Promise<any[]> {
   const sleep = (ms: number) => new Promise(res => setTimeout(res, ms));
+  const servers = [
+    'https://overpass-api.de/api/interpreter',
+    'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.openstreetmap.ru/cgi/interpreter'
+  ];
   
   for (let i = 0; i < retries; i++) {
+    const server = servers[i % servers.length];
     try {
-      const response = await fetch('https://overpass-api.de/api/interpreter', {
+      const response = await fetch(server, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: `data=${encodeURIComponent(query)}`
+        body: `data=${encodeURIComponent(query)}`,
+        signal: AbortSignal.timeout(45000) // 45 segundos máximo por zona
       });
 
       if (response.status === 429) {
-        console.warn(`[Overpass] Demasiadas peticiones (429). Esperando ${15 + i * 10}s...`);
-        await sleep(15000 + i * 10000);
+        console.warn(`[Overpass] Servidor ${i} saturado. Probando siguiente...`);
+        await sleep(2000);
         continue;
       }
 
-      if (!response.ok) throw new Error(`Overpass error: ${response.status} ${response.statusText}`);
+      if (!response.ok) throw new Error(`Error ${response.status}`);
       const data = await response.json();
       return data.elements || [];
     } catch (err: any) {
-      if (i === retries - 1) throw err;
-      console.warn(`[Overpass] Error (intento ${i+1}/${retries}): ${err.message}. Reintentando en 10s...`);
-      await sleep(10000);
+      console.warn(`[Overpass] Error en servidor ${i}: ${err.message}`);
+      if (i < retries - 1) await sleep(2000);
     }
   }
   return [];
@@ -176,13 +182,12 @@ export async function GET(request: Request) {
     for (const zone of frZones) {
       const isLegacyMatch = (country === 'fr_south' && zone.name.startsWith('fr_s')) || (country === 'fr_mid' && zone.name.startsWith('fr_m')) || (country === 'fr_north' && zone.name.startsWith('fr_n'));
       if (country === 'all' || country === 'fr' || country === zone.name || isLegacyMatch) {
-        if (Object.keys(results).length > 0) await sleep(5000); // Pausa de 5 segundos
         console.log(`[RadarSync] Sincronizando ${zone.name}...`);
-        const query = `[out:json][timeout:90];(node["highway"="speed_camera"](${zone.bbox});node["enforcement"="speed"](${zone.bbox}););out body;`;
+        const query = `[out:json][timeout:30];(node["highway"="speed_camera"](${zone.bbox});node["enforcement"="speed"](${zone.bbox}););out body;`;
         try {
           results[zone.name] = await upsertRadars(supabase, await fetchRadarsFromOverpass(query));
         } catch (e: any) {
-          console.error(`[RadarSync] Fallo final en ${zone.name}:`, e.message);
+          console.error(`[RadarSync] Fallo en ${zone.name}:`, e.message);
           results[zone.name] = 0;
         }
       }
