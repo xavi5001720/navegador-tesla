@@ -541,25 +541,23 @@ export default function MapUI({
         <MapRotator heading={snappedHeading} viewMode={viewMode} speed={speed} />
         
         {mapMode === 'satellite' ? (
-          <>
-            <TileLayer 
-              attribution="&copy; Google Maps" 
-              url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" 
-              eventHandlers={{
-                tileerror: () => {
-                  errorCountRef.current++;
-                  if (errorCountRef.current > 5 && onMapError) {
-                    onMapError();
-                    errorCountRef.current = 0;
-                  }
-                },
-                tileload: () => {
-                  errorCountRef.current = 0; // Reset si algo carga bien
+          <TileLayer 
+            attribution="&copy; Google Maps" 
+            url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}" 
+            crossOrigin={true}
+            eventHandlers={{
+              tileerror: () => {
+                errorCountRef.current++;
+                if (errorCountRef.current > 5 && onMapError) {
+                  onMapError();
+                  errorCountRef.current = 0;
                 }
-              }}
-            />
-            <TileLayer attribution="&copy; Google Maps" url="https://mt1.google.com/vt/lyrs=h&x={x}&y={y}&z={z}" />
-          </>
+              },
+              tileload: () => {
+                errorCountRef.current = 0;
+              }
+            }}
+          />
         ) : (
           <TileLayer 
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
