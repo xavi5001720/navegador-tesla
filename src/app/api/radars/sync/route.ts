@@ -132,20 +132,29 @@ export async function GET(request: Request) {
     // ── Francia Sur ── (lat 41-45, lon -5-10) -> crons: 03:00 AM
     // ── FRANCIA: División en 6 cuadrantes para evitar Timeouts ──
     const frZones = [
-      { name: 'fr_south_west', bbox: '41.0,-5.0,45.0,2.5' },
-      { name: 'fr_south_east', bbox: '41.0,2.5,45.0,10.0' },
-      { name: 'fr_mid_west',   bbox: '45.0,-5.0,48.5,2.5' },
-      { name: 'fr_mid_east',   bbox: '45.0,2.5,48.5,10.0' },
-      { name: 'fr_north_west', bbox: '48.5,-5.0,52.0,2.5' },
-      { name: 'fr_north_east', bbox: '48.5,2.5,52.0,10.0' }
+      // SUR (4 zonas)
+      { name: 'fr_s_w1', bbox: '41.0,-5.0,43.5,-1.0' },
+      { name: 'fr_s_w2', bbox: '41.0,-1.0,43.5,2.5' },
+      { name: 'fr_s_e1', bbox: '41.0,2.5,43.5,6.0' },
+      { name: 'fr_s_e2', bbox: '41.0,6.0,43.5,10.0' },
+      // CENTRO (4 zonas)
+      { name: 'fr_m_w1', bbox: '43.5,-5.0,48.0,-1.0' },
+      { name: 'fr_m_w2', bbox: '43.5,-1.0,48.0,2.5' },
+      { name: 'fr_m_e1', bbox: '43.5,2.5,48.0,6.0' },
+      { name: 'fr_m_e2', bbox: '43.5,6.0,48.0,10.0' },
+      // NORTE (4 zonas)
+      { name: 'fr_n_w1', bbox: '48.0,-5.0,52.0,-1.0' },
+      { name: 'fr_n_w2', bbox: '48.0,-1.0,52.0,2.5' },
+      { name: 'fr_n_e1', bbox: '48.0,2.5,52.0,6.0' },
+      { name: 'fr_n_e2', bbox: '48.0,6.0,52.0,10.0' }
     ];
 
     for (const zone of frZones) {
-      // Mapeo de compatibilidad: fr_south incluye sw/se, fr_mid incluye mw/me, fr_north incluye nw/ne
+      // Mapeo de compatibilidad: fr_south incluye zonas s, fr_mid incluye zonas m, fr_north incluye zonas n
       const isLegacyMatch = 
-        (country === 'fr_south' && zone.name.startsWith('fr_south')) ||
-        (country === 'fr_mid' && zone.name.startsWith('fr_mid')) ||
-        (country === 'fr_north' && zone.name.startsWith('fr_north'));
+        (country === 'fr_south' && zone.name.startsWith('fr_s')) ||
+        (country === 'fr_mid' && zone.name.startsWith('fr_m')) ||
+        (country === 'fr_north' && zone.name.startsWith('fr_n'));
 
       if (country === 'all' || country === 'fr' || country === zone.name || isLegacyMatch) {
         console.log(`[RadarSync] Sincronizando ${zone.name}...`);
