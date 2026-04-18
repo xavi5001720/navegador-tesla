@@ -1,36 +1,16 @@
 {
   "crons": [
     {
-      "path": "/api/radars/sync?country=es_south_west",
+      "path": "/api/radars/sync?country=es",
       "schedule": "0 1 * * *"
     },
     {
-      "path": "/api/radars/sync?country=es_south_east",
-      "schedule": "15 1 * * *"
-    },
-    {
-      "path": "/api/radars/sync?country=es_north_west",
-      "schedule": "30 1 * * *"
-    },
-    {
-      "path": "/api/radars/sync?country=es_north_east",
-      "schedule": "45 1 * * *"
-    },
-    {
-      "path": "/api/radars/sync?country=fr_south",
+      "path": "/api/radars/sync?country=fr",
       "schedule": "0 3 * * *"
     },
     {
-      "path": "/api/radars/sync?country=fr_mid",
-      "schedule": "0 4 * * *"
-    },
-    {
-      "path": "/api/radars/sync?country=fr_north",
-      "schedule": "0 5 * * *"
-    },
-    {
       "path": "/api/gas/sync",
-      "schedule": "0 23 * * *"
+      "schedule": "0 5 * * *"
     }
   ]
 }

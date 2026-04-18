@@ -48,6 +48,8 @@ async function upsertRadars(supabase: any, elements: any[]): Promise<number> {
       mappedRadars.push({
         id: el.id,
         geom: `POINT(${el.lon} ${el.lat})`,
+        lat: el.lat,
+        lon: el.lon,
         radar_type: rType,
         speed_limit: el.tags?.maxspeed ? parseInt(el.tags.maxspeed) : null,
         direction: direction,
@@ -128,51 +130,36 @@ export async function GET(request: Request) {
     }
 
     // ── Francia Sur ── (lat 41-45, lon -5-10) -> crons: 03:00 AM
-    if (country === 'all' || country === 'fr' || country === 'fr_south') {
-      console.log('[RadarSync] Sincronizando Francia Sur...');
-      const queryFRS = `
-        [out:json][timeout:90];
-        (
-          node["highway"="speed_camera"](41.0,-5.0,45.0,10.0);
-          node["enforcement"="speed"](41.0,-5.0,45.0,10.0);
-        );
-        out body;
-      `;
-      const elementsFRS = await fetchRadarsFromOverpass(queryFRS);
-      console.log(`[RadarSync] Francia Sur: ${elementsFRS.length} elementos.`);
-      results.francia_sur = await upsertRadars(supabase, elementsFRS);
-    }
+    // ── FRANCIA: División en 6 cuadrantes para evitar Timeouts ──
+    const frZones = [
+      { name: 'fr_south_west', bbox: '41.0,-5.0,45.0,2.5' },
+      { name: 'fr_south_east', bbox: '41.0,2.5,45.0,10.0' },
+      { name: 'fr_mid_west',   bbox: '45.0,-5.0,48.5,2.5' },
+      { name: 'fr_mid_east',   bbox: '45.0,2.5,48.5,10.0' },
+      { name: 'fr_north_west', bbox: '48.5,-5.0,52.0,2.5' },
+      { name: 'fr_north_east', bbox: '48.5,2.5,52.0,10.0' }
+    ];
 
-    // ── Francia Centro ── (lat 45-48, lon -5-10) -> crons: 04:00 AM
-    if (country === 'all' || country === 'fr' || country === 'fr_mid') {
-      console.log('[RadarSync] Sincronizando Francia Centro...');
-      const queryFRM = `
-        [out:json][timeout:90];
-        (
-          node["highway"="speed_camera"](45.0,-5.0,48.0,10.0);
-          node["enforcement"="speed"](45.0,-5.0,48.0,10.0);
-        );
-        out body;
-      `;
-      const elementsFRM = await fetchRadarsFromOverpass(queryFRM);
-      console.log(`[RadarSync] Francia Centro: ${elementsFRM.length} elementos.`);
-      results.francia_centro = await upsertRadars(supabase, elementsFRM);
-    }
+    for (const zone of frZones) {
+      // Mapeo de compatibilidad: fr_south incluye sw/se, fr_mid incluye mw/me, fr_north incluye nw/ne
+      const isLegacyMatch = 
+        (country === 'fr_south' && zone.name.startsWith('fr_south')) ||
+        (country === 'fr_mid' && zone.name.startsWith('fr_mid')) ||
+        (country === 'fr_north' && zone.name.startsWith('fr_north'));
 
-    // ── Francia Norte ── (lat 48-52, lon -5-10) -> crons: 05:00 AM
-    if (country === 'all' || country === 'fr' || country === 'fr_north') {
-      console.log('[RadarSync] Sincronizando Francia Norte...');
-      const queryFRN = `
-        [out:json][timeout:90];
-        (
-          node["highway"="speed_camera"](48.0,-5.0,52.0,10.0);
-          node["enforcement"="speed"](48.0,-5.0,52.0,10.0);
-        );
-        out body;
-      `;
-      const elementsFRN = await fetchRadarsFromOverpass(queryFRN);
-      console.log(`[RadarSync] Francia Norte: ${elementsFRN.length} elementos.`);
-      results.francia_norte = await upsertRadars(supabase, elementsFRN);
+      if (country === 'all' || country === 'fr' || country === zone.name || isLegacyMatch) {
+        console.log(`[RadarSync] Sincronizando ${zone.name}...`);
+        const query = `[out:json][timeout:90];(node["highway"="speed_camera"](${zone.bbox});node["enforcement"="speed"](${zone.bbox}););out body;`;
+        try {
+          const elements = await fetchRadarsFromOverpass(query);
+          console.log(`[RadarSync] ${zone.name}: ${elements.length} elementos.`);
+          const count = await upsertRadars(supabase, elements);
+          results[zone.name] = count;
+        } catch (e: any) {
+          console.error(`[RadarSync] Fallo en ${zone.name}:`, e.message);
+          results[zone.name] = 0;
+        }
+      }
     }
 
     const total = Object.values(results).reduce((a, b) => a + b, 0);

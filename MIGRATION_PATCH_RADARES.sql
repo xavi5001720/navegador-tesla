@@ -4,6 +4,8 @@
 CREATE TABLE IF NOT EXISTS public.radars (
   id BIGINT PRIMARY KEY,
   geom GEOMETRY(POINT, 4326),
+  lat FLOAT,
+  lon FLOAT,
   radar_type TEXT, 
   speed_limit INTEGER,
   updated_at TIMESTAMPTZ DEFAULT NOW()

@@ -15,30 +15,35 @@ export async function GET() {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    // 1. Obtener conteo total y última actualización global (rápido)
-    const { count: totalCount } = await supabase.from('radars').select('*', { count: 'exact', head: true });
-    
-    // 2. Obtener última actualización en España (aproximado por bounding box)
-    const { data: latestEs } = await supabase
+    // 1. Conteo total
+    const { count: totalCount, error: totalError } = await supabase
       .from('radars')
-      .select('updated_at')
-      .filter('lat', 'gte', 27)
-      .filter('lat', 'lte', 44)
-      .filter('lon', 'gte', -19)
-      .filter('lon', 'lte', 5)
-      .order('updated_at', { ascending: false })
-      .limit(1);
+      .select('*', { count: 'exact', head: true });
 
-    // 3. Obtener conteo España
+    if (totalError) throw totalError;
+
+    // 2. Estadísticas España (Península + Canarias)
     const { count: countEs } = await supabase
       .from('radars')
       .select('*', { count: 'exact', head: true })
-      .filter('lat', 'gte', 27)
-      .filter('lat', 'lte', 44)
-      .filter('lon', 'gte', -19)
-      .filter('lon', 'lte', 5);
+      .or('and(lat.gte.34,lat.lte.44,lon.gte.-10,lon.lte.5),and(lat.gte.27,lat.lte.30,lon.gte.-19,lon.lte.-13)');
 
-    // 4. Última actualización Francia (aproximado)
+    const { data: latestEs } = await supabase
+      .from('radars')
+      .select('updated_at')
+      .or('and(lat.gte.34,lat.lte.44,lon.gte.-10,lon.lte.5),and(lat.gte.27,lat.lte.30,lon.gte.-19,lon.lte.-13)')
+      .order('updated_at', { ascending: false })
+      .limit(1);
+
+    // 3. Estadísticas Francia
+    const { count: countFr } = await supabase
+      .from('radars')
+      .select('*', { count: 'exact', head: true })
+      .filter('lat', 'gt', 44)
+      .filter('lat', 'lte', 52)
+      .filter('lon', 'gte', -5)
+      .filter('lon', 'lte', 10);
+
     const { data: latestFr } = await supabase
       .from('radars')
       .select('updated_at')
@@ -48,15 +53,6 @@ export async function GET() {
       .filter('lon', 'lte', 10)
       .order('updated_at', { ascending: false })
       .limit(1);
-    
-    // 5. Conteo Francia
-    const { count: countFr } = await supabase
-      .from('radars')
-      .select('*', { count: 'exact', head: true })
-      .filter('lat', 'gt', 44)
-      .filter('lat', 'lte', 52)
-      .filter('lon', 'gte', -5)
-      .filter('lon', 'lte', 10);
 
     return NextResponse.json({
       es: { 
@@ -70,6 +66,7 @@ export async function GET() {
       total: totalCount || 0
     });
   } catch (error: any) {
+    console.error('[RadarStats] Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
