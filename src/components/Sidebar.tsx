@@ -72,6 +72,10 @@ interface SidebarProps {
   setIsYachtsEnabled: (v: boolean) => void;
   yachts: any[];
   onLocateYacht?: (lat: number, lng: number) => void;
+  isFestivalsEnabled: boolean;
+  setIsFestivalsEnabled: (v: boolean) => void;
+  festivalsCount: number;
+  loadingFestivals: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -135,7 +139,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   isYachtsEnabled,
   setIsYachtsEnabled,
   yachts,
-  onLocateYacht
+  onLocateYacht,
+  isFestivalsEnabled,
+  setIsFestivalsEnabled,
+  festivalsCount,
+  loadingFestivals
 }) => {
   const [showRadarStats, setShowRadarStats] = useState(false);
   const [showYachtList, setShowYachtList] = useState(false);
@@ -714,6 +722,48 @@ const Sidebar: React.FC<SidebarProps> = ({
                        </div>
                   </div>
                 </div>
+              )}
+           </div>
+
+           {/* Bloque Fiestas Tradicionales */}
+           <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 mb-4 ${isFestivalsEnabled ? 'bg-amber-600/20 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.2)]' : 'bg-white/5 border-white/10'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`p-1 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isFestivalsEnabled ? 'bg-amber-500/20 hover:bg-amber-500/30' : 'bg-gray-500/20'}`}>
+                    <span className="text-3xl drop-shadow-md">🎭</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Fiestas e Imperdibles</span>
+                    </div>
+                    {isFestivalsEnabled ? (
+                      <div className="flex flex-col">
+                        <span className="text-2xl font-black leading-none text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]">
+                          {loadingFestivals ? '...' : festivalsCount}
+                        </span>
+                        <span className="text-[9px] text-gray-500 font-medium mt-1 uppercase">Próximas en la zona</span>
+                      </div>
+                    ) : (
+                      <span className="text-2xl font-black leading-none text-white/30 uppercase">OFF</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-1.5">
+                  <button 
+                    onClick={() => setIsFestivalsEnabled(!isFestivalsEnabled)}
+                    className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isFestivalsEnabled ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
+                  >
+                    <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isFestivalsEnabled ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
+                      <Power className={`h-3 w-3 ${isFestivalsEnabled ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
+                    </span>
+                  </button>
+                  <span className={`text-[9px] font-bold uppercase tracking-wider ${isFestivalsEnabled ? 'text-green-500' : 'text-rose-500'}`}>
+                    {isFestivalsEnabled ? 'Activado' : 'Desactivado'}
+                  </span>
+                </div>
+              </div>
+              {isFestivalsEnabled && !loadingFestivals && festivalsCount === 0 && (
+                <p className="mt-3 text-[10px] text-gray-500 uppercase italic text-center">No hay fiestas destacadas este mes</p>
               )}
            </div>
 

@@ -46,6 +46,7 @@ import NavigationPanel from '@/components/NavigationPanel';
 import AboutModal from '@/components/AboutModal';
 import { useLuxuryYachts, YachtPosition } from '@/hooks/useLuxuryYachts';
 import { useCommunityRadars } from '@/hooks/useCommunityRadars';
+import { useFestivals } from '@/hooks/useFestivals';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -115,6 +116,7 @@ export default function Home() {
   const [isAircraftsEnabled, setIsAircraftsEnabled] = useState(false);
   const [isChargersEnabled, setIsChargersEnabled] = useState(false);
   const [isWeatherEnabled, setIsWeatherEnabled] = useState(false);
+  const [isFestivalsEnabled, setIsFestivalsEnabled] = useState(false);
   const [mapMode, setMapMode] = useState<'satellite' | 'light'>('satellite');
   
   const [chargerFilters, setChargerFilters] = useState<ChargerFilters>({
@@ -284,6 +286,7 @@ export default function Home() {
       if (p.isGasStationsEnabled !== undefined) setIsGasStationsEnabled(p.isGasStationsEnabled);
       if (p.gasStationFilters !== undefined) setGasStationFilters(p.gasStationFilters);
       if (p.isWeatherEnabled !== undefined) setIsWeatherEnabled(p.isWeatherEnabled);
+      if (p.isFestivalsEnabled !== undefined) setIsFestivalsEnabled(p.isFestivalsEnabled);
       if (p.isSoundEnabled !== undefined) setIsSoundEnabled(p.isSoundEnabled);
       if (p.voiceType !== undefined) setVoiceType(p.voiceType);
       
@@ -310,6 +313,7 @@ export default function Home() {
       isGasStationsEnabled,
       gasStationFilters,
       isWeatherEnabled,
+      isFestivalsEnabled,
       isSoundEnabled,
       voiceType
     };
@@ -328,7 +332,7 @@ export default function Home() {
     }
   }, [
     session, profile?.preferences, updateProfile, isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, 
-    chargerFilters, isGasStationsEnabled, gasStationFilters, isWeatherEnabled, 
+    chargerFilters, isGasStationsEnabled, gasStationFilters, isWeatherEnabled, isFestivalsEnabled,
     isSoundEnabled, voiceType
   ]);
 
@@ -345,7 +349,7 @@ export default function Home() {
   }, [
     isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, 
     chargerFilters, isGasStationsEnabled, gasStationFilters, 
-    isWeatherEnabled, isSoundEnabled, voiceType,
+    isWeatherEnabled, isFestivalsEnabled, isSoundEnabled, voiceType,
     session, prefsLoaded, handleSavePreferences, sessionConflict
   ]);
 
@@ -543,6 +547,7 @@ export default function Home() {
   const { chargers, loading: loadingChargers, progress: chargerProgress } = useChargers(userPos, route?.coordinates, isChargersEnabled, chargerFilters);
   const { stations: gasStations, loading: loadingGasStations, progress: gasProgress } = useGasStations(userPos, route?.coordinates, isGasStationsEnabled, gasStationFilters);
   const { weatherPoints, loadingWeather, currentWeather } = useWeather(userPos, route?.coordinates, isWeatherEnabled);
+  const { festivals, loading: loadingFestivals } = useFestivals(isFestivalsEnabled);
 
   const notifiedPegasus = useRef<Set<string>>(new Set());
   const notifiedWaypoints = useRef<Set<string>>(new Set());
@@ -1103,6 +1108,10 @@ export default function Home() {
           setIsYachtsEnabled={setIsYachtsEnabled}
           yachts={yachts}
           onLocateYacht={handleLocateYacht}
+          isFestivalsEnabled={isFestivalsEnabled}
+          setIsFestivalsEnabled={setIsFestivalsEnabled}
+          festivalsCount={festivals.length}
+          loadingFestivals={loadingFestivals}
         />
 
       {/* Sección del Mapa (Fondo) */}
@@ -1118,6 +1127,7 @@ export default function Home() {
           chargers={chargers}
           gasStations={gasStations}
           weatherPoints={weatherPoints}
+          festivals={festivals}
           waypoints={waypoints}
           yachts={isYachtsEnabled ? yachts : []}
           speed={speed}

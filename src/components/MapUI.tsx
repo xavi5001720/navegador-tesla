@@ -14,6 +14,7 @@ import { Friend } from '@/hooks/useSocial';
 import { YachtPosition } from '@/hooks/useLuxuryYachts';
 import { RouteSection } from '@/hooks/useRoute';
 import { WeatherPoint } from '@/hooks/useWeather';
+import { Festival } from '@/hooks/useFestivals';
 import { Ruler, Radio, Check, Trash2, AlertTriangle, Construction, Package, Car, PawPrint } from 'lucide-react'; 
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -180,6 +181,17 @@ const createWeatherIcon = (temp: number, condition: string) => {
   return L.divIcon({ html: iconHtml, className: 'custom-weather-icon', iconSize: [75, 36], iconAnchor: [37, 18] });
 };
 
+const festivalIcon = L.divIcon({
+  html: renderToStaticMarkup(
+    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-amber-500 border-2 border-white shadow-[0_0_20px_rgba(245,158,11,0.8)] counter-rotate animate-bounce-slow">
+       <span className="text-xl">🎭</span>
+    </div>
+  ),
+  className: 'custom-festival-icon pointer-events-auto',
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+});
+
 function MapEvents({ viewMode, onViewModeChange, onMapClick }: { viewMode?: string, onViewModeChange?: (mode: 'navigation' | 'overview') => void, onMapClick?: (lat: number, lon: number, screenX: number, screenY: number) => void }) {
   const map = useMap();
   useEffect(() => {
@@ -224,6 +236,7 @@ interface MapUIProps {
    weatherPoints?: WeatherPoint[];
    waypoints?: [number, number][];
    yachts?: YachtPosition[];
+   festivals?: Festival[];
    speed?: number;
    hasLocation?: boolean;
    viewMode?: 'navigation' | 'overview';
@@ -475,7 +488,7 @@ const communityRadarIcon = (isVisible: boolean, isMine: boolean, category: strin
 
 export default function MapUI({ 
   userPos, heading, carColor, routeCoordinates, radars = [], aircrafts = [], chargers = [],
-  gasStations = [], weatherPoints = [], waypoints = [], yachts = [], speed = 0, hasLocation = false,
+  gasStations = [], weatherPoints = [], waypoints = [], yachts = [], festivals = [], speed = 0, hasLocation = false,
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
   onGasStationClick, onYachtClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [],   centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
    mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname, radarZones = [],
@@ -521,6 +534,11 @@ export default function MapUI({
         .leaflet-container { background: #030712 !important; }
         @keyframes aircraft-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.15); } }
         .counter-rotate { transform: rotate(var(--map-heading, 0deg)); }
+        @keyframes bounce-slow {
+          0%, 100% { transform: translateY(0) rotate(var(--map-heading, 0deg)); }
+          50% { transform: translateY(-5px) rotate(var(--map-heading, 0deg)); }
+        }
+        .animate-bounce-slow { animation: bounce-slow 2s infinite ease-in-out; }
         .custom-yacht-icon { 
           pointer-events: auto !important; 
           cursor: pointer !important; 
@@ -683,6 +701,60 @@ export default function MapUI({
         {chargers.map(charger => <Marker key={`charger-${charger.id}`} position={[charger.lat, charger.lon]} icon={chargerIcon} eventHandlers={{ click: () => { if (onChargerClick) onChargerClick(charger); } }} />)}
         {gasStations.map(station => <Marker key={`gas-${station.id}`} position={[station.lat, station.lon]} icon={gasStationIcon} eventHandlers={{ click: () => { if (onGasStationClick) onGasStationClick(station); } }} />)}
         {weatherPoints.map(wp => <Marker key={`weather-${wp.id}`} position={[wp.lat, wp.lon]} icon={createWeatherIcon(wp.temp, wp.condition)} interactive={false} />)}
+        
+        {/* Fiestas Tradicionales */}
+        {festivals.map(fest => (
+          <Marker 
+            key={`fest-${fest.id}`} 
+            position={[fest.lat, fest.lon]} 
+            icon={festivalIcon}
+          >
+            <Popup className="tesla-popup" minWidth={250}>
+              <div className="p-4 bg-black/90 backdrop-blur-2xl border border-amber-500/30 rounded-2xl flex flex-col gap-3">
+                <div className="flex flex-col">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest leading-tight">Fiesta Tradicional</span>
+                    <span className="text-[10px] font-black text-white bg-amber-600 px-2 py-0.5 rounded-full shadow-lg">{fest.rating}% Rec.</span>
+                  </div>
+                  <span className="text-lg font-black text-white tracking-tight">{fest.name}</span>
+                  <div className="flex items-center gap-1 text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
+                    <MapPin className="h-3 w-3" />
+                    {fest.city}, {fest.country}
+                  </div>
+                </div>
+
+                <div className="h-px bg-white/10 w-full" />
+
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 p-2 rounded-xl">
+                    <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Fechas:</span>
+                    <span className="text-[11px] text-white font-black">{fest.dates_approx}</span>
+                  </div>
+                  
+                  <p className="text-[12px] text-gray-300 leading-relaxed font-medium">
+                    {fest.description}
+                  </p>
+
+                  <div className="mt-1 p-2 bg-white/5 rounded-xl border border-white/10">
+                    <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">¿Qué la hace única?</span>
+                    <p className="text-[11px] text-white italic font-medium leading-snug">"{fest.unique_reason}"</p>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => {
+                    const origin: [number, number] = userPos || [0, 0];
+                    if (origin[0] !== 0) calculateRoute(origin, [fest.lat, fest.lon], [], false, isTrafficWanted);
+                  }}
+                  className="mt-2 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white transition-all active:scale-95 shadow-lg shadow-amber-900/20"
+                >
+                  <Navigation className="h-4 w-4" />
+                  <span className="text-xs font-black uppercase tracking-widest">Trazar Ruta</span>
+                </button>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
         
         {/* Amigos (Marcadores con Posición Real) */}
         {friends.filter(f => f.is_online && f.is_sharing_location !== false).map((friend) => {
