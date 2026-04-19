@@ -3,6 +3,9 @@ import * as Sentry from '@sentry/nextjs';
 
 const IS_PROD = process.env.NODE_ENV === 'production';
 
+// MARCA DE AGUA PARA VERIFICAR DESPLIEGUE
+console.log('%c🚀 NAVEGAPRO TELEMETRY V3.0 - ONLINE', 'background: #1e40af; color: white; padding: 10px; font-weight: bold; border-radius: 8px; font-size: 14px;');
+
 export const logger = {
   info(module: string, message: string, ...args: unknown[]) {
     console.log(`%c[${new Date().toLocaleTimeString()}][INFO][${module}] ${message}`, 'color: #3b82f6; font-weight: bold', ...args);
