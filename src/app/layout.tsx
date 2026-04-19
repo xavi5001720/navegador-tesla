@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Viajando en Tesla | Navegador Premium & Detector de Radares",
+  title: "Viajando en Tesla v3.0 | Navegador Premium & Detector de Radares",
   description: "Navegación inteligente optimizada para la pantalla de tu Tesla. Incluye detección de radares Pegasus en tiempo real, tráfico, cargadores y radares meteorológicos.",
   keywords: ["Tesla", "Navegador", "Radares", "Pegasus", "Cargadores Tesla", "Navegación Social"],
   authors: [{ name: "Viajando en Tesla" }],
