@@ -1,75 +1,64 @@
-// src/lib/logger.ts — Logger centralizado con Telemetría Avanzada e integración Sentry
+// src/lib/logger.ts — Logger centralizado con Telemetría Avanzada
 import * as Sentry from '@sentry/nextjs';
 
-type LogLevel = 'info' | 'warn' | 'error' | 'debug';
-
 const IS_PROD = process.env.NODE_ENV === 'production';
-// Flag para activar la telemetría avanzada (grupos, tablas, tiempos)
-const DEBUG_MODE = !IS_PROD; 
-
-function formatMsg(level: LogLevel, module: string, msg: string, data?: unknown): string {
-  const ts = new Date().toISOString().substring(11, 23); // HH:mm:ss.mmm
-  return `[${ts}][${level.toUpperCase()}][${module}] ${msg}${data !== undefined ? ' ' + JSON.stringify(data) : ''}`;
-}
 
 export const logger = {
-  info(module: string, msg: string, data?: unknown) {
-    if (!IS_PROD) console.log(formatMsg('info', module, msg, data));
+  info(module: string, message: string, ...args: unknown[]) {
+    console.log(`%c[${new Date().toLocaleTimeString()}][INFO][${module}] ${message}`, 'color: #3b82f6; font-weight: bold', ...args);
   },
 
-  warn(module: string, msg: string, data?: unknown) {
-    console.warn(formatMsg('warn', module, msg, data));
+  warn(module: string, message: string, ...args: unknown[]) {
+    console.warn(`[${new Date().toLocaleTimeString()}][WARN][${module}] ${message}`, ...args);
     if (IS_PROD) {
       Sentry.addBreadcrumb({
         category: module,
-        message: msg,
+        message: message,
         level: 'warning',
-        data: data ? { detail: String(data) } : undefined,
       });
     }
   },
 
-  error(module: string, msg: string, data?: unknown) {
-    console.error(formatMsg('error', module, msg, data));
+  error(module: string, message: string, ...args: unknown[]) {
+    console.error(`[${new Date().toLocaleTimeString()}][ERROR][${module}] ${message}`, ...args);
     if (IS_PROD) {
-      const error = data instanceof Error ? data : new Error(`[${module}] ${msg}`);
+      const error = new Error(`[${module}] ${message}`);
       Sentry.captureException(error, {
         tags: { module },
-        extra: { message: msg, data: data instanceof Error ? undefined : data },
+        extra: { message, args },
       });
     }
   },
 
-  // --- MÉTODOS DE TELEMETRÍA (Solo activos en DEBUG_MODE) ---
+  // --- MÉTODOS DE TELEMETRÍA ---
 
-  group(label: string, collapsed = true) {
-    if (DEBUG_MODE) {
-      if (collapsed) console.groupCollapsed(label);
-      else console.group(label);
-    }
+  group(label: string) {
+    console.group(label);
+  },
+
+  groupCollapsed(label: string) {
+    console.groupCollapsed(label);
   },
 
   groupEnd() {
-    if (DEBUG_MODE) console.groupEnd();
+    console.groupEnd();
   },
 
   time(label: string) {
-    if (DEBUG_MODE) console.time(label);
+    console.time(label);
   },
 
   timeEnd(label: string) {
-    if (DEBUG_MODE) console.timeEnd(label);
+    console.timeEnd(label);
   },
 
-  table(data: unknown) {
-    if (DEBUG_MODE) console.table(data);
+  table(data: any) {
+    console.table(data);
   },
 
   setUser(id: string, email?: string) {
-    Sentry.setUser({ id, email });
-  },
-
-  clearUser() {
-    Sentry.setUser(null);
-  },
+    if (IS_PROD) {
+      Sentry.setUser({ id, email });
+    }
+  }
 };
