@@ -60,5 +60,11 @@ export const logger = {
     if (IS_PROD) {
       Sentry.setUser({ id, email });
     }
+  },
+
+  clearUser() {
+    if (IS_PROD) {
+      Sentry.setUser(null);
+    }
   }
 };
