@@ -113,6 +113,8 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
       }
     }
 
+    if (!shouldFetch) return;
+
     const fetchChargers = async () => {
       setLoading(true);
       logger.groupCollapsed('⚡ useChargers', `Iniciando búsqueda (${hasRoute ? 'Modo Ruta' : 'Modo Local'})`);
@@ -139,6 +141,8 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
           params.append('connectiontypeid', ids);
         }
 
+        const accumulated: Charger[] = [];
+
         if (hasRoute && routeCoordinates) {
           const chunks: [number, number][][] = [];
           let currentChunk: [number, number][] = [routeCoordinates[0]];
@@ -157,7 +161,6 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
           if (currentChunk.length > 1) chunks.push(currentChunk);
 
           const uniqueIds = new Set<number>();
-          const accumulated: Charger[] = [];
 
           for (let i = 0; i < chunks.length; i++) {
             const polyline = encodePolyline(chunks[i]);
@@ -199,11 +202,10 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
           const data = await res.json();
           
           if (Array.isArray(data)) {
-            const parsed: Charger[] = [];
             data.forEach(c => {
                if (filters.isFree && !isFreeCharger(c.UsageCost)) return;
                const power = c.Connections?.reduce((max: number, conn: any) => Math.max(max, conn.PowerKW || 0), 0) || 0;
-               parsed.push({
+               accumulated.push({
                   id: c.ID, lat: c.AddressInfo.Latitude, lon: c.AddressInfo.Longitude,
                   title: c.AddressInfo.Title, address: c.AddressInfo.AddressLine1 || c.AddressInfo.Town || 'Ubicación Desconocida',
                   operator: c.OperatorInfo?.Title || 'Operador Desconocido',
@@ -211,15 +213,16 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
                   maxPower: power, connections: c.Connections || []
                });
             });
-            setChargers(parsed);
+            setChargers(accumulated);
+          }
         }
         
         logger.timeEnd('⏱️ Fetch Cargadores');
         logger.group('📊 Resumen de Cargadores');
         logger.table({
-          'Total Encontrados': chargers.length,
-          'Carga Rápida (>50kW)': chargers.filter(c => c.maxPower >= 50).length,
-          'Ultra Rápida (>150kW)': chargers.filter(c => c.maxPower >= 150).length,
+          'Total Encontrados': accumulated.length,
+          'Carga Rápida (>50kW)': accumulated.filter(c => c.maxPower >= 50).length,
+          'Ultra Rápida (>150kW)': accumulated.filter(c => c.maxPower >= 150).length,
           'Solo Gratuitos': filters.isFree ? 'SÍ' : 'NO'
         });
         logger.groupEnd();
@@ -227,7 +230,6 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
 
         lastFetchRef.current = { type: currentType, pos: userPos, routeKey: currentRouteKey, filtersStr };
       } catch (err) {
-        console.error('[useChargers] fetchChargers Error:', err);
         logger.error('useChargers', 'Error al cargar cargadores', err);
       } finally {
         setLoading(false);

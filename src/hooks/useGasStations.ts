@@ -129,7 +129,6 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
 
   const lastFetchRef = useRef<{ type: 'route'|'local', pos: [number, number], routeKey: string, filtersStr: string } | null>(null);
 
-  // FIX C3: Valores primitivos estables como deps
   const routeLength = routeCoordinates?.length ?? 0;
   const routeFirstKey = routeCoordinates?.[0] ? `${routeCoordinates[0][0].toFixed(4)},${routeCoordinates[0][1].toFixed(4)}` : '';
   const routeLastKey = routeLength > 0 ? `${routeCoordinates![routeLength-1][0].toFixed(4)},${routeCoordinates![routeLength-1][1].toFixed(4)}` : '';
@@ -173,6 +172,8 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
           setStations([]);
         }
 
+        const accumulated: any[] = [];
+
         if (hasRoute && routeCoordinates) {
           // Dividir la ruta en tramos de 50km
           const chunks: [number, number][][] = [];
@@ -193,7 +194,6 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
           if (currentChunk.length > 1) chunks.push(currentChunk);
 
           const uniqueIds = new Set<number>();
-          const accumulated: any[] = [];
 
           for (let i = 0; i < chunks.length; i++) {
             const chunk = chunks[i];
@@ -230,14 +230,17 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
             p_radius_meters: 15000
           });
 
+          if (error) throw error;
+          if (data) {
+            data.forEach((s: any) => accumulated.push(s));
+            setStations(processStations(accumulated, filters));
           }
         }
 
-        const processed = processStations(lastFetchRef.current?.type === 'route' ? [] : stations, filters);
         logger.timeEnd('⏱️ Fetch Gasolineras');
         logger.group('📊 Resumen de Combustible');
         logger.table({
-          'Total Encontradas': stations.length,
+          'Total Encontradas': accumulated.length,
           'Solo más Baratas': filters.onlyCheapest ? 'SÍ' : 'NO',
           'Combustibles': filters.fuels?.join(', ') || 'Todos'
         });
@@ -254,9 +257,8 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
     };
 
     fetchStations();
-  // FIX C3: Deps primitivas estables
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userPos, isEnabled, routeLength, routeFirstKey, routeLastKey, filtersStr]);
+  }, [userPos?.[0], userPos?.[1], isEnabled, routeLength, routeFirstKey, routeLastKey, filtersStr]);
 
   return { stations, loading, progress };
 }
