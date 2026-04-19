@@ -74,7 +74,7 @@ export default function Speedometer({ speed }: SpeedometerProps) {
       <style jsx global>{`
         @font-face {
           font-family: 'pIqaD';
-          src: url('https://raw.githubusercontent.com/Deiz/pIqaD/master/fonts/pIqaD.ttf') format('truetype');
+          src: url('/fonts/klingon.ttf') format('truetype');
         }
         .font-klingon {
           font-family: 'pIqaD', sans-serif !important;
