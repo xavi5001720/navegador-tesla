@@ -15,6 +15,7 @@ import { YachtPosition } from '@/hooks/useLuxuryYachts';
 import { RouteSection } from '@/hooks/useRoute';
 import { WeatherPoint } from '@/hooks/useWeather';
 import { Festival } from '@/hooks/useFestivals';
+import { logger } from '@/lib/logger';
 import { Ruler, Radio, Check, Trash2, AlertTriangle, Construction, Package, Car, PawPrint, MapPin, Navigation, X } from 'lucide-react'; 
 import { motion, AnimatePresence } from 'framer-motion';
 
