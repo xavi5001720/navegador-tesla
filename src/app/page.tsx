@@ -58,16 +58,16 @@ const DynamicMap = dynamic(() => import('@/components/MapUI'), {
 });
 
 export default function Home() {
-  const sessionClientId = useRef(typeof window !== 'undefined' ? (
-    localStorage.getItem('tesla_session_id') || (() => {
-      const id = crypto.randomUUID();
-      localStorage.setItem('tesla_session_id', id);
-      return id;
-    })()
-  ) : '').current;
+  const sessionClientId = useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    const id = localStorage.getItem('tesla_session_id') || crypto.randomUUID();
+    localStorage.setItem('tesla_session_id', id);
+    return id;
+  }, []);
+
   const [viewMode, setViewMode] = useState<'navigation' | 'overview'>('overview');
   const [sessionConflict, setSessionConflict] = useState<'none' | 'warning' | 'kicked'>('none');
-  const isSessionMasterRef = useRef(false);
+  const [isSessionMaster, setIsSessionMaster] = useState(false);
   const [expandedFriendId, setExpandedFriendId] = useState<string | null>(null);
   const [isNavMinimized, setIsNavMinimized] = useState(false);
 
@@ -189,7 +189,7 @@ export default function Home() {
     heading,
     speed,
     // CRÍTICO: Solo compartimos si está activo en el perfil Y hemos tomado el control de la sesión (sin conflictos)
-    profile?.is_sharing_location && sessionConflict === 'none' && isSessionMasterRef.current, 
+    (profile?.is_sharing_location ?? false) && sessionConflict === 'none' && isSessionMaster, 
     hasLocation
   );
 
@@ -279,25 +279,28 @@ export default function Home() {
   useEffect(() => {
     if (profile && !prefsLoaded) {
       const p = profile.preferences || {};
-      if (p.isRadarsEnabled !== undefined) setIsRadarsEnabled(p.isRadarsEnabled);
-      if (p.isAircraftsEnabled !== undefined) setIsAircraftsEnabled(p.isAircraftsEnabled);
-      if (p.isChargersEnabled !== undefined) setIsChargersEnabled(p.isChargersEnabled);
-      if (p.chargerFilters !== undefined) setChargerFilters(p.chargerFilters);
-      if (p.isGasStationsEnabled !== undefined) setIsGasStationsEnabled(p.isGasStationsEnabled);
-      if (p.gasStationFilters !== undefined) setGasStationFilters(p.gasStationFilters);
-      if (p.isWeatherEnabled !== undefined) setIsWeatherEnabled(p.isWeatherEnabled);
-      if (p.isFestivalsEnabled !== undefined) setIsFestivalsEnabled(p.isFestivalsEnabled);
-      if (p.isSoundEnabled !== undefined) setIsSoundEnabled(p.isSoundEnabled);
-      if (p.voiceType !== undefined) setVoiceType(p.voiceType);
       
-      setPrefsLoaded(true);
+      // Usar un microtask para evitar renderizado en cascada síncrono
+      Promise.resolve().then(() => {
+        if (p.isRadarsEnabled !== undefined) setIsRadarsEnabled(p.isRadarsEnabled);
+        if (p.isAircraftsEnabled !== undefined) setIsAircraftsEnabled(p.isAircraftsEnabled);
+        if (p.isChargersEnabled !== undefined) setIsChargersEnabled(p.isChargersEnabled);
+        if (p.chargerFilters !== undefined) setChargerFilters(p.chargerFilters);
+        if (p.isGasStationsEnabled !== undefined) setIsGasStationsEnabled(p.isGasStationsEnabled);
+        if (p.gasStationFilters !== undefined) setGasStationFilters(p.gasStationFilters);
+        if (p.isWeatherEnabled !== undefined) setIsWeatherEnabled(p.isWeatherEnabled);
+        if (p.isFestivalsEnabled !== undefined) setIsFestivalsEnabled(p.isFestivalsEnabled);
+        if (p.isSoundEnabled !== undefined) setIsSoundEnabled(p.isSoundEnabled);
+        if (p.voiceType !== undefined) setVoiceType(p.voiceType);
+        setPrefsLoaded(true);
+      });
     }
   }, [profile, prefsLoaded]);
 
   // Resetear flag si el usuario cierra sesión
   useEffect(() => {
     if (!session) {
-      setPrefsLoaded(false);
+      Promise.resolve().then(() => setPrefsLoaded(false));
     }
   }, [userPos, session]);
 
@@ -331,7 +334,7 @@ export default function Home() {
       // Éxito
     }
   }, [
-    session, profile?.preferences, updateProfile, isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, 
+    session, profile, updateProfile, isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, 
     chargerFilters, isGasStationsEnabled, gasStationFilters, isWeatherEnabled, isFestivalsEnabled,
     isSoundEnabled, voiceType
   ]);
@@ -357,8 +360,10 @@ export default function Home() {
   // 3. Gestión de Sesión Única Controlada (Realtime)
   useEffect(() => {
     if (!session?.user) {
-      setSessionConflict('none');
-      isSessionMasterRef.current = false;
+      Promise.resolve().then(() => {
+        setSessionConflict('none');
+        setIsSessionMaster(false);
+      });
       return;
     }
 
@@ -378,7 +383,7 @@ export default function Home() {
       } else {
         // No hay sesión activa o es la nuestra, tomamos control oficialmente
         updateProfile({ last_session_id: sessionClientId });
-        isSessionMasterRef.current = true;
+        setIsSessionMaster(true);
         setSessionConflict('none');
       }
     };
@@ -403,11 +408,11 @@ export default function Home() {
           const newSessionId = payload.new.last_session_id;
           
           // Si el ID cambia y no es el nuestro, hemos sido expulsados
-          // PERO solo nos expulsamos si nosotros éramos el "master" (isSessionMasterRef.current)
-          if (isSessionMasterRef.current && newSessionId && newSessionId !== sessionClientId) {
+          // PERO solo nos expulsamos si nosotros éramos el "master" (isSessionMaster)
+          if (isSessionMaster && newSessionId && newSessionId !== sessionClientId) {
             console.warn('[Auth] Sesión robada por otro terminal:', newSessionId);
             setSessionConflict('kicked');
-            isSessionMasterRef.current = false;
+            setIsSessionMaster(false);
           }
         }
       )
@@ -437,8 +442,10 @@ export default function Home() {
     // Si estamos a más de 100 metros del camino trazado, recalculamos
     if (distOffRoute > 100) {
       console.log("Desviación detectada (" + Math.round(distOffRoute) + "m) a " + speedKmh.toFixed(0) + " km/h. Recalculando...");
-      setLastRecalculationTime(now);
-      calculateRoute(userPos, destination, waypoints, true, isTrafficWanted);
+      Promise.resolve().then(() => {
+        setLastRecalculationTime(now);
+        calculateRoute(userPos, destination, waypoints, true, isTrafficWanted);
+      });
     }
   }, [userPos, speed, route, destination, waypoints, loadingRoute, lastRecalculationTime, calculateRoute, isTrafficWanted]);
 
@@ -478,7 +485,7 @@ export default function Home() {
       console.log(`[page] Preferencia de tráfico cambiada a ${isTrafficWanted ? 'ON' : 'OFF'}. Recalculando ruta...`);
       calculateRoute(userPos, destination, waypoints, true, isTrafficWanted);
     }
-  }, [isTrafficWanted]);
+  }, [isTrafficWanted, route, destination, userPos, lastTrafficTime, lastTrafficPos, waypoints, calculateRoute]);
 
 
   // Unlock audio on first interaction
@@ -501,7 +508,7 @@ export default function Home() {
   // Open sidebar by default only on desktop
   useEffect(() => {
     if (typeof window !== 'undefined' && window.innerWidth > 768) {
-      setIsSidebarOpen(true);
+      Promise.resolve().then(() => setIsSidebarOpen(true));
     }
   }, []);
 
@@ -638,17 +645,21 @@ export default function Home() {
       if (viewMode === 'navigation') {
         // Parado (menos de 4 km/h real para ignorar ruido): temporizador para volver a vista general
         timeoutId = setTimeout(() => {
-          setViewMode('overview');
-          setCustomZoom(null);
+          Promise.resolve().then(() => {
+            setViewMode('overview');
+            setCustomZoom(null);
+          });
         }, 60000);
       }
     } else if (speedKmh > 7) {
       // Solo volvemos a navegación si veníamos de estar parados (para no obligar a volver si el usuario cambió a overview manualmente conduciendo)
       // Y además, si el usuario explícitamente puso el modo manual general, NO le obligamos a volver.
       if (wasStoppedRef.current && viewMode === 'overview' && !isManualOverviewRef.current) {
-        setViewMode('navigation');
-        setCustomZoom(null);
-        wasStoppedRef.current = false;
+        Promise.resolve().then(() => {
+          setViewMode('navigation');
+          setCustomZoom(null);
+          wasStoppedRef.current = false;
+        });
       } else {
         wasStoppedRef.current = false;
       }
@@ -1548,17 +1559,17 @@ export default function Home() {
           mode={sessionConflict === 'warning' ? 'warning' : 'kickout'}
           onConfirm={() => {
             updateProfile({ last_session_id: sessionClientId });
-            isSessionMasterRef.current = true;
+            setIsSessionMaster(true);
             setSessionConflict('none');
           }}
           onCancel={() => {
             handleSignOut();
-            isSessionMasterRef.current = false;
+            setIsSessionMaster(false);
             setSessionConflict('none');
           }}
           onClose={() => {
             handleSignOut();
-            isSessionMasterRef.current = false;
+            setIsSessionMaster(false);
             setSessionConflict('none');
           }}
         />
