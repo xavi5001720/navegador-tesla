@@ -13,12 +13,12 @@ type SpeedFormat = 'NORMAL' | 'MPH' | 'KNOTS' | 'MACH' | 'LIGHT' | 'BINARY' | 'R
 const FORMAT_OPTIONS: { id: SpeedFormat, label: string, unit: string }[] = [
   { id: 'NORMAL', label: 'Estándar', unit: 'km/h' },
   { id: 'MPH', label: 'Millas por hora', unit: 'mph' },
-  { id: 'KNOTS', label: 'Nudos Náuticos', unit: 'kts' },
+  { id: 'KNOTS', label: 'Nudos Náuticos', unit: 'nudos' },
   { id: 'MACH', label: 'Número de Mach', unit: 'Mach' },
   { id: 'LIGHT', label: 'Velocidad Luz', unit: 'c' },
   { id: 'BINARY', label: 'Binario Humano', unit: 'bin' },
   { id: 'ROMAN', label: 'Numeración Romana', unit: 'Roman' },
-  { id: 'KLINGON', label: 'Imperio Klingon', unit: 'pIqaD' },
+  { id: 'KLINGON', label: 'Imperio Klingon', unit: 'Klingon' },
 ];
 
 export default function Speedometer({ speed }: SpeedometerProps) {
@@ -49,7 +49,8 @@ export default function Speedometer({ speed }: SpeedometerProps) {
   };
 
   const toKlingon = (num: number): string => {
-    const klingonDigits = ['', '', '', '', '', '', '', '', '', ''];
+    // Klingon digits (pIqaD) Unicode mapping
+    const klingonDigits = ['\uF8E0', '\uF8E1', '\uF8E2', '\uF8E3', '\uF8E4', '\uF8E5', '\uF8E6', '\uF8E7', '\uF8E8', '\uF8E9'];
     return Math.floor(num).toString().split('').map(d => klingonDigits[parseInt(d)]).join('');
   };
 
@@ -70,6 +71,16 @@ export default function Speedometer({ speed }: SpeedometerProps) {
 
   return (
     <>
+      <style jsx global>{`
+        @font-face {
+          font-family: 'pIqaD';
+          src: url('https://raw.githubusercontent.com/Deiz/pIqaD/master/fonts/pIqaD.ttf') format('truetype');
+        }
+        .font-klingon {
+          font-family: 'pIqaD', sans-serif !important;
+        }
+      `}</style>
+
       <motion.div 
         drag 
         dragMomentum={false}
@@ -84,7 +95,7 @@ export default function Speedometer({ speed }: SpeedometerProps) {
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-40 transition-opacity">
           <Settings2 className="h-3 w-3 text-white" />
         </div>
-        <span className={`text-6xl font-black text-white tabular-nums tracking-tighter ${format === 'KLINGON' ? 'font-serif' : ''}`}>
+        <span className={`text-6xl font-black text-white tabular-nums tracking-tighter ${format === 'KLINGON' ? 'font-klingon text-amber-500' : ''}`}>
           {formatValue()}
         </span>
         <span className="text-xs font-bold text-blue-500 uppercase tracking-widest mt-1">
