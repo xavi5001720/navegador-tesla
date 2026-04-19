@@ -49,9 +49,8 @@ export default function Speedometer({ speed }: SpeedometerProps) {
   };
 
   const toKlingon = (num: number): string => {
-    // Klingon digits (pIqaD) Unicode mapping
-    const klingonDigits = ['\uF8E0', '\uF8E1', '\uF8E2', '\uF8E3', '\uF8E4', '\uF8E5', '\uF8E6', '\uF8E7', '\uF8E8', '\uF8E9'];
-    return Math.floor(num).toString().split('').map(d => klingonDigits[parseInt(d)]).join('');
+    // La mayoría de fuentes descargadas mapean directamente los números 0-9
+    return Math.floor(num).toString();
   };
 
   const formatValue = () => {
