@@ -32,7 +32,7 @@ export function useSocial(
   session: Session | null, 
   userPos: [number, number], 
   heading: number = 0,
-  speed: number = 0,
+  _speed: number = 0, // speed no se usa pero se mantiene en la firma por compatibilidad
   isSharingLocation: boolean = true, 
   hasLocation: boolean = false
 ) {
@@ -41,6 +41,7 @@ export function useSocial(
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [livePositions, setLivePositions] = useState<Record<string, LivePosition>>({});
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channelRef = useRef<any>(null);
   const isMountedRef = useRef(true);
 
@@ -203,8 +204,8 @@ export function useSocial(
           if (!isMountedRef.current) return;
           const state = channel.presenceState();
           const onlineIds = new Set<string>();
-          Object.keys(state).forEach((key: any) => {
-            (state[key] as any[]).forEach((p: any) => onlineIds.add(p.key));
+          Object.keys(state).forEach((key: string) => {
+            (state[key] as { key: string }[]).forEach((p: { key: string }) => onlineIds.add(p.key));
           });
           setOnlineUserIds(onlineIds);
         })
@@ -364,10 +365,12 @@ export function useSocial(
         console.log('[useSocial] Invocando invite-friend para:', cleanEmail, 'Remitente:', senderName);
         
         try {
-          const { data: fnData, error: fnError } = await supabase.functions.invoke('invite-friend', {
+          await supabase.functions.invoke('invite-friend', {
             body: { senderName, receiverEmail: cleanEmail }
           });
-        } catch (fErr) {}
+        } catch (err) {
+          console.warn('[useSocial] Error invocando invite-friend (Edge Function):', err);
+        }
 
         await fetchFriends();
         return { success: true, invited: true };

@@ -42,7 +42,7 @@ function processStations(stations: any[], filters: GasStationFilters): GasStatio
     ? filters.fuels 
     : ['g95', 'g98', 'diesel', 'glp'];
 
-  let cheapestPerFuel: Record<string, { station: GasStation, price: number }> = {};
+  const cheapestPerFuel: Record<string, { station: GasStation, price: number }> = {};
 
   for (const s of stations) {
     let isValid = false;

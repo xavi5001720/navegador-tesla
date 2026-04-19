@@ -163,15 +163,26 @@ export function useRadars(
               continue;
             }
 
+            interface TomTomRadarResponse {
+              id: number;
+              lat: number;
+              lon: number;
+              radar_type?: string;
+              speed_limit?: number;
+              direction?: number;
+              road?: string;
+              pk?: string;
+            }
+
             if (data) {
-              data.forEach((r: any) => {
+              (data as TomTomRadarResponse[]).forEach((r) => {
                 if (!uniqueRadarIds.has(r.id)) {
                   uniqueRadarIds.add(r.id);
                   accumulatedRadars.push({
                     id: r.id,
                     lat: r.lat,
                     lon: r.lon,
-                    type: r.radar_type || 'fixed',
+                    type: (r.radar_type as Radar['type']) || 'fixed',
                     speedLimit: r.speed_limit || undefined,
                     direction: r.direction,
                     road: r.road,
@@ -189,8 +200,19 @@ export function useRadars(
               p_viewer_id: userId || null
             });
 
+            interface CommunityRadarResponse {
+              id: number;
+              lat: number;
+              lon: number;
+              confirmations?: number;
+              rejections?: number;
+              is_visible?: boolean;
+              category?: string;
+              user_id?: string;
+            }
+
             if (commData) {
-              commData.forEach((r: any) => {
+              (commData as CommunityRadarResponse[]).forEach((r) => {
                 if (!uniqueRadarIds.has(r.id)) {
                   uniqueRadarIds.add(r.id);
                   accumulatedRadars.push({
@@ -198,7 +220,7 @@ export function useRadars(
                     lat: r.lat,
                     lon: r.lon,
                     type: 'community_mobile',
-                     confirmations: r.confirmations,
+                    confirmations: r.confirmations,
                     rejections: r.rejections,
                     is_visible: r.is_visible,
                     category: r.category,
@@ -238,12 +260,12 @@ export function useRadars(
           const mappedRadars: Radar[] = [];
           
           if (fixedData) {
-            fixedData.forEach((r: any) => {
+            (fixedData as TomTomRadarResponse[]).forEach((r) => {
               mappedRadars.push({
                 id: r.id,
                 lat: r.lat,
                 lon: r.lon,
-                type: r.radar_type || 'fixed',
+                type: (r.radar_type as Radar['type']) || 'fixed',
                 speedLimit: r.speed_limit || undefined,
                 direction: r.direction,
                 road: r.road,
@@ -253,7 +275,7 @@ export function useRadars(
           }
 
           if (commData) {
-            commData.forEach((r: any) => {
+            (commData as CommunityRadarResponse[]).forEach((r) => {
               mappedRadars.push({
                 id: r.id,
                 lat: r.lat,
@@ -277,13 +299,22 @@ export function useRadars(
           .select('id, geom, radius, confidence');
           
         if (!zonesError && zonesData) {
-          const mappedZones = zonesData.map((z: any) => {
+          interface DbRadarZone {
+            id: number;
+            geom: any; // Mantenemos any para tipos geográficos complejos de postgis
+            radius?: number;
+            confidence?: number;
+          }
+
+          const mappedZones = (zonesData as DbRadarZone[]).map((z) => {
             let lat = 0; let lon = 0;
-            if (z.geom && z.geom.coordinates) {
-               lon = z.geom.coordinates[0];
-               lat = z.geom.coordinates[1];
-            } else if (typeof z.geom === 'string' && z.geom.startsWith('POINT')) {
-               const match = z.geom.match(/POINT\(([^ ]+) ([^)]+)\)/);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const geom = z.geom as any;
+            if (geom && geom.coordinates) {
+               lon = geom.coordinates[0];
+               lat = geom.coordinates[1];
+            } else if (typeof geom === 'string' && geom.startsWith('POINT')) {
+               const match = geom.match(/POINT\(([^ ]+) ([^)]+)\)/);
                if (match) { lon = parseFloat(match[1]); lat = parseFloat(match[2]); }
             }
             return {

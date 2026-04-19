@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { getDistance, getBearing, interpolatePoint, getPointAtDistance, getOffsetPoint } from '@/utils/geo';
+import { getDistance, getBearing, interpolatePoint } from '@/utils/geo';
 import { RouteSection } from './useRoute';
 
 interface useRouteSimulatorProps {
@@ -114,7 +114,7 @@ export function useRouteSimulator({
       
       // 2. Avanzar distancia
       const speedMps = currentSpeedRef.current / 3.6;
-      let newDist = currentDist + speedMps * deltaTime;
+      const newDist = currentDist + speedMps * deltaTime;
 
       if (newDist >= totalRouteDistance) {
         stopSimulation();

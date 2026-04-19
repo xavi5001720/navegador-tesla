@@ -343,7 +343,7 @@ const getFriendIcon = (color?: string, name?: string, nickname?: string, heading
 };
 
 function lerpAngle(current: number, target: number, alpha: number): number {
-  let diff = ((target - current) % 360 + 540) % 360 - 180;
+  const diff = ((target - current) % 360 + 540) % 360 - 180;
   return current + diff * alpha;
 }
 
@@ -568,6 +568,23 @@ export default function MapUI({
     }
     return { snappedPos: userPos, snappedHeading: heading };
   }, [viewMode, userPos, heading, routeCoordinates, routeCumDist]);
+
+  // Lógica de posición visual final para el marcador del coche
+  const carVisualState = useMemo(() => {
+    let pos = userPos;
+    let carHeading = heading;
+    
+    if (viewMode === 'navigation') {
+      carHeading = snappedHeading;
+      if (!isSimulating && routeCoordinates && routeCoordinates.length > 0) {
+        const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
+        if (snapped.distance < 30) {
+          pos = snapped.point;
+        }
+      }
+    }
+    return { pos, carHeading };
+  }, [userPos, heading, viewMode, snappedHeading, isSimulating, routeCoordinates]);
 
   return (
     <div ref={mapContainerRef} className="relative h-full w-full bg-gray-900 overflow-hidden">
@@ -882,21 +899,23 @@ export default function MapUI({
           />
         ))}
 
-        {(() => {
-          let pos = userPos;
-          let carHeading = heading;
-          
-          if (viewMode === 'navigation') {
-            carHeading = snappedHeading;
-            if (!isSimulating && routeCoordinates && routeCoordinates.length > 0) {
-              const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
-              if (snapped.distance < 30) {
-                pos = snapped.point;
-              }
-            }
-          }
-          return <Marker key="user-car-marker" position={pos} icon={getCarIcon(carHeading, carColor, viewMode)} zIndexOffset={1000} interactive={true} eventHandlers={{ click: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); }, mousedown: (e) => { L.DomEvent.stopPropagation(e as any); if (onOpenGarage) onOpenGarage(); } }} />;
-        })()}
+        <Marker 
+          key="user-car-marker" 
+          position={carVisualState.pos} 
+          icon={getCarIcon(carVisualState.carHeading, carColor, viewMode)} 
+          zIndexOffset={1000} 
+          interactive={true} 
+          eventHandlers={{ 
+            click: (e: L.LeafletMouseEvent) => { 
+              L.DomEvent.stopPropagation(e.originalEvent); 
+              if (onOpenGarage) onOpenGarage(); 
+            }, 
+            mousedown: (e: L.LeafletMouseEvent) => { 
+              L.DomEvent.stopPropagation(e.originalEvent); 
+              if (onOpenGarage) onOpenGarage(); 
+            } 
+          }} 
+        />
       </MapContainer>
 
       {/* Modal de Votación Comunitaria */}

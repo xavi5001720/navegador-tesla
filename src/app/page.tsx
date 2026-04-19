@@ -730,7 +730,7 @@ export default function Home() {
       {/* Alerta de Radar */}
       {(isAlertActive || inSectionRadar) && (nearestRadar || inSectionRadar) && (
         <AlertOverlay 
-          radar={nearestRadar || ({ id: 0, lat: 0, lon: 0, type: 'section', speedLimit: 120 } as any)} 
+          radar={nearestRadar || ({ id: 0, lat: 0, lon: 0, type: 'section', speedLimit: 120 } as Radar)} 
           distance={distance || 0} 
           alertType={alertType}
           currentSpeed={speed}
@@ -1069,7 +1069,7 @@ export default function Home() {
           rawAircraftCount={aircraftCount}
           hasLocation={hasLocation}
           onSearch={handleSearchSubmit}
-          onAddFriend={addFriend as (email: string) => Promise<{ success?: boolean; accepted?: boolean; invited?: boolean; error?: any }>}
+          onAddFriend={addFriend as (email: string) => Promise<{ success?: boolean; accepted?: boolean; invited?: boolean; error?: unknown }>}
           isSoundEnabled={isSoundEnabled}
           setIsSoundEnabled={setIsSoundEnabled}
           audioMode={audioMode}

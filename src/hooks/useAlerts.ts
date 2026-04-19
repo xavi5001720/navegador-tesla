@@ -5,7 +5,7 @@ import { getDistance } from '@/utils/geo';
 
 // Helper to get angle difference (0 to 180)
 function getHeadingDiff(heading1: number, heading2: number) {
-  let diff = Math.abs(heading1 - heading2) % 360;
+  const diff = Math.abs(heading1 - heading2) % 360;
   return diff > 180 ? 360 - diff : diff;
 }
 

@@ -95,8 +95,8 @@ const fetchRouteTomTom = async (allPoints: Coordinates[], useTraffic: boolean): 
   if (!data.routes?.length) throw new Error('TomTom: no se encontró ruta.');
 
   const mainRoute = data.routes[0];
-  const latLngs: Coordinates[] = mainRoute.legs.flatMap((leg: any) =>
-    leg.points.map((p: any) => [p.latitude, p.longitude] as Coordinates)
+  const latLngs: Coordinates[] = mainRoute.legs.flatMap((leg: { points: { latitude: number, longitude: number }[] }) =>
+    leg.points.map((p: { latitude: number, longitude: number }) => [p.latitude, p.longitude] as Coordinates)
   );
 
   const TRAFFIC_COLORS: Record<number, string> = {
@@ -107,8 +107,17 @@ const fetchRouteTomTom = async (allPoints: Coordinates[], useTraffic: boolean): 
     4: '#7f1d1d',
   };
 
+  interface TomTomSection {
+    startPointIndex: number;
+    endPointIndex: number;
+    sectionType: string;
+    delayInSeconds?: number;
+    magnitudeOfDelay?: number;
+    speedLimit?: { speed: number };
+  }
+
   const sections: RouteSection[] = (mainRoute.sections || [])
-    .map((s: any) => {
+    .map((s: TomTomSection) => {
       const baseSection = {
         start: s.startPointIndex,
         end: s.endPointIndex,
@@ -133,8 +142,22 @@ const fetchRouteTomTom = async (allPoints: Coordinates[], useTraffic: boolean): 
     .filter(Boolean) as RouteSection[];
 
 
+  interface TomTomInstruction {
+    message: string;
+    instructionType: string;
+    maneuver: string;
+    routeOffsetInMeters: number;
+    point: { latitude: number, longitude: number };
+    street?: string;
+    signpostText?: string;
+    exitNumber?: number;
+    laneGuidance?: {
+      lanes: { directions: string[], recommended: boolean }[];
+    };
+  }
+
   const instructions: RouteInstruction[] = (mainRoute.guidance?.instructions || [])
-    .map((ins: any) => {
+    .map((ins: TomTomInstruction) => {
       const isRoundabout = ins.maneuver?.includes('ROUNDABOUT');
       return {
         message: ins.message,
@@ -148,7 +171,7 @@ const fetchRouteTomTom = async (allPoints: Coordinates[], useTraffic: boolean): 
         isRoundabout,
         exitNumber: ins.exitNumber,
         laneGuidance: ins.laneGuidance ? {
-          lanes: ins.laneGuidance.lanes.map((l: any) => ({
+          lanes: ins.laneGuidance.lanes.map((l: { directions: string[], recommended: boolean }) => ({
             directions: l.directions,
             recommended: l.recommended
           }))
@@ -197,8 +220,19 @@ const fetchRouteOSRM = async (allPoints: Coordinates[]): Promise<RouteResult> =>
   const latLngs: Coordinates[] = mainRoute.geometry.coordinates.map((coord: [number, number]) => [coord[1], coord[0]]);
   if (latLngs.length > 0) latLngs.unshift([...allPoints[0]]);
 
+  interface OSRMStep {
+    name?: string;
+    distance: number;
+    maneuver: {
+      type: string;
+      modifier?: string;
+      instruction?: string;
+      location: [number, number];
+    };
+  }
+
   // Mapear pasos de OSRM a instrucciones internas
-  const instructions: RouteInstruction[] = (mainRoute.legs?.[0]?.steps || []).map((s: any) => {
+  const instructions: RouteInstruction[] = (mainRoute.legs?.[0]?.steps || []).map((s: OSRMStep) => {
     const maneuver = s.maneuver.type.toUpperCase();
     const modifier = s.maneuver.modifier?.toUpperCase() || '';
     

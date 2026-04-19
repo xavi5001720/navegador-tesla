@@ -61,7 +61,7 @@ export const logger = {
     if (DEBUG_MODE) console.timeEnd(label);
   },
 
-  table(data: any) {
+  table(data: unknown) {
     if (DEBUG_MODE) console.table(data);
   },
 

@@ -219,7 +219,7 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
 
     const id = setInterval(tick, SIM_TICK_MS);
     return () => clearInterval(id);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
   return simAircrafts;
