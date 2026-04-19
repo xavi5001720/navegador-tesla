@@ -100,7 +100,7 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
           const uniqueIds = new Set<number>();
           for (let i = 0; i < chunks.length; i++) {
             params.set('polyline', encodePolyline(chunks[i]));
-            params.set('distance', '5');
+            params.set('distance', '1'); // Radio de 1km para no desviarse
             const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
             const data = await res.json();
             if (Array.isArray(data)) {

@@ -147,7 +147,10 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
           const uniqueIds = new Set<number>();
           for (let i = 0; i < chunks.length; i++) {
             const wktPoints = chunks[i].map(pt => `${pt[1]} ${pt[0]}`).join(', ');
-            const { data, error } = await supabase.rpc('get_stations_in_route', { p_route_wkt: `LINESTRING(${wktPoints})`, p_buffer_meters: 300 });
+            const { data, error } = await supabase.rpc('get_stations_in_route', { 
+              p_route_wkt: `LINESTRING(${wktPoints})`, 
+              p_buffer_meters: 100 // Solo gasolineras a pie de carretera (100m)
+            });
             if (data) {
               data.forEach((s: any) => { if (!uniqueIds.has(s.id)) { uniqueIds.add(s.id); accumulatedRaw.push(s); } });
               setStations(processStations([...accumulatedRaw], filters));
