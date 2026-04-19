@@ -15,7 +15,7 @@ import { YachtPosition } from '@/hooks/useLuxuryYachts';
 import { RouteSection } from '@/hooks/useRoute';
 import { WeatherPoint } from '@/hooks/useWeather';
 import { Festival } from '@/hooks/useFestivals';
-import { Ruler, Radio, Check, Trash2, AlertTriangle, Construction, Package, Car, PawPrint, MapPin, Navigation } from 'lucide-react'; 
+import { Ruler, Radio, Check, Trash2, AlertTriangle, Construction, Package, Car, PawPrint, MapPin, Navigation, X } from 'lucide-react'; 
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { getCarFilter, getCarImage } from '@/utils/carStyles';
@@ -179,6 +179,19 @@ const createWeatherIcon = (temp: number, condition: string) => {
     </div>
   );
   return L.divIcon({ html: iconHtml, className: 'custom-weather-icon', iconSize: [75, 36], iconAnchor: [37, 18] });
+};
+
+const ClosePopupButton = () => {
+  const map = useMap();
+  return (
+    <button 
+      onClick={() => map.closePopup()}
+      className="mt-1 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/40 hover:text-white/60 transition-all active:scale-95 border border-white/5 hover:border-white/10"
+    >
+      <X className="h-3 w-3" />
+      <span className="text-[9px] font-black uppercase tracking-widest">Cerrar</span>
+    </button>
+  );
 };
 
 const festivalIcon = L.divIcon({
@@ -711,7 +724,7 @@ export default function MapUI({
             position={[fest.lat, fest.lon]} 
             icon={festivalIcon}
           >
-            <Popup className="tesla-popup" minWidth={250}>
+            <Popup className="tesla-popup" minWidth={250} closeButton={false}>
               <div className="p-4 bg-black/90 backdrop-blur-2xl border border-amber-500/30 rounded-2xl flex flex-col gap-3">
                 <div className="flex flex-col">
                   <div className="flex items-center justify-between mb-1">
@@ -743,16 +756,20 @@ export default function MapUI({
                   </div>
                 </div>
 
-                <button 
-                  onClick={() => {
-                    const origin: [number, number] = userPos || [0, 0];
-                    if (origin[0] !== 0) calculateRoute(origin, [fest.lat, fest.lon], [], false, isTrafficWanted);
-                  }}
-                  className="mt-2 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white transition-all active:scale-95 shadow-lg shadow-amber-900/20"
-                >
-                  <Navigation className="h-4 w-4" />
-                  <span className="text-xs font-black uppercase tracking-widest">Trazar Ruta</span>
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button 
+                    onClick={() => {
+                      const origin: [number, number] = userPos || [0, 0];
+                      if (origin[0] !== 0) calculateRoute(origin, [fest.lat, fest.lon], [], false, isTrafficWanted);
+                    }}
+                    className="mt-1 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white transition-all active:scale-95 shadow-lg shadow-amber-900/20"
+                  >
+                    <Navigation className="h-4 w-4" />
+                    <span className="text-xs font-black uppercase tracking-widest">Ir a la fiesta</span>
+                  </button>
+
+                  <ClosePopupButton />
+                </div>
               </div>
             </Popup>
           </Marker>
