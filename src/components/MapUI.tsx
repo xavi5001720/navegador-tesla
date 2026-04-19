@@ -736,8 +736,8 @@ export default function MapUI({
           />
         ))}
 
-        {/* Filtrado de Radares por Zoom */}
-        {currentZoom > 11 && radars.map((radar) => {
+        {/* Filtrado de Radares por Zoom (Visibles desde 7) */}
+        {currentZoom >= 7 && radars.map((radar) => {
           if (radar.type === 'community_mobile') {
             return (
               <Marker 
@@ -750,8 +750,7 @@ export default function MapUI({
               />
             );
           }
-          // Radares fijos solo visibles a partir de zoom 12
-          if (currentZoom < 12) return null;
+          // Radares fijos ahora visibles desde zoom 7
           return <Marker key={`radar-${radar.id}`} position={[radar.lat, radar.lon]} icon={radarIcon(radar.type, radar.speedLimit)} interactive={false} />;
         })}
 
@@ -764,11 +763,11 @@ export default function MapUI({
           />
         ))}
 
-        {/* Filtrado de Cargadores y Gasolineras (Solo a partir de zoom 13) */}
-        {currentZoom >= 13 && (
+        {/* Filtrado de Cargadores y Gasolineras (Visibles desde 6 y 9) */}
+        {currentZoom >= 6 && (
           <>
             {chargers.map(charger => <Marker key={`charger-${charger.id}`} position={[charger.lat, charger.lon]} icon={chargerIcon} eventHandlers={{ click: () => { if (onChargerClick) onChargerClick(charger); } }} />)}
-            {gasStations.map(station => <Marker key={`gas-${station.id}`} position={[station.lat, station.lon]} icon={gasStationIcon} eventHandlers={{ click: () => { if (onGasStationClick) onGasStationClick(station); } }} />)}
+            {currentZoom >= 9 && gasStations.map(station => <Marker key={`gas-${station.id}`} position={[station.lat, station.lon]} icon={gasStationIcon} eventHandlers={{ click: () => { if (onGasStationClick) onGasStationClick(station); } }} />)}
           </>
         )}
 
