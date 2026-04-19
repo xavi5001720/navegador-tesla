@@ -669,37 +669,31 @@ export default function MapUI({
         />
 
         
-        {(() => {
+        {/* 🛣️ RENDERIZADO DE RUTA OPTIMIZADO (Solo se recalcula si cambiamos de segmento o hay nueva ruta) */}
+        {useMemo(() => {
           if (!routeCoordinates || routeCoordinates.length === 0) return null;
           
-          let currentIndex = 0;
-          let currentSnappedPoint = userPos;
-
-          if (isSimulating) {
-            const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
-            currentIndex = snapped.segmentIndex;
-            currentSnappedPoint = userPos; 
-          } else {
-            const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
-            currentIndex = snapped.segmentIndex;
-            if (snapped.distance < 30) currentSnappedPoint = snapped.point;
-          }
-
-          const remainingCoords = routeCoordinates.slice(currentIndex);
-          if (remainingCoords.length > 0) remainingCoords[0] = currentSnappedPoint;
+          const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
+          const currentIndex = snapped.segmentIndex;
 
           const polylines = [];
           let lastIndex = currentIndex;
           const sortedSections = [...routeSections].sort((a, b) => a.start - b.start);
+
           sortedSections.forEach((section) => {
             if (section.end <= currentIndex) return;
             const startIdx = Math.max(lastIndex, section.start);
-            if (startIdx > lastIndex) polylines.push({ coords: routeCoordinates.slice(lastIndex, startIdx + 1), color: '#3b82f6' });
-            const endIdx = section.end;
-            polylines.push({ coords: routeCoordinates.slice(startIdx, endIdx + 1), color: section.color });
-            lastIndex = endIdx;
+            if (startIdx > lastIndex) {
+              polylines.push({ coords: routeCoordinates.slice(lastIndex, startIdx + 1), color: '#3b82f6' });
+            }
+            polylines.push({ coords: routeCoordinates.slice(startIdx, section.end + 1), color: section.color });
+            lastIndex = section.end;
           });
-          if (lastIndex < routeCoordinates.length - 1) polylines.push({ coords: routeCoordinates.slice(lastIndex), color: '#3b82f6' });
+
+          if (lastIndex < routeCoordinates.length - 1) {
+            polylines.push({ coords: routeCoordinates.slice(lastIndex), color: '#3b82f6' });
+          }
+
           return (
             <>
               {polylines.map((p, i) => (
@@ -719,7 +713,7 @@ export default function MapUI({
               <Marker position={routeCoordinates[routeCoordinates.length - 1]} icon={endMarkerIcon} />
             </>
           );
-        })()}
+        }, [routeCoordinates, routeSections, waypoints, viewMode, Math.floor(userPos[0] * 10000), Math.floor(userPos[1] * 10000)])}
 
         {radarZones.map(zone => (
           <Circle 
@@ -736,39 +730,38 @@ export default function MapUI({
           />
         ))}
 
-        {/* 📡 RADARES: Visibles siempre si hay ruta, o desde zoom 10 si es local */}
-        {(currentZoom >= 10 || (routeCoordinates && routeCoordinates.length > 0)) && radars.map((radar) => {
+        {/* 📡 RADARES: Memoizados por zoom y datos */}
+        {useMemo(() => (currentZoom >= 10 || (routeCoordinates && routeCoordinates.length > 0)) && radars.map((radar) => {
           if (radar.type === 'community_mobile') {
             return (
               <Marker 
                 key={`comm-${radar.id}`} 
                 position={[radar.lat, radar.lon]} 
                 icon={communityRadarIcon(!!radar.is_visible, !!(userId && radar.user_id === userId), radar.category)}
-                eventHandlers={{
-                  click: () => setSelectedCommunityRadar(radar)
-                }}
+                eventHandlers={{ click: () => setSelectedCommunityRadar(radar) }}
               />
             );
           }
           return <Marker key={`radar-${radar.id}`} position={[radar.lat, radar.lon]} icon={radarIcon(radar.type, radar.speedLimit)} interactive={false} />;
-        })}
+        }), [radars, currentZoom, !!routeCoordinates, userId])}
 
-        {aircrafts.map((aircraft) => (
+        {/* ✈️ AVIONES: Memoizados */}
+        {useMemo(() => aircrafts.map((aircraft) => (
           <Marker 
             key={`ac-${aircraft.icao24}`} 
             position={[aircraft.lat, aircraft.lon]} 
             icon={aircraftIcon(aircraft.isSuspect, aircraft.track || 0, getDistance(userPos, [aircraft.lat, aircraft.lon]), viewMode, aircraft.altitude, aircraft.velocity, aircraft.callsign)} 
             interactive={false} 
           />
-        ))}
+        )), [aircrafts, viewMode, Math.floor(userPos[0] * 100), Math.floor(userPos[1] * 100)])}
 
-        {/* ⚡ CARGADORES y ⛽ GASOLINERAS: Visibles siempre si hay ruta, o desde zoom 10 si es local */}
-        {(currentZoom >= 10 || (routeCoordinates && routeCoordinates.length > 0)) && (
+        {/* ⚡ CARGADORES y ⛽ GASOLINERAS: Memoizados */}
+        {useMemo(() => (currentZoom >= 10 || (routeCoordinates && routeCoordinates.length > 0)) && (
           <>
             {chargers.map(charger => <Marker key={`charger-${charger.id}`} position={[charger.lat, charger.lon]} icon={chargerIcon} eventHandlers={{ click: () => { if (onChargerClick) onChargerClick(charger); } }} />)}
             {gasStations.map(station => <Marker key={`gas-${station.id}`} position={[station.lat, station.lon]} icon={gasStationIcon} eventHandlers={{ click: () => { if (onGasStationClick) onGasStationClick(station); } }} />)}
           </>
-        )}
+        ), [chargers, gasStations, currentZoom, !!routeCoordinates])}
 
         {weatherPoints.map(wp => <Marker key={`weather-${wp.id}`} position={[wp.lat, wp.lon]} icon={createWeatherIcon(wp.temp, wp.condition)} interactive={false} />)}
         
