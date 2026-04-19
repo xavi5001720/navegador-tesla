@@ -120,6 +120,9 @@ export function useRadars(
       }
       
       try {
+        logger.groupCollapsed('📡 useRadars', `Iniciando búsqueda (${hasRoute ? 'Modo Ruta' : 'Modo Local'})`);
+        logger.time('⏱️ Fetch Radares');
+
         if (hasRoute && routeCoordinates) {
           // MODO RUTA (EN CASCADA por tramos de 50km)
           
@@ -233,6 +236,7 @@ export function useRadars(
             // Actualizamos el estado de forma incremental
             setRadars([...accumulatedRadars]);
             
+            logger.info('useRadars', `Tramo ${i+1}/${chunks.length} cargado: ${accumulatedRadars.length} radares totales.`);
             setProgress(Math.round(((i + 1) / chunks.length) * 100));
           }
         } else {
@@ -336,8 +340,19 @@ export function useRadars(
         };
         setRefreshTrigger(0);
         
+        logger.timeEnd('⏱️ Fetch Radares');
+        logger.group('📊 Resumen de Radares');
+        logger.table({
+          'Total Radares': radars.length,
+          'Fijos/OSM': radars.filter(r => r.type !== 'community_mobile').length,
+          'Comunitarios': radars.filter(r => r.type === 'community_mobile').length,
+          'Zonas Móviles': radarZones.length
+        });
+        logger.groupEnd();
+        logger.groupEnd();
+        
       } catch (error) {
-        console.error("[useRadars] Erro al obtener radares de Supabase:", error);
+        logger.error('useRadars', "Error al obtener radares de Supabase", error);
       } finally {
         setLoadingRadars(false);
         setFetchingRouteRadars(false);

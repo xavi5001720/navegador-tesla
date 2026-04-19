@@ -115,6 +115,10 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
 
     const fetchChargers = async () => {
       setLoading(true);
+      logger.groupCollapsed('⚡ useChargers', `Iniciando búsqueda (${hasRoute ? 'Modo Ruta' : 'Modo Local'})`);
+      logger.time('⏱️ Fetch Cargadores');
+      logger.info('useChargers', 'Filtros activos', filters);
+
       if (hasRoute) {
         setProgress(0);
         setChargers([]);
@@ -208,10 +212,19 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
                });
             });
             setChargers(parsed);
-          } else {
-            console.warn('[useChargers] Response data is NOT an array:', data);
-          }
         }
+        
+        logger.timeEnd('⏱️ Fetch Cargadores');
+        logger.group('📊 Resumen de Cargadores');
+        logger.table({
+          'Total Encontrados': chargers.length,
+          'Carga Rápida (>50kW)': chargers.filter(c => c.maxPower >= 50).length,
+          'Ultra Rápida (>150kW)': chargers.filter(c => c.maxPower >= 150).length,
+          'Solo Gratuitos': filters.isFree ? 'SÍ' : 'NO'
+        });
+        logger.groupEnd();
+        logger.groupEnd();
+
         lastFetchRef.current = { type: currentType, pos: userPos, routeKey: currentRouteKey, filtersStr };
       } catch (err) {
         console.error('[useChargers] fetchChargers Error:', err);

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { logger } from '@/lib/logger';
 
 export interface Festival {
   id: string;
@@ -31,6 +32,9 @@ export function useFestivals(enabled: boolean) {
 
     const fetchFestivals = async () => {
       setLoading(true);
+      logger.groupCollapsed('🎭 useFestivals', 'Iniciando búsqueda de eventos culturales');
+      logger.time('⏱️ Fetch Fiestas');
+      
       try {
         const now = new Date();
         const currentMonth = now.getMonth() + 1; // 1-12
@@ -43,9 +47,22 @@ export function useFestivals(enabled: boolean) {
           .or(`start_month.eq.${currentMonth},start_month.eq.${nextMonth}`);
 
         if (error) throw error;
-        setFestivals(data || []);
+        
+        const results = data || [];
+        setFestivals(results);
+
+        logger.timeEnd('⏱️ Fetch Fiestas');
+        logger.group('📊 Resumen Cultural');
+        logger.table({
+          'Total Eventos': results.length,
+          'Mes Actual': currentMonth,
+          'Mes Siguiente': nextMonth,
+          'Regiones detectadas': Array.from(new Set(results.map(f => f.region))).length
+        });
+        logger.groupEnd();
+        logger.groupEnd();
       } catch (err) {
-        console.error('Error fetching festivals:', err);
+        logger.error('useFestivals', 'Error fetching festivals', err);
       } finally {
         setLoading(false);
       }

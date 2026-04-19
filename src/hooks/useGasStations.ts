@@ -163,12 +163,16 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
 
     const fetchStations = async () => {
       setLoading(true);
-      if (hasRoute) {
-        setProgress(0);
-        setStations([]);
-      }
+      logger.groupCollapsed('⛽ useGasStations', `Iniciando búsqueda (${hasRoute ? 'Modo Ruta' : 'Modo Local'})`);
+      logger.time('⏱️ Fetch Gasolineras');
+      logger.info('useGasStations', 'Filtros activos', filters);
 
       try {
+        if (hasRoute) {
+          setProgress(0);
+          setStations([]);
+        }
+
         if (hasRoute && routeCoordinates) {
           // Dividir la ruta en tramos de 50km
           const chunks: [number, number][][] = [];
@@ -226,11 +230,19 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
             p_radius_meters: 15000
           });
 
-          if (error) throw error;
-          if (data) {
-            setStations(processStations(data, filters));
           }
         }
+
+        const processed = processStations(lastFetchRef.current?.type === 'route' ? [] : stations, filters);
+        logger.timeEnd('⏱️ Fetch Gasolineras');
+        logger.group('📊 Resumen de Combustible');
+        logger.table({
+          'Total Encontradas': stations.length,
+          'Solo más Baratas': filters.onlyCheapest ? 'SÍ' : 'NO',
+          'Combustibles': filters.fuels?.join(', ') || 'Todos'
+        });
+        logger.groupEnd();
+        logger.groupEnd();
 
         lastFetchRef.current = { type: currentType, pos: userPos, routeKey: currentRouteKey, filtersStr };
       } catch (err) {
