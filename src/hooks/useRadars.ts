@@ -59,96 +59,66 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
     const currentRouteKey = `${routeFirstKey}|${routeLastKey}`;
 
     let shouldFetch = false;
-    if (!lastFetchRef.current || lastFetchRef.current.routeKey !== currentRouteKey) {
-      shouldFetch = true;
-    } else if (!hasRoute && getDist(lastFetchRef.current.pos, userPos) > 5000) {
-      shouldFetch = true;
+    // Si hay ruta, SOLO comparamos la ruta. El movimiento del coche se ignora.
+    if (hasRoute) {
+      if (!lastFetchRef.current || lastFetchRef.current.routeKey !== currentRouteKey) {
+        shouldFetch = true;
+      }
+    } else {
+      // Si es local, solo si nos movemos más de 5km
+      if (!lastFetchRef.current || lastFetchRef.current.routeKey !== 'LOCAL' || getDist(lastFetchRef.current.pos, userPos) > 5000) {
+        shouldFetch = true;
+      }
     }
 
     if (!shouldFetch && refreshTrigger === 0) return;
 
     const fetchAllRadars = async () => {
+      // ... (mismo código de fetch que ya teníamos)
       setLoadingRadars(true);
       const accumulated: Radar[] = [];
       const uniqueIds = new Set<number>();
 
       try {
         logger.groupCollapsed('📡 useRadars', `Iniciando búsqueda (${hasRoute ? 'Modo Ruta Exclusivo' : 'Modo Local'})`);
-        logger.time('⏱️ Fetch Radares');
-
+        
         if (hasRoute && routeCoordinates) {
           const chunks: [number, number][][] = [];
-          let currentChunk: [number, number][] = [routeCoordinates[0]];
-          let currentDist = 0;
-
-          for (let i = 1; i < routeCoordinates.length; i++) {
-            const d = getDist(routeCoordinates[i-1], routeCoordinates[i]);
-            currentDist += d;
-            currentChunk.push(routeCoordinates[i]);
-            if (currentDist >= 50000) {
-              chunks.push(currentChunk);
-              currentChunk = [routeCoordinates[i]];
-              currentDist = 0;
-            }
-          }
-          if (currentChunk.length > 1) chunks.push(currentChunk);
+          for (let i = 0; i < routeCoordinates.length; i += 100) chunks.push(routeCoordinates.slice(i, i + 105));
 
           for (let i = 0; i < chunks.length; i++) {
             const chunk = chunks[i];
             const wkt = `LINESTRING(${chunk.map(pt => `${pt[1]} ${pt[0]}`).join(', ')})`;
-            const { data } = await supabase.rpc('get_radars_in_route', { p_route_wkt: wkt, p_buffer_meters: 150 }); // Reducimos buffer a 150m para más precisión
+            const { data } = await supabase.rpc('get_radars_in_route', { p_route_wkt: wkt, p_buffer_meters: 150 });
             
             if (data) {
-              (data as any[]).forEach((r, idx) => {
+              (data as any[]).forEach((r) => {
                 if (!uniqueIds.has(r.id)) {
-                  // FILTRO DE DIRECCIÓN
                   if (r.direction !== null && r.direction !== undefined) {
-                    // Calculamos el rumbo de la ruta en este tramo
-                    // Buscamos el punto de la ruta más cercano a este radar para saber nuestro rumbo
                     const heading = getHeading(chunk[0], chunk[chunk.length-1]);
                     const diff = Math.abs(heading - r.direction);
                     const normalizedDiff = Math.min(diff, 360 - diff);
-                    
-                    // Si el radar apunta a más de 45 grados de nuestra trayectoria, lo ignoramos (sentido contrario)
-                    // Nota: Algunos radares multan por la espalda, pero el sentido de la vía suele ser el mismo.
                     if (normalizedDiff > 45) return;
                   }
-
                   uniqueIds.add(r.id);
-                  accumulated.push({
-                    id: r.id, lat: r.lat, lon: r.lon, type: r.radar_type || 'fixed',
-                    speedLimit: r.speed_limit, direction: r.direction, road: r.road
-                  });
+                  accumulated.push({ id: r.id, lat: r.lat, lon: r.lon, type: r.radar_type || 'fixed', speedLimit: r.speed_limit, direction: r.direction, road: r.road });
                 }
               });
               setRadars([...accumulated]);
             }
             setProgress(Math.round(((i + 1) / chunks.length) * 100));
           }
-          // En modo ruta, NO cargamos zonas móviles generales para no ensuciar
-          setRadarZones([]); 
         } else {
-          // MODO LOCAL
           const { data: fixed } = await supabase.rpc('get_radars_nearby', { p_lat: userPos[0], p_lon: userPos[1], p_radius_meters: 15000 });
           const { data: comm } = await supabase.rpc('get_community_radars_nearby', { p_lat: userPos[0], p_lon: userPos[1], p_radius_meters: 15000 });
           if (fixed) (fixed as any[]).forEach(r => accumulated.push({ id: r.id, lat: r.lat, lon: r.lon, type: r.radar_type || 'fixed', speedLimit: r.speed_limit, direction: r.direction }));
           if (comm) (comm as any[]).forEach(r => accumulated.push({ id: r.id, lat: r.lat, lon: r.lon, type: 'community_mobile', confirmations: r.confirmations }));
           setRadars(accumulated);
-
           const { data: zones } = await supabase.from('radar_zones').select('*').limit(50);
           if (zones) setRadarZones((zones as any[]).map(z => ({ id: z.id, lat: z.lat, lon: z.lon, radius: z.radius || 500, confidence: z.confidence || 0.5 })));
         }
 
-        logger.timeEnd('⏱️ Fetch Radares');
-        logger.group('📊 Resumen de Radares Inteligente');
-        logger.table({ 
-          'Total Filtrados': accumulated.length, 
-          'Modo': hasRoute ? 'RUTA EXCLUSIVA' : 'LOCAL',
-          'Ahorro por Sentido': uniqueIds.size - accumulated.length // Aproximado
-        });
-        logger.groupEnd(); logger.groupEnd();
-
-        lastFetchRef.current = { pos: userPos, routeKey: currentRouteKey };
+        lastFetchRef.current = { pos: userPos, routeKey: hasRoute ? currentRouteKey : 'LOCAL' };
         setRefreshTrigger(0);
       } catch (err) {
         logger.error('useRadars', 'Error radares', err);
@@ -158,7 +128,7 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
       }
     };
     fetchAllRadars();
-  }, [userPos?.[0], userPos?.[1], isEnabled, routeLength, routeFirstKey, routeLastKey, refreshTrigger]);
+  }, [isEnabled, routeFirstKey, routeLastKey, refreshTrigger, (routeLength === 0 ? Math.floor(userPos?.[0] || 0) : 0)]);
 
   return { radars, radarZones, loadingRadars, progress, refreshRadars: () => setRefreshTrigger(prev => prev + 1) };
 }

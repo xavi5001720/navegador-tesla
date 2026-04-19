@@ -84,41 +84,29 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
 
     const fetchChargers = async () => {
       setLoading(true);
-      logger.groupCollapsed('⚡ useChargers', `Iniciando búsqueda (${hasRoute ? 'Modo Ruta' : 'Modo Local'})`);
-      logger.time('⏱️ Fetch Cargadores');
-
       try {
         const params = new URLSearchParams({ distanceunit: 'KM', maxresults: '250' });
         if (filters.minPower) params.append('minpowerkw', filters.minPower.toString());
-        if (filters.connectors?.length) params.append('connectiontypeid', filters.connectors.map(c => CONSTANTS.CONNECTOR_MAP[c]).join(','));
-
         const accumulated: Charger[] = [];
         if (hasRoute && routeCoordinates) {
           const chunks: [number, number][][] = [];
           for (let i = 0; i < routeCoordinates.length; i += 100) chunks.push(routeCoordinates.slice(i, i + 105));
-
           const uniqueIds = new Set<number>();
           for (let i = 0; i < chunks.length; i++) {
             params.set('polyline', encodePolyline(chunks[i]));
-            params.set('distance', '1'); // Radio de 1km para no desviarse
+            params.set('distance', '1');
             const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
             const data = await res.json();
             if (Array.isArray(data)) {
               data.forEach(c => {
-                if (filters.isFree && !isFreeCharger(c.UsageCost)) return;
                 if (!uniqueIds.has(c.ID)) {
                   uniqueIds.add(c.ID);
                   const power = c.Connections?.reduce((max: number, conn: any) => Math.max(max, conn.PowerKW || 0), 0) || 0;
-                  accumulated.push({
-                    id: c.ID, lat: c.AddressInfo.Latitude, lon: c.AddressInfo.Longitude, title: c.AddressInfo.Title,
-                    address: c.AddressInfo.AddressLine1 || 'Ubicación Desconocida', operator: c.OperatorInfo?.Title || 'Desconocido',
-                    usageCost: c.UsageCost || (filters.isFree ? 'Gratuito' : 'Desconocido'), maxPower: power, connections: c.Connections || []
-                  });
+                  accumulated.push({ id: c.ID, lat: c.AddressInfo.Latitude, lon: c.AddressInfo.Longitude, title: c.AddressInfo.Title, address: c.AddressInfo.AddressLine1 || 'Ubicación', operator: c.OperatorInfo?.Title || 'Desconocido', usageCost: c.UsageCost || 'Desconocido', maxPower: power, connections: c.Connections || [] });
                 }
               });
               setChargers([...accumulated]);
             }
-            setProgress(Math.round(((i + 1) / chunks.length) * 100));
           }
         } else {
           params.set('latitude', userPos[0].toString()); params.set('longitude', userPos[1].toString()); params.set('distance', '15');
@@ -126,31 +114,19 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
           const data = await res.json();
           if (Array.isArray(data)) {
             data.forEach(c => {
-              if (filters.isFree && !isFreeCharger(c.UsageCost)) return;
               const power = c.Connections?.reduce((max: number, conn: any) => Math.max(max, conn.PowerKW || 0), 0) || 0;
-              accumulated.push({
-                id: c.ID, lat: c.AddressInfo.Latitude, lon: c.AddressInfo.Longitude, title: c.AddressInfo.Title,
-                address: c.AddressInfo.AddressLine1 || 'Ubicación Desconocida', operator: c.OperatorInfo?.Title || 'Desconocido',
-                usageCost: c.UsageCost || (filters.isFree ? 'Gratuito' : 'Desconocido'), maxPower: power, connections: c.Connections || []
-              });
+              accumulated.push({ id: c.ID, lat: c.AddressInfo.Latitude, lon: c.AddressInfo.Longitude, title: c.AddressInfo.Title, address: c.AddressInfo.AddressLine1 || 'Ubicación', operator: c.OperatorInfo?.Title || 'Desconocido', usageCost: c.UsageCost || 'Desconocido', maxPower: power, connections: c.Connections || [] });
             });
             setChargers(accumulated);
           }
         }
-
-        logger.timeEnd('⏱️ Fetch Cargadores');
-        logger.group('📊 Resumen de Cargadores');
-        logger.table({ 'Total Encontrados': accumulated.length, 'Filtro Potencia': filters.minPower || 'Todos' });
-        logger.groupEnd(); logger.groupEnd();
-        lastFetchRef.current = { type: currentType, pos: userPos, routeKey: currentRouteKey, filtersStr };
+        lastFetchRef.current = { type: currentType, pos: userPos, routeKey: hasRoute ? currentRouteKey : 'LOCAL', filtersStr };
       } catch (err) {
-        logger.error('useChargers', 'Error en carga de cargadores', err);
-      } finally {
-        setLoading(false);
-      }
+        logger.error('useChargers', 'Error cargadores', err);
+      } finally { setLoading(false); }
     };
     fetchChargers();
-  }, [userPos?.[0], userPos?.[1], isEnabled, routeLength, routeFirstKey, routeLastKey, filtersStr]);
+  }, [isEnabled, routeFirstKey, routeLastKey, filtersStr, (routeLength === 0 ? Math.floor(userPos?.[0] || 0) : 0)]);
 
   return { chargers, loading, progress, refreshChargers: () => { lastFetchRef.current = null; setChargers(prev => [...prev]); } };
 }

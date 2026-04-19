@@ -134,23 +134,17 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
     if (!shouldFetch) return;
 
     const fetchStations = async () => {
+      // ... (mismo fetch)
       setLoading(true);
-      logger.groupCollapsed('⛽ useGasStations', `Iniciando búsqueda (${hasRoute ? 'Modo Ruta' : 'Modo Local'})`);
-      logger.time('⏱️ Fetch Gasolineras');
-
       try {
         const accumulatedRaw: any[] = [];
         if (hasRoute && routeCoordinates) {
           const chunks: [number, number][][] = [];
           for (let i = 0; i < routeCoordinates.length; i += 100) chunks.push(routeCoordinates.slice(i, i + 105));
-
           const uniqueIds = new Set<number>();
           for (let i = 0; i < chunks.length; i++) {
             const wktPoints = chunks[i].map(pt => `${pt[1]} ${pt[0]}`).join(', ');
-            const { data, error } = await supabase.rpc('get_stations_in_route', { 
-              p_route_wkt: `LINESTRING(${wktPoints})`, 
-              p_buffer_meters: 100 // Solo gasolineras a pie de carretera (100m)
-            });
+            const { data } = await supabase.rpc('get_stations_in_route', { p_route_wkt: `LINESTRING(${wktPoints})`, p_buffer_meters: 100 });
             if (data) {
               data.forEach((s: any) => { if (!uniqueIds.has(s.id)) { uniqueIds.add(s.id); accumulatedRaw.push(s); } });
               setStations(processStations([...accumulatedRaw], filters));
@@ -164,26 +158,13 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
             setStations(processStations(accumulatedRaw, filters));
           }
         }
-
-        logger.timeEnd('⏱️ Fetch Gasolineras');
-        logger.group('📊 Resumen de Combustible');
-        logger.table({
-          'Total Encontradas': accumulatedRaw.length,
-          'Filtro Combustibles': filters.fuels?.join(', ') || 'Todos'
-        });
-        logger.groupEnd();
-        logger.groupEnd();
-
-        lastFetchRef.current = { type: currentType, pos: userPos, routeKey: currentRouteKey, filtersStr };
+        lastFetchRef.current = { type: currentType, pos: userPos, routeKey: hasRoute ? currentRouteKey : 'LOCAL', filtersStr };
       } catch (err) {
-        logger.error('useGasStations', 'Error en carga de gasolineras', err);
-      } finally {
-        setLoading(false);
-        setProgress(100);
-      }
+        logger.error('useGasStations', 'Error gasolineras', err);
+      } finally { setLoading(false); setProgress(100); }
     };
     fetchStations();
-  }, [userPos?.[0], userPos?.[1], isEnabled, routeLength, routeFirstKey, routeLastKey, filtersStr]);
+  }, [isEnabled, routeFirstKey, routeLastKey, filtersStr, (routeLength === 0 ? Math.floor(userPos?.[0] || 0) : 0)]);
 
   return { stations, loading, progress };
 }
