@@ -126,7 +126,7 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
       } finally { setLoading(false); }
     };
     fetchChargers();
-  }, [isEnabled, routeFirstKey, routeLastKey, filtersStr, (routeLength === 0 ? Math.floor(userPos?.[0] || 0) : 0)]);
+  }, [isEnabled, routeFirstKey, routeLastKey, filtersStr, (routeLength === 0 ? Math.floor((userPos?.[0] || 0) * 20) + ',' + Math.floor((userPos?.[1] || 0) * 20) : '0')]);
 
   return { chargers, loading, progress, refreshChargers: () => { lastFetchRef.current = null; setChargers(prev => [...prev]); } };
 }

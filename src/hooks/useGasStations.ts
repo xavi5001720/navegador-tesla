@@ -164,7 +164,7 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
       } finally { setLoading(false); setProgress(100); }
     };
     fetchStations();
-  }, [isEnabled, routeFirstKey, routeLastKey, filtersStr, (routeLength === 0 ? Math.floor(userPos?.[0] || 0) : 0)]);
+  }, [isEnabled, routeFirstKey, routeLastKey, filtersStr, (routeLength === 0 ? Math.floor((userPos?.[0] || 0) * 20) + ',' + Math.floor((userPos?.[1] || 0) * 20) : '0')]);
 
   return { stations, loading, progress };
 }

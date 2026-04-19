@@ -128,7 +128,7 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
       }
     };
     fetchAllRadars();
-  }, [isEnabled, routeFirstKey, routeLastKey, refreshTrigger, (routeLength === 0 ? Math.floor(userPos?.[0] || 0) : 0)]);
+  }, [isEnabled, routeFirstKey, routeLastKey, refreshTrigger, (routeLength === 0 ? Math.floor((userPos?.[0] || 0) * 20) + ',' + Math.floor((userPos?.[1] || 0) * 20) : '0')]);
 
   return { radars, radarZones, loadingRadars, progress, refreshRadars: () => setRefreshTrigger(prev => prev + 1) };
 }
