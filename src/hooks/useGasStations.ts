@@ -62,17 +62,8 @@ function processStations(stations: any[], filters: GasStationFilters): GasStatio
 
     if (isValid) {
       const gasStation: GasStation = {
-        id: s.id,
-        lat: s.lat,
-        lon: s.lon,
-        name: s.name,
-        address: s.address,
-        city: s.city,
-        schedule: s.schedule,
-        price_g95: s.price_g95,
-        price_g98: s.price_g98,
-        price_diesel: s.price_diesel,
-        price_glp: s.price_glp,
+        id: s.id, lat: s.lat, lon: s.lon, name: s.name, address: s.address, city: s.city, schedule: s.schedule,
+        price_g95: s.price_g95, price_g98: s.price_g98, price_diesel: s.price_diesel, price_glp: s.price_glp,
         cheapestFuelPrice: cheapestFuelPrice === Infinity ? undefined : cheapestFuelPrice,
       };
 
@@ -93,32 +84,20 @@ function processStations(stations: any[], filters: GasStationFilters): GasStatio
 
   if (filters.onlyCheapest) {
     const winners: Map<number, GasStation> = new Map();
-    
     for (const fuel of fuelTypes) {
       const best = cheapestPerFuel[fuel];
       if (best) {
         if (!winners.has(best.station.id)) {
-          winners.set(best.station.id, { 
-            ...best.station, 
-            cheapestFuelPrice: best.price, // Use the price of the winning fuel
-            targetFuels: [fuel] 
-          });
+          winners.set(best.station.id, { ...best.station, cheapestFuelPrice: best.price, targetFuels: [fuel] });
         } else {
-          // If already a winner for another fuel, add this fuel to the list
           const existing = winners.get(best.station.id)!;
           existing.targetFuels = [...(existing.targetFuels || []), fuel];
-          // Keep the cheapest absolute price for display (optional, but consistent)
-          if (best.price < (existing.cheapestFuelPrice || Infinity)) {
-            existing.cheapestFuelPrice = best.price;
-          }
+          if (best.price < (existing.cheapestFuelPrice || Infinity)) existing.cheapestFuelPrice = best.price;
         }
       }
     }
-    
     return Array.from(winners.values()).sort((a, b) => (a.cheapestFuelPrice || Infinity) - (b.cheapestFuelPrice || Infinity));
   }
-
-  // Ordenar de más barato a más caro
   return processed.sort((a, b) => (a.cheapestFuelPrice || Infinity) - (b.cheapestFuelPrice || Infinity));
 }
 
@@ -126,7 +105,6 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
   const [stations, setStations] = useState<GasStation[]>([]);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
-
   const lastFetchRef = useRef<{ type: 'route'|'local', pos: [number, number], routeKey: string, filtersStr: string } | null>(null);
 
   const routeLength = routeCoordinates?.length ?? 0;
@@ -145,17 +123,12 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
     const currentRouteKey = `${routeFirstKey}|${routeLastKey}`;
 
     let shouldFetch = false;
-    if (!lastFetchRef.current) {
-      shouldFetch = true;
-    } else if (lastFetchRef.current.type !== currentType) {
+    if (!lastFetchRef.current || lastFetchRef.current.type !== currentType || lastFetchRef.current.filtersStr !== filtersStr) {
       shouldFetch = true;
     } else if (currentType === 'route' && lastFetchRef.current.routeKey !== currentRouteKey) {
       shouldFetch = true;
-    } else if (lastFetchRef.current.filtersStr !== filtersStr) {
-      shouldFetch = true;
     } else if (currentType === 'local') {
-      const dist = getDist(lastFetchRef.current.pos, userPos);
-      if (dist > 5000) shouldFetch = true;
+      if (getDist(lastFetchRef.current.pos, userPos) > 5000) shouldFetch = true;
     }
 
     if (!shouldFetch) return;
@@ -164,100 +137,49 @@ export function useGasStations(userPos: [number, number] | null, routeCoordinate
       setLoading(true);
       logger.groupCollapsed('⛽ useGasStations', `Iniciando búsqueda (${hasRoute ? 'Modo Ruta' : 'Modo Local'})`);
       logger.time('⏱️ Fetch Gasolineras');
-      logger.info('useGasStations', 'Filtros activos', filters);
 
       try {
-        if (hasRoute) {
-          setProgress(0);
-          setStations([]);
-        }
-
-        const accumulated: any[] = [];
-
+        const accumulatedRaw: any[] = [];
         if (hasRoute && routeCoordinates) {
-          // Dividir la ruta en tramos de 50km
           const chunks: [number, number][][] = [];
-          let currentChunk: [number, number][] = [routeCoordinates[0]];
-          let currentDist = 0;
-
-          for (let i = 1; i < routeCoordinates.length; i++) {
-            const d = getDist(routeCoordinates[i-1], routeCoordinates[i]);
-            currentDist += d;
-            currentChunk.push(routeCoordinates[i]);
-
-            if (currentDist >= CONSTANTS.CHUNK_DISTANCE_M) {
-              chunks.push(currentChunk);
-              currentChunk = [routeCoordinates[i]];
-              currentDist = 0;
-            }
-          }
-          if (currentChunk.length > 1) chunks.push(currentChunk);
+          for (let i = 0; i < routeCoordinates.length; i += 100) chunks.push(routeCoordinates.slice(i, i + 105));
 
           const uniqueIds = new Set<number>();
-
           for (let i = 0; i < chunks.length; i++) {
-            const chunk = chunks[i];
-            const wktPoints = chunk.map(pt => `${pt[1]} ${pt[0]}`).join(', ');
-            const routeWkt = `LINESTRING(${wktPoints})`;
-
-            const { data, error } = await supabase.rpc('get_stations_in_route', {
-              p_route_wkt: routeWkt,
-              p_buffer_meters: 300
-            });
-
-            if (error) {
-              console.error(`[useGasStations] Error chunk ${i}:`, error);
-              continue;
-            }
-
+            const wktPoints = chunks[i].map(pt => `${pt[1]} ${pt[0]}`).join(', ');
+            const { data, error } = await supabase.rpc('get_stations_in_route', { p_route_wkt: `LINESTRING(${wktPoints})`, p_buffer_meters: 300 });
             if (data) {
-              data.forEach((s: any) => {
-                if (!uniqueIds.has(s.id)) {
-                  uniqueIds.add(s.id);
-                  accumulated.push(s);
-                }
-              });
-              
-              setStations(processStations([...accumulated], filters));
+              data.forEach((s: any) => { if (!uniqueIds.has(s.id)) { uniqueIds.add(s.id); accumulatedRaw.push(s); } });
+              setStations(processStations([...accumulatedRaw], filters));
             }
             setProgress(Math.round(((i + 1) / chunks.length) * 100));
           }
         } else {
-          // Busqueda local 15km
-          const { data, error } = await supabase.rpc('get_stations_nearby', {
-            p_lat: userPos[0],
-            p_lon: userPos[1],
-            p_radius_meters: 15000
-          });
-
-          if (error) throw error;
+          const { data } = await supabase.rpc('get_stations_nearby', { p_lat: userPos[0], p_lon: userPos[1], p_radius_meters: 15000 });
           if (data) {
-            data.forEach((s: any) => accumulated.push(s));
-            setStations(processStations(accumulated, filters));
+            data.forEach((s: any) => accumulatedRaw.push(s));
+            setStations(processStations(accumulatedRaw, filters));
           }
         }
 
         logger.timeEnd('⏱️ Fetch Gasolineras');
         logger.group('📊 Resumen de Combustible');
         logger.table({
-          'Total Encontradas': accumulated.length,
-          'Solo más Baratas': filters.onlyCheapest ? 'SÍ' : 'NO',
-          'Combustibles': filters.fuels?.join(', ') || 'Todos'
+          'Total Encontradas': accumulatedRaw.length,
+          'Filtro Combustibles': filters.fuels?.join(', ') || 'Todos'
         });
         logger.groupEnd();
         logger.groupEnd();
 
         lastFetchRef.current = { type: currentType, pos: userPos, routeKey: currentRouteKey, filtersStr };
       } catch (err) {
-        logger.error('useGasStations', 'Error al cargar gasolineras', err);
+        logger.error('useGasStations', 'Error en carga de gasolineras', err);
       } finally {
         setLoading(false);
         setProgress(100);
       }
     };
-
     fetchStations();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userPos?.[0], userPos?.[1], isEnabled, routeLength, routeFirstKey, routeLastKey, filtersStr]);
 
   return { stations, loading, progress };
