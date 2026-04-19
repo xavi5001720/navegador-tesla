@@ -1163,6 +1163,8 @@ export default function Home() {
           }}
           userId={session?.user?.id}
           voteRadar={voteRadar}
+          calculateRoute={calculateRoute}
+          isTrafficWanted={isTrafficWanted}
         />
 
 

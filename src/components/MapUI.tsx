@@ -15,7 +15,7 @@ import { YachtPosition } from '@/hooks/useLuxuryYachts';
 import { RouteSection } from '@/hooks/useRoute';
 import { WeatherPoint } from '@/hooks/useWeather';
 import { Festival } from '@/hooks/useFestivals';
-import { Ruler, Radio, Check, Trash2, AlertTriangle, Construction, Package, Car, PawPrint } from 'lucide-react'; 
+import { Ruler, Radio, Check, Trash2, AlertTriangle, Construction, Package, Car, PawPrint, MapPin, Navigation } from 'lucide-react'; 
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { getCarFilter, getCarImage } from '@/utils/carStyles';
@@ -261,6 +261,8 @@ interface MapUIProps {
    onUpdateFriendNickname?: (friendId: string, nickname: string) => void;
    userId?: string;
    voteRadar?: (radarId: string, userId: string, type: 'confirm' | 'reject') => Promise<void>;
+   calculateRoute: (origin: [number, number], dest: [number, number], waypoints: [number, number][], isRecalculation: boolean, isTrafficWanted: boolean) => Promise<void>;
+   isTrafficWanted: boolean;
 }
 
 const getCarIcon = (heading: number, color?: string, viewMode: string = 'navigation') => {
@@ -492,7 +494,7 @@ export default function MapUI({
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
   onGasStationClick, onYachtClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [],   centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
    mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname, radarZones = [],
-   userId, voteRadar
+   userId, voteRadar, calculateRoute, isTrafficWanted
 }: MapUIProps) {
   const [selectedCommunityRadar, setSelectedCommunityRadar] = useState<Radar | null>(null);
   const errorCountRef = useRef(0);
