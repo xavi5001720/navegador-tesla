@@ -74,7 +74,11 @@ const fetchRouteTomTom = async (allPoints: Coordinates[], useTraffic: boolean): 
     url += `&traffic=true&routeType=fastest&sectionType=traffic`;
   }
 
+  const timerLabel = `⏱️ TomTom API: ${allPoints.length} puntos`;
+  logger.time(timerLabel);
+  
   const res = await fetch(url);
+  logger.timeEnd(timerLabel);
   
   if (!res.ok) {
     let errorDetail = '';
@@ -152,13 +156,27 @@ const fetchRouteTomTom = async (allPoints: Coordinates[], useTraffic: boolean): 
       };
     });
 
-  return {
+  const result = {
     coordinates: latLngs,
     distance: mainRoute.summary.lengthInMeters,
     duration: mainRoute.summary.travelTimeInSeconds,
     sections,
     instructions,
   };
+
+  if (sections.length > 0) {
+    logger.group('📊 Tramos de Tráfico Detectados');
+    logger.table(sections.map(s => ({
+      Inicio: s.start,
+      Fin: s.end,
+      Retraso: `${s.delay}s`,
+      Magnitud: s.magnitude,
+      Color: s.color
+    })));
+    logger.groupEnd();
+  }
+
+  return result;
 };
 
 
@@ -246,6 +264,7 @@ export function useRoute() {
 
   // Routing principal — TomTom si hay clave, OSRM si no
   const calculateRoute = useCallback(async (origin: Coordinates, destination: Coordinates, stops: Coordinates[] = [], isRecalculation = false, enableTrafficRequested = true) => {
+    logger.group(`${isRecalculation ? '🔄 Recalculando' : '🗺️ Nueva'} Trayectoria`);
     setLoadingRoute(true);
     setRouteError(null);
     const allPoints: Coordinates[] = [origin, ...stops, destination];
@@ -286,6 +305,7 @@ export function useRoute() {
       setIsTrafficEnabled(false);
     } finally {
       setLoadingRoute(false);
+      logger.groupEnd();
     }
   }, []);
 
@@ -340,18 +360,22 @@ export function useRoute() {
     
     // Revisamos al pasar 30 minutos (1800000 ms)
     if (timeSinceLastFetchMs > 30 * 60 * 1000) {
+      logger.group('🚦 Tráfico: Verificando umbral de refresco');
       const distSinceLastFetch = getDist(currentPos, lastTrafficPosRef.current);
       
       // Solo lanzamos API si nos hemos alejado al menos 1 kilómetro (1000m)
       if (distSinceLastFetch > 1000) {
+        logger.info('useRoute', `✅ Umbral superado (${Math.round(distSinceLastFetch)}m). Refrescando tráfico...`);
         lastTrafficTimeRef.current = now;
         lastTrafficPosRef.current = currentPos;
         calculateRoute(currentPos, destination, waypoints, true, isTrafficEnabled);
       } else {
+        logger.info('useRoute', `⏳ Umbral no alcanzado (${Math.round(distSinceLastFetch)}m). Se mantiene caché.`);
         // Rearmar el reloj, porque no nos hemos movido (ej: estamos en un atasco inmenso o parados).
         // Así evitamos volver a entrar en esta condición cada segundo a partir del minuto 30.
         lastTrafficTimeRef.current = now;
       }
+      logger.groupEnd();
     }
   }, [route, destination, waypoints, loadingRoute, calculateRoute]);
 

@@ -1,12 +1,11 @@
-// src/lib/logger.ts — Logger centralizado con niveles + integración Sentry
-// En producción suprime 'info', siempre mantiene 'warn' y 'error'.
-// Los errores se envían automáticamente a Sentry en producción.
-
+// src/lib/logger.ts — Logger centralizado con Telemetría Avanzada e integración Sentry
 import * as Sentry from '@sentry/nextjs';
 
-type LogLevel = 'info' | 'warn' | 'error';
+type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
 const IS_PROD = process.env.NODE_ENV === 'production';
+// Flag para activar la telemetría avanzada (grupos, tablas, tiempos)
+const DEBUG_MODE = !IS_PROD; 
 
 function formatMsg(level: LogLevel, module: string, msg: string, data?: unknown): string {
   const ts = new Date().toISOString().substring(11, 23); // HH:mm:ss.mmm
@@ -20,7 +19,6 @@ export const logger = {
 
   warn(module: string, msg: string, data?: unknown) {
     console.warn(formatMsg('warn', module, msg, data));
-    // Warnings también van a Sentry como breadcrumbs (pistas del contexto)
     if (IS_PROD) {
       Sentry.addBreadcrumb({
         category: module,
@@ -33,21 +31,40 @@ export const logger = {
 
   error(module: string, msg: string, data?: unknown) {
     console.error(formatMsg('error', module, msg, data));
-    // Errores se envían a Sentry en producción
     if (IS_PROD) {
       const error = data instanceof Error ? data : new Error(`[${module}] ${msg}`);
       Sentry.captureException(error, {
         tags: { module },
-        extra: {
-          message: msg,
-          data: data instanceof Error ? undefined : data,
-        },
+        extra: { message: msg, data: data instanceof Error ? undefined : data },
       });
     }
   },
 
-  // Establece contexto del usuario actual para que los errores aparezcan
-  // vinculados al usuario en el panel de Sentry
+  // --- MÉTODOS DE TELEMETRÍA (Solo activos en DEBUG_MODE) ---
+
+  group(label: string, collapsed = true) {
+    if (DEBUG_MODE) {
+      if (collapsed) console.groupCollapsed(label);
+      else console.group(label);
+    }
+  },
+
+  groupEnd() {
+    if (DEBUG_MODE) console.groupEnd();
+  },
+
+  time(label: string) {
+    if (DEBUG_MODE) console.time(label);
+  },
+
+  timeEnd(label: string) {
+    if (DEBUG_MODE) console.timeEnd(label);
+  },
+
+  table(data: any) {
+    if (DEBUG_MODE) console.table(data);
+  },
+
   setUser(id: string, email?: string) {
     Sentry.setUser({ id, email });
   },

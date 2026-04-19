@@ -52,6 +52,7 @@ const radarIcon = (type: string = 'fixed', speedLimit?: number) => L.divIcon({
   iconSize: [40, 44],
   iconAnchor: [20, 32],
 });
+// 1. PRE-GENERACIÓN DE ICONOS ESTÁTICOS (Evita llamar a renderToStaticMarkup en cada render)
 const chargerIcon = L.divIcon({
   html: renderToStaticMarkup(
     <div className="h-8 w-8 flex items-center justify-center rounded-full bg-emerald-600 border-2 border-white shadow-[0_0_15px_rgba(5,150,105,0.8)] counter-rotate">
@@ -74,6 +75,17 @@ const gasStationIcon = L.divIcon({
   iconAnchor: [16, 16],
 });
 
+const festivalIcon = L.divIcon({
+  html: renderToStaticMarkup(
+    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-amber-500 border-2 border-white shadow-[0_0_20px_rgba(245,158,11,0.8)] counter-rotate animate-bounce-slow">
+       <span className="text-xl">🎭</span>
+    </div>
+  ),
+  className: 'custom-festival-icon pointer-events-auto',
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
+});
+
 const airlineMapping: Record<string, string> = {
   'IBE': 'Iberia', 'VLG': 'Vueling', 'AEA': 'Air Europa', 'RYR': 'Ryanair', 'EZY': 'easyJet',
   'BAW': 'British Airways', 'AFR': 'Air France', 'DLH': 'Lufthansa', 'KLM': 'KLM',
@@ -83,9 +95,17 @@ const airlineMapping: Record<string, string> = {
   'TRA': 'Transavia'
 };
 
+const aircraftIconCache = new Map<string, L.DivIcon>();
+
 const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: number = Infinity, viewMode: string = 'navigation', altitude?: number, velocity?: number, callsign?: string) => {
   const isThreat = isSuspect && distanceToUser < 10000;
   const colorFilter = isThreat ? 'invert(15%) sepia(100%) saturate(700%) hue-rotate(340deg) brightness(120%) contrast(130%)' : 'none';
+  
+  // Cache key: combinamos sospecha, rumbo (redondeado a 5º) y modo de vista
+  const roundedHeading = Math.round(heading / 5) * 5;
+  const cacheKey = `${isSuspect}-${roundedHeading}-${viewMode}-${callsign || 'no-call'}-${isThreat}`;
+
+  if (aircraftIconCache.has(cacheKey)) return aircraftIconCache.get(cacheKey)!;
 
   let airlineName = 'Vuelo Comercial';
   if (callsign) {
@@ -113,10 +133,10 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
     </div>
   ` : '';
 
-  return L.divIcon({
+  const icon = L.divIcon({
     html: `
       <div class="relative">
-        <div style="transform: rotate(${heading - 45}deg); width: 40px; height: 40px; ${isThreat ? 'animation: aircraft-pulse 0.8s ease-in-out infinite;' : ''}">
+        <div style="transform: rotate(${roundedHeading - 45}deg); width: 40px; height: 40px; ${isThreat ? 'animation: aircraft-pulse 0.8s ease-in-out infinite;' : ''}">
           <img src="${isSuspect ? '/avion-no-identificado.png' : '/avion-comercial.png'}" style="width: 100%; height: 100%; object-fit: contain; filter: ${colorFilter};" />
         </div>
         ${labelHtml}
@@ -126,6 +146,9 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
     iconSize: [40, 40],
     iconAnchor: [20, 20],
   });
+
+  aircraftIconCache.set(cacheKey, icon);
+  return icon;
 };
 
 const TESLA_SHIPS_MMSI = ['366102000', '311001353', '440245000', '311000321', '636023991', '259805000', '636025798'];
@@ -194,16 +217,7 @@ const ClosePopupButton = () => {
   );
 };
 
-const festivalIcon = L.divIcon({
-  html: renderToStaticMarkup(
-    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-amber-500 border-2 border-white shadow-[0_0_20px_rgba(245,158,11,0.8)] counter-rotate animate-bounce-slow">
-       <span className="text-xl">🎭</span>
-    </div>
-  ),
-  className: 'custom-festival-icon pointer-events-auto',
-  iconSize: [40, 40],
-  iconAnchor: [20, 20],
-});
+// El festivalIcon ya está pre-generado arriba
 
 function MapEvents({ viewMode, onViewModeChange, onMapClick }: { viewMode?: string, onViewModeChange?: (mode: 'navigation' | 'overview') => void, onMapClick?: (lat: number, lon: number, screenX: number, screenY: number) => void }) {
   const map = useMap();
@@ -510,8 +524,20 @@ export default function MapUI({
    userId, voteRadar, calculateRoute, isTrafficWanted
 }: MapUIProps) {
   const [selectedCommunityRadar, setSelectedCommunityRadar] = useState<Radar | null>(null);
+  const [currentZoom, setCurrentZoom] = useState(15);
   const errorCountRef = useRef(0);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+
+  // --- TELEMETRÍA DE RENDERIZADO ---
+  const renderStartTime = useRef<number>(0);
+  renderStartTime.current = performance.now();
+
+  useEffect(() => {
+    const duration = performance.now() - renderStartTime.current;
+    if (duration > 16) { // Si tarda más de 1 frame (16ms), es una alerta de rendimiento
+      logger.info('🗺️ MapUI', `Rendimiento: Renderizado pesado detectado (${duration.toFixed(2)}ms)`);
+    }
+  }, [userPos, radars, aircrafts, chargers, gasStations, yachts, festivals, currentZoom]);
 
   // Pre-calculamos distancias acumuladas para lógica de trazada cinemática (GPS Real)
   const routeCumDist = useMemo(() => {
@@ -618,7 +644,10 @@ export default function MapUI({
           radarZones={radarZones}
           distanceToNextInstruction={distanceToNextInstruction} 
           isSimulating={isSimulating}
-          onCurrentZoomChange={onCurrentZoomChange}
+          onCurrentZoomChange={(zoom) => {
+            setCurrentZoom(zoom);
+            if (onCurrentZoomChange) onCurrentZoomChange(zoom);
+          }}
         />
 
         
@@ -689,7 +718,8 @@ export default function MapUI({
           />
         ))}
 
-        {radars.map((radar) => {
+        {/* Filtrado de Radares por Zoom */}
+        {currentZoom > 11 && radars.map((radar) => {
           if (radar.type === 'community_mobile') {
             return (
               <Marker 
@@ -702,6 +732,8 @@ export default function MapUI({
               />
             );
           }
+          // Radares fijos solo visibles a partir de zoom 12
+          if (currentZoom < 12) return null;
           return <Marker key={`radar-${radar.id}`} position={[radar.lat, radar.lon]} icon={radarIcon(radar.type, radar.speedLimit)} interactive={false} />;
         })}
 
@@ -713,8 +745,15 @@ export default function MapUI({
             interactive={false} 
           />
         ))}
-        {chargers.map(charger => <Marker key={`charger-${charger.id}`} position={[charger.lat, charger.lon]} icon={chargerIcon} eventHandlers={{ click: () => { if (onChargerClick) onChargerClick(charger); } }} />)}
-        {gasStations.map(station => <Marker key={`gas-${station.id}`} position={[station.lat, station.lon]} icon={gasStationIcon} eventHandlers={{ click: () => { if (onGasStationClick) onGasStationClick(station); } }} />)}
+
+        {/* Filtrado de Cargadores y Gasolineras (Solo a partir de zoom 13) */}
+        {currentZoom >= 13 && (
+          <>
+            {chargers.map(charger => <Marker key={`charger-${charger.id}`} position={[charger.lat, charger.lon]} icon={chargerIcon} eventHandlers={{ click: () => { if (onChargerClick) onChargerClick(charger); } }} />)}
+            {gasStations.map(station => <Marker key={`gas-${station.id}`} position={[station.lat, station.lon]} icon={gasStationIcon} eventHandlers={{ click: () => { if (onGasStationClick) onGasStationClick(station); } }} />)}
+          </>
+        )}
+
         {weatherPoints.map(wp => <Marker key={`weather-${wp.id}`} position={[wp.lat, wp.lon]} icon={createWeatherIcon(wp.temp, wp.condition)} interactive={false} />)}
         
         {/* Fiestas Tradicionales */}
