@@ -1,36 +1,31 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
 
 export interface Radar {
-  id: number;
-  lat: number;
-  lon: number;
+  id: number; lat: number; lon: number;
   type: 'fixed' | 'mobile' | 'section' | 'traffic_light' | 'community_mobile';
-  speedLimit?: number;
-  direction?: number;
-  road?: string;
-  pk?: string;
-  confirmations?: number;
-  rejections?: number;
-  is_visible?: boolean;
-  category?: string;
-  user_id?: string;
+  speedLimit?: number; direction?: number; road?: string; pk?: string;
+  confirmations?: number; rejections?: number; is_visible?: boolean;
+  category?: string; user_id?: string;
 }
 
 export interface RadarZone {
-  id: number;
-  lat: number;
-  lon: number;
-  radius: number;
-  confidence: number;
+  id: number; lat: number; lon: number; radius: number; confidence: number;
 }
+
+const getDist = (p1: [number, number], p2: [number, number]) => {
+  const R = 6371e3;
+  const dLat = (p2[0] - p1[0]) * Math.PI / 180;
+  const dLon = (p2[1] - p1[1]) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(p1[0] * Math.PI / 180) * Math.cos(p2[0] * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+};
 
 export function useRadars(userPos: [number, number] | null, routeCoordinates?: [number, number][], isEnabled: boolean = false) {
   const [radars, setRadars] = useState<Radar[]>([]);
   const [radarZones, setRadarZones] = useState<RadarZone[]>([]);
   const [loadingRadars, setLoadingRadars] = useState(false);
-  const [fetchingRouteRadars, setFetchingRouteRadars] = useState(false);
   const [progress, setProgress] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -53,131 +48,85 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
     const currentRouteKey = `${routeFirstKey}|${routeLastKey}`;
 
     let shouldFetch = false;
-    if (!lastFetchRef.current) {
+    if (!lastFetchRef.current || lastFetchRef.current.routeKey !== currentRouteKey) {
       shouldFetch = true;
-    } else if (hasRoute && lastFetchRef.current.routeKey !== currentRouteKey) {
+    } else if (!hasRoute && getDist(lastFetchRef.current.pos, userPos) > 5000) {
       shouldFetch = true;
-    } else if (!hasRoute) {
-      const dist = Math.sqrt(
-        Math.pow(userPos[0] - lastFetchRef.current.pos[0], 2) +
-        Math.pow(userPos[1] - lastFetchRef.current.pos[1], 2)
-      );
-      if (dist > 0.05) shouldFetch = true; 
     }
 
     if (!shouldFetch && refreshTrigger === 0) return;
 
     const fetchAllRadars = async () => {
       setLoadingRadars(true);
-      if (hasRoute) setFetchingRouteRadars(true);
-      
-      const accumulatedRadars: Radar[] = [];
-      const uniqueRadarIds = new Set<number>();
+      const accumulated: Radar[] = [];
+      const uniqueIds = new Set<number>();
 
       try {
         logger.groupCollapsed('📡 useRadars', `Iniciando búsqueda (${hasRoute ? 'Modo Ruta' : 'Modo Local'})`);
         logger.time('⏱️ Fetch Radares');
 
         if (hasRoute && routeCoordinates) {
+          // Dividir por DISTANCIA (50km) no por puntos
           const chunks: [number, number][][] = [];
-          for (let i = 0; i < routeCoordinates.length; i += 100) {
-            chunks.push(routeCoordinates.slice(i, i + 105));
+          let currentChunk: [number, number][] = [routeCoordinates[0]];
+          let currentDist = 0;
+
+          for (let i = 1; i < routeCoordinates.length; i++) {
+            const d = getDist(routeCoordinates[i-1], routeCoordinates[i]);
+            currentDist += d;
+            currentChunk.push(routeCoordinates[i]);
+            if (currentDist >= 50000) {
+              chunks.push(currentChunk);
+              currentChunk = [routeCoordinates[i]];
+              currentDist = 0;
+            }
           }
+          if (currentChunk.length > 1) chunks.push(currentChunk);
 
           for (let i = 0; i < chunks.length; i++) {
-            const chunk = chunks[i];
-            const wktPoints = chunk.map(pt => `${pt[1]} ${pt[0]}`).join(', ');
-            const routeWkt = `LINESTRING(${wktPoints})`;
-
-            const { data, error } = await supabase.rpc('get_radars_in_route', {
-              p_route_wkt: routeWkt,
-              p_buffer_meters: 500
-            });
-
-            if (error) {
-              logger.error('useRadars', `Error en tramo ${i}`, error);
-              continue;
-            }
-
+            const wkt = `LINESTRING(${chunks[i].map(pt => `${pt[1]} ${pt[0]}`).join(', ')})`;
+            const { data } = await supabase.rpc('get_radars_in_route', { p_route_wkt: wkt, p_buffer_meters: 500 });
             if (data) {
-              (data as any[]).forEach((r) => {
-                if (!uniqueRadarIds.has(r.id)) {
-                  uniqueRadarIds.add(r.id);
-                  accumulatedRadars.push({
-                    id: r.id, lat: r.lat, lon: r.lon,
-                    type: r.radar_type || 'fixed',
-                    speedLimit: r.speed_limit,
-                    direction: r.direction, road: r.road, pk: r.pk
+              (data as any[]).forEach(r => {
+                if (!uniqueIds.has(r.id)) {
+                  uniqueIds.add(r.id);
+                  accumulated.push({
+                    id: r.id, lat: r.lat, lon: r.lon, type: r.radar_type || 'fixed',
+                    speedLimit: r.speed_limit, direction: r.direction, road: r.road
                   });
                 }
               });
+              setRadars([...accumulated]);
             }
-            
-            setRadars([...accumulatedRadars]);
             setProgress(Math.round(((i + 1) / chunks.length) * 100));
           }
         } else {
-          // MODO LOCAL
-          const { data: fixedData } = await supabase.rpc('get_radars_nearby', {
-            p_lat: userPos[0], p_lon: userPos[1], p_radius_meters: 20000
-          });
-          const { data: commData } = await supabase.rpc('get_community_radars_nearby', {
-            p_lat: userPos[0], p_lon: userPos[1], p_radius_meters: 20000
-          });
-
-          if (fixedData) {
-            (fixedData as any[]).forEach(r => {
-              accumulatedRadars.push({
-                id: r.id, lat: r.lat, lon: r.lon, type: r.radar_type || 'fixed',
-                speedLimit: r.speed_limit, direction: r.direction, road: r.road
-              });
-            });
-          }
-          if (commData) {
-            (commData as any[]).forEach(r => {
-              accumulatedRadars.push({
-                id: r.id, lat: r.lat, lon: r.lon, type: 'community_mobile',
-                confirmations: r.confirmations, category: r.category
-              });
-            });
-          }
-          setRadars(accumulatedRadars);
+          const { data: fixed } = await supabase.rpc('get_radars_nearby', { p_lat: userPos[0], p_lon: userPos[1], p_radius_meters: 20000 });
+          const { data: comm } = await supabase.rpc('get_community_radars_nearby', { p_lat: userPos[0], p_lon: userPos[1], p_radius_meters: 20000 });
+          if (fixed) (fixed as any[]).forEach(r => accumulated.push({ id: r.id, lat: r.lat, lon: r.lon, type: r.radar_type || 'fixed', speedLimit: r.speed_limit }));
+          if (comm) (comm as any[]).forEach(r => accumulated.push({ id: r.id, lat: r.lat, lon: r.lon, type: 'community_mobile', confirmations: r.confirmations }));
+          setRadars(accumulated);
         }
 
-        // Zonas Móviles
-        const { data: zonesData } = await supabase.from('radar_zones').select('*').limit(100);
-        let finalZones: RadarZone[] = [];
-        if (zonesData) {
-          finalZones = (zonesData as any[]).map(z => ({
-            id: z.id, lat: z.lat || 0, lon: z.lon || 0, radius: z.radius || 500, confidence: z.confidence || 0.5
-          })).filter(z => z.lat !== 0);
-          setRadarZones(finalZones);
-        }
+        const { data: zones } = await supabase.from('radar_zones').select('*').limit(100);
+        if (zones) setRadarZones((zones as any[]).map(z => ({ id: z.id, lat: z.lat, lon: z.lon, radius: z.radius || 500, confidence: z.confidence || 0.5 })));
 
         logger.timeEnd('⏱️ Fetch Radares');
         logger.group('📊 Resumen de Radares');
-        logger.table({
-          'Total Radares': accumulatedRadars.length,
-          'Fijos': accumulatedRadars.filter(r => r.type !== 'community_mobile').length,
-          'Comunitarios': accumulatedRadars.filter(r => r.type === 'community_mobile').length,
-          'Zonas Móviles': finalZones.length
-        });
-        logger.groupEnd();
-        logger.groupEnd();
+        logger.table({ 'Total': accumulated.length, 'Fijos': accumulated.filter(r => r.type !== 'community_mobile').length });
+        logger.groupEnd(); logger.groupEnd();
 
         lastFetchRef.current = { pos: userPos, routeKey: currentRouteKey };
         setRefreshTrigger(0);
-      } catch (error) {
-        logger.error('useRadars', 'Error fatal en carga de radares', error);
+      } catch (err) {
+        logger.error('useRadars', 'Error radares', err);
       } finally {
         setLoadingRadars(false);
-        setFetchingRouteRadars(false);
         setProgress(100);
       }
     };
-
     fetchAllRadars();
   }, [userPos?.[0], userPos?.[1], isEnabled, routeLength, routeFirstKey, routeLastKey, refreshTrigger]);
 
-  return { radars, radarZones, loadingRadars, fetchingRouteRadars, progress, refreshRadars: () => setRefreshTrigger(prev => prev + 1) };
+  return { radars, radarZones, loadingRadars, progress, refreshRadars: () => setRefreshTrigger(prev => prev + 1) };
 }
