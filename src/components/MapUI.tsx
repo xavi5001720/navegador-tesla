@@ -96,27 +96,14 @@ const airlineMapping: Record<string, string> = {
   'TRA': 'Transavia'
 };
 
-/**
- * Extrapolación de posición futura basada en rumbo y velocidad.
- */
-function extrapolate(lat: number, lon: number, velocity: number, track: number, dtSeconds: number) {
-  if (velocity < 0.5 || dtSeconds <= 0) return { lat, lon };
-  const trackRad = track * (Math.PI / 180);
-  const dlat = (velocity * Math.cos(trackRad) * dtSeconds) / 111111;
-  const cosLat = Math.cos(lat * (Math.PI / 180));
-  const dlon = (velocity * Math.sin(trackRad) * dtSeconds) / (111111 * (cosLat || 1));
-  return { lat: lat + dlat, lon: lon + dlon };
-}
-
 const aircraftIconCache = new Map<string, L.DivIcon>();
 
-const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: number = Infinity, viewMode: string = 'navigation', altitude?: number, velocity?: number, callsign?: string, transitionDurationMs: number = 30000) => {
-  const durationS = transitionDurationMs / 1000;
+const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: number = Infinity, viewMode: string = 'navigation', altitude?: number, velocity?: number, callsign?: string) => {
   const isThreat = isSuspect && distanceToUser < 10000;
   const colorFilter = isThreat ? 'invert(15%) sepia(100%) saturate(700%) hue-rotate(340deg) brightness(120%) contrast(130%)' : 'none';
   
   const roundedHeading = Math.round(heading / 5) * 5;
-  const cacheKey = `ac-icon-${isSuspect}-${viewMode}`;
+  const cacheKey = `ac-icon-${isSuspect}-${viewMode}-${roundedHeading}`;
 
   if (aircraftIconCache.has(cacheKey)) return aircraftIconCache.get(cacheKey)!;
 
@@ -149,7 +136,7 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
   const icon = L.divIcon({
     html: `
       <div class="aircraft-animation-container">
-        <div class="aircraft-rotate-container" style="transform: rotate(calc(var(--ac-heading, ${roundedHeading}deg) - 45deg)); width: 40px; height: 40px; ${isThreat ? 'animation: aircraft-pulse 0.8s ease-in-out infinite;' : ''}">
+        <div class="aircraft-rotate-container" style="transform: rotate(${roundedHeading - 45}deg); width: 40px; height: 40px; ${isThreat ? 'animation: aircraft-pulse 0.8s ease-in-out infinite;' : ''}">
           <img src="${isSuspect ? '/avion-no-identificado.png' : '/avion-comercial.png'}" style="width: 100%; height: 100%; object-fit: contain; filter: ${colorFilter};" />
         </div>
         <div class="aircraft-label-container">
@@ -305,7 +292,6 @@ interface MapUIProps {
    voteRadar?: (radarId: string, userId: string, type: 'confirm' | 'reject') => Promise<void>;
    calculateRoute: (origin: [number, number], dest: [number, number], waypoints: [number, number][], isRecalculation: boolean, isTrafficWanted: boolean) => Promise<void>;
    isTrafficWanted: boolean;
-    nextInterval?: number;
 }
 
 const getCarIcon = (heading: number, color?: string, viewMode: string = 'navigation') => {
@@ -427,78 +413,12 @@ const RadarMarker = React.memo(({ radar, userId, onSelect }: { radar: Radar, use
 });
 RadarMarker.displayName = 'RadarMarker';
 
-const AircraftMarker = React.memo(({ aircraft, userPos, viewMode, nextInterval }: { aircraft: Aircraft, userPos: [number, number], viewMode: string, nextInterval: number }) => {
+const AircraftMarker = React.memo(({ aircraft, userPos, viewMode }: { aircraft: Aircraft, userPos: [number, number], viewMode: string }) => {
   const dist = getDistance(userPos, [aircraft.lat, aircraft.lon]);
-  const markerRef = useRef<L.Marker>(null);
-  
-  // Motor de interpolación de alta frecuencia (Bypass React)
-  // stateRef guarda: posición visual actual, destino proyectado, tiempo de inicio y duración
-  const stateRef = useRef({
-    startPos: [aircraft.lat, aircraft.lon] as [number, number],
-    targetPos: [aircraft.lat, aircraft.lon] as [number, number],
-    startTime: Date.now(),
-    duration: nextInterval
-  });
-
-  // Cuando llega una nueva posición REAL de la API (cada ~30-60s)
-  useEffect(() => {
-    if (markerRef.current) {
-      // 1. Capturamos la posición visual donde está el avión AHORA MISMO
-      const currentPos = markerRef.current.getLatLng();
-      
-      // 2. Calculamos el "Destino Proyectado" (dónde estará dentro de N segundos)
-      const future = extrapolate(
-        aircraft.lat, 
-        aircraft.lon, 
-        aircraft.velocity || 0, 
-        aircraft.track || 0, 
-        nextInterval / 1000
-      );
-
-      // 3. Actualizamos el estado de la animación
-      stateRef.current = {
-        startPos: [currentPos.lat, currentPos.lng],
-        targetPos: [future.lat, future.lon],
-        startTime: Date.now(),
-        duration: nextInterval
-      };
-      
-      // Actualizamos rotación vía CSS Variable (GPU)
-      const el = markerRef.current.getElement();
-      if (el) {
-        el.style.setProperty('--ac-heading', `${aircraft.track || 0}deg`);
-      }
-    }
-  }, [aircraft.lat, aircraft.lon, aircraft.track, nextInterval]);
-
-  // Bucle de animación nativo (requestAnimationFrame) a 60 FPS
-  useEffect(() => {
-    let rafId: number;
-    const animate = () => {
-      if (markerRef.current) {
-        const { startPos, targetPos, startTime, duration } = stateRef.current;
-        const elapsed = Date.now() - startTime;
-        const t = Math.min(elapsed / duration, 1);
-        
-        // Interpolación matemática directa
-        const lat = startPos[0] + (targetPos[0] - startPos[0]) * t;
-        const lng = startPos[1] + (targetPos[1] - startPos[1]) * t;
-        
-        // Actualización directa sobre la instancia nativa del mapa (Bypass React)
-        markerRef.current.setLatLng([lat, lng]);
-      }
-      rafId = requestAnimationFrame(animate);
-    };
-    
-    rafId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(rafId);
-  }, []);
-
   return (
     <Marker 
-      ref={markerRef}
       position={[aircraft.lat, aircraft.lon]} 
-      icon={aircraftIcon(aircraft.isSuspect, aircraft.track || 0, dist, viewMode, aircraft.altitude, aircraft.velocity, aircraft.callsign, nextInterval)} 
+      icon={aircraftIcon(aircraft.isSuspect, aircraft.track || 0, dist, viewMode, aircraft.altitude, aircraft.velocity, aircraft.callsign)} 
       interactive={false} 
     />
   );

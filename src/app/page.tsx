@@ -19,6 +19,7 @@ import { useRadars } from '@/hooks/useRadars';
 import { useAlerts } from '@/hooks/useAlerts';
 import { useSpeed } from '@/hooks/useSpeed';
 import { usePegasus } from '@/hooks/usePegasus';
+import { useAircraftSimulator } from '@/hooks/useAircraftSimulator';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useRouteSimulator } from '@/hooks/useRouteSimulator';
 
@@ -548,8 +549,8 @@ export default function Home() {
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars, inSectionRadar, sectionAverageSpeed } = useAlerts(userPos || [0,0], radars, isSoundEnabled, voiceType, speed, heading || 0, allRadarZones || [], audioMode);
   const { allAircrafts, aircrafts, visibleAircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount, nextInterval } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
  
-  // Marcadores de aviones (Interpolación 60FPS gestionada internamente por MapUI)
-  const simulatedAircrafts = visibleAircrafts;
+  // Proyección futura para movimiento fluido vía V11 (Tick 1s)
+  const simulatedAircrafts = useAircraftSimulator(visibleAircrafts);
 
   const { chargers, loading: loadingChargers, progress: chargerProgress } = useChargers(userPos, route?.coordinates, isChargersEnabled, chargerFilters);
   const { stations: gasStations, loading: loadingGasStations, progress: gasProgress } = useGasStations(userPos, route?.coordinates, isGasStationsEnabled, gasStationFilters);
@@ -1180,7 +1181,6 @@ export default function Home() {
           voteRadar={voteRadar}
           calculateRoute={calculateRoute}
           isTrafficWanted={isTrafficWanted}
-          nextInterval={nextInterval}
         />
 
 
