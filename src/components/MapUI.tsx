@@ -418,17 +418,54 @@ RadarMarker.displayName = 'RadarMarker';
 const AircraftMarker = React.memo(({ aircraft, userPos, viewMode, nextInterval }: { aircraft: Aircraft, userPos: [number, number], viewMode: string, nextInterval: number }) => {
   const dist = getDistance(userPos, [aircraft.lat, aircraft.lon]);
   const markerRef = useRef<L.Marker>(null);
+  
+  // Motor de interpolación de alta frecuencia (Bypass React)
+  // Esto permite 60FPS sin un solo re-render de React
+  const stateRef = useRef({
+    startPos: [aircraft.lat, aircraft.lon] as [number, number],
+    targetPos: [aircraft.lat, aircraft.lon] as [number, number],
+    startTime: Date.now(),
+    duration: nextInterval
+  });
 
-  // Actualizar rotación y duración vía CSS Variables para no destruir el DOM y mantener fluidez
+  // Cuando llega una nueva posición de la API (cada ~30-60s)
   useEffect(() => {
     if (markerRef.current) {
+      const currentPos = markerRef.current.getLatLng();
+      stateRef.current = {
+        startPos: [currentPos.lat, currentPos.lng],
+        targetPos: [aircraft.lat, aircraft.lon],
+        startTime: Date.now(),
+        duration: nextInterval
+      };
+      
       const el = markerRef.current.getElement();
       if (el) {
         el.style.setProperty('--ac-heading', `${aircraft.track || 0}deg`);
-        el.style.setProperty('--ac-duration', `${nextInterval / 1000}s`);
       }
     }
-  }, [aircraft.track, nextInterval]);
+  }, [aircraft.lat, aircraft.lon, aircraft.track, nextInterval]);
+
+  useEffect(() => {
+    let rafId: number;
+    const animate = () => {
+      if (markerRef.current) {
+        const { startPos, targetPos, startTime, duration } = stateRef.current;
+        const elapsed = Date.now() - startTime;
+        const t = Math.min(elapsed / duration, 1);
+        
+        // Interpolación lineal
+        const lat = startPos[0] + (targetPos[0] - startPos[0]) * t;
+        const lng = startPos[1] + (targetPos[1] - startPos[1]) * t;
+        
+        markerRef.current.setLatLng([lat, lng]);
+      }
+      rafId = requestAnimationFrame(animate);
+    };
+    
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
 
   return (
     <Marker 
@@ -766,6 +803,12 @@ export default function MapUI({
           pointer-events: auto !important; 
           cursor: pointer !important; 
           z-index: 1000 !important; 
+        }
+        /* 🚀 GPU Accelerated Aircraft Animation */
+        .custom-aircraft-icon {
+          will-change: transform;
+          border: none !important;
+          background: none !important;
         }
         .yacht-icon-container {
           position: relative;
