@@ -40,6 +40,17 @@ export function useSocial(
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [livePositions, setLivePositions] = useState<Record<string, LivePosition>>({});
   const [loading, setLoading] = useState(true);
+
+  // ID único para esta sesión de navegador (ayuda a depurar y evitar eco en broadcast con la misma cuenta)
+  const sessionClientId = useMemo(() => {
+    if (typeof window === 'undefined') return 'ssr';
+    let id = localStorage.getItem('tesla_session_id');
+    if (!id) {
+      id = Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('tesla_session_id', id);
+    }
+    return id;
+  }, []);
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channelRef = useRef<any>(null);
@@ -179,12 +190,15 @@ export function useSocial(
     
     const now = Date.now();
     
+    logger.info('useSocial', `Ubicación sincronizada (${isInitial ? 'Inicio/Toggle' : 'Bucle'}).`);
+
     // Broadcast a amigos conectados
     channelRef.current.send({
       type: 'broadcast',
       event: 'SOCIAL_LOCATION_UPDATE',
       payload: { 
         user_id: session.user.id, 
+        client_id: sessionClientId, // Para evitar eco en el mismo dispositivo
         lat,
         lon,
         heading: isNaN(currentHeading) ? 0 : currentHeading,
@@ -196,10 +210,12 @@ export function useSocial(
     channelRef.current.send({
       type: 'broadcast',
       event: 'SOCIAL_STATUS_UPDATE',
-      payload: { user_id: session.user.id, is_sharing_location: true }
+      payload: { 
+        user_id: session.user.id, 
+        client_id: sessionClientId,
+        is_sharing_location: true 
+      }
     });
-
-    logger.info('useSocial', `Ubicación sincronizada (${isInitial ? 'Inicio/Toggle' : 'Bucle'}).`);
 
     // Persistencia en base de datos
     const { error } = await supabase.from('profiles').update({
@@ -217,10 +233,12 @@ export function useSocial(
     if (!session?.user) return;
 
     const setupChannel = () => {
+      // 1. CREACIÓN DEL CANAL
       const channel = supabase.channel('garage_social_live', {
         config: { presence: { key: session.user.id } }
       });
 
+      // 2. REGISTRO DE LISTENERS (DEBE SER ANTES DE SUBSCRIBE)
       channel
         .on('presence', { event: 'sync' }, () => {
           if (!isMountedRef.current) return;
@@ -229,68 +247,81 @@ export function useSocial(
           const now = Date.now();
           
           Object.keys(state).forEach((key: string) => {
-            (state[key] as { key: string }[]).forEach((p: { key: string }) => {
-              onlineIds.add(p.key);
-              lastSeenRef.current[p.key] = now;
+            (state[key] as { key: string, client_id?: string }[]).forEach((p) => {
+              onlineIds.add(key); // Usamos la key del mapa (user_id)
+              lastSeenRef.current[key] = now;
             });
           });
           setOnlineUserIds(onlineIds);
         })
-        .on('broadcast', { event: 'SOCIAL_LOCATION_UPDATE' }, ({ payload }) => {
-          if (!isMountedRef.current || payload.user_id === session.user.id) return;
+        .on('broadcast', { event: 'SOCIAL_LOCATION_UPDATE' }, (message) => {
+          if (!isMountedRef.current) return;
           
-          // Actualizar lastSeen al recibir broadcast de ubicación
-          lastSeenRef.current[payload.user_id] = Date.now();
+          // Extracción robusta del payload (soporta anidamiento de Supabase)
+          const data = message.payload?.payload || message.payload;
+          if (!data || !data.user_id) return;
+
+          // Ignorar eco del mismo dispositivo
+          if (data.client_id === sessionClientId) return;
           
+          logger.info('useSocial', `Broadcast RECIBIDO: Ubicación de ${data.user_id}`);
+          
+          lastSeenRef.current[data.user_id] = Date.now();
           setLivePositions(prev => ({
             ...prev,
-            [payload.user_id]: {
-              lat: payload.lat,
-              lon: payload.lon,
-              heading: payload.heading ?? 0,
-              timestamp: payload.timestamp
+            [data.user_id]: {
+              lat: data.lat,
+              lon: data.lon,
+              heading: data.heading ?? 0,
+              timestamp: data.timestamp
             }
           }));
         })
-        .on('broadcast', { event: 'SOCIAL_STATUS_UPDATE' }, ({ payload }) => {
+        .on('broadcast', { event: 'SOCIAL_STATUS_UPDATE' }, (message) => {
           if (!isMountedRef.current) return;
+          
+          const data = message.payload?.payload || message.payload;
+          if (!data || !data.user_id) return;
+
+          if (data.client_id === sessionClientId) return;
+
+          logger.info('useSocial', `Broadcast RECIBIDO: Status de ${data.user_id} (${data.is_sharing_location})`);
+          
           setRawFriends(prev => prev.map(f => 
-            f.id === payload.user_id 
-              ? { ...f, is_sharing_location: payload.is_sharing_location } 
+            f.id === data.user_id 
+              ? { ...f, is_sharing_location: data.is_sharing_location } 
               : f
           ));
-          if (payload.is_sharing_location === false) {
+          
+          if (data.is_sharing_location === false) {
             setLivePositions(prev => {
               const next = { ...prev };
-              delete next[payload.user_id];
+              delete next[data.user_id];
               return next;
             });
           }
-        })
-        .subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') {
-            logger.info('useSocial', 'Canal Realtime conectado.');
-            await channel.track({ key: session.user.id, online_at: new Date().toISOString() });
-            // FIX I10: Sincronización instantánea tras suscripción exitosa
-            syncLocation(true);
-          } else if (status === 'CHANNEL_ERROR') {
-            logger.warn('useSocial', 'Canal Realtime error. Reconectando en 5s...');
-            setTimeout(() => {
-              if (isMountedRef.current) {
-                supabase.removeChannel(channel);
-                channelRef.current = setupChannel();
-              }
-            }, 5000);
-          } else if (status === 'TIMED_OUT') {
-            logger.warn('useSocial', 'Canal Realtime timeout. Reconectando...');
-            setTimeout(() => {
-              if (isMountedRef.current) {
-                supabase.removeChannel(channel);
-                channelRef.current = setupChannel();
-              }
-            }, 5000);
-          }
         });
+
+      // 3. SUSCRIPCIÓN (FINAL)
+      channel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          logger.info('useSocial', 'Canal Realtime conectado y escuchando.');
+          await channel.track({ 
+            key: session.user.id, 
+            client_id: sessionClientId,
+            online_at: new Date().toISOString() 
+          });
+          syncLocation(true);
+        } else if (status === 'CHANNEL_ERROR') {
+          logger.warn('useSocial', 'Error en canal. Reconectando...');
+          setTimeout(() => {
+            if (isMountedRef.current) {
+              supabase.removeChannel(channel);
+              channelRef.current = setupChannel();
+            }
+          }, 5000);
+        }
+      });
 
       channelRef.current = channel;
       return channel;
@@ -359,7 +390,11 @@ export function useSocial(
         channelRef.current.send({
           type: 'broadcast',
           event: 'SOCIAL_STATUS_UPDATE',
-          payload: { user_id: session.user.id, is_sharing_location: false }
+          payload: { 
+            user_id: session.user.id, 
+            client_id: sessionClientId,
+            is_sharing_location: false 
+          }
         });
       }
 
