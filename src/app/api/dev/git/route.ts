@@ -29,10 +29,13 @@ export async function GET(req: NextRequest) {
 
     console.log(`[Git API] Usando comando: ${gitCommand}`);
 
+    const execOptions = {
+      env: { ...process.env, PATH: `${process.env.PATH}:/usr/bin:/bin` },
+      cwd: process.cwd()
+    };
+
     // 2. Obtener historial de commits para este módulo
-    const { stdout: logStdout } = await execAsync(`${gitCommand} log --grep="\\[${moduleId}\\]" --pretty=format:"%h|%ad|%s" --date=short -n 20`, {
-      env: { ...process.env, PATH: `${process.env.PATH}:/usr/bin:/bin` }
-    });
+    const { stdout: logStdout } = await execAsync(`${gitCommand} log --grep="\\[${moduleId}\\]" --pretty=format:"%h|%ad|%s" --date=short -n 20`, execOptions);
     
     const history = logStdout.split('\n').filter(line => line.trim()).map(line => {
       const [hash, date, message] = line.split('|');
@@ -45,9 +48,7 @@ export async function GET(req: NextRequest) {
       status = 'green'; // Por defecto verde si hay historial
 
       // 4. Verificar si hay cambios locales sin confirmar en archivos que usen este moduleId
-      const { stdout: statusStdout } = await execAsync(`${gitCommand} status --porcelain`, {
-        env: { ...process.env, PATH: `${process.env.PATH}:/usr/bin:/bin` }
-      });
+      const { stdout: statusStdout } = await execAsync(`${gitCommand} status --porcelain`, execOptions);
       const changedFiles = statusStdout.split('\n')
         .filter(line => line.trim())
         .map(line => line.substring(3).trim()); // Obtener ruta relativa del archivo
@@ -93,7 +94,8 @@ export async function POST(req: NextRequest) {
 
     // 2. Ejecutamos git commit
     await execAsync(`${gitCommand} add . && ${gitCommand} commit -m "${fullMessage}"`, {
-      env: { ...process.env, PATH: `${process.env.PATH}:/usr/bin:/bin` }
+      env: { ...process.env, PATH: `${process.env.PATH}:/usr/bin:/bin` },
+      cwd: process.cwd()
     });
 
     return NextResponse.json({ success: true, message: fullMessage });
