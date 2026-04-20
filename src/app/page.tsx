@@ -1047,12 +1047,14 @@ export default function Home() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="fixed top-[120px] left-6 right-6 md:left-8 md:w-[332px] md:right-auto z-[90] pointer-events-auto"
           >
+            <DevGuard moduleId="[MAP-04]">
             <SearchPanel 
               onSearch={handleSearchSubmit} 
               isLoading={loadingRoute} 
               onOpenFavorites={() => setIsFavoritesOpen(true)} 
               yachts={yachts}
             />
+            </DevGuard>
           </motion.div>
         )}
       </AnimatePresence>
@@ -1229,6 +1231,7 @@ export default function Home() {
                   </button>
                   <span className="text-[9px] font-black text-white uppercase tracking-widest text-center shadow-black drop-shadow-lg">Vista General</span>
                 </div>
+                <DevGuard moduleId="[MAP-02]">
                 <div className="flex flex-col items-center gap-1.5">
                   <button 
                     onClick={() => {
@@ -1241,6 +1244,7 @@ export default function Home() {
                   </button>
                   <span className="text-[9px] font-black text-white uppercase tracking-widest text-center shadow-black drop-shadow-lg">Modo Navegación</span>
                 </div>
+                </DevGuard>
               </>
             )}
           </div>

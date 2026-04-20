@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { X, Check, Settings2 } from 'lucide-react';
+import DevGuard from './DevGuard';
 
 interface SpeedometerProps {
   speed: number;
@@ -49,7 +50,6 @@ export default function Speedometer({ speed }: SpeedometerProps) {
   };
 
   const toKlingon = (num: number): string => {
-    // La mayoría de fuentes descargadas mapean directamente los números 0-9
     return Math.floor(num).toString();
   };
 
@@ -80,27 +80,29 @@ export default function Speedometer({ speed }: SpeedometerProps) {
         }
       `}</style>
 
-      <motion.div 
-        drag 
-        dragMomentum={false}
-        onClick={() => {
-          setTempFormat(format);
-          setIsMenuOpen(true);
-        }}
-        style={{ touchAction: 'none' }}
-        whileTap={{ scale: 0.95 }}
-        className="flex flex-col items-center justify-center bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl min-w-[140px] cursor-pointer hover:bg-black/50 transition-colors pointer-events-auto select-none group relative"
-      >
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-40 transition-opacity">
-          <Settings2 className="h-3 w-3 text-white" />
-        </div>
-        <span className={`text-6xl font-black text-white tabular-nums tracking-tighter ${format === 'KLINGON' ? 'font-klingon text-amber-500' : ''}`}>
-          {formatValue()}
-        </span>
-        <span className="text-xs font-bold text-blue-500 uppercase tracking-widest mt-1">
-          {currentUnit}
-        </span>
-      </motion.div>
+      <DevGuard moduleId="[MAP-01]">
+        <motion.div 
+          drag 
+          dragMomentum={false}
+          onClick={() => {
+            setTempFormat(format);
+            setIsMenuOpen(true);
+          }}
+          style={{ touchAction: 'none' }}
+          whileTap={{ scale: 0.95 }}
+          className="flex flex-col items-center justify-center bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl min-w-[140px] cursor-pointer hover:bg-black/50 transition-colors pointer-events-auto select-none group relative"
+        >
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-40 transition-opacity">
+            <Settings2 className="h-3 w-3 text-white" />
+          </div>
+          <span className={`text-6xl font-black text-white tabular-nums tracking-tighter ${format === 'KLINGON' ? 'font-klingon text-amber-500' : ''}`}>
+            {formatValue()}
+          </span>
+          <span className="text-xs font-bold text-blue-500 uppercase tracking-widest mt-1">
+            {currentUnit}
+          </span>
+        </motion.div>
+      </DevGuard>
 
       <AnimatePresence>
         {isMenuOpen && (

@@ -2,6 +2,7 @@
 
 import { Car, Users, Maximize, Minimize, LogOut, X, Map as MapIcon, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import DevGuard from './DevGuard';
 
 interface UserMenuProps {
   isOpen: boolean;
@@ -45,31 +46,45 @@ export default function UserMenu({
             className="fixed top-20 right-6 z-[600] w-64 overflow-hidden rounded-3xl bg-black/80 backdrop-blur-2xl border border-white/10 shadow-2xl"
           >
             <div className="p-2 space-y-1">
-              <MenuButton 
-                icon={<Car className="h-5 w-5" />} 
-                label="Mi vehículo" 
-                onClick={() => { onOpenGarage(); onClose(); }} 
-              />
-              <MenuButton 
-                icon={<Users className="h-5 w-5" />} 
-                label="Viajar con Amigos" 
-                onClick={() => { onOpenSocial(); onClose(); }} 
-              />
-              <MenuButton 
-                icon={isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />} 
-                label={isFullscreen ? "Ver menú" : "Ver pantalla completa"} 
-                onClick={() => { onToggleFullscreen(); onClose(); }} 
-              />
-              <MenuButton 
-                icon={<MapIcon className="h-5 w-5" />} 
-                label={mapMode === 'satellite' ? "Mapa modo ligero" : "Mapa modo satélite"} 
-                onClick={() => { onToggleMapMode(); onClose(); }} 
-              />
-              <MenuButton 
-                icon={<Info className="h-5 w-5" />} 
-                label="Acerca de" 
-                onClick={() => { onOpenAbout(); onClose(); }} 
-              />
+              <DevGuard moduleId="[SUP-03]">
+                <MenuButton 
+                  icon={<Car className="h-5 w-5" />} 
+                  label="Mi vehículo" 
+                  onClick={() => { onOpenGarage(); onClose(); }} 
+                />
+              </DevGuard>
+
+              <DevGuard moduleId="[SUP-01]">
+                <MenuButton 
+                  icon={<Users className="h-5 w-5" />} 
+                  label="Viajar con Amigos" 
+                  onClick={() => { onOpenSocial(); onClose(); }} 
+                />
+              </DevGuard>
+
+              <DevGuard moduleId="[MAP-03]">
+                <MenuButton 
+                  icon={isFullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />} 
+                  label={isFullscreen ? "Ver menú" : "Ver pantalla completa"} 
+                  onClick={() => { onToggleFullscreen(); onClose(); }} 
+                />
+              </DevGuard>
+
+              <DevGuard moduleId="[MAP-02]">
+                <MenuButton 
+                  icon={<MapIcon className="h-5 w-5" />} 
+                  label={mapMode === 'satellite' ? "Mapa modo ligero" : "Mapa modo satélite"} 
+                  onClick={() => { onToggleMapMode(); onClose(); }} 
+                />
+              </DevGuard>
+
+              <DevGuard moduleId="[SUP-02]">
+                <MenuButton 
+                  icon={<Info className="h-5 w-5" />} 
+                  label="Acerca de" 
+                  onClick={() => { onOpenAbout(); onClose(); }} 
+                />
+              </DevGuard>
               
               <div className="h-px bg-white/5 my-2 mx-4" />
               

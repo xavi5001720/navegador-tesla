@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings, ShieldCheck, History, Send, X } from 'lucide-react';
 import { useDevMode } from '@/contexts/DevModeContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,25 +10,30 @@ interface DevGuardProps {
   children: React.ReactNode;
 }
 
+type ModuleStatus = 'gray' | 'green' | 'orange';
+
 export default function DevGuard({ moduleId, children }: DevGuardProps) {
   const { isDevMode } = useDevMode();
   const [showModal, setShowModal] = useState(false);
   const [message, setMessage] = useState('');
   const [history, setHistory] = useState<any[]>([]);
+  const [status, setStatus] = useState<ModuleStatus>('gray');
   const [loading, setLoading] = useState(false);
 
-  if (!isDevMode) return <>{children}</>;
+  useEffect(() => {
+    if (isDevMode) {
+      fetchStatus();
+    }
+  }, [isDevMode, moduleId]);
 
-  const fetchHistory = async () => {
-    setLoading(true);
+  const fetchStatus = async () => {
     try {
       const res = await fetch(`/api/dev/git?moduleId=${encodeURIComponent(moduleId)}`);
       const data = await res.json();
       setHistory(data.history || []);
+      setStatus(data.status || 'gray');
     } catch (err) {
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -43,7 +48,7 @@ export default function DevGuard({ moduleId, children }: DevGuardProps) {
       });
       if (res.ok) {
         setMessage('');
-        fetchHistory();
+        await fetchStatus();
       }
     } catch (err) {
       console.error(err);
@@ -52,39 +57,52 @@ export default function DevGuard({ moduleId, children }: DevGuardProps) {
     }
   };
 
+  if (!isDevMode) return <>{children}</>;
+
+  const getStatusColor = () => {
+    switch (status) {
+      case 'green': return 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]';
+      case 'orange': return 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.4)]';
+      case 'gray': 
+      default: return 'bg-gray-500 shadow-[0_0_10px_rgba(107,114,128,0.4)]';
+    }
+  };
+
   return (
     <div className="relative group/dev">
       {children}
       
-      {/* Botón Flotante de Configuración (Solo en DevMode) */}
+      {/* Botón Flotante de Configuración (Fijo en DevMode) */}
       <button 
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           setShowModal(true);
-          fetchHistory();
+          fetchStatus();
         }}
-        className="absolute -top-2 -right-2 z-[999] p-1.5 bg-blue-600 rounded-full text-white shadow-lg scale-0 group-hover/dev:scale-100 transition-transform hover:bg-blue-500 active:scale-90"
-        title={`Configurar ${moduleId}`}
+        className={`absolute -top-2 -right-2 z-[999] p-1.5 rounded-full text-white shadow-lg transition-all hover:scale-110 active:scale-90 ${getStatusColor()}`}
+        title={`Configurar ${moduleId} - Estado: ${status}`}
       >
-        <Settings className="h-3 w-3" />
+        <Settings className="h-3 w-3 animate-[spin_4s_linear_infinite]" />
       </button>
 
       {/* Modal de Gestión de Checkpoint */}
       <AnimatePresence>
         {showModal && (
-          <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowModal(false)}>
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className="bg-gray-900 border border-white/10 rounded-[32px] w-full max-w-md overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6 border-b border-white/5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 bg-blue-600/20 rounded-xl flex items-center justify-center border border-blue-500/30">
-                    <ShieldCheck className="h-5 w-5 text-blue-400" />
+                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center border border-white/10 ${getStatusColor()}`}>
+                    <ShieldCheck className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-white font-black uppercase italic tracking-tighter">Checkpoint Blindado</h3>
+                    <h3 className="text-white font-black uppercase italic tracking-tighter">Módulo Blindado</h3>
                     <p className="text-[10px] text-blue-400/60 font-bold uppercase tracking-widest">{moduleId}</p>
                   </div>
                 </div>
@@ -110,9 +128,9 @@ export default function DevGuard({ moduleId, children }: DevGuardProps) {
                     <button 
                       onClick={createCheckpoint}
                       disabled={loading || !message}
-                      className="bg-blue-600 px-4 rounded-xl text-xs font-black uppercase hover:bg-blue-500 disabled:opacity-50 transition-all"
+                      className="bg-blue-600 px-4 rounded-xl text-xs font-black uppercase hover:bg-blue-500 disabled:opacity-50 transition-all text-white"
                     >
-                      Guardar
+                      {loading ? '...' : 'Guardar'}
                     </button>
                   </div>
                 </div>

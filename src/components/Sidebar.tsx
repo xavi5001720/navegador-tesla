@@ -555,7 +555,7 @@ const Sidebar: React.FC<SidebarProps> = ({
            </div>
            </DevGuard>
 
-           {/* Bloque Yates de Lujo */}
+           <DevGuard moduleId="[IZQ-03]">
            <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 mb-4 ${isYachtsEnabled ? 'bg-blue-600/20 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'bg-white/5 border-white/10'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -625,8 +625,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               )}
            </div>
+           </DevGuard>
 
-           {/* Bloque Cargadores */}
+           <DevGuard moduleId="[IZQ-04]">
            <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -729,8 +730,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               )}
            </div>
+           </DevGuard>
 
-           {/* Bloque Fiestas Tradicionales */}
+           <DevGuard moduleId="[IZQ-06]">
            <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 mb-4 ${isFestivalsEnabled ? 'bg-amber-600/20 border-amber-500/50 shadow-[0_0_20px_rgba(245,158,11,0.2)]' : 'bg-white/5 border-white/10'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -771,8 +773,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <p className="mt-3 text-[10px] text-gray-500 uppercase italic text-center">No hay fiestas destacadas este mes</p>
               )}
            </div>
+           </DevGuard>
 
-           {/* Bloque Gasolineras */}
+           <DevGuard moduleId="[IZQ-05]">
            <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -894,8 +897,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               )}
            </div>
+           </DevGuard>
 
-           {/* Bloque de Sistema de Tráfico (Nuevo) */}
+           <DevGuard moduleId="[IZQ-07]">
            <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -937,8 +941,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               </div>
            </div>
+           </DevGuard>
 
-           {/* Bloque Meteorológico (Clima) */}
+           <DevGuard moduleId="[IZQ-08]">
            <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -991,6 +996,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               </div>
            </div>
+           </DevGuard>
 
         </div>
 

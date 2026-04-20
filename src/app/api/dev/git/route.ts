@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import fs from 'fs';
+import path from 'path';
 
 const execAsync = promisify(exec);
 
-// GET: Ver historial de un módulo
+// GET: Ver historial y estado de un módulo
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const moduleId = searchParams.get('moduleId');
@@ -14,18 +16,45 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Buscamos commits que contengan el [moduleId] en el mensaje
-    const { stdout } = await execAsync(`git log --grep="\\[${moduleId}\\]" --pretty=format:"%h|%ad|%s" --date=short -n 20`);
+    // 1. Obtener historial de commits para este módulo
+    const { stdout: logStdout } = await execAsync(`git log --grep="\\[${moduleId}\\]" --pretty=format:"%h|%ad|%s" --date=short -n 20`);
     
-    const history = stdout.split('\n').filter(line => line.trim()).map(line => {
+    const history = logStdout.split('\n').filter(line => line.trim()).map(line => {
       const [hash, date, message] = line.split('|');
       return { hash, date, message };
     });
 
-    return NextResponse.json({ history });
+    // 2. Determinar estado (Gray, Green, Orange)
+    let status = 'gray';
+    if (history.length > 0) {
+      status = 'green'; // Por defecto verde si hay historial
+
+      // 3. Verificar si hay cambios locales sin confirmar en archivos que usen este moduleId
+      const { stdout: statusStdout } = await execAsync('git status --porcelain');
+      const changedFiles = statusStdout.split('\n')
+        .filter(line => line.trim())
+        .map(line => line.substring(3).trim()); // Obtener ruta relativa del archivo
+
+      for (const file of changedFiles) {
+        try {
+          const absolutePath = path.join(process.cwd(), file);
+          if (fs.existsSync(absolutePath) && !fs.lstatSync(absolutePath).isDirectory()) {
+            const content = fs.readFileSync(absolutePath, 'utf8');
+            if (content.includes(`moduleId="${moduleId}"`)) {
+              status = 'orange';
+              break;
+            }
+          }
+        } catch (e) {
+          // Ignorar errores de lectura (archivos binarios, etc)
+        }
+      }
+    }
+
+    return NextResponse.json({ history, status });
   } catch (err) {
-    console.error('Error Git Log:', err);
-    return NextResponse.json({ history: [] }); // Si no hay commits devuelve vacío
+    console.error('Error Git API:', err);
+    return NextResponse.json({ history: [], status: 'gray' });
   }
 }
 
@@ -41,7 +70,6 @@ export async function POST(req: NextRequest) {
     const fullMessage = `[${moduleId}] ✅ ${message}`;
 
     // Ejecutamos git commit
-    // Nota: Usamos git add . para asegurar que se guardan los cambios actuales del proyecto
     await execAsync(`git add . && git commit -m "${fullMessage}"`);
 
     return NextResponse.json({ success: true, message: fullMessage });
