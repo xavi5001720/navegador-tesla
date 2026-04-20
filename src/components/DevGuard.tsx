@@ -46,12 +46,17 @@ export default function DevGuard({ moduleId, children }: DevGuardProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ moduleId, message })
       });
+      const data = await res.json();
       if (res.ok) {
+        alert(data.message || '✅ Operación completada');
         setMessage('');
         await fetchStatus();
+      } else {
+        alert(`❌ Error: ${data.error || 'Error desconocido'}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      alert(`❌ Error de red: ${err.message}`);
     } finally {
       setLoading(false);
     }

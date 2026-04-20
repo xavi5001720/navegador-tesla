@@ -92,18 +92,31 @@ export async function POST(req: NextRequest) {
     if (fs.existsSync('/usr/bin/git')) gitCommand = '/usr/bin/git';
     else if (fs.existsSync('/bin/git')) gitCommand = '/bin/git';
 
-    // 2. Ejecutamos git commit (Solo si hay cambios para evitar error 128)
     const execOptions = {
       env: { ...process.env, PATH: `${process.env.PATH}:/usr/bin:/bin` },
       cwd: process.cwd()
     };
 
     try {
-      // Usamos diff-index para detectar si hay cambios antes de hacer commit
-      // El patrón: add && (diff-index || commit) asegura que el comando total devuelva éxito (0) 
-      // tanto si se hizo commit como si no había nada que subir.
-      await execAsync(`${gitCommand} add . && (${gitCommand} diff-index --quiet HEAD || ${gitCommand} commit -m "${fullMessage}")`, execOptions);
-      return NextResponse.json({ success: true, message: fullMessage });
+      // 2. Verificar si hay cambios reales
+      const { stdout: statusStdout } = await execAsync(`${gitCommand} status --porcelain`, execOptions);
+      
+      if (!statusStdout.trim()) {
+        return NextResponse.json({ 
+          success: true, 
+          message: 'No hay cambios nuevos para guardar.', 
+          status: 'skipped' 
+        });
+      }
+
+      // 3. Ejecutamos git commit
+      await execAsync(`${gitCommand} add . && ${gitCommand} commit -m "${fullMessage}"`, execOptions);
+      
+      return NextResponse.json({ 
+        success: true, 
+        message: `✅ Checkpoint guardado con éxito: ${message}`, 
+        status: 'success' 
+      });
     } catch (err: any) {
       console.error('Error Git Exec:', err.stderr || err.stdout || err.message);
       return NextResponse.json({ 
