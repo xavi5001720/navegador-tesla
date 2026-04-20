@@ -28,21 +28,27 @@ function extrapolate(lat: number, lon: number, velocity: number, track: number, 
  */
 export function useAircraftSimulator(realAircrafts: Aircraft[], projectionTimeMs: number = 30000): Aircraft[] {
   return useMemo(() => {
-    return realAircrafts.map(ac => {
+    return (realAircrafts || []).map(ac => {
+      // Seguridad contra valores nulos o inválidos
+      const interval = (projectionTimeMs && !isNaN(projectionTimeMs)) ? projectionTimeMs : 30000;
+      
       // Proyectamos la posición futura basada en el intervalo de actualización (ej: 30s)
       const future = extrapolate(
         ac.lat, 
         ac.lon, 
-        ac.velocity, 
-        ac.track, 
-        projectionTimeMs / 1000
+        ac.velocity || 0, 
+        ac.track || 0, 
+        interval / 1000
       );
+
+      // Si la proyección falla por alguna razón matemática, usamos la posición real
+      const finalLat = isNaN(future.lat) ? ac.lat : future.lat;
+      const finalLon = isNaN(future.lon) ? ac.lon : future.lon;
 
       return {
         ...ac,
-        lat: future.lat,
-        lon: future.lon,
-        // Guardamos la posición original por si fuera necesaria (debug/etc)
+        lat: finalLat,
+        lon: finalLon,
         _realLat: ac.lat,
         _realLon: ac.lon
       };

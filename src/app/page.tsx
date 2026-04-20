@@ -547,7 +547,7 @@ export default function Home() {
   }, [allRadars, route, userPos, isRadarsEnabled, hiddenIds]);
 
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars, inSectionRadar, sectionAverageSpeed } = useAlerts(userPos || [0,0], radars, isSoundEnabled, voiceType, speed, heading || 0, allRadarZones || [], audioMode);
-  const { allAircrafts, aircrafts, visibleAircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount, nextInterval } = usePegasus(userPos || [0,0], isAircraftsEnabled, route?.coordinates);
+  const { allAircrafts, aircrafts, visibleAircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount, nextInterval } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
  
   // Proyección futura para movimiento fluido vía GPU (CSS Transitions)
   const simulatedAircrafts = useAircraftSimulator(visibleAircrafts, nextInterval);

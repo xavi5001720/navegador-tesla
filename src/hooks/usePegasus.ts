@@ -189,11 +189,12 @@ export function usePegasus(
   }, [isEnabled, userPos ? buildBboxKey(userPos) : '']);
 
   const aircrafts = useMemo(() => {
-    return allAircrafts.filter(a => a.isSuspect && a.altitude > 100 && a.altitude < 2000 && a.velocity < 85 && a.distanceToUser < 25000);
+    // Sospechosos: DGT/Pegasus usualmente vuelan bajo y lento
+    return allAircrafts.filter(a => a.isSuspect && a.altitude > 100 && a.altitude < 3000 && a.velocity < 100 && a.distanceToUser < 50000);
   }, [allAircrafts]);
 
-  const isAnyPegasusNearby = useMemo(() => aircrafts.some(a => a.distanceToUser < 10000), [aircrafts]);
-  const visibleAircrafts = useMemo(() => allAircrafts.filter(a => a.distanceToUser <= 25000), [allAircrafts]);
+  const isAnyPegasusNearby = useMemo(() => aircrafts.some(a => a.distanceToUser < 15000), [aircrafts]);
+  const visibleAircrafts = useMemo(() => allAircrafts.filter(a => a.distanceToUser <= 150000), [allAircrafts]);
 
   return { allAircrafts, aircrafts, visibleAircrafts, totalCount: visibleAircrafts.length, isAnyPegasusNearby, loading, isRateLimited, lastFetchTime, activeAccount, nextInterval };
 }

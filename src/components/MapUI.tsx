@@ -893,7 +893,7 @@ export default function MapUI({
             viewMode={viewMode} 
             nextInterval={nextInterval}
           />
-        )), [aircrafts.length, aircrafts[0]?.icao24, viewMode, nextInterval, Math.floor(userPos[0] * 100), Math.floor(userPos[1] * 100)])}
+        )), [aircrafts, viewMode, nextInterval, Math.floor(userPos[0] * 100), Math.floor(userPos[1] * 100)])}
 
         {/* ⚡ CARGADORES y ⛽ GASOLINERAS: Memoizados */}
         {useMemo(() => (currentZoom >= 10 || (routeCoordinates && routeCoordinates.length > 0)) && (
