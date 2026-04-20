@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Navigation, Radar, Plane, X, Volume2, VolumeX, Play, Power, Database } from 'lucide-react';
 import { playTestSound, VoiceType } from '@/utils/sound';
+import DevGuard from './DevGuard';
 
 import { ChargerFilters } from '@/hooks/useChargers';
 import { GasStationFilters } from '@/hooks/useGasStations';
@@ -379,115 +380,115 @@ const Sidebar: React.FC<SidebarProps> = ({
                     )}
                  </div>
               )}
-           </div>
-
-           <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <button onClick={handleToggleRadarStats} className={`p-1 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isRadarsEnabled ? 'bg-rose-500/20 hover:bg-rose-500/30 cursor-pointer' : 'bg-gray-500/20'}`}>
-                    <img src="/radares.png" alt="Radares" className={`h-11 w-11 object-contain drop-shadow-md ${fetchingRouteRadars ? 'animate-pulse opacity-50' : ''}`} />
-                  </button>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Sistema Antiradar</span>
-                    </div>
-                    {isRadarsEnabled ? (
-                      fetchingRouteRadars ? (
-                        <span className="text-[10px] font-bold text-rose-400 animate-pulse uppercase mt-1">
-                          Calculando ruta... {radarProgress > 0 && `${radarProgress}%`}
-                        </span>
-                      ) : (
-                        <div className="flex flex-col">
-                          <span className="text-2xl font-black leading-none text-rose-500 drop-shadow-[0_0_4px_rgba(225,29,72,0.5)]">
-                            {loadingRadars ? '...' : radars.length}
+                      <DevGuard moduleId="[IZQ-01]">
+            <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <button onClick={handleToggleRadarStats} className={`p-1 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isRadarsEnabled ? 'bg-rose-500/20 hover:bg-rose-500/30 cursor-pointer' : 'bg-gray-500/20'}`}>
+                      <img src="/radares.png" alt="Radares" className={`h-11 w-11 object-contain drop-shadow-md ${fetchingRouteRadars ? 'animate-pulse opacity-50' : ''}`} />
+                    </button>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Sistema Antiradar</span>
+                      </div>
+                      {isRadarsEnabled ? (
+                        fetchingRouteRadars ? (
+                          <span className="text-[10px] font-bold text-rose-400 animate-pulse uppercase mt-1">
+                            Calculando ruta... {radarProgress > 0 && `${radarProgress}%`}
                           </span>
-                          {lastRadarUpdate && (
-                            <span className="text-[9px] text-gray-500 font-medium mt-1">
-                              Actualizado: {new Date(lastRadarUpdate).toLocaleString('es-ES', { 
-                                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' 
-                              })}
+                        ) : (
+                          <div className="flex flex-col">
+                            <span className="text-2xl font-black leading-none text-rose-500 drop-shadow-[0_0_4px_rgba(225,29,72,0.5)]">
+                              {loadingRadars ? '...' : radars.length}
                             </span>
-                          )}
-                        </div>
-                      )
+                            {lastRadarUpdate && (
+                              <span className="text-[9px] text-gray-500 font-medium mt-1">
+                                Actualizado: {new Date(lastRadarUpdate).toLocaleString('es-ES', { 
+                                  day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' 
+                                })}
+                              </span>
+                            )}
+                          </div>
+                        )
+                      ) : (
+                        <span className="text-2xl font-black leading-none text-white/30">OFF</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-1.5">
+                    {/* Switch ON/OFF Radares Moderno */}
+                    <button 
+                      onClick={() => setIsRadarsEnabled(!isRadarsEnabled)}
+                      className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isRadarsEnabled ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
+                    >
+                      <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isRadarsEnabled ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
+                        <Power className={`h-3 w-3 ${isRadarsEnabled ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
+                      </span>
+                    </button>
+                    {isRadarsEnabled ? (
+                      <span className="text-[9px] font-bold text-green-500 uppercase tracking-wider">Activado</span>
                     ) : (
-                      <span className="text-2xl font-black leading-none text-white/30">OFF</span>
+                      <span className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">Desactivado</span>
                     )}
                   </div>
                 </div>
-                <div className="flex flex-col items-center gap-1.5">
-                  {/* Switch ON/OFF Radares Moderno */}
-                  <button 
-                    onClick={() => setIsRadarsEnabled(!isRadarsEnabled)}
-                    className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isRadarsEnabled ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
-                  >
-                    <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isRadarsEnabled ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
-                      <Power className={`h-3 w-3 ${isRadarsEnabled ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
-                    </span>
-                  </button>
-                  {isRadarsEnabled ? (
-                    <span className="text-[9px] font-bold text-green-500 uppercase tracking-wider">Activado</span>
-                  ) : (
-                    <span className="text-[9px] font-bold text-rose-500 uppercase tracking-wider">Desactivado</span>
-                  )}
-                </div>
-              </div>
-              {remainingRadars < radars.length && !loadingRadars && !fetchingRouteRadars && (
-                <div className="flex flex-col items-end">
-                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Restantes</span>
-                  <span className="text-xl font-bold text-blue-400">{remainingRadars}</span>
-                </div>
-              )}
-
-              {/* Estadísticas de Radares (Desplegable) */}
-              {showRadarStats && (
-                <div className="mt-4 pt-4 border-t border-white/10 animate-fade-in">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Database className="h-4 w-4 text-rose-400" />
-                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">BASE DE DATOS ACTUALIZADA</span>
+                {remainingRadars < radars.length && !loadingRadars && !fetchingRouteRadars && (
+                  <div className="flex flex-col items-end">
+                    <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">Restantes</span>
+                    <span className="text-xl font-bold text-blue-400">{remainingRadars}</span>
                   </div>
-                  
-                  {loadingRadarStats ? (
-                    <div className="text-[11px] text-gray-400 animate-pulse text-center py-2">Cargando base de datos...</div>
-                  ) : radarStatsData ? (
-                    <div className="flex flex-col gap-2">
-                      <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
-                        <span className="text-xs text-gray-300 font-medium tracking-wide">🇪🇸 España ({radarStatsData.es.count})</span>
-                        <span className="text-[9px] text-gray-500 font-bold bg-black/40 px-2 py-0.5 rounded-full">
-                          {radarStatsData.es.lastUpdate 
-                            ? new Date(radarStatsData.es.lastUpdate).toLocaleString('es-ES', { 
-                                timeZone: 'Europe/Madrid',
-                                day: '2-digit', month: '2-digit', year: 'numeric',
-                                hour: '2-digit', minute: '2-digit'
-                              }) 
-                            : 'Sin datos'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
-                        <span className="text-xs text-gray-300 font-medium tracking-wide">🇫🇷 Francia ({radarStatsData.fr.count})</span>
-                        <span className="text-[9px] text-gray-500 font-bold bg-black/40 px-2 py-0.5 rounded-full">
-                          {radarStatsData.fr.lastUpdate 
-                            ? new Date(radarStatsData.fr.lastUpdate).toLocaleString('es-ES', { 
-                                timeZone: 'Europe/Madrid',
-                                day: '2-digit', month: '2-digit', year: 'numeric',
-                                hour: '2-digit', minute: '2-digit'
-                              }) 
-                            : 'Sin datos'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between items-center pt-3 border-t border-white/5 mt-1">
-                        <span className="text-xs font-black text-rose-400 uppercase tracking-widest">Total Sincronizado</span>
-                        <span className="text-sm font-black text-rose-400 bg-rose-500/10 px-3 py-1 rounded-xl border border-rose-500/20">{radarStatsData.total}</span>
-                      </div>
+                )}
+
+                {/* Estadísticas de Radares (Desplegable) */}
+                {showRadarStats && (
+                  <div className="mt-4 pt-4 border-t border-white/10 animate-fade-in">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Database className="h-4 w-4 text-rose-400" />
+                      <span className="text-[10px] font-bold text-white uppercase tracking-wider">BASE DE DATOS ACTUALIZADA</span>
                     </div>
-                  ) : (
-                    <div className="text-[11px] text-rose-400 text-center py-2 bg-rose-500/10 rounded-lg">Error al cargar datos</div>
-                  )}
-                </div>
-              )}
+                    
+                    {loadingRadarStats ? (
+                      <div className="text-[11px] text-gray-400 animate-pulse text-center py-2">Cargando base de datos...</div>
+                    ) : radarStatsData ? (
+                      <div className="flex flex-col gap-2">
+                        <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
+                          <span className="text-xs text-gray-300 font-medium tracking-wide">🇪🇸 España ({radarStatsData.es.count})</span>
+                          <span className="text-[9px] text-gray-500 font-bold bg-black/40 px-2 py-0.5 rounded-full">
+                            {radarStatsData.es.lastUpdate 
+                              ? new Date(radarStatsData.es.lastUpdate).toLocaleString('es-ES', { 
+                                  timeZone: 'Europe/Madrid',
+                                  day: '2-digit', month: '2-digit', year: 'numeric',
+                                  hour: '2-digit', minute: '2-digit'
+                                }) 
+                              : 'Sin datos'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
+                          <span className="text-xs text-gray-300 font-medium tracking-wide">🇫🇷 Francia ({radarStatsData.fr.count})</span>
+                          <span className="text-[9px] text-gray-500 font-bold bg-black/40 px-2 py-0.5 rounded-full">
+                            {radarStatsData.fr.lastUpdate 
+                              ? new Date(radarStatsData.fr.lastUpdate).toLocaleString('es-ES', { 
+                                  timeZone: 'Europe/Madrid',
+                                  day: '2-digit', month: '2-digit', year: 'numeric',
+                                  hour: '2-digit', minute: '2-digit'
+                                }) 
+                              : 'Sin datos'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center pt-3 border-t border-white/5 mt-1">
+                          <span className="text-xs font-black text-rose-400 uppercase tracking-widest">Total Sincronizado</span>
+                          <span className="text-sm font-black text-rose-400 bg-rose-500/10 px-3 py-1 rounded-xl border border-rose-500/20">{radarStatsData.total}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-[11px] text-rose-400 text-center py-2 bg-rose-500/10 rounded-lg">Error al cargar datos</div>
+                    )}
+                  </div>
+                )}
+            </div>
+           </DevGuard>
 
-           </div>
-
+           <DevGuard moduleId="[IZQ-02]">
            <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 ${isAnyPegasusNearby ? 'bg-blue-600/20 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'bg-white/5 border-white/10'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -549,6 +550,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </p>
               )}
            </div>
+           </DevGuard>
 
            {/* Bloque Yates de Lujo */}
            <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 mb-4 ${isYachtsEnabled ? 'bg-blue-600/20 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'bg-white/5 border-white/10'}`}>
