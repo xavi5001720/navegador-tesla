@@ -36,10 +36,10 @@ export function useSocial(
   isSharingLocation: boolean = true, 
   hasLocation: boolean = false
 ) {
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [rawFriends, setRawFriends] = useState<Friend[]>([]);
   const [onlineUserIds, setOnlineUserIds] = useState<Set<string>>(new Set());
   const [livePositions, setLivePositions] = useState<Record<string, LivePosition>>({});
+  const [loading, setLoading] = useState(true);
   
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channelRef = useRef<any>(null);
@@ -139,7 +139,7 @@ export function useSocial(
       }));
 
       if (isMountedRef.current) {
-        setFriends(() => [...mappedFriends, ...invitedFriends]);
+        setRawFriends([...mappedFriends, ...invitedFriends]);
       }
     } catch (err) {
       logger.error('useSocial', 'Error loading friends', err);
@@ -254,7 +254,7 @@ export function useSocial(
         })
         .on('broadcast', { event: 'SOCIAL_STATUS_UPDATE' }, ({ payload }) => {
           if (!isMountedRef.current) return;
-          setFriends(prev => prev.map(f => 
+          setRawFriends(prev => prev.map(f => 
             f.id === payload.user_id 
               ? { ...f, is_sharing_location: payload.is_sharing_location } 
               : f
@@ -310,6 +310,24 @@ export function useSocial(
       channelRef.current = null;
     };
   }, [session, fetchFriends, syncLocation]);
+
+  // 4.5. DERIVACIÓN REACTIVA: Amigos procesados con estado LIVE
+  const friends = useMemo(() => {
+    return rawFriends.map(f => {
+      const isOnline = onlineUserIds.has(f.id);
+      const livePos = livePositions[f.id];
+      
+      // Si tenemos datos en vivo, los priorizamos sobre los de la DB
+      return {
+        ...f,
+        is_online: isOnline,
+        last_lat: livePos?.lat ?? f.last_lat,
+        last_lon: livePos?.lon ?? f.last_lon,
+        heading: livePos?.heading ?? f.heading,
+        updated_at: livePos?.timestamp ? new Date(livePos.timestamp).toISOString() : f.updated_at
+      } as Friend;
+    });
+  }, [rawFriends, onlineUserIds, livePositions]);
 
   // 5. Emisión de Posición Periódica (Cada 5 minutos)
   // FIX: El intervalo NO debe depender de userPos/heading, 
