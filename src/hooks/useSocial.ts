@@ -139,7 +139,7 @@ export function useSocial(
       }));
 
       if (isMountedRef.current) {
-        setFriends([...mappedFriends, ...invitedFriends]);
+        setFriends(() => [...mappedFriends, ...invitedFriends]);
       }
     } catch (err) {
       logger.error('useSocial', 'Error loading friends', err);
@@ -312,16 +312,28 @@ export function useSocial(
   }, [session, fetchFriends, syncLocation]);
 
   // 5. Emisión de Posición Periódica (Cada 5 minutos)
+  // FIX: El intervalo NO debe depender de userPos/heading, 
+  // de lo contrario se destruye y recrea 3 veces por segundo y nunca llega a dispararse.
   useEffect(() => {
-    if (!session?.user || !isSharingLocation || !hasLocation || !userPos) return;
+    if (!session?.user) return;
 
-    // Intervalo de 5 minutos (respetado como solicitó el usuario)
-    const senderLoop = setInterval(() => syncLocation(), 300000);
+    const senderLoop = setInterval(() => {
+      syncLocation();
+    }, 300000);
 
     return () => clearInterval(senderLoop);
-  }, [session, userPos, heading, isSharingLocation, hasLocation, syncLocation]);
+  }, [session, syncLocation]);
 
-  // 6. Señal instantánea al CAMBIAR privacidad
+  // 6. Señal instantánea al OBTENER GPS o CAMBIAR privacidad
+  useEffect(() => {
+    if (!session?.user) return;
+    if (hasLocation && isSharingLocation) {
+      // Disparo inicial/bienvenida cuando los datos están listos
+      syncLocation(true);
+    }
+  }, [hasLocation, isSharingLocation, session?.user, syncLocation]);
+
+  // 7. Señal instantánea al APAGAR privacidad
   useEffect(() => {
     if (!session?.user || !channelRef.current) return;
 
@@ -340,11 +352,8 @@ export function useSocial(
         .then(({ error }) => {
           if (error) logger.error('useSocial', 'Error actualizando is_sharing_location en DB', error.message);
         });
-    } else {
-      // FIX I10: Notificar encendido instantáneo
-      syncLocation(true);
     }
-  }, [isSharingLocation, session?.user, syncLocation]);
+  }, [isSharingLocation, session?.user]);
 
 
   // 5. Acciones CRUD

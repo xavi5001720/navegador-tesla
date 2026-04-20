@@ -1,75 +1,52 @@
 -- ====================================================================
--- SUPABASE SECURITY PATCH: RLS HARDENING & PRIVACY
--- ====================================================================
--- Este script corrige las vulnerabilidades reportadas por Supabase:
--- 1. RLS desactivado en tablas públicas.
--- 2. Columnas sensibles expuestas (emails y tokens).
+-- NAVEGAPRO: INFRASTRUCTURE HARDENING (RLS)
+-- Resolve: Critical security alerts in Supabase
+-- Tables: spatial_ref_sys, radar_zones, community_radars
 -- ====================================================================
 
--- 1. ASEGURAR TABLAS DE OPENSKY (PEGASUS)
---------------------------------------------------------------------
+-- 1. ACTIVAR ROW LEVEL SECURITY (RLS)
+-- Esto bloquea por defecto todo acceso que no esté explícitamente permitido por una política.
+ALTER TABLE IF EXISTS public.spatial_ref_sys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.radar_zones ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.community_radars ENABLE ROW LEVEL SECURITY;
 
--- Habilitar RLS en todas las tablas que lo tenían desactivado
-ALTER TABLE public.opensky_tokens ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.opensky_cache ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.opensky_requests ENABLE ROW LEVEL SECURITY;
+-- 2. POLÍTICAS PARA: spatial_ref_sys (Sistema de Referencia Espacial PostGIS)
+-- Requisito: Solo lectura pública para que el mapa funcione correctamente.
+DROP POLICY IF EXISTS "Public read for spatial_ref_sys" ON public.spatial_ref_sys;
+CREATE POLICY "Public read for spatial_ref_sys" 
+ON public.spatial_ref_sys 
+FOR SELECT 
+USING (true);
 
--- POLÍTICAS PARA opensky_tokens:
--- Esta tabla contiene secretos. NO añadimos ninguna política para 'anon' ni 'authenticated'.
--- Solo será accesible mediante la 'service_role' (backend) que ignora el RLS.
-DROP POLICY IF EXISTS "Backend access only" ON public.opensky_tokens;
+-- 3. POLÍTICAS PARA: radar_zones (Zonas de radares móviles OSM / Fixed Zones)
+-- Requisito: Solo lectura pública. Nadie desde la app puede alterar estas zonas.
+DROP POLICY IF EXISTS "Public read for radar_zones" ON public.radar_zones;
+CREATE POLICY "Public read for radar_zones" 
+ON public.radar_zones 
+FOR SELECT 
+USING (true);
 
--- POLÍTICAS PARA opensky_cache:
--- Permitimos lectura (SELECT) y escritura (INSERT/UPDATE) para que el feeder/cliente funcione.
--- NOTA: Se recomienda que el feeder use la SERVICE_ROLE_KEY en lugar de ANON_KEY.
-DROP POLICY IF EXISTS "Allow anon reading of cache" ON public.opensky_cache;
-CREATE POLICY "Allow anon reading of cache" 
-  ON public.opensky_cache FOR SELECT 
-  USING (true);
+-- 4. POLÍTICAS PARA: community_radars (Radares reportados por la comunidad)
+-- Requisito: Lectura pública, permitir inserción (anon/auth), prohibir edición/borrado.
 
-DROP POLICY IF EXISTS "Allow anon management of cache" ON public.opensky_cache;
-CREATE POLICY "Allow anon management of cache" 
-  ON public.opensky_cache FOR ALL 
-  TO anon, authenticated
-  USING (true)
-  WITH CHECK (true);
+-- Permitir que todos vean los radares móviles reportados
+DROP POLICY IF EXISTS "Public read for community_radars" ON public.community_radars;
+CREATE POLICY "Public read for community_radars" 
+ON public.community_radars 
+FOR SELECT 
+USING (true);
 
--- POLÍTICAS PARA opensky_requests:
--- Permite que los dispositivos Tesla publiquen sus necesidades de búsqueda.
-DROP POLICY IF EXISTS "Allow anon management of requests" ON public.opensky_requests;
-CREATE POLICY "Allow anon management of requests" 
-  ON public.opensky_requests FOR ALL 
-  TO anon, authenticated
-  USING (true)
-  WITH CHECK (true);
+-- Permitir que CUALQUIER usuario (incluso con ANON_KEY) pueda reportar un radar
+DROP POLICY IF EXISTS "Public insert for community_radars" ON public.community_radars;
+CREATE POLICY "Public insert for community_radars" 
+ON public.community_radars 
+FOR INSERT 
+WITH CHECK (true);
 
+-- NOTA IMPORTANTE: Al no crear políticas de UPDATE o DELETE, el sistema RLS
+-- denegará automáticamente cualquier intento de modificar o borrar registros 
+-- existentes, cumpliendo con el blindaje solicitado.
 
--- 2. PROTECCIÓN DE PRIVACIDAD EN PERFILES
---------------------------------------------------------------------
-
--- El email es un dato sensible. La política actual permite que cualquiera lo vea.
--- Reemplazamos la política genérica por una que limite la exposición.
-
-DROP POLICY IF EXISTS "Los usuarios pueden buscar perfiles por email" ON public.profiles;
-
--- Nueva política: Los usuarios solo pueden ver otros perfiles si están autenticados,
--- pero idealmente la aplicación no debería listar emails masivamente.
--- Si tu App necesita buscar por email exacto, esta política lo permite:
-CREATE POLICY "Los usuarios pueden ver perfiles básicos" 
-  ON public.profiles FOR SELECT 
-  USING (auth.uid() IS NOT NULL);
-
--- RECOMENDACIÓN ADICIONAL: 
--- Para mayor seguridad, podrías ocultar la columna 'email' de la API pública 
--- creando una Vista o usando RLS más restrictivo. 
--- Por ahora, habilitar RLS y limpiar políticas huérfanas ya elimina el error crítico.
-
-
--- 3. VERIFICACIÓN DE OTRAS TABLAS
---------------------------------------------------------------------
--- Asegurar que yates y gasolineras tienen RLS (ya deberían, pero por si acaso)
-ALTER TABLE IF EXISTS public.luxury_yacht_list ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.luxury_yacht_positions ENABLE ROW LEVEL SECURITY;
-
--- Finalizar recarga de esquema
+-- 5. RECARGAR ESQUEMA
+-- Notifica a PostgREST que el esquema ha cambiado para que las reglas se apliquen de inmediato.
 NOTIFY pgrst, 'reload schema';
