@@ -103,9 +103,8 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
   const isThreat = isSuspect && distanceToUser < 10000;
   const colorFilter = isThreat ? 'invert(15%) sepia(100%) saturate(700%) hue-rotate(340deg) brightness(120%) contrast(130%)' : 'none';
   
-  // Cache key: combinamos sospecha, rumbo (redondeado a 5º) y modo de vista
   const roundedHeading = Math.round(heading / 5) * 5;
-  const cacheKey = `${isSuspect}-${roundedHeading}-${viewMode}-${callsign || 'no-call'}-${isThreat}`;
+  const cacheKey = `ac-icon-${isSuspect}-${viewMode}`;
 
   if (aircraftIconCache.has(cacheKey)) return aircraftIconCache.get(cacheKey)!;
 
@@ -137,11 +136,13 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
 
   const icon = L.divIcon({
     html: `
-      <div class="relative" style="transition: transform ${durationS}s linear !important;">
-        <div style="transform: rotate(${roundedHeading - 45}deg); width: 40px; height: 40px; ${isThreat ? 'animation: aircraft-pulse 0.8s ease-in-out infinite;' : ''}">
+      <div class="aircraft-animation-container">
+        <div class="aircraft-rotate-container" style="transform: rotate(calc(var(--ac-heading, ${roundedHeading}deg) - 45deg)); width: 40px; height: 40px; ${isThreat ? 'animation: aircraft-pulse 0.8s ease-in-out infinite;' : ''}">
           <img src="${isSuspect ? '/avion-no-identificado.png' : '/avion-comercial.png'}" style="width: 100%; height: 100%; object-fit: contain; filter: ${colorFilter};" />
         </div>
-        ${labelHtml}
+        <div class="aircraft-label-container">
+          ${labelHtml}
+        </div>
       </div>
     `,
     className: 'custom-aircraft-icon',
@@ -416,8 +417,21 @@ RadarMarker.displayName = 'RadarMarker';
 
 const AircraftMarker = React.memo(({ aircraft, userPos, viewMode, nextInterval }: { aircraft: Aircraft, userPos: [number, number], viewMode: string, nextInterval: number }) => {
   const dist = getDistance(userPos, [aircraft.lat, aircraft.lon]);
+  const markerRef = useRef<L.Marker>(null);
+
+  // Actualizar rotación vía CSS Variable para no destruir el DOM y mantener fluidez
+  useEffect(() => {
+    if (markerRef.current) {
+      const el = markerRef.current.getElement();
+      if (el) {
+        el.style.setProperty('--ac-heading', `${aircraft.track || 0}deg`);
+      }
+    }
+  }, [aircraft.track]);
+
   return (
     <Marker 
+      ref={markerRef}
       position={[aircraft.lat, aircraft.lon]} 
       icon={aircraftIcon(aircraft.isSuspect, aircraft.track || 0, dist, viewMode, aircraft.altitude, aircraft.velocity, aircraft.callsign, nextInterval)} 
       interactive={false} 

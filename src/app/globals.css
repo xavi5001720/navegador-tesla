@@ -63,6 +63,17 @@ html, body { height: 100%; margin: 0; padding: 0; }
 .custom-aircraft-icon {
   transition: transform 30s linear !important;
   will-change: transform;
+  border: none !important;
+  background: none !important;
+}
+
+.aircraft-animation-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 🛡️ Disable transitions during zoom animations to prevent marker sliding */
