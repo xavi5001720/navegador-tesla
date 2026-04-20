@@ -17,7 +17,8 @@ export async function GET(req: NextRequest) {
 
   try {
     // 1. Obtener historial de commits para este módulo
-    const { stdout: logStdout } = await execAsync(`git log --grep="\\[${moduleId}\\]" --pretty=format:"%h|%ad|%s" --date=short -n 20`);
+    const GIT_PATH = '/usr/bin/git';
+    const { stdout: logStdout } = await execAsync(`${GIT_PATH} log --grep="\\[${moduleId}\\]" --pretty=format:"%h|%ad|%s" --date=short -n 20`);
     
     const history = logStdout.split('\n').filter(line => line.trim()).map(line => {
       const [hash, date, message] = line.split('|');
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
       status = 'green'; // Por defecto verde si hay historial
 
       // 3. Verificar si hay cambios locales sin confirmar en archivos que usen este moduleId
-      const { stdout: statusStdout } = await execAsync('git status --porcelain');
+      const { stdout: statusStdout } = await execAsync(`${GIT_PATH} status --porcelain`);
       const changedFiles = statusStdout.split('\n')
         .filter(line => line.trim())
         .map(line => line.substring(3).trim()); // Obtener ruta relativa del archivo
@@ -70,7 +71,8 @@ export async function POST(req: NextRequest) {
     const fullMessage = `[${moduleId}] ✅ ${message}`;
 
     // Ejecutamos git commit
-    await execAsync(`git add . && git commit -m "${fullMessage}"`);
+    const GIT_PATH = '/usr/bin/git';
+    await execAsync(`${GIT_PATH} add . && ${GIT_PATH} commit -m "${fullMessage}"`);
 
     return NextResponse.json({ success: true, message: fullMessage });
   } catch (err: any) {
