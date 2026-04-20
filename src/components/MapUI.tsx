@@ -96,6 +96,18 @@ const airlineMapping: Record<string, string> = {
   'TRA': 'Transavia'
 };
 
+/**
+ * Extrapolación de posición futura basada en rumbo y velocidad.
+ */
+function extrapolate(lat: number, lon: number, velocity: number, track: number, dtSeconds: number) {
+  if (velocity < 0.5 || dtSeconds <= 0) return { lat, lon };
+  const trackRad = track * (Math.PI / 180);
+  const dlat = (velocity * Math.cos(trackRad) * dtSeconds) / 111111;
+  const cosLat = Math.cos(lat * (Math.PI / 180));
+  const dlon = (velocity * Math.sin(trackRad) * dtSeconds) / (111111 * (cosLat || 1));
+  return { lat: lat + dlat, lon: lon + dlon };
+}
+
 const aircraftIconCache = new Map<string, L.DivIcon>();
 
 const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: number = Infinity, viewMode: string = 'navigation', altitude?: number, velocity?: number, callsign?: string, transitionDurationMs: number = 30000) => {
@@ -420,7 +432,7 @@ const AircraftMarker = React.memo(({ aircraft, userPos, viewMode, nextInterval }
   const markerRef = useRef<L.Marker>(null);
   
   // Motor de interpolación de alta frecuencia (Bypass React)
-  // Esto permite 60FPS sin un solo re-render de React
+  // stateRef guarda: posición visual actual, destino proyectado, tiempo de inicio y duración
   const stateRef = useRef({
     startPos: [aircraft.lat, aircraft.lon] as [number, number],
     targetPos: [aircraft.lat, aircraft.lon] as [number, number],
@@ -428,17 +440,30 @@ const AircraftMarker = React.memo(({ aircraft, userPos, viewMode, nextInterval }
     duration: nextInterval
   });
 
-  // Cuando llega una nueva posición de la API (cada ~30-60s)
+  // Cuando llega una nueva posición REAL de la API (cada ~30-60s)
   useEffect(() => {
     if (markerRef.current) {
+      // 1. Capturamos la posición visual donde está el avión AHORA MISMO
       const currentPos = markerRef.current.getLatLng();
+      
+      // 2. Calculamos el "Destino Proyectado" (dónde estará dentro de N segundos)
+      const future = extrapolate(
+        aircraft.lat, 
+        aircraft.lon, 
+        aircraft.velocity || 0, 
+        aircraft.track || 0, 
+        nextInterval / 1000
+      );
+
+      // 3. Actualizamos el estado de la animación
       stateRef.current = {
         startPos: [currentPos.lat, currentPos.lng],
-        targetPos: [aircraft.lat, aircraft.lon],
+        targetPos: [future.lat, future.lon],
         startTime: Date.now(),
         duration: nextInterval
       };
       
+      // Actualizamos rotación vía CSS Variable (GPU)
       const el = markerRef.current.getElement();
       if (el) {
         el.style.setProperty('--ac-heading', `${aircraft.track || 0}deg`);
@@ -446,6 +471,7 @@ const AircraftMarker = React.memo(({ aircraft, userPos, viewMode, nextInterval }
     }
   }, [aircraft.lat, aircraft.lon, aircraft.track, nextInterval]);
 
+  // Bucle de animación nativo (requestAnimationFrame) a 60 FPS
   useEffect(() => {
     let rafId: number;
     const animate = () => {
@@ -454,10 +480,11 @@ const AircraftMarker = React.memo(({ aircraft, userPos, viewMode, nextInterval }
         const elapsed = Date.now() - startTime;
         const t = Math.min(elapsed / duration, 1);
         
-        // Interpolación lineal
+        // Interpolación matemática directa
         const lat = startPos[0] + (targetPos[0] - startPos[0]) * t;
         const lng = startPos[1] + (targetPos[1] - startPos[1]) * t;
         
+        // Actualización directa sobre la instancia nativa del mapa (Bypass React)
         markerRef.current.setLatLng([lat, lng]);
       }
       rafId = requestAnimationFrame(animate);
