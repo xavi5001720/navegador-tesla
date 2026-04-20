@@ -58,3 +58,20 @@ html, body { height: 100%; margin: 0; padding: 0; }
   color: white !important;
   background: transparent !important;
 }
+
+/* 🚀 GPU Accelerated Aircraft Animation */
+.custom-aircraft-icon {
+  transition: transform 30s linear !important;
+  will-change: transform;
+}
+
+/* 🛡️ Disable transitions during zoom animations to prevent marker sliding */
+.leaflet-zoom-anim .custom-aircraft-icon {
+  transition: none !important;
+}
+
+@keyframes aircraft-pulse {
+  0% { filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.5)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.8)); transform: scale(1.1); }
+  100% { filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.5)); transform: scale(1); }
+}

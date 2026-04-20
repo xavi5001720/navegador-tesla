@@ -98,7 +98,8 @@ const airlineMapping: Record<string, string> = {
 
 const aircraftIconCache = new Map<string, L.DivIcon>();
 
-const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: number = Infinity, viewMode: string = 'navigation', altitude?: number, velocity?: number, callsign?: string) => {
+const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: number = Infinity, viewMode: string = 'navigation', altitude?: number, velocity?: number, callsign?: string, transitionDurationMs: number = 30000) => {
+  const durationS = transitionDurationMs / 1000;
   const isThreat = isSuspect && distanceToUser < 10000;
   const colorFilter = isThreat ? 'invert(15%) sepia(100%) saturate(700%) hue-rotate(340deg) brightness(120%) contrast(130%)' : 'none';
   
@@ -136,7 +137,7 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
 
   const icon = L.divIcon({
     html: `
-      <div class="relative">
+      <div class="relative" style="transition: transform ${durationS}s linear !important;">
         <div style="transform: rotate(${roundedHeading - 45}deg); width: 40px; height: 40px; ${isThreat ? 'animation: aircraft-pulse 0.8s ease-in-out infinite;' : ''}">
           <img src="${isSuspect ? '/avion-no-identificado.png' : '/avion-comercial.png'}" style="width: 100%; height: 100%; object-fit: contain; filter: ${colorFilter};" />
         </div>
@@ -291,6 +292,7 @@ interface MapUIProps {
    voteRadar?: (radarId: string, userId: string, type: 'confirm' | 'reject') => Promise<void>;
    calculateRoute: (origin: [number, number], dest: [number, number], waypoints: [number, number][], isRecalculation: boolean, isTrafficWanted: boolean) => Promise<void>;
    isTrafficWanted: boolean;
+    nextInterval?: number;
 }
 
 const getCarIcon = (heading: number, color?: string, viewMode: string = 'navigation') => {
@@ -412,12 +414,12 @@ const RadarMarker = React.memo(({ radar, userId, onSelect }: { radar: Radar, use
 });
 RadarMarker.displayName = 'RadarMarker';
 
-const AircraftMarker = React.memo(({ aircraft, userPos, viewMode }: { aircraft: Aircraft, userPos: [number, number], viewMode: string }) => {
+const AircraftMarker = React.memo(({ aircraft, userPos, viewMode, nextInterval }: { aircraft: Aircraft, userPos: [number, number], viewMode: string, nextInterval: number }) => {
   const dist = getDistance(userPos, [aircraft.lat, aircraft.lon]);
   return (
     <Marker 
       position={[aircraft.lat, aircraft.lon]} 
-      icon={aircraftIcon(aircraft.isSuspect, aircraft.track || 0, dist, viewMode, aircraft.altitude, aircraft.velocity, aircraft.callsign)} 
+      icon={aircraftIcon(aircraft.isSuspect, aircraft.track || 0, dist, viewMode, aircraft.altitude, aircraft.velocity, aircraft.callsign, nextInterval)} 
       interactive={false} 
     />
   );
@@ -668,7 +670,7 @@ export default function MapUI({
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
   onGasStationClick, onYachtClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [],   centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
     mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname, radarZones = [],
-    userId, voteRadar, calculateRoute, isTrafficWanted
+    userId, voteRadar, calculateRoute, isTrafficWanted, nextInterval = 30000
 }: MapUIProps) {
   const onlineUserIdsCount = (friends.filter(f => f.is_online).length);
   const [selectedCommunityRadar, setSelectedCommunityRadar] = useState<Radar | null>(null);
@@ -889,8 +891,9 @@ export default function MapUI({
             aircraft={aircraft} 
             userPos={userPos} 
             viewMode={viewMode} 
+            nextInterval={nextInterval}
           />
-        )), [aircrafts.length, aircrafts[0]?.icao24, viewMode, Math.floor(userPos[0] * 100), Math.floor(userPos[1] * 100)])}
+        )), [aircrafts.length, aircrafts[0]?.icao24, viewMode, nextInterval, Math.floor(userPos[0] * 100), Math.floor(userPos[1] * 100)])}
 
         {/* ⚡ CARGADORES y ⛽ GASOLINERAS: Memoizados */}
         {useMemo(() => (currentZoom >= 10 || (routeCoordinates && routeCoordinates.length > 0)) && (

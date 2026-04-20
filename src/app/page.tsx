@@ -547,10 +547,10 @@ export default function Home() {
   }, [allRadars, route, userPos, isRadarsEnabled, hiddenIds]);
 
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars, inSectionRadar, sectionAverageSpeed } = useAlerts(userPos || [0,0], radars, isSoundEnabled, voiceType, speed, heading || 0, allRadarZones || [], audioMode);
-  const { allAircrafts, aircrafts, visibleAircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount } = usePegasus(userPos || [0,0], isAircraftsEnabled, route?.coordinates);
+  const { allAircrafts, aircrafts, visibleAircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount, nextInterval } = usePegasus(userPos || [0,0], isAircraftsEnabled, route?.coordinates);
  
-  // Posiciones interpoladas cada 1 s — movimiento fluido para los aviones visibles (25km máximo)
-  const simulatedAircrafts = useAircraftSimulator(visibleAircrafts);
+  // Proyección futura para movimiento fluido vía GPU (CSS Transitions)
+  const simulatedAircrafts = useAircraftSimulator(visibleAircrafts, nextInterval);
 
   const { chargers, loading: loadingChargers, progress: chargerProgress } = useChargers(userPos, route?.coordinates, isChargersEnabled, chargerFilters);
   const { stations: gasStations, loading: loadingGasStations, progress: gasProgress } = useGasStations(userPos, route?.coordinates, isGasStationsEnabled, gasStationFilters);
@@ -1181,6 +1181,7 @@ export default function Home() {
           voteRadar={voteRadar}
           calculateRoute={calculateRoute}
           isTrafficWanted={isTrafficWanted}
+          nextInterval={nextInterval}
         />
 
 
