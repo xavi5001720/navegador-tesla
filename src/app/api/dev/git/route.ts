@@ -92,15 +92,27 @@ export async function POST(req: NextRequest) {
     if (fs.existsSync('/usr/bin/git')) gitCommand = '/usr/bin/git';
     else if (fs.existsSync('/bin/git')) gitCommand = '/bin/git';
 
-    // 2. Ejecutamos git commit
-    await execAsync(`${gitCommand} add . && ${gitCommand} commit -m "${fullMessage}"`, {
+    // 2. Ejecutamos git commit (Solo si hay cambios para evitar error 128)
+    const execOptions = {
       env: { ...process.env, PATH: `${process.env.PATH}:/usr/bin:/bin` },
       cwd: process.cwd()
-    });
+    };
 
-    return NextResponse.json({ success: true, message: fullMessage });
+    try {
+      // Usamos diff-index para detectar si hay cambios antes de hacer commit
+      // El patrón: add && (diff-index || commit) asegura que el comando total devuelva éxito (0) 
+      // tanto si se hizo commit como si no había nada que subir.
+      await execAsync(`${gitCommand} add . && (${gitCommand} diff-index --quiet HEAD || ${gitCommand} commit -m "${fullMessage}")`, execOptions);
+      return NextResponse.json({ success: true, message: fullMessage });
+    } catch (err: any) {
+      console.error('Error Git Exec:', err.stderr || err.stdout || err.message);
+      return NextResponse.json({ 
+        error: err.stderr || err.stdout || err.message,
+        details: 'El comando de git falló. Revisa que el repositorio esté inicializado y tengas permisos.'
+      }, { status: 500 });
+    }
   } catch (err: any) {
-    console.error('Error Git Commit:', err);
+    console.error('Error Git API POST:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
