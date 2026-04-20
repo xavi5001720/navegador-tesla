@@ -47,7 +47,29 @@ export function useProfile(session: Session | null) {
 
   useEffect(() => {
     fetchProfile();
-  }, [fetchProfile]);
+
+    if (!session?.user) return;
+
+    // FIX I11: Sincronización en tiempo real del perfil entre dispositivos
+    const channel = supabase
+      .channel(`profile_realtime_${session.user.id}`)
+      .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'profiles', 
+        filter: `id=eq.${session.user.id}` 
+      }, (payload) => {
+        setProfile(prev => {
+          if (!prev) return payload.new as UserProfile;
+          return { ...prev, ...payload.new };
+        });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session, fetchProfile]);
 
   const updateProfile = useCallback(async (updates: Partial<UserProfile>) => {
     if (!session?.user) return { success: false, error: 'No hay sesión activa' };

@@ -52,7 +52,7 @@ export function useSocial(
   const isSharingLocationRef = useRef(isSharingLocation);
   const hasLocationRef = useRef(hasLocation);
 
-  // Actualización silenciosa de refs
+  // Actualización de refs: Se hace antes de los effects para evitar stale closures
   useEffect(() => {
     userPosRef.current = userPos;
     headingRef.current = heading;
@@ -342,36 +342,36 @@ export function useSocial(
     return () => clearInterval(senderLoop);
   }, [session, syncLocation]);
 
-  // 6. Señal instantánea al OBTENER GPS o CAMBIAR privacidad
+  // 6. GESTIÓN DE PRIVACIDAD: Reacción instantánea al interruptor (Toggle)
   useEffect(() => {
-    if (!session?.user) return;
-    if (hasLocation && isSharingLocation) {
-      // Disparo inicial/bienvenida cuando los datos están listos
-      syncLocation(true);
-    }
-  }, [hasLocation, isSharingLocation, session?.user, syncLocation]);
+    if (!session?.user || !isMountedRef.current) return;
 
-  // 7. Señal instantánea al APAGAR privacidad
-  useEffect(() => {
-    if (!session?.user || !channelRef.current) return;
-
-    if (!isSharingLocation) {
-      // Notificar apagado instantáneo (solo si el canal está listo)
-      if (channelRef.current.state === 'joined') {
+    if (isSharingLocation) {
+      if (hasLocation) {
+        logger.info('useSocial', 'Privacidad: Compartir ACTIVADO. Sincronizando...');
+        syncLocation(true);
+      }
+    } else {
+      logger.info('useSocial', 'Privacidad: Compartir DESACTIVADO. Notificando a red...');
+      
+      // Notificar apagado instantáneo vía Broadcast (si hay canal)
+      if (channelRef.current && channelRef.current.state === 'joined') {
         channelRef.current.send({
           type: 'broadcast',
           event: 'SOCIAL_STATUS_UPDATE',
           payload: { user_id: session.user.id, is_sharing_location: false }
         });
       }
+
+      // Asegurar que la DB también refleja el apagado (por si el broadcast falla o no hay nadie)
       supabase.from('profiles')
         .update({ is_sharing_location: false })
         .eq('id', session.user.id)
         .then(({ error }) => {
-          if (error) logger.error('useSocial', 'Error actualizando is_sharing_location en DB', error.message);
+          if (error) logger.error('useSocial', 'Error al apagar sharing en DB', error.message);
         });
     }
-  }, [isSharingLocation, session?.user]);
+  }, [isSharingLocation, hasLocation, session?.user, syncLocation]);
 
 
   // 5. Acciones CRUD
