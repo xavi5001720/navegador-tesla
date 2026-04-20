@@ -298,6 +298,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="py-4">
         <div className="grid grid-cols-1 gap-3">
 
+           <DevGuard moduleId="[IZQ-09]">
            <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
@@ -381,6 +382,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                  </div>
               )}
            </div>
+           </DevGuard>
 
            <DevGuard moduleId="[IZQ-01]">
            <div className={`flex flex-col rounded-2xl bg-white/5 p-5 border border-white/10 hover:bg-white/10 transition-colors`}>

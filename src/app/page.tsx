@@ -952,6 +952,7 @@ export default function Home() {
             </motion.div>
 
             {/* Botón de Reportar Alerta (Alineado debajo de Amigos) */}
+            <DevGuard moduleId="[MAP-05]">
             <div className="mt-2">
               <IncidentReporter 
                 onReport={async (lat, lon, category) => {
@@ -964,6 +965,7 @@ export default function Home() {
                 userId={session?.user?.id}
               />
             </div>
+            </DevGuard>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-1.5 animate-in fade-in slide-in-from-top-4 duration-700">
@@ -1210,6 +1212,7 @@ export default function Home() {
           
           <div className="flex flex-col gap-5">
             {viewMode === 'navigation' && (
+             <DevGuard moduleId="[MAP-02]">
               <div className="flex flex-col items-center gap-1.5">
                 <button 
                   onClick={() => handleManualViewModeChange('overview')}
@@ -1219,9 +1222,11 @@ export default function Home() {
                 </button>
                 <span className="text-[9px] font-black text-white uppercase tracking-widest text-center shadow-black drop-shadow-lg">Vista General</span>
               </div>
+             </DevGuard>
             )}
             {viewMode === 'overview' && (
               <>
+                 <DevGuard moduleId="[MAP-02]">
                 <div className="flex flex-col items-center gap-1.5">
                   <button 
                     onClick={() => setOverviewFitTrigger(prev => prev + 1)}
@@ -1231,6 +1236,7 @@ export default function Home() {
                   </button>
                   <span className="text-[9px] font-black text-white uppercase tracking-widest text-center shadow-black drop-shadow-lg">Vista General</span>
                 </div>
+                 </DevGuard>
                 <DevGuard moduleId="[MAP-02]">
                 <div className="flex flex-col items-center gap-1.5">
                   <button 
