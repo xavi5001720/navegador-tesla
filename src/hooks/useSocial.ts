@@ -1,7 +1,7 @@
 // src/hooks/useSocial.ts
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { logger } from '@/lib/logger';
