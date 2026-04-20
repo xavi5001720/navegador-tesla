@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { X, Check, Settings2 } from 'lucide-react';
 import DevGuard from './DevGuard';
 
@@ -26,6 +26,25 @@ export default function Speedometer({ speed }: SpeedometerProps) {
   const [format, setFormat] = useState<SpeedFormat>('NORMAL');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [tempFormat, setTempFormat] = useState<SpeedFormat>('NORMAL');
+  
+  // Refs para diferenciar Drag de Click
+  const startPosRef = useRef({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    startPosRef.current = { x: e.clientX, y: e.clientY };
+    isDraggingRef.current = false;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    const dx = e.clientX - startPosRef.current.x;
+    const dy = e.clientY - startPosRef.current.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    if (distance > 5) {
+      isDraggingRef.current = true;
+    }
+  };
 
   const handleSave = () => {
     setFormat(tempFormat);
@@ -84,7 +103,13 @@ export default function Speedometer({ speed }: SpeedometerProps) {
         <motion.div 
           drag 
           dragMomentum={false}
-          onClick={() => {
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onClick={(e) => {
+            if (isDraggingRef.current) {
+              e.stopPropagation();
+              return;
+            }
             setTempFormat(format);
             setIsMenuOpen(true);
           }}
