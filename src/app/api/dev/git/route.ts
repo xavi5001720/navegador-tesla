@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     };
 
     // 2. Obtener historial de commits para este módulo
-    const { stdout: logStdout } = await execAsync(`${gitCommand} log --grep="\\[${moduleId}\\]" --pretty=format:"%h|%ad|%s" --date=short -n 20`, execOptions);
+    const { stdout: logStdout } = await execAsync(`${gitCommand} log -F --grep="[${moduleId}]" --pretty=format:"%h|%ad|%s" --date=short -n 20`, execOptions);
     
     const history = logStdout.split('\n').filter(line => line.trim()).map(line => {
       const [hash, date, message] = line.split('|');
