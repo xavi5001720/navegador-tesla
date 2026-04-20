@@ -91,13 +91,21 @@ export function usePegasus(
           bbox_key: bboxKey, last_requested_at: Date.now(), updated_at: new Date().toISOString(), ulat: pos[0], ulon: pos[1]
         });
 
-        if (isFirstFetchAfterEnable.current) {
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          isFirstFetchAfterEnable.current = false;
+        let cached = null;
+        let retryCount = 0;
+        
+        while (retryCount < 2) {
+          const { data, error } = await supabase.from('opensky_cache').select('*').eq('bbox_key', bboxKey).single();
+          if (data) {
+            cached = data;
+            break;
+          }
+          // Si no hay datos, esperamos un poco a que la Edge Function termine
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          retryCount++;
         }
 
-        const { data: cached, error } = await supabase.from('opensky_cache').select('*').eq('bbox_key', bboxKey).single();
-        if (error || !cached) return { count: 0, minETA: Infinity, anyApproaching: false };
+        if (!cached) return { count: 0, minETA: Infinity, anyApproaching: false };
 
         setIsRateLimited(cached.rate_limited ?? false);
         if (cached.account_index && cached.account_index !== -1) setActiveAccount(cached.account_index);
@@ -190,11 +198,11 @@ export function usePegasus(
 
   const aircrafts = useMemo(() => {
     // Sospechosos: DGT/Pegasus usualmente vuelan bajo y lento
-    return allAircrafts.filter(a => a.isSuspect && a.altitude > 100 && a.altitude < 3000 && a.velocity < 100 && a.distanceToUser < 50000);
+    return allAircrafts.filter(a => a.isSuspect && a.altitude > 100 && a.altitude < 2500 && a.velocity < 90 && a.distanceToUser < 25000);
   }, [allAircrafts]);
 
-  const isAnyPegasusNearby = useMemo(() => aircrafts.some(a => a.distanceToUser < 15000), [aircrafts]);
-  const visibleAircrafts = useMemo(() => allAircrafts.filter(a => a.distanceToUser <= 150000), [allAircrafts]);
+  const isAnyPegasusNearby = useMemo(() => aircrafts.some(a => a.distanceToUser < 10000), [aircrafts]);
+  const visibleAircrafts = useMemo(() => allAircrafts.filter(a => a.distanceToUser <= 25000), [allAircrafts]);
 
   return { allAircrafts, aircrafts, visibleAircrafts, totalCount: visibleAircrafts.length, isAnyPegasusNearby, loading, isRateLimited, lastFetchTime, activeAccount, nextInterval };
 }
