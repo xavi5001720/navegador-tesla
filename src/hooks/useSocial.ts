@@ -44,6 +44,7 @@ export function useSocial(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channelRef = useRef<any>(null);
   const isMountedRef = useRef(true);
+  const lastSeenRef = useRef<Record<string, number>>({});
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -145,7 +146,8 @@ export function useSocial(
 
     // FIX C5: Guard para canal nulo o no conectado
     if (!channelRef.current || channelRef.current.state !== 'joined') {
-      if (!isInitial) logger.warn('useSocial', 'Canal no disponible para sync de posición, saltando.');
+      // Si estamos en medio de una reconexión, no inundamos el log con warnings.
+      // Solo logueamos si ha pasado tiempo desde el último intento exitoso.
       return;
     }
     
@@ -204,13 +206,21 @@ export function useSocial(
           if (!isMountedRef.current) return;
           const state = channel.presenceState();
           const onlineIds = new Set<string>();
+          const now = Date.now();
+          
           Object.keys(state).forEach((key: string) => {
-            (state[key] as { key: string }[]).forEach((p: { key: string }) => onlineIds.add(p.key));
+            (state[key] as { key: string }[]).forEach((p: { key: string }) => {
+              onlineIds.add(p.key);
+              lastSeenRef.current[p.key] = now;
+            });
           });
           setOnlineUserIds(onlineIds);
         })
         .on('broadcast', { event: 'SOCIAL_LOCATION_UPDATE' }, ({ payload }) => {
           if (!isMountedRef.current || payload.user_id === session.user.id) return;
+          
+          // Actualizar lastSeen al recibir broadcast de ubicación
+          lastSeenRef.current[payload.user_id] = Date.now();
           
           setLivePositions(prev => ({
             ...prev,
@@ -296,12 +306,14 @@ export function useSocial(
     if (!session?.user || !channelRef.current) return;
 
     if (!isSharingLocation) {
-      // Notificar apagado instantáneo
-      channelRef.current.send({
-        type: 'broadcast',
-        event: 'SOCIAL_STATUS_UPDATE',
-        payload: { user_id: session.user.id, is_sharing_location: false }
-      });
+      // Notificar apagado instantáneo (solo si el canal está listo)
+      if (channelRef.current.state === 'joined') {
+        channelRef.current.send({
+          type: 'broadcast',
+          event: 'SOCIAL_STATUS_UPDATE',
+          payload: { user_id: session.user.id, is_sharing_location: false }
+        });
+      }
       supabase.from('profiles')
         .update({ is_sharing_location: false })
         .eq('id', session.user.id)
@@ -422,14 +434,20 @@ export function useSocial(
     }
   };
 
-  // Mapeo final para el mapa
-  const enhancedFriends = friends.map(f => ({
-    ...f,
-    is_online: f.friendship_status === 'accepted' && onlineUserIds.has(f.id),
-    last_lat: livePositions[f.id]?.lat ?? f.last_lat,
-    last_lon: livePositions[f.id]?.lon ?? f.last_lon,
-    heading: livePositions[f.id]?.heading ?? 0
-  }));
+  // Mapeo final para el mapa con GRACE PERIOD (Evita parpadeo por micro-desconexiones)
+  const enhancedFriends = friends.map(f => {
+    const isActuallyInPresence = onlineUserIds.has(f.id);
+    const lastSeen = lastSeenRef.current[f.id] || 0;
+    const isSeenRecently = (Date.now() - lastSeen) < 15000; // 15 segundos de gracia
+    
+    return {
+      ...f,
+      is_online: f.friendship_status === 'accepted' && (isActuallyInPresence || isSeenRecently),
+      last_lat: livePositions[f.id]?.lat ?? f.last_lat,
+      last_lon: livePositions[f.id]?.lon ?? f.last_lon,
+      heading: livePositions[f.id]?.heading ?? 0
+    };
+  });
 
   return { 
     friends: enhancedFriends, 
