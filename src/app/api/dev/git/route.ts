@@ -16,9 +16,23 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // 1. Obtener historial de commits para este módulo
-    const GIT_PATH = '/usr/bin/git';
-    const { stdout: logStdout } = await execAsync(`${GIT_PATH} log --grep="\\[${moduleId}\\]" --pretty=format:"%h|%ad|%s" --date=short -n 20`);
+    // 1. Intentar encontrar git dinámicamente o usar rutas comunes
+    let gitCommand = 'git';
+    try {
+      const { stdout: whichGit } = await execAsync('which git');
+      if (whichGit.trim()) gitCommand = whichGit.trim();
+    } catch (e) {
+      // Si 'which' falla, probamos rutas típicas
+      if (fs.existsSync('/usr/bin/git')) gitCommand = '/usr/bin/git';
+      else if (fs.existsSync('/bin/git')) gitCommand = '/bin/git';
+    }
+
+    console.log(`[Git API] Usando comando: ${gitCommand}`);
+
+    // 2. Obtener historial de commits para este módulo
+    const { stdout: logStdout } = await execAsync(`${gitCommand} log --grep="\\[${moduleId}\\]" --pretty=format:"%h|%ad|%s" --date=short -n 20`, {
+      env: { ...process.env, PATH: `${process.env.PATH}:/usr/bin:/bin` }
+    });
     
     const history = logStdout.split('\n').filter(line => line.trim()).map(line => {
       const [hash, date, message] = line.split('|');
@@ -30,8 +44,10 @@ export async function GET(req: NextRequest) {
     if (history.length > 0) {
       status = 'green'; // Por defecto verde si hay historial
 
-      // 3. Verificar si hay cambios locales sin confirmar en archivos que usen este moduleId
-      const { stdout: statusStdout } = await execAsync(`${GIT_PATH} status --porcelain`);
+      // 4. Verificar si hay cambios locales sin confirmar en archivos que usen este moduleId
+      const { stdout: statusStdout } = await execAsync(`${gitCommand} status --porcelain`, {
+        env: { ...process.env, PATH: `${process.env.PATH}:/usr/bin:/bin` }
+      });
       const changedFiles = statusStdout.split('\n')
         .filter(line => line.trim())
         .map(line => line.substring(3).trim()); // Obtener ruta relativa del archivo
@@ -70,9 +86,15 @@ export async function POST(req: NextRequest) {
 
     const fullMessage = `[${moduleId}] ✅ ${message}`;
 
-    // Ejecutamos git commit
-    const GIT_PATH = '/usr/bin/git';
-    await execAsync(`${GIT_PATH} add . && ${GIT_PATH} commit -m "${fullMessage}"`);
+    // 1. Encontrar git
+    let gitCommand = 'git';
+    if (fs.existsSync('/usr/bin/git')) gitCommand = '/usr/bin/git';
+    else if (fs.existsSync('/bin/git')) gitCommand = '/bin/git';
+
+    // 2. Ejecutamos git commit
+    await execAsync(`${gitCommand} add . && ${gitCommand} commit -m "${fullMessage}"`, {
+      env: { ...process.env, PATH: `${process.env.PATH}:/usr/bin:/bin` }
+    });
 
     return NextResponse.json({ success: true, message: fullMessage });
   } catch (err: any) {
