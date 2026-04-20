@@ -318,6 +318,84 @@ const getCarIcon = (heading: number, color?: string, viewMode: string = 'navigat
 // Sistema de Caché de Iconos para evitar parpadeo (Flickering)
 const iconCache = new Map<string, L.DivIcon>();
 
+const getFriendIcon = (color?: string, name?: string, nickname?: string, heading: number = 0) => {
+  const roundedHeading = Math.round(heading / 2) * 2;
+  const key = `friend-${color}-${name}-${nickname}-${roundedHeading}`;
+  if (iconCache.has(key)) return iconCache.get(key)!;
+
+  const displayName = nickname ? `${nickname} (${name})` : name;
+  const iconHtml = renderToStaticMarkup(
+    <div className="relative flex flex-col items-center group car-marker-social">
+      <div className="mb-1 pointer-events-none">
+        <span className="text-[10px] font-black text-white px-2 py-0.5 rounded-full bg-blue-600/60 border border-blue-400/40 backdrop-blur-sm shadow-lg whitespace-nowrap uppercase tracking-widest leading-none block">
+          {displayName}
+        </span>
+      </div>
+      <div className="relative h-20 w-20" style={{ transform: `rotate(${roundedHeading}deg)` }}>
+        <div className={`absolute inset-0 rounded-full blur-2xl scale-125 ${color === 'Rojo' ? 'bg-red-500/30' : color === 'Azul' ? 'bg-blue-500/30' : 'bg-blue-500/20'}`}></div>
+        <img src={getCarImage(color)} className="w-full h-full object-contain rotate-180 opacity-90" style={{ filter: getCarFilter(color) }} />
+      </div>
+    </div>
+  );
+  
+  const icon = L.divIcon({ html: iconHtml, className: 'custom-friend-icon', iconSize: [100, 130], iconAnchor: [50, 65] });
+  iconCache.set(key, icon);
+  return icon;
+};
+
+const communityRadarIcon = (isVisible: boolean, isMine: boolean, category: string = 'mobile_radar') => {
+  let bgColor = isVisible ? 'bg-blue-600' : 'bg-gray-600';
+  let Icon = null;
+
+  switch (category) {
+    case 'accident':
+      bgColor = 'bg-rose-600';
+      Icon = <AlertTriangle className="h-6 w-6 text-white" />;
+      break;
+    case 'works':
+      bgColor = 'bg-orange-600';
+      Icon = <Construction className="h-6 w-6 text-white" />;
+      break;
+    case 'object':
+      bgColor = 'bg-amber-600';
+      Icon = <Package className="h-6 w-6 text-white" />;
+      break;
+    case 'stopped_vehicle':
+      bgColor = 'bg-slate-600';
+      Icon = <Car className="h-6 w-6 text-white" />;
+      break;
+    case 'animal':
+      bgColor = 'bg-emerald-600';
+      Icon = <PawPrint className="h-6 w-6 text-white" />;
+      break;
+    default:
+      Icon = <img src="/radarpolicia.png" alt="P" className="h-7 w-7 object-contain" />;
+  }
+
+  return L.divIcon({
+    html: renderToStaticMarkup(
+      <div className={`relative h-12 w-12 flex flex-col items-center counter-rotate transition-all duration-500 ${!isVisible && isMine ? 'opacity-60 scale-90' : 'opacity-100 scale-110'}`}>
+        <div className={`h-10 w-10 flex items-center justify-center rounded-full border-2 border-white shadow-xl z-10 ${bgColor}`}>
+           {Icon}
+        </div>
+        {!isVisible && isMine && (
+          <div className="absolute -top-1 bg-amber-500 border border-white rounded-md px-1 py-0.5 z-20 shadow-sm">
+            <span className="text-[8px] font-bold text-white uppercase whitespace-nowrap">Pendiente</span>
+          </div>
+        )}
+      </div>
+    ),
+    className: 'custom-community-icon',
+    iconSize: [48, 48],
+    iconAnchor: [24, 24],
+  });
+};
+
+function lerpAngle(current: number, target: number, alpha: number): number {
+  const diff = ((target - current) % 360 + 540) % 360 - 180;
+  return current + diff * alpha;
+}
+
 // --- COMPONENTES DE MARCADORES MEMOIZADOS ---
 
 const RadarMarker = React.memo(({ radar, userId, onSelect }: { radar: Radar, userId?: string, onSelect: (r: Radar) => void }) => {
