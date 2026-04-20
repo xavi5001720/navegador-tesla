@@ -61,7 +61,7 @@ html, body { height: 100%; margin: 0; padding: 0; }
 
 /* 🚀 GPU Accelerated Aircraft Animation */
 .custom-aircraft-icon {
-  transition: transform 30s linear !important;
+  transition: transform var(--ac-duration, 30s) linear !important;
   will-change: transform;
   border: none !important;
   background: none !important;

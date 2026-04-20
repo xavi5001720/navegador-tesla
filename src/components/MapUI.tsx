@@ -419,15 +419,16 @@ const AircraftMarker = React.memo(({ aircraft, userPos, viewMode, nextInterval }
   const dist = getDistance(userPos, [aircraft.lat, aircraft.lon]);
   const markerRef = useRef<L.Marker>(null);
 
-  // Actualizar rotación vía CSS Variable para no destruir el DOM y mantener fluidez
+  // Actualizar rotación y duración vía CSS Variables para no destruir el DOM y mantener fluidez
   useEffect(() => {
     if (markerRef.current) {
       const el = markerRef.current.getElement();
       if (el) {
         el.style.setProperty('--ac-heading', `${aircraft.track || 0}deg`);
+        el.style.setProperty('--ac-duration', `${nextInterval / 1000}s`);
       }
     }
-  }, [aircraft.track]);
+  }, [aircraft.track, nextInterval]);
 
   return (
     <Marker 
