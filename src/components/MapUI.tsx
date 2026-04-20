@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -318,30 +318,147 @@ const getCarIcon = (heading: number, color?: string, viewMode: string = 'navigat
 // Sistema de Caché de Iconos para evitar parpadeo (Flickering)
 const iconCache = new Map<string, L.DivIcon>();
 
-const getFriendIcon = (color?: string, name?: string, nickname?: string, heading: number = 0) => {
-  const roundedHeading = Math.round(heading / 2) * 2;
-  const key = `friend-${color}-${name}-${nickname}-${roundedHeading}`;
-  if (iconCache.has(key)) return iconCache.get(key)!;
+// --- COMPONENTES DE MARCADORES MEMOIZADOS ---
 
-  const displayName = nickname ? `${nickname} (${name})` : name;
-  const iconHtml = renderToStaticMarkup(
-    <div className="relative flex flex-col items-center group car-marker-social">
-      <div className="mb-1 pointer-events-none">
-        <span className="text-[10px] font-black text-white px-2 py-0.5 rounded-full bg-blue-600/60 border border-blue-400/40 backdrop-blur-sm shadow-lg whitespace-nowrap uppercase tracking-widest leading-none block">
-          {displayName}
-        </span>
-      </div>
-      <div className="relative h-20 w-20" style={{ transform: `rotate(${roundedHeading}deg)` }}>
-        <div className={`absolute inset-0 rounded-full blur-2xl scale-125 ${color === 'Rojo' ? 'bg-red-500/30' : color === 'Azul' ? 'bg-blue-500/30' : 'bg-blue-500/20'}`}></div>
-        <img src={getCarImage(color)} className="w-full h-full object-contain rotate-180 opacity-90" style={{ filter: getCarFilter(color) }} />
-      </div>
-    </div>
+const RadarMarker = React.memo(({ radar, userId, onSelect }: { radar: Radar, userId?: string, onSelect: (r: Radar) => void }) => {
+  if (radar.type === 'community_mobile') {
+    return (
+      <Marker 
+        position={[radar.lat, radar.lon]} 
+        icon={communityRadarIcon(!!radar.is_visible, !!(userId && radar.user_id === userId), radar.category)}
+        eventHandlers={{ click: () => onSelect(radar) }}
+      />
+    );
+  }
+  return <Marker position={[radar.lat, radar.lon]} icon={radarIcon(radar.type, radar.speedLimit)} interactive={false} />;
+});
+RadarMarker.displayName = 'RadarMarker';
+
+const AircraftMarker = React.memo(({ aircraft, userPos, viewMode }: { aircraft: Aircraft, userPos: [number, number], viewMode: string }) => {
+  const dist = getDistance(userPos, [aircraft.lat, aircraft.lon]);
+  return (
+    <Marker 
+      position={[aircraft.lat, aircraft.lon]} 
+      icon={aircraftIcon(aircraft.isSuspect, aircraft.track || 0, dist, viewMode, aircraft.altitude, aircraft.velocity, aircraft.callsign)} 
+      interactive={false} 
+    />
   );
-  
-  const icon = L.divIcon({ html: iconHtml, className: 'custom-friend-icon', iconSize: [100, 130], iconAnchor: [50, 65] });
-  iconCache.set(key, icon);
-  return icon;
-};
+});
+AircraftMarker.displayName = 'AircraftMarker';
+
+const FriendMarker = React.memo(({ friend, onUpdateNickname }: { friend: Friend, onUpdateNickname?: (id: string, name: string) => void }) => {
+  const finalLat = friend.last_lat;
+  const finalLon = friend.last_lon;
+  const finalHeading = (friend.heading != null && !isNaN(friend.heading)) ? friend.heading : 0;
+
+  if (!finalLat || !finalLon) return null;
+
+  return (
+    <Marker 
+      position={[finalLat, finalLon]} 
+      icon={getFriendIcon(friend.car_color, friend.car_name, friend.nickname, finalHeading)} 
+      zIndexOffset={1000}
+      eventHandlers={{ click: (e) => e.target.openPopup() }}
+    >
+      <Popup className="tesla-popup" minWidth={220} offset={[0, -20]}>
+        <div className="p-3 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-2xl flex flex-col gap-3">
+           <div className="flex flex-col">
+             <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-tight">Contacto Social</span>
+             <span className="text-sm font-bold text-white truncate max-w-[140px]">{friend.nickname || friend.car_name}</span>
+           </div>
+           <div className="h-px bg-white/10 w-full" />
+           <div className="flex flex-col gap-1.5">
+             <button 
+               onClick={() => {
+                 const newName = prompt('Introduce el apodo para este amigo:', friend.nickname || '');
+                 if (newName !== null) onUpdateNickname?.(friend.id, newName);
+               }}
+               className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all text-[11px] font-bold uppercase"
+             >
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                Editar nombre
+             </button>
+           </div>
+        </div>
+      </Popup>
+    </Marker>
+  );
+});
+FriendMarker.displayName = 'FriendMarker';
+
+const FestivalMarker = React.memo(({ fest, userPos, isTrafficWanted, onCalculateRoute }: { fest: Festival, userPos: [number, number], isTrafficWanted: boolean, onCalculateRoute: any }) => (
+  <Marker position={[fest.lat, fest.lon]} icon={festivalIcon}>
+    <Popup className="tesla-popup" minWidth={250} closeButton={false}>
+      <div className="p-4 bg-black/90 backdrop-blur-2xl border border-amber-500/30 rounded-2xl flex flex-col gap-3">
+        <div className="flex flex-col">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest leading-tight">Fiesta Tradicional</span>
+            <span className="text-[10px] font-black text-white bg-amber-600 px-2 py-0.5 rounded-full shadow-lg">{fest.rating}% Rec.</span>
+          </div>
+          <span className="text-lg font-black text-white tracking-tight">{fest.name}</span>
+          <div className="flex items-center gap-1 text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
+            <MapPin className="h-3 w-3" />
+            {fest.city}, {fest.country}
+          </div>
+        </div>
+        <div className="h-px bg-white/10 w-full" />
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 p-2 rounded-xl">
+            <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Fechas:</span>
+            <span className="text-[11px] text-white font-black">{fest.dates_approx}</span>
+          </div>
+          <p className="text-[12px] text-gray-300 leading-relaxed font-medium">{fest.description}</p>
+          <div className="mt-1 p-2 bg-white/5 rounded-xl border border-white/10">
+            <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">¿Qué la hace única?</span>
+            <p className="text-[11px] text-white italic font-medium leading-snug">"{fest.unique_reason}"</p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-2">
+          <button 
+            onClick={() => {
+              if (userPos[0] !== 0) onCalculateRoute(userPos, [fest.lat, fest.lon], [], false, isTrafficWanted);
+            }}
+            className="mt-1 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white transition-all active:scale-95 shadow-lg shadow-amber-900/20"
+          >
+            <Navigation className="h-4 w-4" />
+            <span className="text-xs font-black uppercase tracking-widest">Ir a la fiesta</span>
+          </button>
+          <ClosePopupButton />
+        </div>
+      </div>
+    </Popup>
+  </Marker>
+));
+FestivalMarker.displayName = 'FestivalMarker';
+
+const YachtMarker = React.memo(({ yacht, onClick }: { yacht: YachtPosition, onClick: (y: YachtPosition) => void }) => (
+  <Marker 
+    position={[yacht.latitude, yacht.longitude]} 
+    icon={yachtIcon(yacht.course || yacht.heading || 0, yacht.mmsi)}
+    zIndexOffset={25000}
+    interactive={true}
+    eventHandlers={{
+      click: () => onClick(yacht),
+      mousedown: () => onClick(yacht)
+    }}
+  />
+));
+YachtMarker.displayName = 'YachtMarker';
+
+const ChargerMarker = React.memo(({ charger, onClick }: { charger: Charger, onClick: (c: Charger) => void }) => (
+  <Marker position={[charger.lat, charger.lon]} icon={chargerIcon} eventHandlers={{ click: () => onClick(charger) }} />
+));
+ChargerMarker.displayName = 'ChargerMarker';
+
+const GasStationMarker = React.memo(({ station, onClick }: { station: GasStation, onClick: (s: GasStation) => void }) => (
+  <Marker position={[station.lat, station.lon]} icon={gasStationIcon} eventHandlers={{ click: () => onClick(station) }} />
+));
+GasStationMarker.displayName = 'GasStationMarker';
+
+const WeatherMarker = React.memo(({ wp }: { wp: WeatherPoint }) => (
+  <Marker position={[wp.lat, wp.lon]} icon={createWeatherIcon(wp.temp, wp.condition)} interactive={false} />
+));
+WeatherMarker.displayName = 'WeatherMarker';
 
 function lerpAngle(current: number, target: number, alpha: number): number {
   const diff = ((target - current) % 360 + 540) % 360 - 180;
@@ -521,9 +638,10 @@ export default function MapUI({
   gasStations = [], weatherPoints = [], waypoints = [], yachts = [], festivals = [], speed = 0, hasLocation = false,
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
   onGasStationClick, onYachtClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [],   centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
-   mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname, radarZones = [],
-   userId, voteRadar, calculateRoute, isTrafficWanted
+    mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname, radarZones = [],
+    userId, voteRadar, calculateRoute, isTrafficWanted
 }: MapUIProps) {
+  const onlineUserIdsCount = (friends.filter(f => f.is_online).length);
   const [selectedCommunityRadar, setSelectedCommunityRadar] = useState<Radar | null>(null);
   const [currentZoom, setCurrentZoom] = useState(15);
   const errorCountRef = useRef(0);
@@ -731,165 +849,56 @@ export default function MapUI({
         ))}
 
         {/* 📡 RADARES: Memoizados por zoom y datos */}
-        {useMemo(() => (currentZoom >= 10 || (routeCoordinates && routeCoordinates.length > 0)) && radars.map((radar) => {
-          if (radar.type === 'community_mobile') {
-            return (
-              <Marker 
-                key={`comm-${radar.id}`} 
-                position={[radar.lat, radar.lon]} 
-                icon={communityRadarIcon(!!radar.is_visible, !!(userId && radar.user_id === userId), radar.category)}
-                eventHandlers={{ click: () => setSelectedCommunityRadar(radar) }}
-              />
-            );
-          }
-          return <Marker key={`radar-${radar.id}`} position={[radar.lat, radar.lon]} icon={radarIcon(radar.type, radar.speedLimit)} interactive={false} />;
-        }), [radars, currentZoom, !!routeCoordinates, userId])}
+        {useMemo(() => (currentZoom >= 10 || (routeCoordinates && routeCoordinates.length > 0)) && radars.map((radar) => (
+          <RadarMarker key={`radar-${radar.id}`} radar={radar} userId={userId} onSelect={setSelectedCommunityRadar} />
+        )), [radars.length, radars[0]?.id, currentZoom, !!routeCoordinates, userId])}
 
         {/* ✈️ AVIONES: Memoizados */}
         {useMemo(() => aircrafts.map((aircraft) => (
-          <Marker 
+          <AircraftMarker 
             key={`ac-${aircraft.icao24}`} 
-            position={[aircraft.lat, aircraft.lon]} 
-            icon={aircraftIcon(aircraft.isSuspect, aircraft.track || 0, getDistance(userPos, [aircraft.lat, aircraft.lon]), viewMode, aircraft.altitude, aircraft.velocity, aircraft.callsign)} 
-            interactive={false} 
+            aircraft={aircraft} 
+            userPos={userPos} 
+            viewMode={viewMode} 
           />
-        )), [aircrafts, viewMode, Math.floor(userPos[0] * 100), Math.floor(userPos[1] * 100)])}
+        )), [aircrafts.length, aircrafts[0]?.icao24, viewMode, Math.floor(userPos[0] * 100), Math.floor(userPos[1] * 100)])}
 
         {/* ⚡ CARGADORES y ⛽ GASOLINERAS: Memoizados */}
         {useMemo(() => (currentZoom >= 10 || (routeCoordinates && routeCoordinates.length > 0)) && (
           <>
-            {chargers.map(charger => <Marker key={`charger-${charger.id}`} position={[charger.lat, charger.lon]} icon={chargerIcon} eventHandlers={{ click: () => { if (onChargerClick) onChargerClick(charger); } }} />)}
-            {gasStations.map(station => <Marker key={`gas-${station.id}`} position={[station.lat, station.lon]} icon={gasStationIcon} eventHandlers={{ click: () => { if (onGasStationClick) onGasStationClick(station); } }} />)}
+            {chargers.map(charger => <ChargerMarker key={`charger-${charger.id}`} charger={charger} onClick={onChargerClick || (() => {})} />)}
+            {gasStations.map(station => <GasStationMarker key={`gas-${station.id}`} station={station} onClick={onGasStationClick || (() => {})} />)}
           </>
-        ), [chargers, gasStations, currentZoom, !!routeCoordinates])}
+        ), [chargers.length, gasStations.length, currentZoom, !!routeCoordinates])}
 
-        {weatherPoints.map(wp => <Marker key={`weather-${wp.id}`} position={[wp.lat, wp.lon]} icon={createWeatherIcon(wp.temp, wp.condition)} interactive={false} />)}
+        {useMemo(() => weatherPoints.map(wp => (
+          <WeatherMarker key={`weather-${wp.id}`} wp={wp} />
+        )), [weatherPoints.length])}
         
         {/* Fiestas Tradicionales */}
-        {festivals.map(fest => (
-          <Marker 
+        {useMemo(() => festivals.map(fest => (
+          <FestivalMarker 
             key={`fest-${fest.id}`} 
-            position={[fest.lat, fest.lon]} 
-            icon={festivalIcon}
-          >
-            <Popup className="tesla-popup" minWidth={250} closeButton={false}>
-              <div className="p-4 bg-black/90 backdrop-blur-2xl border border-amber-500/30 rounded-2xl flex flex-col gap-3">
-                <div className="flex flex-col">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest leading-tight">Fiesta Tradicional</span>
-                    <span className="text-[10px] font-black text-white bg-amber-600 px-2 py-0.5 rounded-full shadow-lg">{fest.rating}% Rec.</span>
-                  </div>
-                  <span className="text-lg font-black text-white tracking-tight">{fest.name}</span>
-                  <div className="flex items-center gap-1 text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
-                    <MapPin className="h-3 w-3" />
-                    {fest.city}, {fest.country}
-                  </div>
-                </div>
-
-                <div className="h-px bg-white/10 w-full" />
-
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 p-2 rounded-xl">
-                    <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Fechas:</span>
-                    <span className="text-[11px] text-white font-black">{fest.dates_approx}</span>
-                  </div>
-                  
-                  <p className="text-[12px] text-gray-300 leading-relaxed font-medium">
-                    {fest.description}
-                  </p>
-
-                  <div className="mt-1 p-2 bg-white/5 rounded-xl border border-white/10">
-                    <span className="text-[9px] text-gray-500 font-black uppercase tracking-widest block mb-1">¿Qué la hace única?</span>
-                    <p className="text-[11px] text-white italic font-medium leading-snug">"{fest.unique_reason}"</p>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <button 
-                    onClick={() => {
-                      const origin: [number, number] = userPos || [0, 0];
-                      if (origin[0] !== 0) calculateRoute(origin, [fest.lat, fest.lon], [], false, isTrafficWanted);
-                    }}
-                    className="mt-1 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white transition-all active:scale-95 shadow-lg shadow-amber-900/20"
-                  >
-                    <Navigation className="h-4 w-4" />
-                    <span className="text-xs font-black uppercase tracking-widest">Ir a la fiesta</span>
-                  </button>
-
-                  <ClosePopupButton />
-                </div>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+            fest={fest} 
+            userPos={userPos} 
+            isTrafficWanted={isTrafficWanted} 
+            onCalculateRoute={calculateRoute} 
+          />
+        )), [festivals.length, festivals[0]?.id, userPos[0].toFixed(2), isTrafficWanted])}
         
         {/* Amigos (Marcadores con Posición Real) */}
-        {friends.filter(f => f.is_online && f.is_sharing_location !== false).map((friend) => {
-          const finalLat = friend.last_lat;
-          const finalLon = friend.last_lon;
-          const finalHeading = (friend.heading != null && !isNaN(friend.heading)) ? friend.heading : 0;
-
-          if (!finalLat || !finalLon) return null;
-
-          return (
-            <Marker 
-              key={`friend-${friend.id}`} 
-              position={[finalLat, finalLon]} 
-              icon={getFriendIcon(friend.car_color, friend.car_name, friend.nickname, finalHeading)} 
-              zIndexOffset={1000}
-              eventHandlers={{
-                click: (e) => {
-                  e.target.openPopup();
-                }
-              }}
-            >
-              <Popup className="tesla-popup" minWidth={220} offset={[0, -20]}>
-                <div className="p-3 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-2xl flex flex-col gap-3">
-                   <div className="flex flex-col">
-                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-tight">Contacto Social</span>
-                     <span className="text-sm font-bold text-white truncate max-w-[140px]">{friend.nickname || friend.car_name}</span>
-                   </div>
-
-                   <div className="h-px bg-white/10 w-full" />
-
-                   <div className="flex flex-col gap-1.5">
-                     <button 
-                       onClick={() => {
-                         const newName = prompt('Introduce el apodo para este amigo:', friend.nickname || '');
-                         if (newName !== null) onUpdateFriendNickname?.(friend.id, newName);
-                       }}
-                       className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 transition-all text-[11px] font-bold uppercase"
-                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                        Editar nombre
-                     </button>
-                   </div>
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
+        {useMemo(() => friends.filter(f => f.is_online && f.is_sharing_location !== false).map((friend) => (
+          <FriendMarker 
+            key={`friend-${friend.id}`} 
+            friend={friend} 
+            onUpdateNickname={onUpdateFriendNickname} 
+          />
+        )), [friends.length, friends.map(f => f.id).join(','), onlineUserIdsCount])}
 
         {/* Yates de Lujo */}
-        {yachts.map((yacht) => (
-          <Marker 
-            key={`yacht-${yacht.mmsi}`} 
-            position={[yacht.latitude, yacht.longitude]} 
-            icon={yachtIcon(yacht.course || yacht.heading || 0, yacht.mmsi)}
-            zIndexOffset={25000}
-
-            interactive={true}
-            eventHandlers={{
-              click: (e) => {
-                if (onYachtClick) onYachtClick(yacht);
-              },
-              mousedown: (e) => {
-                // Fallback para dispositivos de escritorio donde el click puede ser interceptado
-                if (onYachtClick) onYachtClick(yacht);
-              }
-            }}
-          />
-        ))}
+        {useMemo(() => yachts.map((yacht) => (
+          <YachtMarker key={`yacht-${yacht.mmsi}`} yacht={yacht} onClick={onYachtClick || (() => {})} />
+        )), [yachts.length, yachts[0]?.mmsi])}
 
         <Marker 
           key="user-car-marker" 

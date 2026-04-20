@@ -46,6 +46,20 @@ export function useSocial(
   const isMountedRef = useRef(true);
   const lastSeenRef = useRef<Record<string, number>>({});
 
+  // Refs para telemetría: Evitan que el cambio de posición destruya y recree el canal WebSocket
+  const userPosRef = useRef(userPos);
+  const headingRef = useRef(heading);
+  const isSharingLocationRef = useRef(isSharingLocation);
+  const hasLocationRef = useRef(hasLocation);
+
+  // Actualización silenciosa de refs
+  useEffect(() => {
+    userPosRef.current = userPos;
+    headingRef.current = heading;
+    isSharingLocationRef.current = isSharingLocation;
+    hasLocationRef.current = hasLocation;
+  }, [userPos, heading, isSharingLocation, hasLocation]);
+
   useEffect(() => {
     isMountedRef.current = true;
     return () => { isMountedRef.current = false; };
@@ -141,8 +155,14 @@ export function useSocial(
   // 2. Canal Realtime (Broadcast y Presencia) — FIX C5: guard isMountedRef + FIX I6: reconexión
   // 3. Función de Sincronización de Ubicación
   const syncLocation = useCallback(async (isInitial = false) => {
+    // Leemos de las refs para asegurar que la función sea estable
+    const currentPos = userPosRef.current;
+    const currentHeading = headingRef.current;
+    const currentIsSharing = isSharingLocationRef.current;
+    const currentHasLocation = hasLocationRef.current;
+
     // FIX I10: Comprobación robusta de requisitos para compartir
-    if (!session?.user || !isSharingLocation || !hasLocation || !userPos) return;
+    if (!session?.user || !currentIsSharing || !currentHasLocation || !currentPos) return;
 
     // FIX C5: Guard para canal nulo o no conectado
     if (!channelRef.current || channelRef.current.state !== 'joined') {
@@ -151,7 +171,7 @@ export function useSocial(
       return;
     }
     
-    const [lat, lon] = userPos;
+    const [lat, lon] = currentPos;
     if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
       logger.warn('useSocial', 'Coordenadas inválidas, no se envían.', { lat, lon });
       return;
@@ -167,7 +187,7 @@ export function useSocial(
         user_id: session.user.id, 
         lat,
         lon,
-        heading: isNaN(heading) ? 0 : heading,
+        heading: isNaN(currentHeading) ? 0 : currentHeading,
         timestamp: now 
       }
     });
@@ -190,7 +210,7 @@ export function useSocial(
     }).eq('id', session.user.id);
 
     if (error) logger.error('useSocial', 'Error guardando posición en DB', error.message);
-  }, [session, isSharingLocation, hasLocation, userPos, heading]);
+  }, [session]); // Dependencia estable: solo cambia si cambia el usuario
 
   // 4. Ciclo de Vida del Canal Social
   useEffect(() => {
