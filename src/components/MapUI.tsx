@@ -922,7 +922,7 @@ export default function MapUI({
             friend={friend} 
             onUpdateNickname={onUpdateFriendNickname} 
           />
-        )), [friends.length, friends.map(f => f.id).join(','), onlineUserIdsCount])}
+        )), [friends])}
 
         {/* Yates de Lujo */}
         {useMemo(() => yachts.map((yacht) => (

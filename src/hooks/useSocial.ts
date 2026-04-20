@@ -267,6 +267,15 @@ export function useSocial(
           logger.info('useSocial', `Broadcast RECIBIDO: Ubicación de ${data.user_id}`);
           
           lastSeenRef.current[data.user_id] = Date.now();
+          
+          // Redundancia: Si recibimos broadcast, está online
+          setOnlineUserIds(prev => {
+            if (prev.has(data.user_id)) return prev;
+            const next = new Set(prev);
+            next.add(data.user_id);
+            return next;
+          });
+
           setLivePositions(prev => ({
             ...prev,
             [data.user_id]: {
@@ -287,6 +296,14 @@ export function useSocial(
 
           logger.info('useSocial', `Broadcast RECIBIDO: Status de ${data.user_id} (${data.is_sharing_location})`);
           
+          // Redundancia: Si recibimos broadcast, está online
+          setOnlineUserIds(prev => {
+            if (prev.has(data.user_id)) return prev;
+            const next = new Set(prev);
+            next.add(data.user_id);
+            return next;
+          });
+
           setRawFriends(prev => prev.map(f => 
             f.id === data.user_id 
               ? { ...f, is_sharing_location: data.is_sharing_location } 
