@@ -11,6 +11,7 @@ import AlertOverlay from '@/components/AlertOverlay';
 import Speedometer from '@/components/Speedometer';
 import IncidentReporter from '@/components/IncidentReporter';
 import SessionAlert from '@/components/SessionAlert';
+import DevGuard from '@/components/DevGuard';
 
 
 import { useRoute } from '@/hooks/useRoute';
@@ -1544,6 +1545,7 @@ export default function Home() {
       />
 
       {/* Modal Social (Viajar con Amigos) */}
+      <DevGuard moduleId="[SUP-01]">
       <SocialModal 
         isOpen={isSocialOpen}
         onClose={() => setIsSocialOpen(false)}
@@ -1552,6 +1554,7 @@ export default function Home() {
         updateProfile={updateProfile}
         onAddFriend={addFriend}
       />
+      </DevGuard>
 
       {/* Alertas de Sesión Duplicada / Advertencias */}
       {sessionConflict !== 'none' && (

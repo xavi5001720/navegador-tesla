@@ -5,7 +5,7 @@ import { DevModeProvider } from '@/contexts/DevModeContext';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<>{children}</>}>
+    <Suspense fallback={<div className="bg-black min-h-screen" />}>
       <DevModeProvider>
         {children}
       </DevModeProvider>
