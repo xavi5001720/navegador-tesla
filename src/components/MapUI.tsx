@@ -538,10 +538,7 @@ const WeatherMarker = React.memo(({ wp }: { wp: WeatherPoint }) => (
 ));
 WeatherMarker.displayName = 'WeatherMarker';
 
-function lerpAngle(current: number, target: number, alpha: number): number {
-  const diff = ((target - current) % 360 + 540) % 360 - 180;
-  return current + diff * alpha;
-}
+
 
 function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMode: string, speed?: number }) {
   const map = useMap();
@@ -663,53 +660,7 @@ function LocationTracker({
   return null;
 }
 
-const communityRadarIcon = (isVisible: boolean, isMine: boolean, category: string = 'mobile_radar') => {
-  let bgColor = isVisible ? 'bg-blue-600' : 'bg-gray-600';
-  let Icon = null;
 
-  switch (category) {
-    case 'accident':
-      bgColor = 'bg-rose-600';
-      Icon = <AlertTriangle className="h-6 w-6 text-white" />;
-      break;
-    case 'works':
-      bgColor = 'bg-orange-600';
-      Icon = <Construction className="h-6 w-6 text-white" />;
-      break;
-    case 'object':
-      bgColor = 'bg-amber-600';
-      Icon = <Package className="h-6 w-6 text-white" />;
-      break;
-    case 'stopped_vehicle':
-      bgColor = 'bg-slate-600';
-      Icon = <Car className="h-6 w-6 text-white" />;
-      break;
-    case 'animal':
-      bgColor = 'bg-emerald-600';
-      Icon = <PawPrint className="h-6 w-6 text-white" />;
-      break;
-    default:
-      Icon = <img src="/radarpolicia.png" alt="P" className="h-7 w-7 object-contain" />;
-  }
-
-  return L.divIcon({
-    html: renderToStaticMarkup(
-      <div className={`relative h-12 w-12 flex flex-col items-center counter-rotate transition-all duration-500 ${!isVisible && isMine ? 'opacity-60 scale-90' : 'opacity-100 scale-110'}`}>
-        <div className={`h-10 w-10 flex items-center justify-center rounded-full border-2 border-white shadow-xl z-10 ${bgColor}`}>
-           {Icon}
-        </div>
-        {!isVisible && isMine && (
-          <div className="absolute -top-1 bg-amber-500 border border-white rounded-md px-1 py-0.5 z-20 shadow-sm">
-            <span className="text-[8px] font-bold text-white uppercase whitespace-nowrap">Pendiente</span>
-          </div>
-        )}
-      </div>
-    ),
-    className: 'custom-community-icon',
-    iconSize: [48, 48],
-    iconAnchor: [24, 24],
-  });
-};
 
 export default function MapUI({ 
   userPos, heading, carColor, routeCoordinates, radars = [], aircrafts = [], chargers = [],
