@@ -87,6 +87,41 @@ export default function Speedometer({ speed }: SpeedometerProps) {
 
   const currentUnit = FORMAT_OPTIONS.find(o => o.id === format)?.unit || 'km/h';
 
+  // Generador de fondos temáticos dinámicos (Pure CSS)
+  const getThematicBackground = () => {
+    switch (format) {
+      case 'MPH': // USA Style
+        return 'linear-gradient(135deg, rgba(0,35,102,0.6) 0%, rgba(20,20,20,0.8) 50%, rgba(187,19,62,0.4) 100%)';
+      case 'KNOTS': // Deep Sea / Sonar
+        return 'radial-gradient(circle at 50% 50%, rgba(0,105,148,0.4) 0%, rgba(0,35,102,0.7) 100%)';
+      case 'MACH': // Aerospace Metallic
+        return 'linear-gradient(135deg, #1a1a1a 0%, #333 45%, #666 50%, #333 55%, #1a1a1a 100%)';
+      case 'LIGHT': // Deep Space
+        return `
+          radial-gradient(circle at 20% 30%, white 0.5px, transparent 1px),
+          radial-gradient(circle at 70% 60%, white 0.5px, transparent 1px),
+          radial-gradient(circle at 40% 80%, white 0.5px, transparent 1px),
+          radial-gradient(circle at 80% 20%, white 0.5px, transparent 1px),
+          linear-gradient(to bottom, #000, #050505)
+        `;
+      case 'BINARY': // Matrix
+        return 'linear-gradient(to bottom, #000 0%, #001a00 100%)';
+      case 'ROMAN': // Parchment/Marble
+        return 'linear-gradient(135deg, #d4c4a8 0%, #b8a689 100%)';
+      case 'KLINGON': // Bird of Prey
+        return 'linear-gradient(45deg, #000 0%, #4a0000 70%, #900 100%)';
+      default: // Estándar Tesla
+        return 'linear-gradient(180deg, rgba(30,30,30,0.8) 0%, rgba(10,10,10,0.9) 100%)';
+    }
+  };
+
+  const getTextStyles = () => {
+    if (format === 'ROMAN') return 'text-amber-900 drop-shadow-sm';
+    if (format === 'KLINGON') return 'text-white drop-shadow-[0_0_15px_rgba(255,0,0,0.8)] font-klingon';
+    if (format === 'BINARY') return 'text-green-500 drop-shadow-[0_0_10px_rgba(34,197,94,0.6)]';
+    return 'text-white drop-shadow-[0_5px_15px_rgba(0,0,0,0.5)]';
+  };
+
   return (
     <>
       <style jsx global>{`
@@ -113,17 +148,24 @@ export default function Speedometer({ speed }: SpeedometerProps) {
             setTempFormat(format);
             setIsMenuOpen(true);
           }}
-          style={{ touchAction: 'none' }}
+          style={{ 
+            touchAction: 'none',
+            background: getThematicBackground()
+          }}
           whileTap={{ scale: 0.95 }}
-          className="flex flex-col items-center justify-center bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl min-w-[140px] cursor-pointer hover:bg-black/50 transition-colors pointer-events-auto select-none group relative"
+          className={`flex flex-col items-center justify-center backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl min-w-[180px] cursor-pointer transition-all duration-700 pointer-events-auto select-none group relative overflow-hidden`}
         >
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-40 transition-opacity">
-            <Settings2 className="h-3 w-3 text-white" />
+          {/* Brillo dinámico según modo */}
+          <div className={`absolute inset-0 opacity-20 pointer-events-none transition-opacity duration-700 ${format === 'BINARY' ? 'bg-green-500/10' : ''}`}></div>
+          
+          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-40 transition-opacity">
+            <Settings2 className="h-4 w-4 text-white" />
           </div>
-          <span className={`text-6xl font-black text-white tabular-nums tracking-tighter ${format === 'KLINGON' ? 'font-klingon text-amber-500' : ''}`}>
+
+          <span className={`text-7xl font-black tabular-nums tracking-tighter transition-all duration-700 ${getTextStyles()}`}>
             {formatValue()}
           </span>
-          <span className="text-xs font-bold text-blue-500 uppercase tracking-widest mt-1">
+          <span className={`text-[10px] font-black uppercase tracking-[0.2em] mt-2 transition-colors duration-700 ${format === 'ROMAN' ? 'text-amber-800' : 'text-blue-400'}`}>
             {currentUnit}
           </span>
         </motion.div>
