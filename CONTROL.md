@@ -8,7 +8,7 @@ Este archivo sirve para auditar la estabilidad de cada módulo del sistema. Cada
 | ID | Módulo | Descripción | Estado |
 |:---|:---|:---|:---|
 | [IZQ-01] | **Radares** | Sistema antiradar y alertas de proximidad | ✅ Blindado |
-| [IZQ-02] | **Aviones** | Detección de Pegasus y aeronaves | ⏳ Pendiente |
+| [IZQ-02] | **Aviones** | Detección de Pegasus y aeronaves | ✅ Blindado |
 | [IZQ-03] | **Yates** | Radar náutico de embarcaciones de lujo | ⏳ Pendiente |
 | [IZQ-04] | **Cargadores** | Buscador de puntos de carga EV | ⏳ Pendiente |
 | [IZQ-05] | **Gasolineras** | Comparador de precios de combustible | ⏳ Pendiente |
