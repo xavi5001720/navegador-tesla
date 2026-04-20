@@ -98,30 +98,41 @@ export async function POST(req: NextRequest) {
     };
 
     try {
-      // 2. Verificar si hay cambios reales
-      const { stdout: statusStdout } = await execAsync(`${gitCommand} status --porcelain`, execOptions);
-      
-      if (!statusStdout.trim()) {
-        return NextResponse.json({ 
-          success: true, 
-          message: 'No hay cambios nuevos para guardar.', 
-          status: 'skipped' 
+      // 2. Actualizar CONTROL.md de forma incondicional
+      const controlPath = path.join(process.cwd(), 'CONTROL.md');
+      if (fs.existsSync(controlPath)) {
+        let controlContent = fs.readFileSync(controlPath, 'utf8');
+        const lines = controlContent.split('\n');
+        const updatedLines = lines.map(line => {
+          // Si la línea contiene el moduleId, actualizamos su estado
+          if (line.includes(`| ${moduleId} |`)) {
+            // Buscamos la última celda (Estado) y la marcamos como Blindado
+            const parts = line.split('|');
+            if (parts.length >= 5) {
+              parts[4] = ' ✅ Blindado ';
+              return parts.join('|');
+            }
+          }
+          return line;
         });
+        fs.writeFileSync(controlPath, updatedLines.join('\n'));
       }
 
-      // 3. Ejecutamos git commit
-      await execAsync(`${gitCommand} add . && ${gitCommand} commit -m "${fullMessage}"`, execOptions);
+      // 3. Ejecutamos git commit FORZADO (--allow-empty)
+      // Esto asegura que el hito quede registrado siempre en el historial
+      const commitMsg = `[${moduleId}] ✅ Checkpoint Blindado: ${message}`;
+      await execAsync(`${gitCommand} add . && ${gitCommand} commit --allow-empty -m "${commitMsg}"`, execOptions);
       
       return NextResponse.json({ 
         success: true, 
-        message: `✅ Checkpoint guardado con éxito: ${message}`, 
+        message: `🛡️ Módulo ${moduleId} marcado como BLINDADO con éxito.`,
         status: 'success' 
       });
     } catch (err: any) {
       console.error('Error Git Exec:', err.stderr || err.stdout || err.message);
       return NextResponse.json({ 
         error: err.stderr || err.stdout || err.message,
-        details: 'El comando de git falló. Revisa que el repositorio esté inicializado y tengas permisos.'
+        details: 'El blindaje ha fallado. Revisa permisos o si el repositorio está activo.'
       }, { status: 500 });
     }
   } catch (err: any) {
