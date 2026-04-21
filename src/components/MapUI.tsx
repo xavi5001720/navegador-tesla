@@ -678,7 +678,7 @@ function LocationTracker({
 
 export default function MapUI({ 
   userPos, heading, carColor, routeCoordinates, radars = [], aircrafts = [], chargers = [],
-  gasStations = [], weatherPoints = [], waypoints = [], yachts = [], festivals = [], speed = 0, hasLocation = false,
+  gasStations = [], weatherPoints = [], waypoints = [], yachts = [], festivals = [], restaurants = [], speed = 0, hasLocation = false,
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
   onGasStationClick, onYachtClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [],   centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
     mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname, radarZones = [],
