@@ -38,6 +38,7 @@ export function useRestaurants(
   // Cache A: No-Route or SmartOff
   const cacheCenterRef = useRef<[number, number] | null>(null);
   const cacheDataRef = useRef<Restaurant[]>([]);
+  const fetchedChunksRef = useRef<Set<number>>(new Set());
 
   // Cache B: Route + SmartOn
   const lastPredictionSegmentRef = useRef<{start: number, end: number} | null>(null);
@@ -46,6 +47,7 @@ export function useRestaurants(
 
   // Route cumulative distances for fast lookup
   const [cumulativeDistances, setCumulativeDistances] = useState<number[]>([]);
+  const currentRouteKey = route?.distance ? String(route.distance) : '';
 
   useEffect(() => {
     if (route && route.coordinates) {
@@ -60,6 +62,18 @@ export function useRestaurants(
       setCumulativeDistances([]);
     }
   }, [route]);
+
+  // 1. CHUNKING: Dividir la ruta en bloques de 50km (Arquitectura Radar)
+  const routeChunks = useMemo(() => {
+    if (!route || !route.coordinates || route.coordinates.length === 0 || cumulativeDistances.length === 0) return [];
+    const chunks: {startDist: number, endDist: number}[] = [];
+    const totalDist = cumulativeDistances[cumulativeDistances.length - 1];
+    
+    for (let d = 0; d < totalDist; d += 50000) {
+      chunks.push({ startDist: d, endDist: Math.min(d + 50000, totalDist) });
+    }
+    return chunks;
+  }, [route, cumulativeDistances]);
 
   const fetchRestaurants = async (lat: number, lon: number, radiusMeters: number): Promise<Restaurant[]> => {
     try {
@@ -215,61 +229,66 @@ export function useRestaurants(
 
     // SCENARIO A: No Route OR Smart Optimization OFF
     // ------------------------------------------------------------------
-    // If there's a route: sample the polyline every 30km and do a tight
-    // 5km search at each sample point to find roadside restaurants.
-    // This avoids swamping Foursquare with a single 25km city-center query.
+    // LAZY CHUNK ARCHITECTURE (Radar/Charger Sync)
     // ------------------------------------------------------------------
-    if (route && route.coordinates && route.coordinates.length > 1) {
+    if (route && route.coordinates && route.coordinates.length > 1 && cumulativeDistances.length > 0) {
       const currentRouteStr = route.distance ? String(route.distance) : '';
-      const bypass = bypassRef.current.routeStr !== currentRouteStr;
       
-      let fetchedRestaurants = cacheDataRef.current;
+      // Reset if route changes
+      if (bypassRef.current.routeStr !== currentRouteStr) {
+        fetchedChunksRef.current.clear();
+        cacheDataRef.current = [];
+        bypassRef.current = { routeStr: currentRouteStr, targetTime: filters.targetTime, maxDev: filters.maxDeviation };
+      }
 
-      if (bypass || fetchedRestaurants.length === 0) {
+      // Encontrar posición actual en la ruta
+      const currentDist = (route.distance || 0) - (liveDistance || route.distance);
+      
+      // Encontrar qué chunks debemos cargar
+      const chunksToFetch: number[] = [];
+      routeChunks.forEach((chunk, idx) => {
+        // Si el coche está en este chunk o el chunk está cerca (Lazy Load 10km)
+        const isNear = currentDist >= chunk.startDist - 5000 && currentDist <= chunk.endDist + 10000;
+        if (isNear && !fetchedChunksRef.current.has(idx)) {
+          chunksToFetch.push(idx);
+        }
+      });
+
+      if (chunksToFetch.length > 0) {
         setLoading(true);
         setProgress(20);
-        bypassRef.current = { routeStr: currentRouteStr, targetTime: filters.targetTime, maxDev: filters.maxDeviation };
 
-        // Build sample points every 20km along the polyline
-        const SAMPLE_INTERVAL_M = 20000; // 20km
-        const SEARCH_RADIUS_M = 3000;    // 3km tight corridor
-        const routeTotalM = cumulativeDistances[cumulativeDistances.length - 1] || 0;
-        const samplePoints: [number, number][] = [];
+        for (const chunkIdx of chunksToFetch) {
+          fetchedChunksRef.current.add(chunkIdx);
+          const chunk = routeChunks[chunkIdx];
+          
+          // Muestreo dentro del chunk (cada 15km para máxima densidad)
+          const samplePoints: [number, number][] = [];
+          for (let d = chunk.startDist; d <= chunk.endDist; d += 15000) {
+            const pt = getPointAtDistance(cumulativeDistances, route.coordinates, d);
+            if (pt) samplePoints.push(pt);
+          }
+          // Siempre el final del chunk si no se pilló
+          const endPt = getPointAtDistance(cumulativeDistances, route.coordinates, chunk.endDist);
+          if (endPt) samplePoints.push(endPt);
 
-        for (let d = 0; d <= routeTotalM; d += SAMPLE_INTERVAL_M) {
-          const pt = getPointAtDistance(cumulativeDistances, route.coordinates, d);
-          if (pt) samplePoints.push(pt);
+          // Peticiones paralelas para este chunk
+          const results = await Promise.all(
+            samplePoints.map(pt => fetchRestaurants(pt[0], pt[1], 3000))
+          );
+
+          const flatResults = results.flat();
+          
+          // Deduplicar y añadir al cache global
+          const currentCache = cacheDataRef.current;
+          const newOnes = flatResults.filter(r => !currentCache.some(p => p.id === r.id));
+          cacheDataRef.current = [...currentCache, ...newOnes];
         }
-        // Always include endpoint
-        const lastPt = getPointAtDistance(cumulativeDistances, route.coordinates, routeTotalM);
-        if (lastPt) samplePoints.push(lastPt);
-
-        // Parallel fetches for all sample points
-        const step = 60 / (samplePoints.length || 1);
-        const allResults = await Promise.all(
-          samplePoints.map(async (pt, i) => {
-            const results = await fetchRestaurants(pt[0], pt[1], SEARCH_RADIUS_M);
-            setProgress(20 + Math.round((i + 1) * step));
-            return results;
-          })
-        );
-
-        // Deduplicate by id
-        const seen = new Set<string>();
-        fetchedRestaurants = allResults.flat().filter(r => {
-          if (seen.has(r.id)) return false;
-          seen.add(r.id);
-          return true;
-        });
-
-        cacheDataRef.current = fetchedRestaurants;
-        cacheCenterRef.current = userPos;
-        lastPredictionSegmentRef.current = null;
       }
 
       setProgress(90);
-      // Hard corridor post-filter: 2km max from route polyline
-      const filtered = fetchedRestaurants.filter(r => {
+      // Hard corridor post-filter: 2km max from route polyline (Route Snapping)
+      const filtered = cacheDataRef.current.filter(r => {
         const d = distanceToPolyline([r.lat, r.lon], route.coordinates);
         r.distanceToRoute = d;
         return d <= 2000;
