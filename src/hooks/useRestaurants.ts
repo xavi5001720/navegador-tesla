@@ -15,12 +15,8 @@ export interface Restaurant {
 export interface RestaurantFilters {
   smartOptimization: boolean;
   maxDeviation: 0 | 5 | 10 | 15; // km
+  targetTime: string; // e.g. '14:15'
 }
-
-const LUNCH_START = 13.5 * 3600;
-const LUNCH_END = 15.5 * 3600;
-const DINNER_START = 20.5 * 3600;
-const DINNER_END = 22.5 * 3600;
 
 export function useRestaurants(
   enabled: boolean,
@@ -97,91 +93,68 @@ export function useRestaurants(
       
       const now = new Date();
       const currentSecondsOfDay = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-      const tripEndSeconds = currentSecondsOfDay + remainingDuration;
+      
+      const targetParts = (filters.targetTime || '14:00').split(':');
+      const targetSecondsOfDay = parseInt(targetParts[0]) * 3600 + parseInt(targetParts[1]) * 60;
 
-      // Check overlaps
-      let overlapStart = -1;
-      let overlapEnd = -1;
-
-      if (currentSecondsOfDay < LUNCH_END && tripEndSeconds > LUNCH_START) {
-        overlapStart = Math.max(currentSecondsOfDay, LUNCH_START);
-        overlapEnd = Math.min(tripEndSeconds, LUNCH_END);
-      } else if (currentSecondsOfDay < DINNER_END && tripEndSeconds > DINNER_START) {
-        overlapStart = Math.max(currentSecondsOfDay, DINNER_START);
-        overlapEnd = Math.min(tripEndSeconds, DINNER_END);
+      let secondsToTarget = targetSecondsOfDay - currentSecondsOfDay;
+      if (secondsToTarget < -3600) {
+         // Si la hora deseada ya pasó por más de una hora, asumimos que es para mañana
+         secondsToTarget += 24 * 3600;
       }
 
-      if (overlapStart === -1) {
-        // No overlap. Clean map.
+      if (secondsToTarget < 0 || secondsToTarget > remainingDuration) {
+        // La parada está fuera de nuestra previsión de conducción
         setRestaurants([]);
         lastPredictionSegmentRef.current = null;
         return;
       }
 
-      // We have an overlap. Find segment distance.
+      // We have an exact time. Find segment distance.
       const avgSpeed = remainingDuration > 0 ? remainingDistance / remainingDuration : 0;
-      
-      const distToOverlapStart = avgSpeed * (overlapStart - currentSecondsOfDay);
-      const distToOverlapEnd = avgSpeed * (overlapEnd - currentSecondsOfDay);
+      const distToTarget = avgSpeed * secondsToTarget;
 
       const currentDistanceAlongRoute = (route.distance || 0) - remainingDistance;
-      const absoluteStartDist = currentDistanceAlongRoute + distToOverlapStart;
-      const absoluteEndDist = currentDistanceAlongRoute + distToOverlapEnd;
+      const absoluteTargetDist = currentDistanceAlongRoute + distToTarget;
+
+      const targetPoint = getPointAtDistance(cumulativeDistances, route.coordinates, absoluteTargetDist);
+      if (!targetPoint) {
+        setRestaurants([]);
+        return;
+      }
 
       const nowMs = Date.now();
       const timeSinceLastCheck = nowMs - lastRouteCheckRef.current.time;
       const distSinceLastCheck = Math.abs((route.distance - remainingDistance) - lastRouteCheckRef.current.distance);
 
-      const needsFetch = !lastPredictionSegmentRef.current || timeSinceLastCheck > 30 * 60 * 1000 || distSinceLastCheck > 30000;
+      // Re-fetch si cambiamos de targetPoint significativamente
+      const prevStart = lastPredictionSegmentRef.current?.start || 0;
+      const targetShifted = Math.abs(prevStart - absoluteTargetDist) > 5000; // 5km shift
+
+      const needsFetch = !lastPredictionSegmentRef.current || timeSinceLastCheck > 30 * 60 * 1000 || distSinceLastCheck > 30000 || targetShifted;
 
       let fetchedRestaurants = cacheDataRef.current;
 
       if (needsFetch) {
         setLoading(true);
-        setProgress(20);
+        setProgress(50);
         
-        let minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
-        const pts = [];
-        for (let d = absoluteStartDist; d <= absoluteEndDist; d += 5000) {
-           const p = getPointAtDistance(cumulativeDistances, route.coordinates, d);
-           if (p) pts.push(p);
-        }
-        const endP = getPointAtDistance(cumulativeDistances, route.coordinates, absoluteEndDist);
-        if (endP) pts.push(endP);
+        const radiusMeters = filters.maxDeviation === 0 ? 500 : filters.maxDeviation * 1000;
 
-        if (pts.length > 0) {
-          pts.forEach(p => {
-            if (p[0] < minLat) minLat = p[0];
-            if (p[0] > maxLat) maxLat = p[0];
-            if (p[1] < minLon) minLon = p[1];
-            if (p[1] > maxLon) maxLon = p[1];
-          });
-
-          const marginKm = filters.maxDeviation + 2; 
-          const latExpand = marginKm / 111.0;
-          const lonExpand = marginKm / (111.0 * Math.cos((minLat + maxLat) / 2 * Math.PI / 180));
-
-          minLat -= latExpand;
-          maxLat += latExpand;
-          minLon -= lonExpand;
-          maxLon += lonExpand;
-
-          setProgress(50);
-          const query = `
-            [out:json][timeout:25];
-            (
-              node["amenity"="restaurant"](${minLat},${minLon},${maxLat},${maxLon});
-            );
-            out body;
-            >;
-            out skel qt;
-          `;
-          
-          fetchedRestaurants = await fetchOverpass(query);
-          cacheDataRef.current = fetchedRestaurants;
-          lastPredictionSegmentRef.current = { start: absoluteStartDist, end: absoluteEndDist };
-          lastRouteCheckRef.current = { time: nowMs, distance: currentDistanceAlongRoute };
-        }
+        const query = `
+          [out:json][timeout:25];
+          (
+            node["amenity"="restaurant"](around:${radiusMeters}, ${targetPoint[0]}, ${targetPoint[1]});
+          );
+          out body;
+          >;
+          out skel qt;
+        `;
+        
+        fetchedRestaurants = await fetchOverpass(query);
+        cacheDataRef.current = fetchedRestaurants;
+        lastPredictionSegmentRef.current = { start: absoluteTargetDist, end: absoluteTargetDist };
+        lastRouteCheckRef.current = { time: nowMs, distance: currentDistanceAlongRoute };
       }
 
       setProgress(80);

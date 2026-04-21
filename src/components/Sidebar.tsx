@@ -840,7 +840,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               {/* Filtros de Restaurantes (Desplegable) */}
               {showRestaurantFilters && (
                 <div className="mt-4 pt-4 border-t border-white/10 animate-fade-in flex flex-col gap-3">
-                  <div className="flex flex-col gap-1 bg-white/5 p-3 rounded-lg">
+                  <div className="flex flex-col gap-3 bg-white/5 p-3 rounded-lg">
                      <div className="flex items-center justify-between">
                        <span className="text-xs font-bold text-white uppercase tracking-wider">Optimización Inteligente</span>
                        <button 
@@ -850,9 +850,17 @@ const Sidebar: React.FC<SidebarProps> = ({
                           <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform duration-200 ${restaurantFilters.smartOptimization ? 'translate-x-4' : 'translate-x-0.5'}`} />
                        </button>
                      </div>
-                     <span className="text-[9px] text-gray-400 mt-1 leading-tight">
-                       (Calcula tu ruta y muestra solo los restaurantes que te pillan de paso a la hora de comer o cenar)
-                     </span>
+                     {restaurantFilters.smartOptimization && (
+                       <div className="flex items-center justify-between border-t border-white/10 pt-2">
+                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Hora deseada para parar</span>
+                         <input 
+                           type="time" 
+                           value={restaurantFilters.targetTime || '14:00'}
+                           onChange={(e) => setRestaurantFilters({ ...restaurantFilters, targetTime: e.target.value })}
+                           className="bg-black/50 border border-white/20 rounded-md text-white px-2 py-1 text-xs outline-none focus:border-purple-500 cursor-pointer"
+                         />
+                       </div>
+                     )}
                   </div>
 
                   {restaurantFilters.smartOptimization && (

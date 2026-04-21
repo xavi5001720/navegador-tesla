@@ -132,8 +132,13 @@ export default function Home() {
     fuels: [], maxPrice: null
   });
 
-  const [restaurantFilters, setRestaurantFilters] = useState<RestaurantFilters>({
-    smartOptimization: true, maxDeviation: 5
+  const [restaurantFilters, setRestaurantFilters] = useState<RestaurantFilters>(() => {
+    const currentHour = new Date().getHours();
+    return {
+      smartOptimization: true, 
+      maxDeviation: 5,
+      targetTime: currentHour < 15 ? '14:00' : '21:00'
+    };
   });
 
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
