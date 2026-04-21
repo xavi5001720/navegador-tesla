@@ -39,9 +39,23 @@ const playBeep = (type: 'beep_short' | 'alarm_clock_beeping') => {
   beepPlayer.play().catch(e => console.warn('[Sound] Beep blocked:', e));
 };
 
-// ── Voice via Google TTS proxy with Locale selection ───────────────────────
-const playVoice = async (msg: string, voiceType: VoiceType) => {
-  if (typeof window === 'undefined') return;
+// ── Audio Queue Manager ────────────────────────────────────────────────────────
+const audioQueue: { msg: string, voiceType: VoiceType }[] = [];
+let isSpeaking = false;
+let lastPlayedMsg = '';
+
+const processQueue = () => {
+  if (isSpeaking || audioQueue.length === 0) return;
+
+  isSpeaking = true;
+  const nextItem = audioQueue.shift();
+  if (!nextItem) {
+    isSpeaking = false;
+    return;
+  }
+
+  const { msg, voiceType } = nextItem;
+  lastPlayedMsg = msg;
 
   try {
     let lang = 'es'; // Mujer (es-ES) por defecto
@@ -52,10 +66,41 @@ const playVoice = async (msg: string, voiceType: VoiceType) => {
     const url = `/api/tts?text=${encodeURIComponent(msg)}&lang=${lang}&v=3`;
     const audio = new Audio(url);
     audio.volume = VOLUME;
-    audio.play().catch(e => console.warn('[Sound] Voice blocked:', e));
+
+    audio.onended = () => {
+      isSpeaking = false;
+      processQueue();
+    };
+
+    audio.onerror = (e) => {
+      console.warn('[Sound] Voice error during playback:', e);
+      isSpeaking = false;
+      processQueue();
+    };
+
+    audio.play().catch(e => {
+      console.warn('[Sound] Voice blocked:', e);
+      isSpeaking = false;
+      processQueue();
+    });
   } catch (err) {
     console.error('[Sound] playVoice error:', err);
+    isSpeaking = false;
+    processQueue();
   }
+};
+
+// ── Voice via Google TTS proxy with Locale selection ───────────────────────
+const playVoice = async (msg: string, voiceType: VoiceType) => {
+  if (typeof window === 'undefined') return;
+
+  // 1. Deduplicación Anti-Spam (Filtro estricto)
+  if (msg === lastPlayedMsg) return;
+  if (audioQueue.length > 0 && audioQueue[audioQueue.length - 1].msg === msg) return;
+
+  // 2. Encolar y procesar (FIFO)
+  audioQueue.push({ msg, voiceType });
+  processQueue();
 };
 
 // ── Public API ────────────────────────────────────────────────────────────────
