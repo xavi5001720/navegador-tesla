@@ -8,6 +8,7 @@ import DevGuard from './DevGuard';
 import { ChargerFilters } from '@/hooks/useChargers';
 import { GasStationFilters } from '@/hooks/useGasStations';
 import { WeatherPoint } from '@/hooks/useWeather';
+import { RestaurantFilters } from '@/hooks/useRestaurants';
 
 interface SidebarProps {
   isSidebarOpen: boolean;
@@ -77,6 +78,13 @@ interface SidebarProps {
   setIsFestivalsEnabled: (v: boolean) => void;
   festivalsCount: number;
   loadingFestivals: boolean;
+  isRestaurantsEnabled: boolean;
+  setIsRestaurantsEnabled: (v: boolean) => void;
+  restaurantFilters: RestaurantFilters;
+  setRestaurantFilters: (f: RestaurantFilters) => void;
+  restaurantsCount: number;
+  loadingRestaurants: boolean;
+  restaurantProgress: number;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -144,12 +152,20 @@ const Sidebar: React.FC<SidebarProps> = ({
   isFestivalsEnabled,
   setIsFestivalsEnabled,
   festivalsCount,
-  loadingFestivals
+  loadingFestivals,
+  isRestaurantsEnabled,
+  setIsRestaurantsEnabled,
+  restaurantFilters,
+  setRestaurantFilters,
+  restaurantsCount,
+  loadingRestaurants,
+  restaurantProgress
 }) => {
   const [showRadarStats, setShowRadarStats] = useState(false);
   const [showYachtList, setShowYachtList] = useState(false);
   const [showChargerFilters, setShowChargerFilters] = useState(false);
   const [showSoundOptions, setShowSoundOptions] = useState(false);
+  const [showRestaurantFilters, setShowRestaurantFilters] = useState(false);
   const [radarStatsData, setRadarStatsData] = useState<any>(null);
   const [loadingRadarStats, setLoadingRadarStats] = useState(false);
 
@@ -773,6 +789,89 @@ const Sidebar: React.FC<SidebarProps> = ({
               </div>
               {isFestivalsEnabled && !loadingFestivals && festivalsCount === 0 && (
                 <p className="mt-3 text-[10px] text-gray-500 uppercase italic text-center">No hay fiestas destacadas este mes</p>
+              )}
+           </div>
+           </DevGuard>
+
+
+           <DevGuard moduleId="restaurants">
+           <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 mb-4 ${isRestaurantsEnabled ? 'bg-purple-600/20 border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.2)]' : 'bg-white/5 border-white/10'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <button 
+                    onClick={() => setShowRestaurantFilters(!showRestaurantFilters)}
+                    className={`p-1 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isRestaurantsEnabled ? 'bg-purple-500/20 hover:bg-purple-500/30' : 'bg-gray-500/20'}`}
+                  >
+                    <img src="/cocina.png" alt="Restaurantes" className={`h-11 w-11 object-contain drop-shadow-md ${loadingRestaurants ? 'animate-pulse opacity-50' : ''}`} />
+                  </button>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Restaurantes</span>
+                    </div>
+                    {isRestaurantsEnabled ? (
+                      <div className="flex flex-col">
+                        <span className="text-2xl font-black leading-none text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]">
+                          {loadingRestaurants ? '...' : restaurantsCount}
+                        </span>
+                        <span className="text-[9px] text-gray-500 font-medium mt-1 uppercase">
+                          {restaurantProgress > 0 ? `Buscando... ${restaurantProgress}%` : 'En ruta o cercanos'}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-2xl font-black leading-none text-white/30 uppercase">OFF</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col items-center gap-1.5">
+                  <button 
+                    onClick={() => setIsRestaurantsEnabled(!isRestaurantsEnabled)}
+                    className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full border-2 transition-all duration-300 ease-in-out focus:outline-none shadow-lg ${isRestaurantsEnabled ? 'bg-green-500 border-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)]' : 'bg-red-500/20 border-red-500/50'}`}
+                  >
+                    <span className={`inline-flex items-center justify-center h-5 w-5 transform rounded-full bg-white transition-transform duration-300 shadow-sm ${isRestaurantsEnabled ? 'translate-x-[26px]' : 'translate-x-[4px]'}`}>
+                      <Power className={`h-3 w-3 ${isRestaurantsEnabled ? 'text-green-500' : 'text-red-500'}`} strokeWidth={3} />
+                    </span>
+                  </button>
+                  <span className={`text-[9px] font-bold uppercase tracking-wider ${isRestaurantsEnabled ? 'text-green-500' : 'text-rose-500'}`}>
+                    {isRestaurantsEnabled ? 'Activado' : 'Desactivado'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Filtros de Restaurantes (Desplegable) */}
+              {showRestaurantFilters && (
+                <div className="mt-4 pt-4 border-t border-white/10 animate-fade-in flex flex-col gap-3">
+                  <div className="flex flex-col gap-1 bg-white/5 p-3 rounded-lg">
+                     <div className="flex items-center justify-between">
+                       <span className="text-xs font-bold text-white uppercase tracking-wider">Optimización Inteligente</span>
+                       <button 
+                         onClick={() => setRestaurantFilters({ ...restaurantFilters, smartOptimization: !restaurantFilters.smartOptimization })}
+                         className={`w-8 h-4 rounded-full transition-colors relative ${restaurantFilters.smartOptimization ? 'bg-purple-500' : 'bg-gray-600'}`}
+                       >
+                          <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform duration-200 ${restaurantFilters.smartOptimization ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                       </button>
+                     </div>
+                     <span className="text-[9px] text-gray-400 mt-1 leading-tight">
+                       (Calcula tu ruta y muestra solo los restaurantes que te pillan de paso a la hora de comer o cenar)
+                     </span>
+                  </div>
+
+                  {restaurantFilters.smartOptimization && (
+                    <div className="bg-white/5 p-3 rounded-lg flex flex-col gap-2">
+                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Desvío máximo</span>
+                         <div className="grid grid-cols-2 gap-2 mt-1">
+                            {[0, 5, 10, 15].map(d => (
+                               <button 
+                                  key={d}
+                                  onClick={() => setRestaurantFilters({ ...restaurantFilters, maxDeviation: d as 0|5|10|15 })}
+                                  className={`py-1.5 text-[10px] font-bold rounded-md transition-colors ${restaurantFilters.maxDeviation === d ? 'bg-purple-600 text-white shadow-lg' : 'bg-gray-700 text-gray-400 hover:bg-gray-600'}`}
+                               >
+                                  {d === 0 ? 'En ruta' : `< ${d} km`}
+                               </button>
+                            ))}
+                         </div>
+                    </div>
+                  )}
+                </div>
               )}
            </div>
            </DevGuard>

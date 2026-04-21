@@ -48,6 +48,7 @@ import AboutModal from '@/components/AboutModal';
 import { useLuxuryYachts, YachtPosition } from '@/hooks/useLuxuryYachts';
 import { useCommunityRadars } from '@/hooks/useCommunityRadars';
 import { useFestivals } from '@/hooks/useFestivals';
+import { useRestaurants, RestaurantFilters } from '@/hooks/useRestaurants';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -119,6 +120,7 @@ export default function Home() {
   const [isChargersEnabled, setIsChargersEnabled] = useState(false);
   const [isWeatherEnabled, setIsWeatherEnabled] = useState(false);
   const [isFestivalsEnabled, setIsFestivalsEnabled] = useState(false);
+  const [isRestaurantsEnabled, setIsRestaurantsEnabled] = useState(false);
   const [mapMode, setMapMode] = useState<'satellite' | 'light'>('satellite');
   
   const [chargerFilters, setChargerFilters] = useState<ChargerFilters>({
@@ -128,6 +130,10 @@ export default function Home() {
   const [isGasStationsEnabled, setIsGasStationsEnabled] = useState(false);
   const [gasStationFilters, setGasStationFilters] = useState<GasStationFilters>({
     fuels: [], maxPrice: null
+  });
+
+  const [restaurantFilters, setRestaurantFilters] = useState<RestaurantFilters>({
+    smartOptimization: true, maxDeviation: 5
   });
 
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
@@ -557,6 +563,14 @@ export default function Home() {
   const { stations: gasStations, loading: loadingGasStations, progress: gasProgress } = useGasStations(userPos, route?.coordinates, isGasStationsEnabled, gasStationFilters);
   const { weatherPoints, loadingWeather, currentWeather } = useWeather(userPos, route?.coordinates, isWeatherEnabled);
   const { festivals, loading: loadingFestivals } = useFestivals(isFestivalsEnabled);
+  const { restaurants, loading: loadingRestaurants, progress: restaurantProgress } = useRestaurants(
+    isRestaurantsEnabled,
+    restaurantFilters,
+    userPos,
+    route,
+    liveDistance,
+    liveDuration
+  );
 
   const notifiedPegasus = useRef<Set<string>>(new Set());
   const notifiedWaypoints = useRef<Set<string>>(new Set());
@@ -1132,6 +1146,13 @@ export default function Home() {
           setIsFestivalsEnabled={setIsFestivalsEnabled}
           festivalsCount={festivals.length}
           loadingFestivals={loadingFestivals}
+          isRestaurantsEnabled={isRestaurantsEnabled}
+          setIsRestaurantsEnabled={setIsRestaurantsEnabled}
+          restaurantFilters={restaurantFilters}
+          setRestaurantFilters={setRestaurantFilters}
+          restaurantsCount={restaurants.length}
+          loadingRestaurants={loadingRestaurants}
+          restaurantProgress={restaurantProgress}
         />
 
       {/* Sección del Mapa (Fondo) */}
@@ -1148,6 +1169,7 @@ export default function Home() {
           gasStations={gasStations}
           weatherPoints={weatherPoints}
           festivals={festivals}
+          restaurants={isRestaurantsEnabled ? restaurants : []}
           waypoints={waypoints}
           yachts={isYachtsEnabled ? yachts : []}
           speed={speed}

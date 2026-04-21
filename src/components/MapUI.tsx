@@ -15,6 +15,7 @@ import { YachtPosition } from '@/hooks/useLuxuryYachts';
 import { RouteSection } from '@/hooks/useRoute';
 import { WeatherPoint } from '@/hooks/useWeather';
 import { Festival } from '@/hooks/useFestivals';
+import { Restaurant } from '@/hooks/useRestaurants';
 import { logger } from '@/lib/logger';
 import { Ruler, Radio, Check, Trash2, AlertTriangle, Construction, Package, Car, PawPrint, MapPin, Navigation, X } from 'lucide-react'; 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -85,6 +86,17 @@ const festivalIcon = L.divIcon({
   className: 'custom-festival-icon pointer-events-auto',
   iconSize: [40, 40],
   iconAnchor: [20, 20],
+});
+
+const restaurantIcon = L.divIcon({
+  html: renderToStaticMarkup(
+    <div className="h-8 w-8 flex items-center justify-center rounded-full bg-purple-600 border-2 border-white shadow-[0_0_15px_rgba(168,85,247,0.8)] counter-rotate">
+       <img src="/cocina.png" alt="R" className="h-4 w-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+    </div>
+  ),
+  className: 'custom-restaurant-icon pointer-events-auto',
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
 });
 
 const airlineMapping: Record<string, string> = {
@@ -266,6 +278,7 @@ interface MapUIProps {
    waypoints?: [number, number][];
    yachts?: YachtPosition[];
    festivals?: Festival[];
+   restaurants?: Restaurant[];
    speed?: number;
    hasLocation?: boolean;
    viewMode?: 'navigation' | 'overview';
@@ -912,7 +925,6 @@ export default function MapUI({
           <WeatherMarker key={`weather-${wp.id}`} wp={wp} />
         )), [weatherPoints.length])}
         
-        {/* Fiestas Tradicionales */}
         {useMemo(() => festivals.map(fest => (
           <FestivalMarker 
             key={`fest-${fest.id}`} 
@@ -922,6 +934,30 @@ export default function MapUI({
             onCalculateRoute={calculateRoute} 
           />
         )), [festivals.length, festivals[0]?.id, userPos[0].toFixed(2), isTrafficWanted])}
+        
+        {/* Restaurantes */}
+        {useMemo(() => (restaurants || []).map(rest => (
+          <Marker
+            key={`rest-${rest.id}`}
+            position={[rest.lat, rest.lon]}
+            icon={restaurantIcon}
+          >
+            <Popup className="tesla-popup">
+              <div className="flex flex-col gap-2 min-w-[200px] p-2">
+                <h4 className="font-black text-lg text-white leading-tight uppercase tracking-tighter">
+                  {rest.name}
+                </h4>
+                <div className="flex flex-col gap-0.5 text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1 border-t border-white/10 pt-2">
+                  <p>Culinaria: <span className="text-purple-400">{rest.cuisine || 'Variada'}</span></p>
+                  {rest.distanceToRoute !== undefined && (
+                    <p>Desvío de ruta: <span className="text-white">{(rest.distanceToRoute / 1000).toFixed(1)} km</span></p>
+                  )}
+                </div>
+                <ClosePopupButton />
+              </div>
+            </Popup>
+          </Marker>
+        )), [(restaurants || []).length])}
         
         {/* Amigos (Marcadores con Posición Real) */}
         {useMemo(() => friends.filter(f => f.is_online && f.is_sharing_location !== false).map((friend) => (
