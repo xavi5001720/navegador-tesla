@@ -10,9 +10,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Faltan parámetros (lat, lon, radius)' }, { status: 400 });
   }
 
-  // Foursquare V2 API credentials (known working)
-  const clientId = process.env.FOURSQUARE_CLIENT_ID || '0R0HS3RIBUP0YJ301HJ0J3DIMPVVOBPVQWEOSM15PZBTYFEH';
-  const clientSecret = process.env.FOURSQUARE_CLIENT_SECRET || 'ZDHZ5ITXNCAJKWQ5PJQRHSNZVS1SBFSJVKU40WWMTYJB21EH';
+  // Foursquare V2 API credentials from environment variables
+  const clientId = process.env.NEXT_PUBLIC_FSQ_CLIENT_ID;
+  const clientSecret = process.env.NEXT_PUBLIC_FSQ_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    return NextResponse.json({ error: 'Configuración de Foursquare (Client ID/Secret) incompleta en el servidor' }, { status: 500 });
+  }
 
   try {
     // Categoría de Food/Dining en v2: 4d4b7105d754a06374d81259
