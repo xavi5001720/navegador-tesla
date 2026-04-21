@@ -1205,7 +1205,6 @@ export default function Home() {
                setMapMode('light');
              }
           }}
-          followingFriendId={followingFriendId}
           onUpdateFriendNickname={(friendId, name) => {
             updateFriendNickname(friendId, name);
           }}
