@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { getDistance, getPointAtDistance, distanceToPolyline } from '@/utils/geo';
 import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
