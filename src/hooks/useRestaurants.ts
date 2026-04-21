@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getDistance, getPointAtDistance, distanceToPolyline } from '@/utils/geo';
 import { logger } from '@/lib/logger';
+import { supabase } from '@/lib/supabase';
 
 export interface Restaurant {
   id: string;
@@ -8,6 +9,10 @@ export interface Restaurant {
   lon: number;
   name: string;
   cuisine?: string;
+  rating_foursquare?: number;
+  rating_community?: number;
+  rating_combined?: number;
+  total_reviews?: number;
   distanceToUser?: number;
   distanceToRoute?: number;
 }
@@ -56,27 +61,49 @@ export function useRestaurants(
     }
   }, [route]);
 
-  const fetchOverpass = async (query: string): Promise<Restaurant[]> => {
+  const fetchRestaurants = async (lat: number, lon: number, radiusMeters: number): Promise<Restaurant[]> => {
     try {
-      const res = await fetch('https://overpass-api.de/api/interpreter', {
-        method: 'POST',
-        body: query,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-      });
-      if (!res.ok) throw new Error('Overpass API error');
+      const res = await fetch(`/api/restaurants?lat=${lat}&lon=${lon}&radius=${radiusMeters}`);
+      if (!res.ok) throw new Error('Proxy API error');
       const data = await res.json();
-      
-      return data.elements
-        .filter((e: any) => e.tags && e.tags.name)
-        .map((e: any) => ({
-          id: e.id.toString(),
-          lat: e.lat,
-          lon: e.lon,
-          name: e.tags.name,
-          cuisine: e.tags.cuisine || 'Variada',
-        }));
+      const fsqRestaurants: Restaurant[] = data.elements || [];
+
+      if (fsqRestaurants.length === 0) return [];
+
+      const fsqIds = fsqRestaurants.map(r => r.id);
+      const { data: reviews, error } = await supabase
+        .from('resenas_tesla')
+        .select('fsq_id, puntuacion')
+        .in('fsq_id', fsqIds);
+
+      if (error) {
+        logger.error('Restaurantes', 'Error fetching Supabase reviews: ' + error.message);
+      }
+
+      const merged = fsqRestaurants.map(r => {
+        const placeReviews = (reviews || []).filter(rev => rev.fsq_id === r.id);
+        const fsqNorm = r.rating_foursquare ? r.rating_foursquare / 2 : null;
+        
+        let rating_community = null;
+        let rating_combined = fsqNorm;
+        
+        if (placeReviews.length > 0) {
+          const sum = placeReviews.reduce((acc, rev: any) => acc + rev.puntuacion, 0);
+          rating_community = sum / placeReviews.length;
+          rating_combined = fsqNorm ? (fsqNorm + rating_community) / 2 : rating_community;
+        }
+
+        return {
+          ...r,
+          rating_community,
+          rating_combined,
+          total_reviews: placeReviews.length
+        };
+      });
+
+      return merged;
     } catch (err) {
-      logger.error('Restaurantes', 'Error fetching from Overpass: ' + (err as Error).message);
+      logger.error('Restaurantes', 'Error fetching hybrid restaurants: ' + (err as Error).message);
       return [];
     }
   };
@@ -100,18 +127,15 @@ export function useRestaurants(
 
       let secondsToTarget = targetSecondsOfDay - currentSecondsOfDay;
       if (secondsToTarget < -3600) {
-         // Si la hora deseada ya pasó por más de una hora, asumimos que es para mañana
          secondsToTarget += 24 * 3600;
       }
 
       if (secondsToTarget < 0 || secondsToTarget > remainingDuration) {
-        // La parada está fuera de nuestra previsión de conducción
         setRestaurants([]);
         lastPredictionSegmentRef.current = null;
         return;
       }
 
-      // We have an exact time. Find segment distance.
       const avgSpeed = remainingDuration > 0 ? remainingDistance / remainingDuration : 0;
       const distToTarget = avgSpeed * secondsToTarget;
 
@@ -128,7 +152,6 @@ export function useRestaurants(
       const timeSinceLastCheck = nowMs - lastRouteCheckRef.current.time;
       const distSinceLastCheck = Math.abs((route.distance - remainingDistance) - lastRouteCheckRef.current.distance);
 
-      // Bypass check: force fetch if critical dependencies changed
       const currentRouteStr = route.distance ? String(route.distance) : '';
       const bypass = 
         bypassRef.current.routeStr !== currentRouteStr ||
@@ -143,9 +166,8 @@ export function useRestaurants(
         };
       }
 
-      // Re-fetch si cambiamos de targetPoint significativamente o si se activó el bypass
       const prevStart = lastPredictionSegmentRef.current?.start || 0;
-      const targetShifted = Math.abs(prevStart - absoluteTargetDist) > 5000; // 5km shift
+      const targetShifted = Math.abs(prevStart - absoluteTargetDist) > 5000; 
 
       const needsFetch = bypass || !lastPredictionSegmentRef.current || timeSinceLastCheck > 30 * 60 * 1000 || distSinceLastCheck > 30000 || targetShifted;
 
@@ -156,18 +178,8 @@ export function useRestaurants(
         setProgress(50);
         
         const radiusMeters = filters.maxDeviation === 0 ? 500 : filters.maxDeviation * 1000;
-
-        const query = `
-          [out:json][timeout:25];
-          (
-            node["amenity"="restaurant"](around:${radiusMeters}, ${targetPoint[0]}, ${targetPoint[1]});
-          );
-          out body;
-          >;
-          out skel qt;
-        `;
         
-        fetchedRestaurants = await fetchOverpass(query);
+        fetchedRestaurants = await fetchRestaurants(targetPoint[0], targetPoint[1], radiusMeters);
         cacheDataRef.current = fetchedRestaurants;
         lastPredictionSegmentRef.current = { start: absoluteTargetDist, end: absoluteTargetDist };
         lastRouteCheckRef.current = { time: nowMs, distance: currentDistanceAlongRoute };
@@ -196,16 +208,8 @@ export function useRestaurants(
     if (distFromCache > 15000) { 
       setLoading(true);
       setProgress(30);
-      const query = `
-        [out:json][timeout:25];
-        (
-          node["amenity"="restaurant"](around:25000, ${userPos[0]}, ${userPos[1]});
-        );
-        out body;
-        >;
-        out skel qt;
-      `;
-      fetchedRestaurants = await fetchOverpass(query);
+      
+      fetchedRestaurants = await fetchRestaurants(userPos[0], userPos[1], 25000);
       cacheDataRef.current = fetchedRestaurants;
       cacheCenterRef.current = userPos;
       lastPredictionSegmentRef.current = null; 
@@ -236,5 +240,32 @@ export function useRestaurants(
     return () => clearTimeout(t);
   }, [evaluateAndFetch]);
 
-  return { restaurants, loading, progress };
+  // Validación Anti-Spam (1 reseña cada 8 horas por usuario)
+  const checkCanReview = async (userId: string): Promise<{ canReview: boolean, hoursLeft: number }> => {
+    try {
+      const { data, error } = await supabase
+        .from('resenas_tesla')
+        .select('created_at')
+        .eq('usuario_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+      if (!data || data.length === 0) return { canReview: true, hoursLeft: 0 };
+
+      const lastReviewDate = new Date(data[0].created_at).getTime();
+      const now = new Date().getTime();
+      const hoursSince = (now - lastReviewDate) / (1000 * 60 * 60);
+
+      if (hoursSince < 8) {
+        return { canReview: false, hoursLeft: 8 - hoursSince };
+      }
+      return { canReview: true, hoursLeft: 0 };
+    } catch (err) {
+      console.error('[Anti-Spam] Error consultando límite:', err);
+      return { canReview: false, hoursLeft: 8 }; 
+    }
+  };
+
+  return { restaurants, loading, progress, checkCanReview };
 }

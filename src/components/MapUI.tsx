@@ -17,6 +17,7 @@ import { WeatherPoint } from '@/hooks/useWeather';
 import { Festival } from '@/hooks/useFestivals';
 import { Restaurant } from '@/hooks/useRestaurants';
 import { logger } from '@/lib/logger';
+import { supabase } from '@/lib/supabase';
 import { Ruler, Radio, Check, Trash2, AlertTriangle, Construction, Package, Car, PawPrint, MapPin, Navigation, X } from 'lucide-react'; 
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -90,13 +91,13 @@ const festivalIcon = L.divIcon({
 
 const restaurantIcon = L.divIcon({
   html: renderToStaticMarkup(
-    <div className="h-8 w-8 flex items-center justify-center rounded-full bg-purple-600 border-2 border-white shadow-[0_0_15px_rgba(168,85,247,0.8)] counter-rotate">
-       <img src="/cocina.png" alt="R" className="h-4 w-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-gray-900 border-2 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.8)] counter-rotate animate-bounce-slow">
+       <img src="/burguer.png" alt="R" className="h-6 w-6 object-contain" />
     </div>
   ),
   className: 'custom-restaurant-icon pointer-events-auto',
-  iconSize: [32, 32],
-  iconAnchor: [16, 16],
+  iconSize: [40, 40],
+  iconAnchor: [20, 20],
 });
 
 const airlineMapping: Record<string, string> = {
@@ -305,6 +306,7 @@ interface MapUIProps {
    voteRadar?: (radarId: string, userId: string, type: 'confirm' | 'reject') => Promise<void>;
    calculateRoute: (origin: [number, number], dest: [number, number], waypoints: [number, number][], isRecalculation: boolean, isTrafficWanted: boolean) => Promise<void>;
    isTrafficWanted: boolean;
+   checkCanReview?: (userId: string) => Promise<{canReview: boolean, hoursLeft: number}>;
 }
 
 const getCarIcon = (heading: number, color?: string, viewMode: string = 'navigation') => {
@@ -552,6 +554,162 @@ const WeatherMarker = React.memo(({ wp }: { wp: WeatherPoint }) => (
 ));
 WeatherMarker.displayName = 'WeatherMarker';
 
+const SEMANTIC_RATINGS = [
+  'Terrible, a evitar',
+  'Malo, solo emergencias',
+  'Regular, mejorable',
+  'Correcto, sin más',
+  'Muy bueno, recomendable',
+  'Espectacular, parada obligatoria'
+];
+
+const HybridRestaurantMarker = React.memo(({ rest, userId, checkCanReview }: { rest: Restaurant, userId?: string, checkCanReview?: (userId: string) => Promise<{canReview: boolean, hoursLeft: number}> }) => {
+  const [isRating, setIsRating] = useState(false);
+  const [score, setScore] = useState<number | null>(null);
+  const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  
+  // Format rating
+  const finalRating = rest.rating_combined !== null && rest.rating_combined !== undefined ? rest.rating_combined.toFixed(1) : 'S/N';
+  
+  const handleOpenRating = async () => {
+    if (!userId) {
+      setErrorMsg('Debes iniciar sesión para puntuar.');
+      return;
+    }
+    if (checkCanReview) {
+      const { canReview, hoursLeft } = await checkCanReview(userId);
+      if (!canReview) {
+        setErrorMsg(`Debes esperar ${Math.ceil(hoursLeft)}h para otra reseña.`);
+        return;
+      }
+    }
+    setIsRating(true);
+    setErrorMsg(null);
+  };
+
+  const submitRating = async () => {
+    if (!userId || score === null) return;
+    setIsSubmitting(true);
+    try {
+      const { error } = await supabase.from('resenas_tesla').upsert(
+        { 
+          fsq_id: rest.id, 
+          usuario_id: userId, 
+          puntuacion: score, 
+          comentario: comment || null 
+        },
+        { onConflict: 'usuario_id,fsq_id' }
+      );
+      if (error) throw error;
+      setSuccessMsg('¡Reseña guardada! Gracias.');
+      setIsRating(false);
+    } catch (err) {
+      console.error(err);
+      setErrorMsg('Error al guardar reseña.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Marker position={[rest.lat, rest.lon]} icon={restaurantIcon}>
+      <Popup className="tesla-popup" minWidth={260} closeButton={false}>
+        <div className="p-4 bg-black/95 backdrop-blur-3xl border border-purple-500/30 rounded-2xl flex flex-col gap-3 relative overflow-hidden">
+          {/* Header */}
+          <div className="flex flex-col">
+             <div className="flex justify-between items-start mb-1">
+               <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest leading-tight">{rest.cuisine || 'Restaurante'}</span>
+               <div className="flex items-center gap-1 bg-purple-600/20 px-2 py-0.5 rounded-full border border-purple-500/30">
+                 <span className="text-yellow-400 text-xs">★</span>
+                 <span className="text-xs font-black text-white">{finalRating}</span>
+                 <span className="text-[9px] text-gray-400 ml-1">/5</span>
+               </div>
+             </div>
+             <span className="text-lg font-black text-white tracking-tight leading-tight">{rest.name}</span>
+          </div>
+
+          <div className="h-px bg-white/10 w-full" />
+
+          {/* Stats Info */}
+          {!isRating && (
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase">
+                <span>Comunidad: {rest.total_reviews || 0} reseñas</span>
+                {rest.distanceToRoute !== undefined && <span>Desvío: {(rest.distanceToRoute / 1000).toFixed(1)} km</span>}
+              </div>
+              
+              {errorMsg && <div className="text-[10px] text-rose-500 font-bold bg-rose-500/10 p-2 rounded-lg border border-rose-500/20">{errorMsg}</div>}
+              {successMsg && <div className="text-[10px] text-green-500 font-bold bg-green-500/10 p-2 rounded-lg border border-green-500/20">{successMsg}</div>}
+              
+              <button 
+                onClick={handleOpenRating}
+                className="mt-2 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-all active:scale-95 shadow-lg shadow-purple-900/20"
+              >
+                <span className="text-xs font-black uppercase tracking-widest">Puntuar y Reseñar</span>
+              </button>
+            </div>
+          )}
+
+          {/* Interactive Rating Form */}
+          {isRating && (
+            <div className="flex flex-col gap-3 animate-fade-in">
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Tu Puntuación</span>
+                <div className="flex justify-between gap-1">
+                  {[0,1,2,3,4,5].map(v => (
+                    <button 
+                      key={v} 
+                      onClick={() => setScore(v)}
+                      className={`flex-1 py-2 rounded-lg border flex flex-col items-center justify-center transition-all ${score === v ? 'bg-purple-600 border-purple-400' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
+                      title={SEMANTIC_RATINGS[v]}
+                    >
+                      <span className={`text-sm font-bold ${score === v ? 'text-white' : 'text-gray-400'}`}>{v}</span>
+                    </button>
+                  ))}
+                </div>
+                {score !== null && (
+                  <span className="text-[10px] font-bold text-purple-400 mt-1 italic text-center animate-fade-in">"{SEMANTIC_RATINGS[score]}"</span>
+                )}
+              </div>
+              
+              <div className="flex flex-col gap-1">
+                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Comentario (Opcional)</span>
+                 <textarea 
+                   value={comment}
+                   onChange={e => setComment(e.target.value)}
+                   className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white resize-none outline-none focus:border-purple-500 h-16"
+                   placeholder="¿Qué tal la comida y el parking?"
+                 />
+              </div>
+
+              <div className="flex gap-2 mt-1">
+                <button 
+                  onClick={() => setIsRating(false)}
+                  className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider transition-all"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={submitRating}
+                  disabled={score === null || isSubmitting}
+                  className={`flex-1 py-2 rounded-lg text-white text-[10px] font-bold uppercase tracking-wider transition-all ${score === null ? 'bg-gray-700 cursor-not-allowed opacity-50' : 'bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-900/40'}`}
+                >
+                  {isSubmitting ? 'Guardando...' : 'Enviar'}
+                </button>
+              </div>
+            </div>
+          )}
+          <ClosePopupButton />
+        </div>
+      </Popup>
+    </Marker>
+  );
+});
+HybridRestaurantMarker.displayName = 'HybridRestaurantMarker';
+
 
 
 function MapRotator({ heading, rawHeading, viewMode, speed = 0 }: { heading: number, rawHeading: number, viewMode: string, speed?: number }) {
@@ -683,7 +841,7 @@ export default function MapUI({
   viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
   onGasStationClick, onYachtClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [],   centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
     mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname, radarZones = [],
-    userId, voteRadar, calculateRoute, isTrafficWanted, nextInterval = 30000
+    userId, voteRadar, calculateRoute, isTrafficWanted, nextInterval = 30000, checkCanReview
 }: MapUIProps) {
   const onlineUserIdsCount = (friends.filter(f => f.is_online).length);
   const [selectedCommunityRadar, setSelectedCommunityRadar] = useState<Radar | null>(null);
@@ -944,27 +1102,13 @@ export default function MapUI({
         
         {/* Restaurantes */}
         {useMemo(() => (restaurants || []).map(rest => (
-          <Marker
+          <HybridRestaurantMarker 
             key={`rest-${rest.id}`}
-            position={[rest.lat, rest.lon]}
-            icon={restaurantIcon}
-          >
-            <Popup className="tesla-popup">
-              <div className="flex flex-col gap-2 min-w-[200px] p-2">
-                <h4 className="font-black text-lg text-white leading-tight uppercase tracking-tighter">
-                  {rest.name}
-                </h4>
-                <div className="flex flex-col gap-0.5 text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1 border-t border-white/10 pt-2">
-                  <p>Culinaria: <span className="text-purple-400">{rest.cuisine || 'Variada'}</span></p>
-                  {rest.distanceToRoute !== undefined && (
-                    <p>Desvío de ruta: <span className="text-white">{(rest.distanceToRoute / 1000).toFixed(1)} km</span></p>
-                  )}
-                </div>
-                <ClosePopupButton />
-              </div>
-            </Popup>
-          </Marker>
-        )), [(restaurants || []).length])}
+            rest={rest}
+            userId={userId}
+            checkCanReview={checkCanReview}
+          />
+        )), [(restaurants || []).length, userId, checkCanReview])}
         
         {/* Amigos (Marcadores con Posición Real) */}
         {useMemo(() => friends.filter(f => f.is_online && f.is_sharing_location !== false).map((friend) => (

@@ -568,7 +568,7 @@ export default function Home() {
   const { stations: gasStations, loading: loadingGasStations, progress: gasProgress } = useGasStations(userPos, route?.coordinates, isGasStationsEnabled, gasStationFilters);
   const { weatherPoints, loadingWeather, currentWeather } = useWeather(userPos, route?.coordinates, isWeatherEnabled);
   const { festivals, loading: loadingFestivals } = useFestivals(isFestivalsEnabled);
-  const { restaurants, loading: loadingRestaurants, progress: restaurantProgress } = useRestaurants(
+  const { restaurants, loading: loadingRestaurants, progress: restaurantProgress, checkCanReview } = useRestaurants(
     isRestaurantsEnabled,
     restaurantFilters,
     userPos,
@@ -1199,19 +1199,16 @@ export default function Home() {
           isSimulating={isSimulating}
           onCurrentZoomChange={setCurrentZoom}
           mapMode={mapMode}
-          onMapError={() => {
-             if (mapMode === 'satellite') {
-               console.warn('[Auto-Fallback] Fallo en satélite detectado. Cambiando a Modo Ligero...');
-               setMapMode('light');
-             }
-          }}
-           onUpdateFriendNickname={(friendId, name) => {
+          onMapError={handleMapError}
+          followingFriendId={followingFriendId}
+          onUpdateFriendNickname={(friendId, name) => {
             updateFriendNickname(friendId, name);
           }}
           userId={session?.user?.id}
           voteRadar={voteRadar}
           calculateRoute={calculateRoute}
           isTrafficWanted={isTrafficWanted}
+          checkCanReview={checkCanReview}
         />
 
 
