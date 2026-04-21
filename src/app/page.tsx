@@ -1199,7 +1199,12 @@ export default function Home() {
           isSimulating={isSimulating}
           onCurrentZoomChange={setCurrentZoom}
           mapMode={mapMode}
-          onMapError={handleMapError}
+          onMapError={() => {
+             if (mapMode === 'satellite') {
+               console.warn('[Auto-Fallback] Fallo en satélite detectado. Cambiando a Modo Ligero...');
+               setMapMode('light');
+             }
+          }}
           followingFriendId={followingFriendId}
           onUpdateFriendNickname={(friendId, name) => {
             updateFriendNickname(friendId, name);
