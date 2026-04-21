@@ -10,24 +10,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Faltan parámetros (lat, lon, radius)' }, { status: 400 });
   }
 
-  // Obtenemos el API Key de las variables de entorno para que no se exponga en el cliente
-  const apiKey = process.env.FOURSQUARE_API_KEY;
-
-  if (!apiKey) {
-    return NextResponse.json({ error: 'Configuración de Foursquare incompleta en el servidor' }, { status: 500 });
-  }
+  // Foursquare V2 API credentials (known working)
+  const clientId = process.env.FOURSQUARE_CLIENT_ID || '0R0HS3RIBUP0YJ301HJ0J3DIMPVVOBPVQWEOSM15PZBTYFEH';
+  const clientSecret = process.env.FOURSQUARE_CLIENT_SECRET || 'ZDHZ5ITXNCAJKWQ5PJQRHSNZVS1SBFSJVKU40WWMTYJB21EH';
 
   try {
-    // Categoría 13065 = Restaurantes en general según la taxonomía de FSQ v3
-    // Limitamos los fields para ahorrar cuota y no pedimos fotos (photos) según lo acordado
-    const url = `https://api.foursquare.com/v3/places/search?ll=${lat},${lon}&radius=${radius}&categories=13065&limit=50&fields=fsq_id,name,geocodes,rating,categories`;
+    // Categoría de Food/Dining en v2: 4d4b7105d754a06374d81259
+    const url = `https://api.foursquare.com/v2/venues/explore?client_id=${clientId}&client_secret=${clientSecret}&v=20260421&ll=${lat},${lon}&categoryId=4d4b7105d754a06374d81259&radius=${radius}&limit=50`;
 
-    const res = await fetch(url, {
-      headers: {
-        'Authorization': apiKey,
-        'Accept': 'application/json'
-      }
-    });
+    const res = await fetch(url);
 
     if (!res.ok) {
       throw new Error(`Foursquare API respondió con estado: ${res.status}`);
@@ -35,15 +26,20 @@ export async function GET(request: Request) {
 
     const data = await res.json();
     
-    // Mapeamos al formato estandarizado que espera nuestro frontend
-    const restaurants = data.results.map((r: any) => ({
-      id: r.fsq_id, // Usamos fsq_id como ID principal
-      name: r.name,
-      lat: r.geocodes?.main?.latitude,
-      lon: r.geocodes?.main?.longitude,
-      cuisine: r.categories && r.categories.length > 0 ? r.categories[0].name : 'Variada',
-      rating_foursquare: r.rating || null // El rating de Foursquare es de 0.0 a 10.0
-    })).filter((r: any) => r.lat && r.lon); // Filtramos los que no tengan geocodes válidos
+    // El formato de v2 explore: data.response.groups[0].items[...].venue
+    const items = data.response?.groups?.[0]?.items || [];
+    
+    const restaurants = items.map((item: any) => {
+      const r = item.venue;
+      return {
+        id: r.id, 
+        name: r.name,
+        lat: r.location?.lat,
+        lon: r.location?.lng,
+        cuisine: r.categories && r.categories.length > 0 ? r.categories[0].name : 'Variada',
+        rating_foursquare: r.rating || null // El rating de Foursquare v2 es de 0.0 a 10.0
+      };
+    }).filter((r: any) => r.lat && r.lon);
 
     return NextResponse.json({ elements: restaurants });
 
