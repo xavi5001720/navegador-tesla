@@ -82,15 +82,28 @@ export function useRestaurants(
 
       const merged = fsqRestaurants.map(r => {
         const placeReviews = (reviews || []).filter(rev => rev.fsq_id === r.id);
-        const fsqNorm = r.rating_foursquare ? r.rating_foursquare / 2 : null;
         
-        let rating_community = null;
-        let rating_combined = fsqNorm;
-        
+        const hasFsqRating = typeof r.rating_foursquare === 'number' && r.rating_foursquare > 0;
+        const fsqNorm = hasFsqRating ? r.rating_foursquare! / 2 : null;
+
+        let rating_community: number | null = null;
+        let hasCommunityRating = false;
+
         if (placeReviews.length > 0) {
           const sum = placeReviews.reduce((acc, rev: any) => acc + rev.puntuacion, 0);
           rating_community = sum / placeReviews.length;
-          rating_combined = fsqNorm ? (fsqNorm + rating_community) / 2 : rating_community;
+          hasCommunityRating = true;
+        }
+
+        let rating_combined: number | null = null;
+        if (hasFsqRating && hasCommunityRating) {
+          rating_combined = (fsqNorm! + rating_community!) / 2;
+        } else if (hasFsqRating) {
+          rating_combined = fsqNorm;
+        } else if (hasCommunityRating) {
+          rating_combined = rating_community;
+        } else {
+          rating_combined = null; // No ratings at all
         }
 
         return {

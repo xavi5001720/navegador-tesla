@@ -571,8 +571,9 @@ const HybridRestaurantMarker = React.memo(({ rest, userId, checkCanReview }: { r
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   
-  // Format rating
-  const finalRating = rest.rating_combined !== null && rest.rating_combined !== undefined ? rest.rating_combined.toFixed(1) : 'S/N';
+  // Format rating — null-safe
+  const hasRating = rest.rating_combined !== null && rest.rating_combined !== undefined && rest.rating_combined > 0;
+  const finalRating = hasRating ? rest.rating_combined!.toFixed(1) : null;
   
   const handleOpenRating = async () => {
     if (!userId) {
@@ -622,11 +623,17 @@ const HybridRestaurantMarker = React.memo(({ rest, userId, checkCanReview }: { r
           <div className="flex flex-col">
              <div className="flex justify-between items-start mb-1">
                <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest leading-tight">{rest.cuisine || 'Restaurante'}</span>
-               <div className="flex items-center gap-1 bg-purple-600/20 px-2 py-0.5 rounded-full border border-purple-500/30">
-                 <span className="text-yellow-400 text-xs">★</span>
-                 <span className="text-xs font-black text-white">{finalRating}</span>
-                 <span className="text-[9px] text-gray-400 ml-1">/5</span>
-               </div>
+               {finalRating ? (
+                 <div className="flex items-center gap-1 bg-purple-600/20 px-2 py-0.5 rounded-full border border-purple-500/30">
+                   <span className="text-yellow-400 text-xs">★</span>
+                   <span className="text-xs font-black text-white">{finalRating}</span>
+                   <span className="text-[9px] text-gray-400 ml-1">/5</span>
+                 </div>
+               ) : (
+                 <div className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                   <span className="text-[10px] text-gray-400 italic">🌟 Sé el primero</span>
+                 </div>
+               )}
              </div>
              <span className="text-lg font-black text-white tracking-tight leading-tight">{rest.name}</span>
           </div>
