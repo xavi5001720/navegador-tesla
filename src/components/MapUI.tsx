@@ -554,12 +554,13 @@ WeatherMarker.displayName = 'WeatherMarker';
 
 
 
-function MapRotator({ heading, viewMode, speed = 0 }: { heading: number, viewMode: string, speed?: number }) {
+function MapRotator({ heading, rawHeading, viewMode, speed = 0 }: { heading: number, rawHeading: number, viewMode: string, speed?: number }) {
   const map = useMap();
   const smoothedHeadingRef = useRef<number>(heading);
   const rafRef = useRef<number | null>(null);
   const targetHeadingRef = useRef<number>(heading);
 
+  // Actualiza el target con el heading efectivo (que ya viene corregido si el snap se ha roto)
   useEffect(() => { if (speed * 3.6 >= 4) targetHeadingRef.current = heading; }, [heading, speed]);
 
   useEffect(() => {
@@ -713,18 +714,24 @@ export default function MapUI({
     return dists;
   }, [routeCoordinates]);
 
-  // LÓGICA DE NAVEGACIÓN PERFECCIONADA (Carril + Paralelismo)
+  // LÓGICA DE NAVEGACIÓN PERFECCIONADA (Carril + Paralelismo + Ruptura por Desvío Angular)
   const { snappedPos, snappedHeading } = useMemo(() => {
     if (viewMode === 'navigation' && routeCoordinates && routeCoordinates.length > 1 && routeCumDist.length > 0) {
       const snapped = findClosestPointOnPolyline(userPos, routeCoordinates);
-      // Solo nos "imantamos" si estamos a menos de 40 metros de la ruta
+      // Condición 1: distancia física < 40m
       if (snapped.distance < 40) {
         const p1 = routeCoordinates[snapped.segmentIndex];
         const p2 = routeCoordinates[snapped.segmentIndex + 1];
         if (p1 && p2) {
           const roadBearing = getBearing(p1, p2);
-          // POSICIÓN CENTRADA: Alineado con la línea de la vía
-          return { snappedPos: snapped.point, snappedHeading: roadBearing };
+          // Condición 2 (NUEVA): delta de ángulo entre el GPS real y la carretera < 35°
+          // Si el conductor ha girado más de 35°, se suelta inmediatamente el snap
+          const headingDelta = Math.abs(((heading - roadBearing) % 360 + 540) % 360 - 180);
+          if (headingDelta < 35) {
+            // POSICIÓN CENTRADA: Alineado con la línea de la vía
+            return { snappedPos: snapped.point, snappedHeading: roadBearing };
+          }
+          // Se ha girado mucho: suelto snap pero quedo en posición GPS real con heading GPS real
         }
       }
     }
@@ -782,7 +789,7 @@ export default function MapUI({
       `}</style>
       <MapContainer center={userPos} zoom={15} className="h-full w-full z-0" zoomControl={false} doubleClickZoom={false}>
         <MapEvents viewMode={viewMode} onViewModeChange={onViewModeChange} onMapClick={onMapClick} />
-        <MapRotator heading={snappedHeading} viewMode={viewMode} speed={speed} />
+        <MapRotator heading={snappedHeading} rawHeading={heading} viewMode={viewMode} speed={speed} />
         
         {mapMode === 'satellite' ? (
           <TileLayer 
