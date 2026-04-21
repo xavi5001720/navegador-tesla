@@ -201,31 +201,89 @@ export function useRestaurants(
     }
 
     // SCENARIO A: No Route OR Smart Optimization OFF
+    // ------------------------------------------------------------------
+    // If there's a route: sample the polyline every 30km and do a tight
+    // 5km search at each sample point to find roadside restaurants.
+    // This avoids swamping Foursquare with a single 25km city-center query.
+    // ------------------------------------------------------------------
+    if (route && route.coordinates && route.coordinates.length > 1) {
+      const currentRouteStr = route.distance ? String(route.distance) : '';
+      const bypass = bypassRef.current.routeStr !== currentRouteStr;
+      
+      let fetchedRestaurants = cacheDataRef.current;
+
+      if (bypass || fetchedRestaurants.length === 0) {
+        setLoading(true);
+        setProgress(20);
+        bypassRef.current = { routeStr: currentRouteStr, targetTime: filters.targetTime, maxDev: filters.maxDeviation };
+
+        // Build sample points every 30km along the polyline
+        const SAMPLE_INTERVAL_M = 30000; // 30km
+        const SEARCH_RADIUS_M = 5000;    // 5km tight corridor
+        const routeTotalM = cumulativeDistances[cumulativeDistances.length - 1] || 0;
+        const samplePoints: [number, number][] = [];
+
+        for (let d = 0; d <= routeTotalM; d += SAMPLE_INTERVAL_M) {
+          const pt = getPointAtDistance(cumulativeDistances, route.coordinates, d);
+          if (pt) samplePoints.push(pt);
+        }
+        // Always include endpoint
+        const lastPt = getPointAtDistance(cumulativeDistances, route.coordinates, routeTotalM);
+        if (lastPt) samplePoints.push(lastPt);
+
+        // Parallel fetches for all sample points
+        const step = 60 / (samplePoints.length || 1);
+        const allResults = await Promise.all(
+          samplePoints.map(async (pt, i) => {
+            const results = await fetchRestaurants(pt[0], pt[1], SEARCH_RADIUS_M);
+            setProgress(20 + Math.round((i + 1) * step));
+            return results;
+          })
+        );
+
+        // Deduplicate by id
+        const seen = new Set<string>();
+        fetchedRestaurants = allResults.flat().filter(r => {
+          if (seen.has(r.id)) return false;
+          seen.add(r.id);
+          return true;
+        });
+
+        cacheDataRef.current = fetchedRestaurants;
+        cacheCenterRef.current = userPos;
+        lastPredictionSegmentRef.current = null;
+      }
+
+      setProgress(90);
+      // Filter: up to 4km from the route polyline
+      const filtered = fetchedRestaurants.filter(r => {
+        const d = distanceToPolyline([r.lat, r.lon], route.coordinates);
+        r.distanceToRoute = d;
+        return d <= 4000;
+      });
+
+      setRestaurants(filtered);
+      setLoading(false);
+      setProgress(0);
+      return;
+    }
+
+    // No route at all — simple 5km bubble around user
     const distFromCache = cacheCenterRef.current ? getDistance(userPos, cacheCenterRef.current) : Infinity;
-    
     let fetchedRestaurants = cacheDataRef.current;
 
-    if (distFromCache > 15000) { 
+    if (distFromCache > 10000) {
       setLoading(true);
       setProgress(30);
-      
-      fetchedRestaurants = await fetchRestaurants(userPos[0], userPos[1], 25000);
+      fetchedRestaurants = await fetchRestaurants(userPos[0], userPos[1], 5000);
       cacheDataRef.current = fetchedRestaurants;
       cacheCenterRef.current = userPos;
-      lastPredictionSegmentRef.current = null; 
+      lastPredictionSegmentRef.current = null;
     }
 
     setProgress(80);
-    let filtered: Restaurant[] = [];
-    if (route) {
-      filtered = fetchedRestaurants.filter(r => {
-        const distUser = getDistance(userPos, [r.lat, r.lon]);
-        const distRoute = distanceToPolyline([r.lat, r.lon], route.coordinates);
-        return distUser <= 5000 || distRoute <= 2000;
-      });
-    } else {
-      filtered = fetchedRestaurants.filter(r => getDistance(userPos, [r.lat, r.lon]) <= 5000);
-    }
+    const filtered = fetchedRestaurants.filter(r => getDistance(userPos, [r.lat, r.lon]) <= 5000);
+    filtered.forEach(r => { r.distanceToRoute = 0; });
 
     setRestaurants(filtered);
     setLoading(false);
