@@ -251,14 +251,7 @@ export default function Speedometer({ speed }: SpeedometerProps) {
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
         
-        /* Optimización de arrastre: desactivar transiciones y forzar hardware acceleration */
-        :global(.arrastrando) {
-          transition: none !important;
-          will-change: transform;
-        }
-        :global(.arrastrando *) {
-          transition: none !important;
-        }
+        /* Optimización de arrastre: el estilo se hereda de globals.css (.arrastrando) */
       `}</style>
     </>
   );

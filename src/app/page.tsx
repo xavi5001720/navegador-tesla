@@ -71,6 +71,7 @@ export default function Home() {
   const [isSessionMaster, setIsSessionMaster] = useState(false);
   const [expandedFriendId, setExpandedFriendId] = useState<string | null>(null);
   const [isNavMinimized, setIsNavMinimized] = useState(false);
+  const [isDraggingFriends, setIsDraggingFriends] = useState(false);
 
 
   const [isSimulatingState, setIsSimulatingState] = useState(false);
@@ -818,7 +819,10 @@ export default function Home() {
             <motion.div 
               drag 
               dragMomentum={false}
-              className="w-64 max-h-[300px] overflow-y-auto bg-black/60 backdrop-blur-xl border border-white/10 rounded-[32px] p-4 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500 scrollbar-hide cursor-grab active:cursor-grabbing pointer-events-auto"
+              onPointerDown={() => setIsDraggingFriends(true)}
+              onPointerUp={() => setIsDraggingFriends(false)}
+              onDragEnd={() => setIsDraggingFriends(false)}
+              className={`w-64 max-h-[300px] overflow-y-auto bg-black/60 backdrop-blur-xl border border-white/10 rounded-[32px] p-4 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500 scrollbar-hide cursor-grab active:cursor-grabbing pointer-events-auto ${isDraggingFriends ? 'arrastrando' : ''}`}
             >
               <div className="flex items-center justify-between mb-3 px-1">
                 <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none">Amigos</span>

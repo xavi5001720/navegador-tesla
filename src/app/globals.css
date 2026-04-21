@@ -85,3 +85,12 @@ html, body { height: 100%; margin: 0; padding: 0; }
   50% { filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.8)); transform: scale(1.1); }
   100% { filter: drop-shadow(0 0 2px rgba(59, 130, 246, 0.5)); transform: scale(1); }
 }
+
+/* Optimización de arrastre: desactivar transiciones y forzar hardware acceleration */
+.arrastrando {
+  transition: none !important;
+  will-change: transform;
+}
+.arrastrando * {
+  transition: none !important;
+}
