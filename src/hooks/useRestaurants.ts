@@ -37,6 +37,7 @@ export function useRestaurants(
   // Cache B: Route + SmartOn
   const lastPredictionSegmentRef = useRef<{start: number, end: number} | null>(null);
   const lastRouteCheckRef = useRef<{time: number, distance: number}>({ time: 0, distance: 0 });
+  const bypassRef = useRef({ routeStr: '', targetTime: '', maxDev: -1 });
 
   // Route cumulative distances for fast lookup
   const [cumulativeDistances, setCumulativeDistances] = useState<number[]>([]);
@@ -127,11 +128,26 @@ export function useRestaurants(
       const timeSinceLastCheck = nowMs - lastRouteCheckRef.current.time;
       const distSinceLastCheck = Math.abs((route.distance - remainingDistance) - lastRouteCheckRef.current.distance);
 
-      // Re-fetch si cambiamos de targetPoint significativamente
+      // Bypass check: force fetch if critical dependencies changed
+      const currentRouteStr = route.distance ? String(route.distance) : '';
+      const bypass = 
+        bypassRef.current.routeStr !== currentRouteStr ||
+        bypassRef.current.targetTime !== filters.targetTime ||
+        bypassRef.current.maxDev !== filters.maxDeviation;
+
+      if (bypass) {
+        bypassRef.current = {
+          routeStr: currentRouteStr,
+          targetTime: filters.targetTime,
+          maxDev: filters.maxDeviation
+        };
+      }
+
+      // Re-fetch si cambiamos de targetPoint significativamente o si se activó el bypass
       const prevStart = lastPredictionSegmentRef.current?.start || 0;
       const targetShifted = Math.abs(prevStart - absoluteTargetDist) > 5000; // 5km shift
 
-      const needsFetch = !lastPredictionSegmentRef.current || timeSinceLastCheck > 30 * 60 * 1000 || distSinceLastCheck > 30000 || targetShifted;
+      const needsFetch = bypass || !lastPredictionSegmentRef.current || timeSinceLastCheck > 30 * 60 * 1000 || distSinceLastCheck > 30000 || targetShifted;
 
       let fetchedRestaurants = cacheDataRef.current;
 
