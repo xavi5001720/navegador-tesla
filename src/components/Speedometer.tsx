@@ -30,6 +30,7 @@ export default function Speedometer({ speed }: SpeedometerProps) {
   // Refs para diferenciar Drag de Click
   const startPosRef = useRef({ x: 0, y: 0 });
   const isDraggingRef = useRef(false);
+  const [isDraggingUI, setIsDraggingUI] = useState(false);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     startPosRef.current = { x: e.clientX, y: e.clientY };
@@ -138,8 +139,13 @@ export default function Speedometer({ speed }: SpeedometerProps) {
         <motion.div 
           drag 
           dragMomentum={false}
-          onPointerDown={handlePointerDown}
+          onPointerDown={(e) => {
+            handlePointerDown(e);
+            setIsDraggingUI(true);
+          }}
           onPointerMove={handlePointerMove}
+          onPointerUp={() => setIsDraggingUI(false)}
+          onDragEnd={() => setIsDraggingUI(false)}
           onClick={(e) => {
             if (isDraggingRef.current) {
               e.stopPropagation();
@@ -153,7 +159,7 @@ export default function Speedometer({ speed }: SpeedometerProps) {
             background: getThematicBackground()
           }}
           whileTap={{ scale: 0.95 }}
-          className={`flex flex-col items-center justify-center backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl min-w-[180px] cursor-pointer transition-all duration-700 pointer-events-auto select-none group relative overflow-hidden`}
+          className={`flex flex-col items-center justify-center backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl min-w-[180px] cursor-pointer transition-all duration-700 pointer-events-auto select-none group relative overflow-hidden ${isDraggingUI ? 'arrastrando' : ''}`}
         >
           {/* Brillo dinámico según modo */}
           <div className={`absolute inset-0 opacity-20 pointer-events-none transition-opacity duration-700 ${format === 'BINARY' ? 'bg-green-500/10' : ''}`}></div>
@@ -244,6 +250,15 @@ export default function Speedometer({ speed }: SpeedometerProps) {
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        
+        /* Optimización de arrastre: desactivar transiciones y forzar hardware acceleration */
+        :global(.arrastrando) {
+          transition: none !important;
+          will-change: transform;
+        }
+        :global(.arrastrando *) {
+          transition: none !important;
+        }
       `}</style>
     </>
   );
