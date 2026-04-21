@@ -41,7 +41,9 @@ export async function GET(request: Request) {
         lat: r.location?.lat,
         lon: r.location?.lng,
         cuisine: r.categories && r.categories.length > 0 ? r.categories[0].name : 'Variada',
-        rating_foursquare: r.rating || null // El rating de Foursquare v2 es de 0.0 a 10.0
+        // Nota: la API v2 /explore no devuelve `rating` sin OAuth de usuario.
+        // El sistema usa las reseñas de la comunidad (Supabase) como única fuente de valoración.
+        rating_foursquare: null
       };
     }).filter((r: any) => r.lat && r.lon);
 
