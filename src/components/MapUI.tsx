@@ -565,29 +565,50 @@ const SEMANTIC_RATINGS = [
 
 const HybridRestaurantMarker = React.memo(({ rest, userId, checkCanReview }: { rest: Restaurant, userId?: string, checkCanReview?: (userId: string) => Promise<{canReview: boolean, hoursLeft: number}> }) => {
   const [isRating, setIsRating] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [score, setScore] = useState<number | null>(null);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  
+  const [reviews, setReviews] = useState<{puntuacion: number, comentario: string | null, usuario_id: string}[]>([]);
+  const [myReview, setMyReview] = useState<{puntuacion: number, comentario: string | null} | null>(null);
+  const [reviewsLoaded, setReviewsLoaded] = useState(false);
+
   // Format rating — null-safe
   const hasRating = rest.rating_combined !== null && rest.rating_combined !== undefined && rest.rating_combined > 0;
   const finalRating = hasRating ? rest.rating_combined!.toFixed(1) : null;
-  
-  const handleOpenRating = async () => {
-    if (!userId) {
-      setErrorMsg('Debes iniciar sesión para puntuar.');
-      return;
-    }
-    if (checkCanReview) {
-      const { canReview, hoursLeft } = await checkCanReview(userId);
-      if (!canReview) {
-        setErrorMsg(`Debes esperar ${Math.ceil(hoursLeft)}h para otra reseña.`);
-        return;
+
+  // Load reviews from Supabase when popup opens
+  const loadReviews = async () => {
+    if (reviewsLoaded) return;
+    const { data } = await supabase
+      .from('resenas_tesla')
+      .select('puntuacion, comentario, usuario_id')
+      .eq('fsq_id', rest.id)
+      .order('created_at', { ascending: false });
+    if (data) {
+      setReviews(data);
+      if (userId) {
+        const mine = data.find(r => r.usuario_id === userId);
+        if (mine) {
+          setMyReview({ puntuacion: mine.puntuacion, comentario: mine.comentario });
+          setScore(mine.puntuacion);
+          setComment(mine.comentario || '');
+        }
       }
     }
+    setReviewsLoaded(true);
+  };
+
+  const handleOpenRating = async () => {
+    if (!userId) { setErrorMsg('Debes iniciar sesión para puntuar.'); return; }
+    if (!myReview && checkCanReview) {
+      const { canReview, hoursLeft } = await checkCanReview(userId);
+      if (!canReview) { setErrorMsg(`Debes esperar ${Math.ceil(hoursLeft)}h para otra reseña.`); return; }
+    }
     setIsRating(true);
+    setIsEditing(!!myReview);
     setErrorMsg(null);
   };
 
@@ -596,17 +617,15 @@ const HybridRestaurantMarker = React.memo(({ rest, userId, checkCanReview }: { r
     setIsSubmitting(true);
     try {
       const { error } = await supabase.from('resenas_tesla').upsert(
-        { 
-          fsq_id: rest.id, 
-          usuario_id: userId, 
-          puntuacion: score, 
-          comentario: comment || null 
-        },
+        { fsq_id: rest.id, usuario_id: userId, puntuacion: score, comentario: comment || null },
         { onConflict: 'usuario_id,fsq_id' }
       );
       if (error) throw error;
       setSuccessMsg('¡Reseña guardada! Gracias.');
+      setMyReview({ puntuacion: score, comentario: comment || null });
       setIsRating(false);
+      setIsEditing(false);
+      setReviewsLoaded(false); // force reload
     } catch (err) {
       console.error(err);
       setErrorMsg('Error al guardar reseña.');
@@ -616,59 +635,100 @@ const HybridRestaurantMarker = React.memo(({ rest, userId, checkCanReview }: { r
   };
 
   return (
-    <Marker position={[rest.lat, rest.lon]} icon={restaurantIcon}>
-      <Popup className="tesla-popup" minWidth={260} closeButton={false}>
+    <Marker position={[rest.lat, rest.lon]} icon={restaurantIcon} eventHandlers={{ click: loadReviews }}>
+      <Popup className="tesla-popup" minWidth={280} closeButton={false}>
         <div className="p-4 bg-black/95 backdrop-blur-3xl border border-purple-500/30 rounded-2xl flex flex-col gap-3 relative overflow-hidden">
+          
           {/* Header */}
           <div className="flex flex-col">
-             <div className="flex justify-between items-start mb-1">
-               <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest leading-tight">{rest.cuisine || 'Restaurante'}</span>
-               {finalRating ? (
-                 <div className="flex items-center gap-1 bg-purple-600/20 px-2 py-0.5 rounded-full border border-purple-500/30">
-                   <span className="text-yellow-400 text-xs">★</span>
-                   <span className="text-xs font-black text-white">{finalRating}</span>
-                   <span className="text-[9px] text-gray-400 ml-1">/5</span>
-                 </div>
-               ) : (
-                 <div className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
-                   <span className="text-[10px] text-gray-400 italic">🌟 Sé el primero</span>
-                 </div>
-               )}
-             </div>
-             <span className="text-lg font-black text-white tracking-tight leading-tight">{rest.name}</span>
+            <div className="flex justify-between items-start mb-1">
+              <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest leading-tight">{rest.cuisine || 'Restaurante'}</span>
+              {finalRating ? (
+                <div className="flex items-center gap-1 bg-purple-600/20 px-2 py-0.5 rounded-full border border-purple-500/30">
+                  <span className="text-yellow-400 text-xs">★</span>
+                  <span className="text-xs font-black text-white">{finalRating}</span>
+                  <span className="text-[9px] text-gray-400 ml-1">/5</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                  <span className="text-[10px] text-gray-400 italic">🌟 Sé el primero</span>
+                </div>
+              )}
+            </div>
+            <span className="text-lg font-black text-white tracking-tight leading-tight">{rest.name}</span>
+            <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase mt-1">
+              <span>{reviews.length || rest.total_reviews || 0} reseñas de conductores</span>
+              {rest.distanceToRoute !== undefined && <span>Desvío: {(rest.distanceToRoute / 1000).toFixed(1)} km</span>}
+            </div>
           </div>
 
           <div className="h-px bg-white/10 w-full" />
 
-          {/* Stats Info */}
-          {!isRating && (
-            <div className="flex flex-col gap-2">
-              <div className="flex justify-between text-[10px] font-bold text-gray-400 uppercase">
-                <span>Comunidad: {rest.total_reviews || 0} reseñas</span>
-                {rest.distanceToRoute !== undefined && <span>Desvío: {(rest.distanceToRoute / 1000).toFixed(1)} km</span>}
+          {/* Community Reviews List */}
+          {!isRating && reviews.filter(r => r.comentario).length > 0 && (
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">Reseñas de Conductores</span>
+              <div className="max-h-28 overflow-y-auto flex flex-col gap-1.5 pr-1 scrollbar-thin scrollbar-thumb-purple-800/40">
+                {reviews.filter(r => r.comentario).map((r, i) => (
+                  <div key={i} className="bg-white/5 border border-white/10 rounded-lg p-2 flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1">
+                      <span className="text-yellow-400 text-[10px]">{'★'.repeat(r.puntuacion)}{'☆'.repeat(5 - r.puntuacion)}</span>
+                      <span className="text-[9px] text-purple-400 font-bold ml-auto">{SEMANTIC_RATINGS[r.puntuacion]}</span>
+                    </div>
+                    <span className="text-[10px] text-gray-300 leading-snug italic">"{r.comentario}"</span>
+                  </div>
+                ))}
               </div>
-              
-              {errorMsg && <div className="text-[10px] text-rose-500 font-bold bg-rose-500/10 p-2 rounded-lg border border-rose-500/20">{errorMsg}</div>}
-              {successMsg && <div className="text-[10px] text-green-500 font-bold bg-green-500/10 p-2 rounded-lg border border-green-500/20">{successMsg}</div>}
-              
-              <button 
-                onClick={handleOpenRating}
-                className="mt-2 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-all active:scale-95 shadow-lg shadow-purple-900/20"
-              >
-                <span className="text-xs font-black uppercase tracking-widest">Puntuar y Reseñar</span>
-              </button>
+              <div className="h-px bg-white/10 w-full mt-1" />
             </div>
           )}
 
-          {/* Interactive Rating Form */}
+          {/* Main action area */}
+          {!isRating && (
+            <div className="flex flex-col gap-2">
+              {errorMsg && <div className="text-[10px] text-rose-500 font-bold bg-rose-500/10 p-2 rounded-lg border border-rose-500/20">{errorMsg}</div>}
+              {successMsg && <div className="text-[10px] text-green-500 font-bold bg-green-500/10 p-2 rounded-lg border border-green-500/20">{successMsg}</div>}
+
+              {myReview && !successMsg ? (
+                // Already voted — show summary + edit button
+                <div className="flex flex-col gap-2">
+                  <div className="bg-purple-600/10 border border-purple-500/20 rounded-xl p-3 flex flex-col gap-1">
+                    <span className="text-[9px] font-black text-purple-400 uppercase tracking-widest">Tu valoración</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl font-black text-white">{myReview.puntuacion}</span>
+                      <span className="text-[10px] text-gray-400 italic">{SEMANTIC_RATINGS[myReview.puntuacion]}</span>
+                    </div>
+                    {myReview.comentario && <span className="text-[10px] text-gray-300 italic">"{myReview.comentario}"</span>}
+                  </div>
+                  <button
+                    onClick={handleOpenRating}
+                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all active:scale-95"
+                  >
+                    <span className="text-[10px] font-black uppercase tracking-widest">✏️ Editar mi reseña</span>
+                  </button>
+                </div>
+              ) : (
+                // Not voted yet
+                <button
+                  onClick={handleOpenRating}
+                  className="mt-1 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-all active:scale-95 shadow-lg shadow-purple-900/20"
+                >
+                  <span className="text-xs font-black uppercase tracking-widest">Puntuar y Reseñar</span>
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Rating / Edit Form */}
           {isRating && (
             <div className="flex flex-col gap-3 animate-fade-in">
+              <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest">{isEditing ? '✏️ Editar tu reseña' : 'Nueva Reseña'}</span>
               <div className="flex flex-col gap-1">
                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Tu Puntuación</span>
                 <div className="flex justify-between gap-1">
                   {[0,1,2,3,4,5].map(v => (
-                    <button 
-                      key={v} 
+                    <button
+                      key={v}
                       onClick={() => setScore(v)}
                       className={`flex-1 py-2 rounded-lg border flex flex-col items-center justify-center transition-all ${score === v ? 'bg-purple-600 border-purple-400' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}
                       title={SEMANTIC_RATINGS[v]}
@@ -678,37 +738,35 @@ const HybridRestaurantMarker = React.memo(({ rest, userId, checkCanReview }: { r
                   ))}
                 </div>
                 {score !== null && (
-                  <span className="text-[10px] font-bold text-purple-400 mt-1 italic text-center animate-fade-in">"{SEMANTIC_RATINGS[score]}"</span>
+                  <span className="text-[10px] font-bold text-purple-400 mt-1 italic text-center">"{SEMANTIC_RATINGS[score]}"</span>
                 )}
               </div>
-              
+
               <div className="flex flex-col gap-1">
-                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Comentario (Opcional)</span>
-                 <textarea 
-                   value={comment}
-                   onChange={e => setComment(e.target.value)}
-                   className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white resize-none outline-none focus:border-purple-500 h-16"
-                   placeholder="¿Qué tal la comida y el parking?"
-                 />
+                <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Comentario (Opcional)</span>
+                <textarea
+                  value={comment}
+                  onChange={e => setComment(e.target.value)}
+                  className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white resize-none outline-none focus:border-purple-500 h-16"
+                  placeholder="¿Qué tal la comida y el parking?"
+                />
               </div>
 
               <div className="flex gap-2 mt-1">
-                <button 
-                  onClick={() => setIsRating(false)}
-                  className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider transition-all"
-                >
+                <button onClick={() => { setIsRating(false); setIsEditing(false); }} className="flex-1 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-wider transition-all">
                   Cancelar
                 </button>
-                <button 
+                <button
                   onClick={submitRating}
                   disabled={score === null || isSubmitting}
                   className={`flex-1 py-2 rounded-lg text-white text-[10px] font-bold uppercase tracking-wider transition-all ${score === null ? 'bg-gray-700 cursor-not-allowed opacity-50' : 'bg-purple-600 hover:bg-purple-500 shadow-lg shadow-purple-900/40'}`}
                 >
-                  {isSubmitting ? 'Guardando...' : 'Enviar'}
+                  {isSubmitting ? 'Guardando...' : isEditing ? 'Actualizar' : 'Enviar'}
                 </button>
               </div>
             </div>
           )}
+
           <ClosePopupButton />
         </div>
       </Popup>

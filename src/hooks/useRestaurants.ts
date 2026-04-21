@@ -230,9 +230,9 @@ export function useRestaurants(
         setProgress(20);
         bypassRef.current = { routeStr: currentRouteStr, targetTime: filters.targetTime, maxDev: filters.maxDeviation };
 
-        // Build sample points every 30km along the polyline
-        const SAMPLE_INTERVAL_M = 30000; // 30km
-        const SEARCH_RADIUS_M = 5000;    // 5km tight corridor
+        // Build sample points every 20km along the polyline
+        const SAMPLE_INTERVAL_M = 20000; // 20km
+        const SEARCH_RADIUS_M = 3000;    // 3km tight corridor
         const routeTotalM = cumulativeDistances[cumulativeDistances.length - 1] || 0;
         const samplePoints: [number, number][] = [];
 
@@ -268,11 +268,11 @@ export function useRestaurants(
       }
 
       setProgress(90);
-      // Filter: up to 4km from the route polyline
+      // Hard corridor post-filter: 2km max from route polyline
       const filtered = fetchedRestaurants.filter(r => {
         const d = distanceToPolyline([r.lat, r.lon], route.coordinates);
         r.distanceToRoute = d;
-        return d <= 4000;
+        return d <= 2000;
       });
 
       setRestaurants(filtered);
