@@ -26,7 +26,7 @@ Este archivo sirve para auditar la estabilidad de cada módulo del sistema. Cada
 ### 🗺️ Controles de Mapa
 | ID | Módulo | Descripción | Estado |
 |:---|:---|:---|:---|
-| [MAP-01] | **Velocímetro** | Lectura GPS y visualización de velocidad | ⏳ Pendiente |
+| [MAP-01] | **Velocímetro** | Lectura GPS y visualización de velocidad | ✅ Blindado |
 | [MAP-02] | **Pantalla** | Modo pantalla completa y controles de UI | ⏳ Pendiente |
 | [MAP-03] | **Rotación** | Modo navegación (seguimiento de rumbo) | ⏳ Pendiente |
 | [MAP-04] | **Vistas** | Cambio entre modo lista y vista de mapa | ⏳ Pendiente |
