@@ -192,11 +192,13 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
         // Detección de aterrizaje activo (aterrizando sobre la pista: baja altura < 50m y en aeropuerto)
         const isLanding = st.meta.altitude < 50 && isNearAirport;
         
+        // 1. Decidir velocidad efectiva para la simulación
         let effectiveVelocity = st.velocity;
-        if (st.lostTs || isLanding) {
-          // Si lo perdimos en aeropuerto o está aterrizando activamente, lo dejamos aparcado
+        if (isLanding) {
+          // Aterrizaje confirmado en aeropuerto: Frenar en seco
           effectiveVelocity = 0;
         }
+        // Nota: Si st.lostTs existe pero no ha aterrizado, mantenemos st.velocity (Inercia)
 
         // 1. Extrapolamos desde la posición REAL con el tiempo transcurrido
         const proj = extrapolate(st.realLat, st.realLon, effectiveVelocity, st.track, dtReal);
@@ -230,10 +232,12 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
         st.simLat = newLat;
         st.simLon = newLon;
 
-        // Solo forzamos 0/0 si realmente estamos tocando tierra o aterrizando en aeropuerto
+        // Solo forzamos 0/0 si realmente está en tierra
         const isActuallyAtGround = st.meta.altitude < 50;
-        const finalAltitude = (isLanding || (st.lostTs && isActuallyAtGround)) ? 0 : Math.max(0, st.meta.altitude);
-        const finalVelocity = (isLanding || (st.lostTs && isActuallyAtGround)) ? 0 : st.meta.velocity;
+        const showAsStopped = isLanding || (st.lostTs && isActuallyAtGround);
+        
+        const finalAltitude = showAsStopped ? 0 : Math.max(0, st.meta.altitude);
+        const finalVelocity = showAsStopped ? 0 : st.meta.velocity;
 
         next.push({
           ...st.meta,
