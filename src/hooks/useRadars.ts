@@ -185,5 +185,56 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
     }
   }, [isEnabled, currentRouteKey, routeLength, (routeLength === 0 ? Math.floor(userPos?.[0]*20) : 0)]);
 
+  // 4. SUPABASE REALTIME: Escuchar nuevos radares comunitarios (Directiva Core #2: Optimización Supabase)
+  useEffect(() => {
+    if (!isEnabled || !userPos) return;
+
+    const channel = supabase
+      .channel('community_radars_realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'community_radars' },
+        (payload) => {
+          const r = payload.new as any;
+          if (!r || !r.lat || !r.lon) return;
+
+          // Solo procesamos si está a menos de 60km (Burbuja de interés)
+          // Esto evita procesar radares de otra punta de España
+          const dist = getDist(userPos, [r.lat, r.lon]);
+          if (dist > 60000) return;
+
+          if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            setRadars(prev => {
+              const exists = prev.find(p => p.id === r.id && p.type === 'community_mobile');
+              if (exists) {
+                // Actualizar contadores si ya existe
+                return prev.map(p => p.id === r.id ? { 
+                  ...p, 
+                  confirmations: r.confirmations, 
+                  rejections: r.rejections,
+                  is_visible: r.is_visible 
+                } : p);
+              }
+              // Añadir nuevo
+              return [...prev, {
+                id: r.id, lat: r.lat, lon: r.lon, 
+                type: 'community_mobile',
+                confirmations: r.confirmations,
+                rejections: r.rejections,
+                category: r.category
+              }];
+            });
+          } else if (payload.eventType === 'DELETE') {
+            setRadars(prev => prev.filter(p => p.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isEnabled, userPos?.[0], userPos?.[1]]);
+
   return { radars, radarZones, loadingRadars, progress, refreshRadars: () => { fetchedChunksRef.current.clear(); setRefreshTrigger(prev => prev + 1); } };
 }

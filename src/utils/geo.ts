@@ -38,7 +38,24 @@ export function distanceToSegment(p: [number, number], v: [number, number], w: [
 export function distanceToPolyline(p: [number, number], polyline: [number, number][]) {
   let minD = Infinity;
   for (let i = 0; i < polyline.length - 1; i++) {
-    const d = distanceToSegment(p, polyline[i], polyline[i+1]);
+    const v = polyline[i];
+    const w = polyline[i+1];
+
+    // Early exit: Bounding Box check (en grados, muy rápido)
+    // 0.01 grados son aprox 1.1km. Si minD ya es pequeño, podemos ser más agresivos.
+    if (minD !== Infinity) {
+      const margin = minD / 111111; // margen de seguridad basado en la mejor distancia hallada
+      const minLat = Math.min(v[0], w[0]) - margin;
+      const maxLat = Math.max(v[0], w[0]) + margin;
+      const minLon = Math.min(v[1], w[1]) - margin;
+      const maxLon = Math.max(v[1], w[1]) + margin;
+
+      if (p[0] < minLat || p[0] > maxLat || p[1] < minLon || p[1] > maxLon) {
+        continue;
+      }
+    }
+
+    const d = distanceToSegment(p, v, w);
     if (d < minD) minD = d;
   }
   return minD;
@@ -67,6 +84,19 @@ export function findClosestPointOnPolyline(p: [number, number], polyline: [numbe
     const v = polyline[i];
     const w = polyline[i+1];
     
+    // Early exit: Bounding Box check (Directiva Core #3: Rendimiento Tesla)
+    if (minD !== Infinity) {
+      const margin = minD / 111111; 
+      const minLat = Math.min(v[0], w[0]) - margin;
+      const maxLat = Math.max(v[0], w[0]) + margin;
+      const minLon = Math.min(v[1], w[1]) - margin;
+      const maxLon = Math.max(v[1], w[1]) + margin;
+
+      if (p[0] < minLat || p[0] > maxLat || p[1] < minLon || p[1] > maxLon) {
+        continue;
+      }
+    }
+
     const l2 = Math.pow(v[0] - w[0], 2) + Math.pow(v[1] - w[1], 2);
     if (l2 === 0) {
       const d = getDistance(p, v);
