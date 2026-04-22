@@ -162,8 +162,8 @@ export function usePegasus(
 
           const isCommercial = COMMERCIAL_RE.test(callsign);
           const hasWatchPattern = WATCH_RE.test(callsign);
-          const isLow = altitude < 1000;
-          const isSlow = velocity < 60;
+          const isLow = altitude < 1500;
+          const isSlow = velocity < 80;
           const nearApt = AIRPORTS.some(ap => haversine([lat, lon], [ap[0] as number, ap[1] as number]) < 5000);
 
           // 1. Vía Identidad: Match directo con patrones de vigilancia (Ignora altitud)
