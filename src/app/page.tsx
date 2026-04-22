@@ -796,7 +796,7 @@ export default function Home() {
                 : 'bg-black/60 text-amber-500 border-amber-500/30 hover:border-amber-500/60 backdrop-blur-md'
             }`}
           >
-            {isDebugMode ? '☠️ Modo Dios: ON' : '🛡️ Modo Dios: OFF'}
+            {isDebugMode ? '☠️ MODO DESARROLLADOR: ON' : '🛡️ MODO DESARROLLADOR: OFF'}
           </button>
         </div>
       )}
