@@ -10,9 +10,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Faltan parámetros (lat, lon, radius)' }, { status: 400 });
   }
 
-  // Foursquare V2 API credentials from environment variables
-  const clientId = process.env.NEXT_PUBLIC_FSQ_CLIENT_ID;
-  const clientSecret = process.env.NEXT_PUBLIC_FSQ_CLIENT_SECRET;
+  // Foursquare V2 API credentials — server-only (no NEXT_PUBLIC_ prefix).
+  // These vars are NEVER sent to the client bundle. Only the Next.js API Route
+  // (which runs on the server) can read them. See .env.local for values.
+  const clientId = process.env.FSQ_CLIENT_ID;
+  const clientSecret = process.env.FSQ_CLIENT_SECRET;
 
   if (!clientId || !clientSecret) {
     return NextResponse.json({ error: 'Configuración de Foursquare (Client ID/Secret) incompleta en el servidor' }, { status: 500 });

@@ -49,6 +49,7 @@ import { useLuxuryYachts, YachtPosition } from '@/hooks/useLuxuryYachts';
 import { useCommunityRadars } from '@/hooks/useCommunityRadars';
 import { useFestivals } from '@/hooks/useFestivals';
 import { useRestaurants, RestaurantFilters } from '@/hooks/useRestaurants';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 
 const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ssr: false,
@@ -577,6 +578,9 @@ export default function Home() {
     liveDuration
   );
 
+  // Directiva Core #4: indicador de conectividad — datos pueden ser caché cuando isOnline = false
+  const isOnline = useOnlineStatus();
+
   const notifiedPegasus = useRef<Set<string>>(new Set());
   const notifiedWaypoints = useRef<Set<string>>(new Set());
   const notifiedTraffic = useRef<Set<string>>(new Set());
@@ -792,6 +796,17 @@ export default function Home() {
           >
             ACTIVAR GPS
           </button>
+        </div>
+      )}
+
+      {/* Banner de Sin Cobertura — Directiva Core #4 (fallback elegante) */}
+      {!isOnline && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[700] flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-gray-900/95 backdrop-blur-xl border border-amber-500/40 shadow-2xl shadow-black/60 animate-in fade-in slide-in-from-top-2 duration-300">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+          </span>
+          <span className="text-[11px] font-black text-amber-300 uppercase tracking-widest">Sin cobertura &mdash; datos en caché</span>
         </div>
       )}
 

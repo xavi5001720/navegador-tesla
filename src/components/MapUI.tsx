@@ -89,6 +89,7 @@ const festivalIcon = L.divIcon({
   iconAnchor: [20, 20],
 });
 
+/** Pin estándar: restaurante ya valorado por la comunidad (púrpura) */
 const restaurantIcon = L.divIcon({
   html: renderToStaticMarkup(
     <div className="h-10 w-10 flex items-center justify-center rounded-full bg-gray-900 border-2 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.8)] counter-rotate animate-bounce-slow">
@@ -98,6 +99,20 @@ const restaurantIcon = L.divIcon({
   className: 'custom-restaurant-icon pointer-events-auto',
   iconSize: [40, 40],
   iconAnchor: [20, 20],
+});
+
+/** Pin dorado: restaurante sin valorar (territorio virgen / oportunidad) */
+const restaurantVirginIcon = L.divIcon({
+  html: renderToStaticMarkup(
+    <div className="relative h-11 w-11 flex items-center justify-center rounded-full bg-gray-900 border-2 border-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.9)] counter-rotate animate-bounce-slow">
+      <img src="/burguer.png" alt="R" className="h-6 w-6 object-contain" />
+      {/* Badge estrella vacía — indica 'nadie ha estado aquí aún' */}
+      <span className="absolute -top-1.5 -right-1.5 text-[10px] bg-amber-400 text-gray-900 font-black rounded-full w-4 h-4 flex items-center justify-center shadow-md">★</span>
+    </div>
+  ),
+  className: 'custom-restaurant-virgin-icon pointer-events-auto',
+  iconSize: [44, 44],
+  iconAnchor: [22, 22],
 });
 
 const airlineMapping: Record<string, string> = {
@@ -306,7 +321,7 @@ interface MapUIProps {
    voteRadar?: (radarId: string, userId: string, type: 'confirm' | 'reject') => Promise<void>;
    calculateRoute: (origin: [number, number], dest: [number, number], waypoints: [number, number][], isRecalculation: boolean, isTrafficWanted: boolean) => Promise<void>;
    isTrafficWanted: boolean;
-   checkCanReview?: (userId: string) => Promise<{canReview: boolean, hoursLeft: number}>;
+   checkCanReview?: (userId: string, fsqId?: string) => Promise<{canReview: boolean, hoursLeft: number, reason?: 'per_restaurant' | 'daily_limit'}>;
 }
 
 const getCarIcon = (heading: number, color?: string, viewMode: string = 'navigation') => {
@@ -578,6 +593,8 @@ const HybridRestaurantMarker = React.memo(({ rest, userId, checkCanReview }: { r
   // Format rating — null-safe
   const hasRating = rest.rating_combined !== null && rest.rating_combined !== undefined && rest.rating_combined > 0;
   const finalRating = hasRating ? rest.rating_combined!.toFixed(1) : null;
+  /** true = nadie ha valorado este sitio aún — dispara el modo 'Descubridor' */
+  const isVirgin = !hasRating && (rest.total_reviews ?? 0) === 0;
 
   // Load reviews from Supabase when popup opens
   const loadReviews = async () => {
@@ -604,8 +621,14 @@ const HybridRestaurantMarker = React.memo(({ rest, userId, checkCanReview }: { r
   const handleOpenRating = async () => {
     if (!userId) { setErrorMsg('Debes iniciar sesión para puntuar.'); return; }
     if (!myReview && checkCanReview) {
-      const { canReview, hoursLeft } = await checkCanReview(userId);
-      if (!canReview) { setErrorMsg(`Debes esperar ${Math.ceil(hoursLeft)}h para otra reseña.`); return; }
+      const { canReview, hoursLeft, reason } = await checkCanReview(userId, rest.id);
+      if (!canReview) {
+        const msg = reason === 'per_restaurant'
+          ? `Ya has valorado este restaurante. Podrás editar tu reseña en ${Math.ceil(hoursLeft)}h.`
+          : `Has alcanzado el límite de ${5} reseñas diarias. Podrás escribir más en ${Math.ceil(hoursLeft)}h.`;
+        setErrorMsg(msg);
+        return;
+      }
     }
     setIsRating(true);
     setIsEditing(!!myReview);
@@ -615,13 +638,20 @@ const HybridRestaurantMarker = React.memo(({ rest, userId, checkCanReview }: { r
   const submitRating = async () => {
     if (!userId || score === null) return;
     setIsSubmitting(true);
+    // Guardamos si era virgen ANTES de escribir, para el toast de Descubridor
+    const wasVirgin = isVirgin;
     try {
       const { error } = await supabase.from('resenas_tesla').upsert(
         { fsq_id: rest.id, usuario_id: userId, puntuacion: score, comentario: comment || null },
         { onConflict: 'usuario_id,fsq_id' }
       );
       if (error) throw error;
-      setSuccessMsg('¡Reseña guardada! Gracias.');
+      // 🏆 Toast diferenciado: Descubridor vs. valorador estándar
+      setSuccessMsg(
+        wasVirgin
+          ? '🏆 ¡Felicidades! Eres el Descubridor Oficial de este restaurante.'
+          : '✅ ¡Reseña guardada! Gracias por contribuir a la comunidad Tesla.'
+      );
       setMyReview({ puntuacion: score, comentario: comment || null });
       setIsRating(false);
       setIsEditing(false);
@@ -635,14 +665,16 @@ const HybridRestaurantMarker = React.memo(({ rest, userId, checkCanReview }: { r
   };
 
   return (
-    <Marker position={[rest.lat, rest.lon]} icon={restaurantIcon} eventHandlers={{ click: loadReviews }}>
+    <Marker position={[rest.lat, rest.lon]} icon={isVirgin ? restaurantVirginIcon : restaurantIcon} eventHandlers={{ click: loadReviews }}>
       <Popup className="tesla-popup" minWidth={280} closeButton={false}>
         <div className="p-4 bg-black/95 backdrop-blur-3xl border border-purple-500/30 rounded-2xl flex flex-col gap-3 relative overflow-hidden">
           
           {/* Header */}
           <div className="flex flex-col">
             <div className="flex justify-between items-start mb-1">
-              <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest leading-tight">{rest.cuisine || 'Restaurante'}</span>
+              <span className={`text-[10px] font-black uppercase tracking-widest leading-tight ${isVirgin ? 'text-amber-400' : 'text-purple-500'}`}>
+                {isVirgin ? '⭐ Territorio Inexplorado' : (rest.cuisine || 'Restaurante')}
+              </span>
               {finalRating ? (
                 <div className="flex items-center gap-1 bg-purple-600/20 px-2 py-0.5 rounded-full border border-purple-500/30">
                   <span className="text-yellow-400 text-xs">★</span>
@@ -650,16 +682,25 @@ const HybridRestaurantMarker = React.memo(({ rest, userId, checkCanReview }: { r
                   <span className="text-[9px] text-gray-400 ml-1">/5</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
-                  <span className="text-[10px] text-gray-400 italic">🌟 Sé el primero</span>
+                <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${isVirgin ? 'bg-amber-400/10 border-amber-400/30' : 'bg-white/5 border-white/10'}`}>
+                  <span className="text-[10px] text-amber-400 italic font-bold">★ Primera vez</span>
                 </div>
               )}
             </div>
             <span className="text-lg font-black text-white tracking-tight leading-tight">{rest.name}</span>
-            <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase mt-1">
-              <span>{reviews.length || rest.total_reviews || 0} reseñas de conductores</span>
-              {rest.distanceToRoute !== undefined && <span>Desvío: {(rest.distanceToRoute / 1000).toFixed(1)} km</span>}
-            </div>
+            {/* Sub-header: CTA virgen vs. contador normal */}
+            {isVirgin ? (
+              <div className="mt-1.5 p-2.5 rounded-xl bg-amber-400/10 border border-amber-400/20">
+                <p className="text-[11px] text-amber-300 font-bold leading-snug">
+                  🗺️ ¡Territorio inexplorado! Sé el primer Tesla en conquistar este lugar y deja tu huella.
+                </p>
+              </div>
+            ) : (
+              <div className="flex justify-between text-[10px] font-bold text-gray-500 uppercase mt-1">
+                <span>{reviews.length || rest.total_reviews || 0} reseñas de conductores</span>
+                {rest.distanceToRoute !== undefined && <span>Desvío: {(rest.distanceToRoute / 1000).toFixed(1)} km</span>}
+              </div>
+            )}
           </div>
 
           <div className="h-px bg-white/10 w-full" />
@@ -708,12 +749,16 @@ const HybridRestaurantMarker = React.memo(({ rest, userId, checkCanReview }: { r
                   </button>
                 </div>
               ) : (
-                // Not voted yet
+                // Not voted yet — CTA distinto si es virgen
                 <button
                   onClick={handleOpenRating}
-                  className="mt-1 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white transition-all active:scale-95 shadow-lg shadow-purple-900/20"
+                  className={`mt-1 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-white transition-all active:scale-95 shadow-lg font-black uppercase tracking-widest text-xs ${
+                    isVirgin
+                      ? 'bg-amber-500 hover:bg-amber-400 shadow-amber-900/30'
+                      : 'bg-purple-600 hover:bg-purple-500 shadow-purple-900/20'
+                  }`}
                 >
-                  <span className="text-xs font-black uppercase tracking-widest">Puntuar y Reseñar</span>
+                  {isVirgin ? '🗺️ Ser el Descubridor' : 'Puntuar y Reseñar'}
                 </button>
               )}
             </div>
