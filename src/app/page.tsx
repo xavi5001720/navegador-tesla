@@ -19,7 +19,7 @@ import { useRadars } from '@/hooks/useRadars';
 import { useAlerts } from '@/hooks/useAlerts';
 import { useSpeed } from '@/hooks/useSpeed';
 import { usePegasus } from '@/hooks/usePegasus';
-import { useAircraftSimulator } from '@/hooks/useAircraftSimulator';
+// useAircraftSimulator was moved to MapUI.tsx
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useRouteSimulator } from '@/hooks/useRouteSimulator';
 
@@ -562,8 +562,7 @@ export default function Home() {
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars, inSectionRadar, sectionAverageSpeed } = useAlerts(userPos || [0,0], radars, isSoundEnabled, voiceType, speed, heading || 0, allRadarZones || [], audioMode);
   const { allAircrafts, aircrafts, visibleAircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount, nextInterval } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
  
-  // Proyección futura para movimiento fluido vía V11 (Tick 1s)
-  const simulatedAircrafts = useAircraftSimulator(visibleAircrafts);
+  // Proyección futura para movimiento fluido vía V11 (Tick 1s) movida a MapUI.tsx (AircraftLayer)
 
   const { chargers, loading: loadingChargers, progress: chargerProgress } = useChargers(userPos, route?.coordinates, isChargersEnabled, chargerFilters);
   const { stations: gasStations, loading: loadingGasStations, progress: gasProgress } = useGasStations(userPos, route?.coordinates, isGasStationsEnabled, gasStationFilters);
@@ -1184,7 +1183,7 @@ export default function Home() {
           routeCoordinates={route?.coordinates} 
           radars={radars}
           radarZones={isRadarsEnabled ? allRadarZones : []}
-          aircrafts={simulatedAircrafts}
+          aircrafts={visibleAircrafts}
           chargers={chargers}
           gasStations={gasStations}
           weatherPoints={weatherPoints}

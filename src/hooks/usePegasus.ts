@@ -16,6 +16,7 @@ export interface Aircraft {
   track         : number;
   isSuspect     : boolean;
   distanceToUser: number;  // metros
+  last_contact  : number;  // timestamp (s)
 }
 
 // -- Helper parameters must match the edge function snap size
@@ -171,7 +172,8 @@ export function usePegasus(
           return {
             icao24, callsign: callsign || 'N/A', origin_country: s[2] || '',
             lat, lon, altitude, velocity, track: s[10] ?? 0,
-            isSuspect, distanceToUser
+            isSuspect, distanceToUser,
+            last_contact: s[4] ?? s[3] ?? Math.floor(Date.now() / 1000)
           };
         }).filter((a): a is Aircraft => a !== null);
 
@@ -222,7 +224,16 @@ export function usePegasus(
 
   // ── Filtros locales (V11 Restaurada) ──────────────────────────────────────────
   const aircrafts = useMemo(() => {
+    // Modo Debug visual oficial (Directiva Core: UX/QA sin tocar .env)
+    const isDebugMode = typeof window !== 'undefined' && localStorage.getItem('DEBUG_PEGASUS') === 'true';
+
     return allAircrafts.filter(a => {
+      // Si estamos en debug, saltamos los filtros cinéticos y sospechosos
+      if (isDebugMode) {
+        // En debug, limitamos distancia igualmente para evitar crashear el mapa con 5000 aviones
+        return a.distanceToUser <= 100000; 
+      }
+
       // 1. Debe ser sospechoso (DGT, Policía, bajo/lento no-comercial)
       if (!a.isSuspect) return false;
 

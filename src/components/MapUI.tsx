@@ -7,6 +7,7 @@ import L from 'leaflet';
 import { Camera, Map as MapIcon } from 'lucide-react'; 
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Radar, RadarZone } from '@/hooks/useRadars';
+import { useAircraftSimulator } from '@/hooks/useAircraftSimulator';
 import { Aircraft } from '@/hooks/usePegasus';
 import { Charger } from '@/hooks/useChargers';
 import { GasStation } from '@/hooks/useGasStations';
@@ -454,6 +455,24 @@ const AircraftMarker = React.memo(({ aircraft, userPos, viewMode }: { aircraft: 
   );
 });
 AircraftMarker.displayName = 'AircraftMarker';
+
+const AircraftLayer = React.memo(({ realAircrafts, userPos, viewMode }: { realAircrafts: Aircraft[], userPos: [number, number], viewMode: string }) => {
+  const simulatedAircrafts = useAircraftSimulator(realAircrafts);
+  
+  return (
+    <>
+      {simulatedAircrafts.map((aircraft) => (
+        <AircraftMarker 
+          key={`ac-${aircraft.icao24}`} 
+          aircraft={aircraft} 
+          userPos={userPos} 
+          viewMode={viewMode} 
+        />
+      ))}
+    </>
+  );
+});
+AircraftLayer.displayName = 'AircraftLayer';
 
 const FriendMarker = React.memo(({ friend, onUpdateNickname }: { friend: Friend, onUpdateNickname?: (id: string, name: string) => void }) => {
   const finalLat = friend.last_lat;
@@ -1177,16 +1196,12 @@ export default function MapUI({
           <RadarMarker key={`radar-${radar.id}`} radar={radar} userId={userId} onSelect={setSelectedCommunityRadar} />
         )), [radars.length, radars[0]?.id, currentZoom, !!routeCoordinates, userId])}
 
-        {/* ✈️ AVIONES: Memoizados */}
-        {useMemo(() => aircrafts.map((aircraft) => (
-          <AircraftMarker 
-            key={`ac-${aircraft.icao24}`} 
-            aircraft={aircraft} 
-            userPos={userPos} 
-            viewMode={viewMode} 
-            nextInterval={nextInterval}
-          />
-        )), [aircrafts, viewMode, nextInterval, Math.floor(userPos[0] * 100), Math.floor(userPos[1] * 100)])}
+        {/* ✈️ AVIONES: Aislados en AircraftLayer para no forzar re-render de MapUI cada 1s */}
+        <AircraftLayer 
+          realAircrafts={aircrafts} 
+          userPos={userPos} 
+          viewMode={viewMode} 
+        />
 
         {/* ⚡ CARGADORES y ⛽ GASOLINERAS: Memoizados */}
         {useMemo(() => (currentZoom >= 10 || (routeCoordinates && routeCoordinates.length > 0)) && (

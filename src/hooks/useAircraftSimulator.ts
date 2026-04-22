@@ -80,6 +80,7 @@ interface SimState {
   // Datos cinéticos (sin cambio entre updates)
   velocity  : number;
   track     : number;
+  lastContact: number;  // Timestamp Guard: Unix timestamp del último paquete
   // Fantasma / Aterrizaje
   lostTs?   : number;   // tiempo (ms) en que lo perdimos
   // Resto de campos Aircraft (se pasan tal cual)
@@ -119,19 +120,28 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
           simLon  : initialProj.lon,
           velocity: ac.velocity,
           track   : ac.track,
-          meta    : { icao24: ac.icao24, callsign: ac.callsign, origin_country: ac.origin_country, altitude: ac.altitude, velocity: ac.velocity, track: ac.track, isSuspect: ac.isSuspect, distanceToUser: ac.distanceToUser },
+          lastContact: ac.last_contact,
+          meta    : { icao24: ac.icao24, callsign: ac.callsign, origin_country: ac.origin_country, altitude: ac.altitude, velocity: ac.velocity, track: ac.track, isSuspect: ac.isSuspect, distanceToUser: ac.distanceToUser, last_contact: ac.last_contact },
         });
       } else {
-        // Actualizar fuente de verdad y datos cinéticos.
-        // Backdatamos igual para que el nuevo dato también se extrapole
-        // correctamente desde el primer tick tras la actualización.
-        existing.realLat  = ac.lat;
-        existing.realLon  = ac.lon;
-        existing.realTs   = now - OPENSKY_LATENCY_S * 1_000;
-        existing.velocity = ac.velocity;
-        existing.track    = ac.track;
-        existing.lostTs   = undefined; // Rescatado de ser fantasma
-        existing.meta     = { icao24: ac.icao24, callsign: ac.callsign, origin_country: ac.origin_country, altitude: ac.altitude, velocity: ac.velocity, track: ac.track, isSuspect: ac.isSuspect, distanceToUser: ac.distanceToUser };
+        // Timestamp Guard (Directiva Core): Ignorar paquetes desordenados (Out-of-Order)
+        if (ac.last_contact <= existing.lastContact) {
+          // Paquete antiguo. No actualizamos cinética ni posición real,
+          // pero lo rescatamos de fantasma por precaución.
+          existing.lostTs = undefined;
+        } else {
+          // Actualizar fuente de verdad y datos cinéticos.
+          // Backdatamos igual para que el nuevo dato también se extrapole
+          // correctamente desde el primer tick tras la actualización.
+          existing.realLat  = ac.lat;
+          existing.realLon  = ac.lon;
+          existing.realTs   = now - OPENSKY_LATENCY_S * 1_000;
+          existing.velocity = ac.velocity;
+          existing.track    = ac.track;
+          existing.lastContact = ac.last_contact;
+          existing.lostTs   = undefined; // Rescatado de ser fantasma
+          existing.meta     = { icao24: ac.icao24, callsign: ac.callsign, origin_country: ac.origin_country, altitude: ac.altitude, velocity: ac.velocity, track: ac.track, isSuspect: ac.isSuspect, distanceToUser: ac.distanceToUser, last_contact: ac.last_contact };
+        }
       }
     }
 
