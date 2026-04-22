@@ -174,6 +174,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [showChargerFilters, setShowChargerFilters] = useState(false);
   const [showSoundOptions, setShowSoundOptions] = useState(false);
   const [showRestaurantFilters, setShowRestaurantFilters] = useState(false);
+  const [showAircraftOptions, setShowAircraftOptions] = useState(false);
   const [radarStatsData, setRadarStatsData] = useState<any>(null);
   const [loadingRadarStats, setLoadingRadarStats] = useState(false);
 
@@ -521,9 +522,12 @@ const Sidebar: React.FC<SidebarProps> = ({
            <div className={`flex flex-col rounded-2xl p-5 border transition-all duration-500 ${isAnyPegasusNearby ? 'bg-blue-600/20 border-blue-500/50 shadow-[0_0_20px_rgba(37,99,235,0.2)]' : 'bg-white/5 border-white/10'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className={`p-1 rounded-xl flex items-center justify-center ${isAircraftsEnabled ? (isAnyPegasusNearby ? 'bg-blue-500 animate-pulse' : 'bg-blue-500/20') : 'bg-gray-500/20'}`}>
+                  <button 
+                    onClick={() => setShowAircraftOptions(!showAircraftOptions)}
+                    className={`p-1 rounded-xl flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${isAircraftsEnabled ? (isAnyPegasusNearby ? 'bg-blue-500 animate-pulse' : 'bg-blue-500/20') : 'bg-gray-500/20'}`}
+                  >
                     <img src="/controlador.png" alt="Aviones" className="h-11 w-11 object-contain drop-shadow-md" />
-                  </div>
+                  </button>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Sistema Antiaéreo</span>
@@ -570,7 +574,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   OBJETIVO SOSPECHOSO DETECTADO
                 </p>
               )}
-              {isAircraftsEnabled && (
+              {showAircraftOptions && isAircraftsEnabled && (
                 <div className="mt-4 pt-4 border-t border-white/10 flex flex-col gap-3">
                   <div className="flex items-center justify-between bg-white/5 p-2 rounded-lg">
                     <span className="text-[10px] text-gray-300 font-bold uppercase tracking-wider">Info Comerciales</span>
