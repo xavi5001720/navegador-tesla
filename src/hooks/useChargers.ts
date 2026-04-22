@@ -111,6 +111,10 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
             const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
             const data = await res.json();
             if (Array.isArray(data)) {
+              data.forEach(c => {
+                if (!uniqueIds.has(c.ID)) {
+                  uniqueIds.add(c.ID);
+                  const power = c.Connections?.reduce((max: number, conn: any) => Math.max(max, conn.PowerKW || 0), 0) || 0;
                   accumulated.push({ 
                     id: c.ID, 
                     lat: c.AddressInfo.Latitude, 
