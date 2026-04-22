@@ -234,7 +234,12 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
         });
       }
 
-      setSimAircrafts(next);
+      // Solo actualizamos React si algo cambió realmente.
+      // Esto evita re-renders del MapUI en ticks donde ningún avión
+      // se movió más de MIN_MOVE_DEG (ej: velocidad 0, aterrizando).
+      if (changed) {
+        setSimAircrafts(next.length > 0 ? next : []);
+      }
     };
 
     const id = setInterval(tick, SIM_TICK_MS);

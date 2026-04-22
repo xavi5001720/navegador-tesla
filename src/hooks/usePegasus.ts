@@ -256,7 +256,10 @@ export function usePegasus(
     allAircrafts,
     aircrafts,
     visibleAircrafts,
-    totalCount       : visibleAircrafts.length,
+    // totalCount muestra TODOS los aviones detectados en la macro-zona,
+    // no solo los del radio de 25km que se pintan en el mapa.
+    // Así el usuario ve "91 aviones en zona" aunque ninguno esté cerca.
+    totalCount       : allAircrafts.length,
     isAnyPegasusNearby,
     loading,
     isRateLimited,
