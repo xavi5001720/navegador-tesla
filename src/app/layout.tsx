@@ -58,7 +58,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
         {/* ErrorBoundary global: captura renders rotos sin blanquear toda la app */}
         <ErrorBoundary>

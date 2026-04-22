@@ -1145,6 +1145,7 @@ function MapUI(props: MapUIProps) {
           <TileLayer 
             attribution="&copy; Google Maps" 
             url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}" 
+            referrerPolicy="no-referrer"
             eventHandlers={{
               tileerror: () => {
                 errorCountRef.current++;
