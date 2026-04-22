@@ -34,6 +34,11 @@ export function useLuxuryYachts(isEnabled: boolean = false) {
         });
         if (syncError) {
           console.error('[useLuxuryYachts] Sync error:', syncError);
+          // Intentar obtener el cuerpo del error si es posible
+          try {
+            const errorBody = await (syncError as any).context?.json();
+            if (errorBody) console.error('[useLuxuryYachts] Detalle del error:', errorBody);
+          } catch (e) {}
         }
       }
 
