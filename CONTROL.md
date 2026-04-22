@@ -10,7 +10,7 @@ Este archivo sirve para auditar la estabilidad de cada módulo del sistema. Cada
 | [IZQ-01] | **Radares** | Sistema antiradar y alertas de proximidad | ✅ Blindado |
 | [IZQ-02] | **Aviones** | Detección de Pegasus y aeronaves | ✅ Blindado |
 | [IZQ-03] | **Yates** | Radar náutico de embarcaciones de lujo | ⏳ Pendiente |
-| [IZQ-04] | **Cargadores** | Buscador de puntos de carga EV | ⏳ Pendiente |
+| [IZQ-04] | **Cargadores** | Buscador de puntos de carga EV | ✅ Blindado |
 | [IZQ-05] | **Gasolineras** | Comparador de precios de combustible | ⏳ Pendiente |
 | [IZQ-06] | **Clima** | Sistema meteorológico en tiempo real | ⏳ Pendiente |
 | [IZQ-07] | **Tráfico** | Capa de tráfico de Google Maps | ⏳ Pendiente |
