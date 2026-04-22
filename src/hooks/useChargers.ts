@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { logger } from '@/lib/logger';
 
 export interface ChargerFilters {
@@ -196,5 +196,10 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
     fetchChargers();
   }, [isEnabled, routeFirstKey, routeLastKey, filtersStr, (routeLength === 0 ? Math.floor((userPos?.[0] || 0) * 20) + ',' + Math.floor((userPos?.[1] || 0) * 20) : '0')]);
 
-  return { chargers, loading, progress, refreshChargers: () => { lastFetchRef.current = null; setChargers(prev => [...prev]); } };
+  return useMemo(() => ({ 
+    chargers, 
+    loading, 
+    progress, 
+    refreshChargers: () => { lastFetchRef.current = null; setChargers(prev => [...prev]); } 
+  }), [chargers, loading, progress]);
 }

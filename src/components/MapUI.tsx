@@ -615,6 +615,29 @@ const GasStationMarker = React.memo(({ station, onClick }: { station: GasStation
 ));
 GasStationMarker.displayName = 'GasStationMarker';
 
+const ChargerLayer = React.memo(({ chargers, currentZoom, routeActive, onChargerClick }: { chargers: Charger[], currentZoom: number, routeActive: boolean, onChargerClick: (c: Charger) => void }) => {
+  const shouldShow = currentZoom >= 10 || routeActive;
+  if (!shouldShow) return null;
+  
+  return (
+    <>
+      {chargers.map(charger => (
+        <ChargerMarker 
+          key={`charger-${charger.id}`} 
+          charger={charger} 
+          onClick={onChargerClick} 
+        />
+      ))}
+    </>
+  );
+}, (prev, next) => {
+  return prev.chargers.length === next.chargers.length && 
+         prev.currentZoom === next.currentZoom && 
+         prev.routeActive === next.routeActive &&
+         prev.chargers[0]?.id === next.chargers[0]?.id;
+});
+ChargerLayer.displayName = 'ChargerLayer';
+
 const WeatherMarker = React.memo(({ wp }: { wp: WeatherPoint }) => (
   <Marker position={[wp.lat, wp.lon]} icon={createWeatherIcon(wp.temp, wp.condition)} interactive={false} />
 ));
@@ -1122,7 +1145,6 @@ function MapUI(props: MapUIProps) {
           <TileLayer 
             attribution="&copy; Google Maps" 
             url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}" 
-            crossOrigin={true}
             eventHandlers={{
               tileerror: () => {
                 errorCountRef.current++;
@@ -1245,13 +1267,20 @@ function MapUI(props: MapUIProps) {
           showSuspectInfo={showSuspectInfo}
         />
 
-        {/* ⚡ CARGADORES y ⛽ GASOLINERAS: Memoizados */}
+        {/* ⚡ CARGADORES: Aislados en ChargerLayer para evitar lag de renderizado */}
+        <ChargerLayer 
+          chargers={chargers} 
+          currentZoom={currentZoom} 
+          routeActive={!!routeCoordinates} 
+          onChargerClick={onChargerClick || (() => {})} 
+        />
+
+        {/* ⛽ GASOLINERAS: Memoizadas */}
         {useMemo(() => (currentZoom >= 10 || (routeCoordinates && routeCoordinates.length > 0)) && (
           <>
-            {chargers.map(charger => <ChargerMarker key={`charger-${charger.id}`} charger={charger} onClick={onChargerClick || (() => {})} />)}
             {gasStations.map(station => <GasStationMarker key={`gas-${station.id}`} station={station} onClick={onGasStationClick || (() => {})} />)}
           </>
-        ), [chargers.length, gasStations.length, currentZoom, !!routeCoordinates])}
+        ), [gasStations.length, currentZoom, !!routeCoordinates])}
 
         {useMemo(() => weatherPoints.map(wp => (
           <WeatherMarker key={`weather-${wp.id}`} wp={wp} />
