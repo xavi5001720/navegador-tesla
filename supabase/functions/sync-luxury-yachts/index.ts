@@ -19,6 +19,19 @@ Deno.serve(async (req) => {
   )
 
   try {
+    // REFUERZO DE SEGURIDAD MANUAL:
+    // Ya que hemos desactivado verify_jwt en el Gateway para permitir llaves opacas sb_publishable,
+    // verificamos manualmente que la cabecera Authorization contenga nuestra Anon Key.
+    const authHeader = req.headers.get('Authorization')
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
+    
+    if (!authHeader || (anonKey && !authHeader.includes(anonKey))) {
+      console.error('[Security] Intento de acceso no autorizado detectado.')
+      return new Response(JSON.stringify({ error: 'No autorizado: Llave de acceso inválida' }), { 
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
     // 1. Obtener todos los MMSIs registrados en nuestra lista
     const { data: yachts, error: listError } = await supabase
       .from('luxury_yacht_list')
