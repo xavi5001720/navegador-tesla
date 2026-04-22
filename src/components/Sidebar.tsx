@@ -734,11 +734,11 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <div className="bg-white/5 p-2 rounded-lg flex flex-col gap-2">
                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Conector</span>
                        <div className="flex flex-wrap gap-2">
-                          {(['ccs', 'tipo2', 'enchufe'] as const).map(c => (
+                          {(['ccs', 'tipo2', 'enchufe', 'chademo'] as const).map(c => (
                              <button 
                                 key={c}
                                 onClick={() => {
-                                  let newC = [...(chargerFilters.connectors || [])] as ('ccs' | 'tipo2' | 'enchufe')[];
+                                  let newC = [...(chargerFilters.connectors || [])] as ('ccs' | 'tipo2' | 'enchufe' | 'chademo')[];
                                   if (newC.includes(c)) newC = newC.filter(x => x !== c);
                                   else newC.push(c);
                                   setChargerFilters({ ...chargerFilters, connectors: newC });
