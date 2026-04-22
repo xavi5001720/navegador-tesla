@@ -79,6 +79,8 @@ export default function Home() {
   const [isSimulatingState, setIsSimulatingState] = useState(false);
   const [showDebugToggle, setShowDebugToggle] = useState(false);
   const [isDebugMode, setIsDebugMode] = useState(false);
+  const [showCommercialInfo, setShowCommercialInfo] = useState(true);
+  const [showSuspectInfo, setShowSuspectInfo] = useState(true);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -1168,6 +1170,10 @@ export default function Home() {
           voiceType={voiceType}
           setVoiceType={setVoiceType}
           onOpenFavorites={() => setIsFavoritesOpen(true)}
+          showCommercialInfo={showCommercialInfo}
+          setShowCommercialInfo={setShowCommercialInfo}
+          showSuspectInfo={showSuspectInfo}
+          setShowSuspectInfo={setShowSuspectInfo}
           radarProgress={progress}
           isTrafficEnabled={isTrafficEnabled}
           isTrafficWanted={isTrafficWanted}
@@ -1264,6 +1270,8 @@ export default function Home() {
           voteRadar={voteRadar}
           calculateRoute={calculateRoute}
           isTrafficWanted={isTrafficWanted}
+          showCommercialInfo={showCommercialInfo}
+          showSuspectInfo={showSuspectInfo}
           checkCanReview={checkCanReview}
         />
 

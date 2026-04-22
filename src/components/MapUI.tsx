@@ -127,12 +127,23 @@ const airlineMapping: Record<string, string> = {
 
 const aircraftIconCache = new Map<string, L.DivIcon>();
 
-const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: number = Infinity, viewMode: string = 'navigation', altitude?: number, velocity?: number, callsign?: string) => {
+const aircraftIcon = (
+  isSuspect: boolean, 
+  heading: number, 
+  distanceToUser: number = Infinity, 
+  viewMode: string = 'navigation', 
+  altitude?: number, 
+  velocity?: number, 
+  callsign?: string,
+  showCommercialInfo: boolean = true,
+  showSuspectInfo: boolean = true
+) => {
   const isThreat = isSuspect && distanceToUser < 10000;
   const colorFilter = isThreat ? 'invert(15%) sepia(100%) saturate(700%) hue-rotate(340deg) brightness(120%) contrast(130%)' : 'none';
   
   const roundedHeading = Math.round(heading / 5) * 5;
-  const cacheKey = `ac-icon-${isSuspect}-${viewMode}-${roundedHeading}`;
+  const showLabel = isSuspect ? showSuspectInfo : showCommercialInfo;
+  const cacheKey = `ac-icon-${isSuspect}-${viewMode}-${roundedHeading}-${showLabel}`;
 
   if (aircraftIconCache.has(cacheKey)) return aircraftIconCache.get(cacheKey)!;
 
@@ -147,7 +158,7 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
     else if (callsign.trim()) airlineName = `Vuelo ${callsign.trim()}`;
   }
 
-  const labelHtml = (viewMode === 'overview') ? `
+  const labelHtml = (viewMode === 'overview' && showLabel) ? `
     <div class="absolute top-10 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none" style="min-width: 150px;">
       <div class="bg-black/80 backdrop-blur-md border border-${isSuspect ? 'amber' : 'gray'}-500/50 rounded-lg p-2 shadow-2xl text-center">
         <p class="text-[10px] font-black text-${isSuspect ? 'amber' : 'gray'}-400 uppercase tracking-tighter leading-tight whitespace-nowrap">${airlineName}</p>
@@ -329,9 +340,12 @@ interface MapUIProps {
    onUpdateFriendNickname?: (friendId: string, nickname: string) => void;
    userId?: string;
    voteRadar?: (radarId: string, userId: string, type: 'confirm' | 'reject') => Promise<void>;
+   showCommercialInfo?: boolean;
+   showSuspectInfo?: boolean;
    calculateRoute: (origin: [number, number], dest: [number, number], waypoints: [number, number][], isRecalculation: boolean, isTrafficWanted: boolean) => Promise<void>;
    isTrafficWanted: boolean;
    checkCanReview?: (userId: string, fsqId?: string) => Promise<{canReview: boolean, hoursLeft: number, reason?: 'per_restaurant' | 'daily_limit'}>;
+   nextInterval?: number;
 }
 
 const getCarIcon = (heading: number, color?: string, viewMode: string = 'navigation') => {
@@ -453,19 +467,19 @@ const RadarMarker = React.memo(({ radar, userId, onSelect }: { radar: Radar, use
 });
 RadarMarker.displayName = 'RadarMarker';
 
-const AircraftMarker = React.memo(({ aircraft, userPos, viewMode }: { aircraft: Aircraft, userPos: [number, number], viewMode: string }) => {
+const AircraftMarker = React.memo(({ aircraft, userPos, viewMode, showCommercialInfo, showSuspectInfo }: { aircraft: Aircraft, userPos: [number, number], viewMode: string, showCommercialInfo: boolean, showSuspectInfo: boolean }) => {
   const dist = getDistance(userPos, [aircraft.lat, aircraft.lon]);
   return (
     <Marker 
       position={[aircraft.lat, aircraft.lon]} 
-      icon={aircraftIcon(aircraft.isSuspect, aircraft.track || 0, dist, viewMode, aircraft.altitude, aircraft.velocity, aircraft.callsign)} 
+      icon={aircraftIcon(aircraft.isSuspect, aircraft.track || 0, dist, viewMode, aircraft.altitude, aircraft.velocity, aircraft.callsign, showCommercialInfo, showSuspectInfo)} 
       interactive={false} 
     />
   );
 });
 AircraftMarker.displayName = 'AircraftMarker';
 
-const AircraftLayer = React.memo(({ realAircrafts, userPos, viewMode }: { realAircrafts: Aircraft[], userPos: [number, number], viewMode: string }) => {
+const AircraftLayer = React.memo(({ realAircrafts, userPos, viewMode, showCommercialInfo, showSuspectInfo }: { realAircrafts: Aircraft[], userPos: [number, number], viewMode: string, showCommercialInfo: boolean, showSuspectInfo: boolean }) => {
   const simulatedAircrafts = useAircraftSimulator(realAircrafts);
   
   return (
@@ -476,6 +490,8 @@ const AircraftLayer = React.memo(({ realAircrafts, userPos, viewMode }: { realAi
           aircraft={aircraft} 
           userPos={userPos} 
           viewMode={viewMode} 
+          showCommercialInfo={showCommercialInfo}
+          showSuspectInfo={showSuspectInfo}
         />
       ))}
     </>
@@ -973,14 +989,22 @@ function LocationTracker({
 
 
 
-export default function MapUI({ 
-  userPos, heading, carColor, routeCoordinates, radars = [], aircrafts = [], chargers = [],
-  gasStations = [], weatherPoints = [], waypoints = [], yachts = [], festivals = [], restaurants = [], speed = 0, hasLocation = false,
-  viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
-  onGasStationClick, onYachtClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [],   centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
+export default function MapUI(props: MapUIProps) {
+  const { 
+    userPos, heading, carColor, routeCoordinates, radars = [], aircrafts = [], chargers = [],
+    gasStations = [], weatherPoints = [], waypoints = [], yachts = [], festivals = [], restaurants = [], speed = 0, hasLocation = false,
+    viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
+    onGasStationClick, onYachtClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [], centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
     mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname, radarZones = [],
-    userId, voteRadar, calculateRoute, isTrafficWanted, nextInterval = 30000, checkCanReview
-}: MapUIProps) {
+    userId,
+    voteRadar,
+    showCommercialInfo = true,
+    showSuspectInfo = true,
+    calculateRoute,
+    isTrafficWanted,
+    checkCanReview
+  } = props;
+
   const onlineUserIdsCount = (friends.filter(f => f.is_online).length);
   const [selectedCommunityRadar, setSelectedCommunityRadar] = useState<Radar | null>(null);
   const [currentZoom, setCurrentZoom] = useState(15);
@@ -1210,6 +1234,8 @@ export default function MapUI({
           realAircrafts={aircrafts} 
           userPos={userPos} 
           viewMode={viewMode} 
+          showCommercialInfo={showCommercialInfo}
+          showSuspectInfo={showSuspectInfo}
         />
 
         {/* ⚡ CARGADORES y ⛽ GASOLINERAS: Memoizados */}

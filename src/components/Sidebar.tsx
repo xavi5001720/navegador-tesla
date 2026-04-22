@@ -85,6 +85,10 @@ interface SidebarProps {
   restaurantsCount: number;
   loadingRestaurants: boolean;
   restaurantProgress: number;
+  showCommercialInfo: boolean;
+  setShowCommercialInfo: (v: boolean) => void;
+  showSuspectInfo: boolean;
+  setShowSuspectInfo: (v: boolean) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -159,7 +163,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   setRestaurantFilters,
   restaurantsCount,
   loadingRestaurants,
-  restaurantProgress
+  restaurantProgress,
+  showCommercialInfo,
+  setShowCommercialInfo,
+  showSuspectInfo,
+  setShowSuspectInfo
 }) => {
   const [showRadarStats, setShowRadarStats] = useState(false);
   const [showYachtList, setShowYachtList] = useState(false);
@@ -562,13 +570,27 @@ const Sidebar: React.FC<SidebarProps> = ({
                   OBJETIVO SOSPECHOSO DETECTADO
                 </p>
               )}
-              {isRateLimited && (
-                <p className="mt-2 text-[10px] font-medium leading-tight animate-pulse">
-                  {loadingAircrafts && rawAircraftCount === 0
-                    ? <span className="text-blue-400/80">Inicializando sistema de seguimiento…</span>
-                    : <span className="text-amber-500/80">Límite de API alcanzado.</span>
-                  }
-                </p>
+              {isAircraftsEnabled && (
+                <div className="mt-4 pt-4 border-t border-white/10 flex flex-col gap-3">
+                  <div className="flex items-center justify-between bg-white/5 p-2 rounded-lg">
+                    <span className="text-[10px] text-gray-300 font-bold uppercase tracking-wider">Info Comerciales</span>
+                    <button 
+                      onClick={() => setShowCommercialInfo(!showCommercialInfo)}
+                      className={`w-8 h-4 rounded-full transition-colors relative ${showCommercialInfo ? 'bg-blue-600' : 'bg-gray-600'}`}
+                    >
+                      <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform duration-200 ${showCommercialInfo ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between bg-white/5 p-2 rounded-lg">
+                    <span className="text-[10px] text-gray-300 font-bold uppercase tracking-wider">Info Sospechosos</span>
+                    <button 
+                      onClick={() => setShowSuspectInfo(!showSuspectInfo)}
+                      className={`w-8 h-4 rounded-full transition-colors relative ${showSuspectInfo ? 'bg-blue-600' : 'bg-gray-600'}`}
+                    >
+                      <div className={`w-3 h-3 bg-white rounded-full absolute top-0.5 transition-transform duration-200 ${showSuspectInfo ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                    </button>
+                  </div>
+                </div>
               )}
            </div>
            </DevGuard>
