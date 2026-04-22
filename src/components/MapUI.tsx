@@ -137,7 +137,11 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
   if (aircraftIconCache.has(cacheKey)) return aircraftIconCache.get(cacheKey)!;
 
   let airlineName = 'Vuelo Comercial';
-  if (callsign) {
+  if (isSuspect) {
+    if (/DGT/i.test(callsign || '')) airlineName = '⚠️ Radar DGT Pegasus';
+    else if (/POLIC|GUARDIA|SAER|PESG/i.test(callsign || '')) airlineName = '⚠️ Patrulla Policial';
+    else airlineName = '⚠️ Aeronave sospechosa (Baja cota)';
+  } else if (callsign) {
     const prefix = callsign.trim().substring(0, 3).toUpperCase();
     if (airlineMapping[prefix]) airlineName = `✈️ ${airlineMapping[prefix]}`;
     else if (callsign.trim()) airlineName = `Vuelo ${callsign.trim()}`;
@@ -146,7 +150,7 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
   const labelHtml = (viewMode === 'overview') ? `
     <div class="absolute top-10 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none" style="min-width: 150px;">
       <div class="bg-black/80 backdrop-blur-md border border-${isSuspect ? 'amber' : 'gray'}-500/50 rounded-lg p-2 shadow-2xl text-center">
-        <p class="text-[10px] font-black text-${isSuspect ? 'amber' : 'gray'}-400 uppercase tracking-tighter leading-tight whitespace-nowrap">${isSuspect ? '⚠️ Aeronave no identificada' : airlineName}</p>
+        <p class="text-[10px] font-black text-${isSuspect ? 'amber' : 'gray'}-400 uppercase tracking-tighter leading-tight whitespace-nowrap">${airlineName}</p>
         <div class="flex gap-2 mt-1 justify-center">
           <div class="flex flex-col">
             <span class="text-[8px] text-gray-400 uppercase font-bold">Altitud</span>

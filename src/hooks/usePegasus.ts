@@ -162,12 +162,17 @@ export function usePegasus(
 
           const isCommercial = COMMERCIAL_RE.test(callsign);
           const hasWatchPattern = WATCH_RE.test(callsign);
-          const isDGT = icao24.startsWith('34');
           const isLow = altitude < 1000;
           const isSlow = velocity < 60;
           const nearApt = AIRPORTS.some(ap => haversine([lat, lon], [ap[0] as number, ap[1] as number]) < 5000);
 
-          const isSuspect = !isCommercial && (hasWatchPattern || isDGT || ((isLow && isSlow) && !nearApt));
+          // 1. Vía Identidad: Match directo con patrones de vigilancia (Ignora altitud)
+          const identitySuspect = hasWatchPattern;
+          
+          // 2. Vía Comportamiento: (Bajo + Lento + Fuera de Aeropuerto) Y (No es comercial confirmado)
+          const behaviorSuspect = (isLow && isSlow && !nearApt) && !isCommercial;
+
+          const isSuspect = identitySuspect || behaviorSuspect;
           const distanceToUser = haversine([pos[0], pos[1]], [lat, lon]);
 
           return {
