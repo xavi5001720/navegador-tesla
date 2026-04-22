@@ -13,6 +13,7 @@ export interface YachtPosition {
   nav_status: string | null;
   last_update: string;
   destination: string | null;
+  owner_photo_url?: string | null;
 }
 
 const SYNC_INTERVAL_MS = 5 * 60 * 60 * 1000; // 5 horas
@@ -68,7 +69,8 @@ export function useLuxuryYachts(isEnabled: boolean = false) {
           destination,
           luxury_yacht_list (
             name,
-            owner
+            owner,
+            owner_photo_url
           )
         `);
 
@@ -86,7 +88,8 @@ export function useLuxuryYachts(isEnabled: boolean = false) {
           last_update: item.last_update,
           destination: item.destination,
           name: item.luxury_yacht_list?.name || 'Yate Desconocido',
-          owner: item.luxury_yacht_list?.owner || 'Privado'
+          owner: item.luxury_yacht_list?.owner || 'Privado',
+          owner_photo_url: item.luxury_yacht_list?.owner_photo_url || null
         }));
 
         setYachts(mappedYachts);

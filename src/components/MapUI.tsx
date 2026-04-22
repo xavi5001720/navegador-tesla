@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, Circle, Polyline } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap, Circle, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { Camera, Map as MapIcon } from 'lucide-react'; 
@@ -590,18 +590,53 @@ const FestivalMarker = React.memo(({ fest, userPos, isTrafficWanted, onCalculate
 ));
 FestivalMarker.displayName = 'FestivalMarker';
 
-const YachtMarker = React.memo(({ yacht, onClick }: { yacht: YachtPosition, onClick: (y: YachtPosition) => void }) => (
-  <Marker 
-    position={[yacht.latitude, yacht.longitude]} 
-    icon={yachtIcon(yacht.course || yacht.heading || 0, yacht.mmsi)}
-    zIndexOffset={25000}
-    interactive={true}
-    eventHandlers={{
-      click: () => onClick(yacht),
-      mousedown: () => onClick(yacht)
-    }}
-  />
-));
+const YachtMarker = React.memo(({ yacht, onClick }: { yacht: YachtPosition, onClick: (y: YachtPosition) => void }) => {
+  const photoHtml = yacht.owner_photo_url ? `
+    <div style="display: flex; flex-direction: column; align-items: center; padding: 5px;">
+      <img 
+        src="${yacht.owner_photo_url}" 
+        referrerPolicy="no-referrer" 
+        onerror="this.style.display='none'" 
+        style="width:50px; height:50px; border-radius:50%; object-fit:cover; border: 2px solid #fbbf24; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" 
+      />
+      <div style="text-align: center;">
+        <div style="font-size: 11px; font-weight: 900; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1;">Propietario</div>
+        <div style="font-size: 14px; font-weight: 900; color: white; margin-top: 2px;">${yacht.owner}</div>
+        <div style="font-size: 10px; font-weight: 700; color: #94a3b8; margin-top: 1px; text-transform: uppercase;">${yacht.name}</div>
+      </div>
+    </div>
+  ` : `
+    <div style="padding: 5px; text-align: center;">
+      <div style="font-size: 11px; font-weight: 900; color: #fbbf24; text-transform: uppercase;">${yacht.owner}</div>
+      <div style="font-size: 13px; font-weight: 900; color: white;">${yacht.name}</div>
+    </div>
+  `;
+
+  return (
+    <Marker 
+      position={[yacht.latitude, yacht.longitude]} 
+      icon={yachtIcon(yacht.course || yacht.heading || 0, yacht.mmsi)}
+      zIndexOffset={25000}
+      interactive={true}
+      eventHandlers={{
+        click: () => onClick(yacht),
+        mousedown: () => onClick(yacht)
+      }}
+    >
+      <Tooltip 
+        direction="top" 
+        offset={[0, -20]} 
+        opacity={1} 
+        permanent={false}
+        className="luxury-yacht-tooltip"
+      >
+        <div className="bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl p-1 shadow-2xl">
+          ${photoHtml}
+        </div>
+      </Tooltip>
+    </Marker>
+  );
+});
 YachtMarker.displayName = 'YachtMarker';
 
 const ChargerMarker = React.memo(({ charger, onClick }: { charger: Charger, onClick: (c: Charger) => void }) => (

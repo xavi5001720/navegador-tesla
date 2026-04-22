@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS luxury_yacht_list (
     mmsi text UNIQUE NOT NULL,
     name text NOT NULL,
     owner text,
+    owner_photo_url text,
     created_at timestamptz DEFAULT now()
 );
 

@@ -60,10 +60,24 @@ html, body { height: 100%; margin: 0; padding: 0; }
 }
 
 /* 🚀 GPU Accelerated Aircraft Animation */
-.custom-aircraft-icon {
-  will-change: transform;
-  border: none !important;
+.custom-aircraft-icon, .custom-yacht-icon, .custom-car-icon, .custom-friend-icon, .custom-community-icon {
   background: none !important;
+  border: none !important;
+}
+
+.luxury-yacht-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.luxury-yacht-tooltip::before {
+  display: none !important;
+}
+
+.leaflet-tooltip-top.luxury-yacht-tooltip::before {
+  border-top-color: transparent !important;
 }
 
 .aircraft-animation-container {
