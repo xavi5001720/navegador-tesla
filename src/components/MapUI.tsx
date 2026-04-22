@@ -198,15 +198,14 @@ const aircraftIcon = (
   return icon;
 };
 
-const TESLA_SHIPS_MMSI = ['366102000', '311001353', '440245000', '311000321', '636023991', '259805000', '636025798'];
+
 
 // Cache global para iconos de barcos para evitar renderToStaticMarkup masivo
 const yachtIconCache = new Map<string, L.DivIcon>();
 
 const yachtIcon = (heading: number, mmsi?: string) => {
-  const isTeslaShip = mmsi && TESLA_SHIPS_MMSI.includes(mmsi);
   const roundedHeading = Math.round(heading / 2) * 2;
-  const cacheKey = `${isTeslaShip ? 'tesla' : 'yacht'}-${roundedHeading}`;
+  const cacheKey = `yacht-${roundedHeading}`;
   
   if (yachtIconCache.has(cacheKey)) return yachtIconCache.get(cacheKey)!;
 
@@ -215,7 +214,7 @@ const yachtIcon = (heading: number, mmsi?: string) => {
       <div class="yacht-icon-container" style="transform: rotate(${roundedHeading - 45}deg)">
         <div class="absolute inset-0 rounded-full bg-blue-400/10 blur-2xl scale-150 animate-pulse"></div>
         <img 
-          src="${isTeslaShip ? "/barcotesla.png" : "/yacht-icon.png"}" 
+          src="/yacht-icon.png" 
           alt="Y" 
           class="h-10 w-10 object-contain drop-shadow-[0_5px_20px_rgba(0,0,0,0.8)]" 
         />
