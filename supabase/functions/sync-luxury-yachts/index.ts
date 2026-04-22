@@ -6,6 +6,8 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
+  console.log(`[Sync] Request received: ${req.method} ${new URL(req.url).pathname}`);
+
   // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
