@@ -45,28 +45,27 @@ function encodePolyline(coordinates: [number, number][]) {
 }
 
 function isFreeCharger(costStr: string | null | undefined, apiIsFree: boolean | null | undefined): boolean {
-  // Si la API dice explícitamente que es de pago, lo descartamos
+  // 1. Sanitización y preparación
+  const s = (costStr || '').toLowerCase();
+  
+  // 2. Prioridad Absoluta a la Lista Blanca (Short-circuit)
+  // Si detectamos términos de gratuidad, aprobamos inmediatamente (evita falsos positivos con '0€')
+  const whiteList = ['gratis', 'free', '0.00', '0,00', '0€', '0 €', 'sin coste'];
+  if (whiteList.some(k => s.includes(k))) return true;
+
+  // 3. Evaluación de la Lista Negra (Solo si falló la Blanca)
+  // Si la API dice explícitamente que se paga en el sitio (apiIsFree es false) -> Bloqueamos
   if (apiIsFree === false) return false;
 
-  if (!costStr) return false; // Bloqueo estricto: Si no hay info, no es gratis
-  const s = costStr.toLowerCase();
-  
-  // Lista Blanca: Términos que confirman gratuidad
-  const whiteList = ['gratis', 'free', '0.00', '0,00', 'sin coste', 'no cost', 'incluido'];
-  const isWhiteListed = whiteList.some(k => s.includes(k));
-  
-  // Lista Negra: Términos que implican pago
-  const blackList = ['€', 'kwh', 'min', 'pago', 'precio', 'tarifa', 'cost', 'fee', 'eur'];
-  const hasBlackListTerm = blackList.some(k => s.includes(k));
-  
-  // Lógica de decisión:
-  // 1. Si está en la blanca, es gratis (incluso si menciona "parking 5€, carga gratis")
-  if (isWhiteListed) return true;
-  
-  // 2. Si no está en la blanca y tiene términos de pago, es de pago
-  if (hasBlackListTerm) return false;
-  
-  // 3. Ante cualquier duda o ambigüedad, descartar
+  // Si el texto contiene términos de pago -> Bloqueamos
+  const blackList = ['€', 'kwh', 'min', 'pago', 'precio', 'tarifa'];
+  if (blackList.some(k => s.includes(k))) return false;
+
+  // 4. Regla de Relajación para Nulos / API Confirmada
+  // Si no hay texto de coste pero la API confirma que NO es de pago -> Aprobamos
+  if (apiIsFree === true) return true;
+
+  // Caso por defecto: Si no hay info o es ambigua (y no pasó la blanca), bloqueamos por seguridad
   return false;
 }
 
