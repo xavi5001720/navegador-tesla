@@ -785,20 +785,31 @@ export default function Home() {
         />
       )}
 
-      {/* Botón Flotante Modo Debug (Solo visible con ?xavi) */}
+      {/* MODO DESARROLLADOR (Solo visible con ?xavi en la URL) */}
       {showDebugToggle && (
-        <div className="fixed top-6 right-6 z-[600]">
-          <button
-            onClick={() => setIsDebugMode(!isDebugMode)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
-              isDebugMode 
-                ? 'bg-amber-500/90 text-black border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.5)]' 
-                : 'bg-black/60 text-amber-500 border-amber-500/30 hover:border-amber-500/60 backdrop-blur-md'
-            }`}
-          >
-            {isDebugMode ? '☠️ MODO DESARROLLADOR: ON' : '🛡️ MODO DESARROLLADOR: OFF'}
-          </button>
-        </div>
+        <>
+          {/* Banda superior identificativa */}
+          <div className="fixed top-0 left-0 right-0 z-[700] flex items-center justify-center gap-2 py-1 bg-amber-500/20 border-b border-amber-500/40 backdrop-blur-sm pointer-events-none">
+            <span className="text-[10px] font-black text-amber-400 uppercase tracking-[0.2em]">
+              ⚡ MODO DESARROLLADOR ACTIVO ⚡
+            </span>
+          </div>
+
+          {/* Botón de toggle flotante */}
+          <div className="fixed top-8 right-4 z-[650]">
+            <button
+              onClick={() => setIsDebugMode(!isDebugMode)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-300 border ${
+                isDebugMode
+                  ? 'bg-amber-500 text-black border-amber-300 shadow-[0_0_24px_rgba(245,158,11,0.6)]'
+                  : 'bg-black/70 text-amber-400 border-amber-500/40 hover:border-amber-400 backdrop-blur-md'
+              }`}
+            >
+              <span className={`h-2 w-2 rounded-full ${isDebugMode ? 'bg-black animate-pulse' : 'bg-amber-500'}`} />
+              {isDebugMode ? 'Comerciales: ON' : 'Comerciales: OFF'}
+            </button>
+          </div>
+        </>
       )}
 
       {/* Botón de Toggle Sidebar (Mobile) */}
