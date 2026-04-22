@@ -591,27 +591,6 @@ const FestivalMarker = React.memo(({ fest, userPos, isTrafficWanted, onCalculate
 FestivalMarker.displayName = 'FestivalMarker';
 
 const YachtMarker = React.memo(({ yacht, onClick }: { yacht: YachtPosition, onClick: (y: YachtPosition) => void }) => {
-  const photoHtml = yacht.owner_photo_url ? `
-    <div style="display: flex; flex-direction: column; align-items: center; padding: 5px;">
-      <img 
-        src="${yacht.owner_photo_url}" 
-        referrerPolicy="no-referrer" 
-        onerror="this.style.display='none'" 
-        style="width:50px; height:50px; border-radius:50%; object-fit:cover; border: 2px solid #fbbf24; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);" 
-      />
-      <div style="text-align: center;">
-        <div style="font-size: 11px; font-weight: 900; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1;">Propietario</div>
-        <div style="font-size: 14px; font-weight: 900; color: white; margin-top: 2px;">${yacht.owner}</div>
-        <div style="font-size: 10px; font-weight: 700; color: #94a3b8; margin-top: 1px; text-transform: uppercase;">${yacht.name}</div>
-      </div>
-    </div>
-  ` : `
-    <div style="padding: 5px; text-align: center;">
-      <div style="font-size: 11px; font-weight: 900; color: #fbbf24; text-transform: uppercase;">${yacht.owner}</div>
-      <div style="font-size: 13px; font-weight: 900; color: white;">${yacht.name}</div>
-    </div>
-  `;
-
   return (
     <Marker 
       position={[yacht.latitude, yacht.longitude]} 
@@ -623,17 +602,66 @@ const YachtMarker = React.memo(({ yacht, onClick }: { yacht: YachtPosition, onCl
         mousedown: () => onClick(yacht)
       }}
     >
-      <Tooltip 
-        direction="top" 
-        offset={[0, -20]} 
-        opacity={1} 
-        permanent={false}
-        className="luxury-yacht-tooltip"
-      >
-        <div className="bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl p-1 shadow-2xl">
-          ${photoHtml}
+      <Tooltip direction="top" offset={[0, -20]} opacity={1}>
+        <div className="flex flex-col items-center p-2 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-2xl min-w-[120px]">
+          {yacht.owner_photo_url && (
+            <img 
+              src={yacht.owner_photo_url} 
+              referrerPolicy="no-referrer"
+              className="w-12 h-12 rounded-full object-cover border-2 border-amber-500 mb-2 shadow-xl"
+              alt={yacht.owner}
+            />
+          )}
+          <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">{yacht.owner}</span>
+          <span className="text-xs font-bold text-white tracking-tight">{yacht.name}</span>
         </div>
       </Tooltip>
+
+      <Popup minWidth={250} className="tesla-popup">
+        <div className="p-4 bg-black/95 backdrop-blur-3xl border border-amber-500/30 rounded-2xl flex flex-col items-center text-center gap-3">
+          {yacht.owner_photo_url ? (
+            <div className="relative">
+              <div className="absolute inset-0 rounded-full bg-amber-500/20 blur-xl animate-pulse"></div>
+              <img 
+                src={yacht.owner_photo_url} 
+                referrerPolicy="no-referrer"
+                className="relative w-24 h-24 rounded-full object-cover border-4 border-amber-500 shadow-2xl"
+                alt={yacht.owner}
+              />
+            </div>
+          ) : (
+            <div className="w-24 h-24 rounded-full bg-white/5 border-4 border-white/10 flex items-center justify-center text-4xl font-black text-white/20">
+              {yacht.owner.charAt(0)}
+            </div>
+          )}
+          
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">Superyate VIP</span>
+            <h3 className="text-2xl font-black text-white tracking-tighter">{yacht.name}</h3>
+            <p className="text-sm font-medium text-gray-400">Propiedad de <strong className="text-white font-black">{yacht.owner}</strong></p>
+          </div>
+
+          <div className="w-full h-px bg-white/10 my-1" />
+          
+          <div className="grid grid-cols-2 gap-2 w-full">
+            <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+              <span className="block text-[8px] text-gray-500 font-black uppercase tracking-widest">Velocidad</span>
+              <span className="text-sm font-black text-white">{yacht.speed?.toFixed(1) || '0.0'} kn</span>
+            </div>
+            <div className="bg-white/5 p-2 rounded-xl border border-white/5">
+              <span className="block text-[8px] text-gray-500 font-black uppercase tracking-widest">Rumbo</span>
+              <span className="text-sm font-black text-white">{(yacht.course || yacht.heading || 0)}º</span>
+            </div>
+          </div>
+
+          <button 
+            onClick={() => onClick(yacht)}
+            className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-amber-900/40"
+          >
+            Ver Telemetría Completa
+          </button>
+        </div>
+      </Popup>
     </Marker>
   );
 });
