@@ -1489,7 +1489,7 @@ export default function Home() {
                       isCharger ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-orange-500 hover:bg-orange-400'
                     }`}
                   >
-                    <img src="/navegacion.png" alt="" className="h-4 w-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+                    <img src="/mapa.png" alt="" className="h-4 w-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
                     Ir aquí
                   </button>
                   <button

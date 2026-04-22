@@ -26,91 +26,87 @@ import { getCarFilter, getCarImage } from '@/utils/carStyles';
 import { getDistance, getBearing, findClosestPointOnPolyline } from '@/utils/geo';
 
 const endMarkerIcon = L.divIcon({
-   html: renderToStaticMarkup(
-     <div className="h-6 w-6 rounded-full bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,1)] border-4 border-white transform -translate-x-1/2 -translate-y-1/2"></div>
-   ),
+   html: `<div class="h-6 w-6 rounded-full bg-rose-500 shadow-[0_0_15px_rgba(244,63,94,1)] border-4 border-white transform -translate-x-1/2 -translate-y-1/2"></div>`,
    className: 'custom-end-icon',
    iconSize: [24, 24],
    iconAnchor: [12, 12],
 });
 
 const radarIcon = (type: string = 'fixed', speedLimit?: number) => L.divIcon({
-  html: renderToStaticMarkup(
-    <div className="relative h-10 w-10 flex flex-col items-center counter-rotate">
-      <div className={`h-8 w-8 flex items-center justify-center rounded-full border-2 border-white shadow-lg animate-pulse z-10 ${
+  html: `
+    <div class="relative h-10 w-10 flex flex-col items-center counter-rotate">
+      <div class="h-8 w-8 flex items-center justify-center rounded-full border-2 border-white shadow-lg animate-pulse z-10 ${
         type === 'section' ? 'bg-orange-600' : (type === 'camera' ? 'bg-blue-600' : 'bg-rose-600')
-      }`}>
-         {type === 'section' ? <Ruler className="h-4 w-4 text-white" /> : 
-          (type === 'camera' ? <Radio className="h-4 w-4 text-white" /> : <Camera className="h-4 w-4 text-white" />)}
+      }">
+         ${type === 'section' ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.8 2.8 0 1 1-4 4l-12.6-12.7a2.8 2.8 0 1 1 4-4l12.6 12.7Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 13.5 2 2"/><path d="m16.5 10.5 2 2"/></svg>' : 
+          (type === 'camera' ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0-4a9 9 0 0 1 9 9 9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9"/></svg>' : 
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>')}
       </div>
-      {speedLimit && (
-        <div className={`absolute -bottom-1 bg-white border-2 rounded-full h-5 w-5 flex items-center justify-center shadow-md z-20 ${
+      ${speedLimit ? `
+        <div class="absolute -bottom-1 bg-white border-2 rounded-full h-5 w-5 flex items-center justify-center shadow-md z-20 ${
           type === 'section' ? 'border-orange-600' : (type === 'camera' ? 'border-blue-600' : 'border-rose-600')
-        }`}>
-          <span className="text-[10px] font-black text-black leading-none">{speedLimit}</span>
+        }">
+          <span class="text-[10px] font-black text-black leading-none">${speedLimit}</span>
         </div>
-      )}
+      ` : ''}
     </div>
-  ),
+  `,
   className: 'custom-radar-icon',
   iconSize: [40, 44],
   iconAnchor: [20, 32],
 });
 // 1. PRE-GENERACIÓN DE ICONOS ESTÁTICOS (Evita llamar a renderToStaticMarkup en cada render)
 const chargerIcon = L.divIcon({
-  html: renderToStaticMarkup(
-    <div className="h-8 w-8 flex items-center justify-center rounded-full bg-emerald-600 border-2 border-white shadow-[0_0_15px_rgba(5,150,105,0.8)] counter-rotate">
-       <img src="/cargadorEV.png" alt="C" className="h-4 w-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+  html: `
+    <div class="h-8 w-8 flex items-center justify-center rounded-full bg-emerald-600 border-2 border-white shadow-[0_0_15px_rgba(5,150,105,0.8)] counter-rotate">
+       <img src="/cargadorEV.png" alt="C" class="h-4 w-4 object-contain" style="filter: brightness(0) invert(1);" />
     </div>
-  ),
+  `,
   className: 'custom-charger-icon pointer-events-auto',
   iconSize: [32, 32],
   iconAnchor: [16, 16],
 });
 
 const gasStationIcon = L.divIcon({
-  html: renderToStaticMarkup(
-    <div className="h-8 w-8 flex items-center justify-center rounded-full bg-orange-500 border-2 border-white shadow-[0_0_15px_rgba(249,115,22,0.8)] counter-rotate">
-       <img src="/gasolinera.png" alt="G" className="h-4 w-4 object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+  html: `
+    <div class="h-8 w-8 flex items-center justify-center rounded-full bg-orange-500 border-2 border-white shadow-[0_0_15px_rgba(249,115,22,0.8)] counter-rotate">
+       <img src="/gasolinera.png" alt="G" class="h-4 w-4 object-contain" style="filter: brightness(0) invert(1);" />
     </div>
-  ),
+  `,
   className: 'custom-gas-icon pointer-events-auto',
   iconSize: [32, 32],
   iconAnchor: [16, 16],
 });
 
 const festivalIcon = L.divIcon({
-  html: renderToStaticMarkup(
-    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-amber-500 border-2 border-white shadow-[0_0_20px_rgba(245,158,11,0.8)] counter-rotate animate-bounce-slow">
-       <span className="text-xl">🎭</span>
+  html: `
+    <div class="h-10 w-10 flex items-center justify-center rounded-full bg-amber-500 border-2 border-white shadow-[0_0_20px_rgba(245,158,11,0.8)] counter-rotate animate-bounce-slow">
+       <span class="text-xl">🎭</span>
     </div>
-  ),
+  `,
   className: 'custom-festival-icon pointer-events-auto',
   iconSize: [40, 40],
   iconAnchor: [20, 20],
 });
 
-/** Pin estándar: restaurante ya valorado por la comunidad (púrpura) */
 const restaurantIcon = L.divIcon({
-  html: renderToStaticMarkup(
-    <div className="h-10 w-10 flex items-center justify-center rounded-full bg-gray-900 border-2 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.8)] counter-rotate animate-bounce-slow">
-       <img src="/burguer.png" alt="R" className="h-6 w-6 object-contain" />
+  html: `
+    <div class="h-10 w-10 flex items-center justify-center rounded-full bg-gray-900 border-2 border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.8)] counter-rotate animate-bounce-slow">
+       <img src="/burguer.png" alt="R" class="h-6 w-6 object-contain" />
     </div>
-  ),
+  `,
   className: 'custom-restaurant-icon pointer-events-auto',
   iconSize: [40, 40],
   iconAnchor: [20, 20],
 });
 
-/** Pin dorado: restaurante sin valorar (territorio virgen / oportunidad) */
 const restaurantVirginIcon = L.divIcon({
-  html: renderToStaticMarkup(
-    <div className="relative h-11 w-11 flex items-center justify-center rounded-full bg-gray-900 border-2 border-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.9)] counter-rotate animate-bounce-slow">
-      <img src="/burguer.png" alt="R" className="h-6 w-6 object-contain" />
-      {/* Badge estrella vacía — indica 'nadie ha estado aquí aún' */}
-      <span className="absolute -top-1.5 -right-1.5 text-[10px] bg-amber-400 text-gray-900 font-black rounded-full w-4 h-4 flex items-center justify-center shadow-md">★</span>
+  html: `
+    <div class="relative h-11 w-11 flex items-center justify-center rounded-full bg-gray-900 border-2 border-amber-400 shadow-[0_0_18px_rgba(251,191,36,0.9)] counter-rotate animate-bounce-slow">
+      <img src="/burguer.png" alt="R" class="h-6 w-6 object-contain" />
+      <span class="absolute -top-1.5 -right-1.5 text-[10px] bg-amber-400 text-gray-900 font-black rounded-full w-4 h-4 flex items-center justify-center shadow-md">★</span>
     </div>
-  ),
+  `,
   className: 'custom-restaurant-virgin-icon pointer-events-auto',
   iconSize: [44, 44],
   iconAnchor: [22, 22],
@@ -209,27 +205,22 @@ const yachtIconCache = new Map<string, L.DivIcon>();
 
 const yachtIcon = (heading: number, mmsi?: string) => {
   const isTeslaShip = mmsi && TESLA_SHIPS_MMSI.includes(mmsi);
-  
-  // Normalizamos el heading para mejorar el hit-rate del cache
-  // Un barco no cambia visualmente mucho cada 2 grados
   const roundedHeading = Math.round(heading / 2) * 2;
   const cacheKey = `${isTeslaShip ? 'tesla' : 'yacht'}-${roundedHeading}`;
   
-  if (yachtIconCache.has(cacheKey)) {
-    return yachtIconCache.get(cacheKey)!;
-  }
+  if (yachtIconCache.has(cacheKey)) return yachtIconCache.get(cacheKey)!;
 
   const icon = L.divIcon({
-    html: renderToStaticMarkup(
-      <div className="yacht-icon-container" style={{ transform: `rotate(${roundedHeading - 45}deg)` }}>
-        <div className="absolute inset-0 rounded-full bg-blue-400/10 blur-2xl scale-150 animate-pulse"></div>
+    html: `
+      <div class="yacht-icon-container" style="transform: rotate(${roundedHeading - 45}deg)">
+        <div class="absolute inset-0 rounded-full bg-blue-400/10 blur-2xl scale-150 animate-pulse"></div>
         <img 
-          src={isTeslaShip ? "/barcotesla.png" : "/yacht-icon.png"} 
+          src="${isTeslaShip ? "/barcotesla.png" : "/yacht-icon.png"}" 
           alt="Y" 
-          className="h-10 w-10 object-contain drop-shadow-[0_5px_20px_rgba(0,0,0,0.8)]" 
+          class="h-10 w-10 object-contain drop-shadow-[0_5px_20px_rgba(0,0,0,0.8)]" 
         />
       </div>
-    ),
+    `,
     className: 'custom-yacht-icon',
     iconSize: [64, 64],
     iconAnchor: [32, 32],
@@ -246,12 +237,12 @@ const weatherEmojiMap: Record<string, string> = {
 
 const createWeatherIcon = (temp: number, condition: string) => {
   const emoji = weatherEmojiMap[condition] || '🌡️';
-  const iconHtml = renderToStaticMarkup(
-    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-md border border-white/20 rounded-full shadow-[0_0_15px_rgba(0,0,0,0.5)] text-white font-bold counter-rotate">
-       <span className="text-lg drop-shadow-md">{emoji}</span>
-       <span className="text-sm drop-shadow-md">{Math.round(temp)}º</span>
+  const iconHtml = `
+    <div class="flex items-center gap-1.5 px-3 py-1.5 bg-black/50 backdrop-blur-md border border-white/20 rounded-full shadow-[0_0_15px_rgba(0,0,0,0.5)] text-white font-bold counter-rotate">
+       <span class="text-lg drop-shadow-md">${emoji}</span>
+       <span class="text-sm drop-shadow-md">${Math.round(temp)}º</span>
     </div>
-  );
+  `;
   return L.divIcon({ html: iconHtml, className: 'custom-weather-icon', iconSize: [75, 36], iconAnchor: [37, 18] });
 };
 
@@ -349,22 +340,24 @@ interface MapUIProps {
 }
 
 const getCarIcon = (heading: number, color?: string, viewMode: string = 'navigation') => {
-  // Round heading to nearest 5° to keep cache hit rates high without sacrificing accuracy
   const roundedHeading = Math.round(heading / 5) * 5;
   const key = `car-${color}-${roundedHeading}-${viewMode}`;
   if (iconCache.has(key)) return iconCache.get(key)!;
 
-  // In navigation mode the map container rotates so we use a CSS variable to counter-rotate the car.
   const rotationStyle = viewMode === 'navigation'
     ? `rotate(var(--car-rotation, ${roundedHeading}deg))`
     : `rotate(${roundedHeading}deg)`;
 
-  const iconHtml = renderToStaticMarkup(
-    <div className="relative flex items-center justify-center h-20 w-20 group car-always-up" style={{ transform: rotationStyle }}>
-      <div className={`absolute inset-0 rounded-full blur-2xl scale-125 transition-all duration-700 ${color === 'Rojo' ? 'bg-red-500/30' : color === 'Azul' ? 'bg-blue-500/30' : color === 'Negro' ? 'bg-gray-900/40' : 'bg-blue-500/20'}`}></div>
-      <img src={getCarImage(color)} className="w-full h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] rotate-180" style={{ filter: getCarFilter(color) }} />
+  const carImage = getCarImage(color);
+  const carFilter = getCarFilter(color);
+  const glowColor = color === 'Rojo' ? 'bg-red-500/30' : color === 'Azul' ? 'bg-blue-500/30' : color === 'Negro' ? 'bg-gray-900/40' : 'bg-blue-500/20';
+
+  const iconHtml = `
+    <div class="relative flex items-center justify-center h-20 w-20 group car-always-up" style="transform: ${rotationStyle}">
+      <div class="absolute inset-0 rounded-full blur-2xl scale-125 transition-all duration-700 ${glowColor}"></div>
+      <img src="${carImage}" class="w-full h-full object-contain drop-shadow-[0_15px_15px_rgba(0,0,0,0.8)] rotate-180" style="filter: ${carFilter}" />
     </div>
-  );
+  `;
   const icon = L.divIcon({ html: iconHtml, className: 'custom-car-icon', iconSize: [80, 80], iconAnchor: [40, 40] });
   iconCache.set(key, icon);
   return icon;
@@ -379,19 +372,23 @@ const getFriendIcon = (color?: string, name?: string, nickname?: string, heading
   if (iconCache.has(key)) return iconCache.get(key)!;
 
   const displayName = nickname ? `${nickname} (${name})` : name;
-  const iconHtml = renderToStaticMarkup(
-    <div className="relative flex flex-col items-center group car-marker-social">
-      <div className="mb-1 pointer-events-none">
-        <span className="text-[10px] font-black text-white px-2 py-0.5 rounded-full bg-blue-600/60 border border-blue-400/40 backdrop-blur-sm shadow-lg whitespace-nowrap uppercase tracking-widest leading-none block">
-          {displayName}
+  const carImage = getCarImage(color);
+  const carFilter = getCarFilter(color);
+  const glowColor = color === 'Rojo' ? 'bg-red-500/30' : color === 'Azul' ? 'bg-blue-500/30' : 'bg-blue-500/20';
+
+  const iconHtml = `
+    <div class="relative flex flex-col items-center group car-marker-social">
+      <div class="mb-1 pointer-events-none">
+        <span class="text-[10px] font-black text-white px-2 py-0.5 rounded-full bg-blue-600/60 border border-blue-400/40 backdrop-blur-sm shadow-lg whitespace-nowrap uppercase tracking-widest leading-none block">
+          ${displayName}
         </span>
       </div>
-      <div className="relative h-20 w-20" style={{ transform: `rotate(${roundedHeading}deg)` }}>
-        <div className={`absolute inset-0 rounded-full blur-2xl scale-125 ${color === 'Rojo' ? 'bg-red-500/30' : color === 'Azul' ? 'bg-blue-500/30' : 'bg-blue-500/20'}`}></div>
-        <img src={getCarImage(color)} className="w-full h-full object-contain rotate-180 opacity-90" style={{ filter: getCarFilter(color) }} />
+      <div class="relative h-20 w-20" style="transform: rotate(${roundedHeading}deg)">
+        <div class="absolute inset-0 rounded-full blur-2xl scale-125 ${glowColor}"></div>
+        <img src="${carImage}" class="w-full h-full object-contain rotate-180 opacity-90" style="filter: ${carFilter}" />
       </div>
     </div>
-  );
+  `;
   
   const icon = L.divIcon({ html: iconHtml, className: 'custom-friend-icon', iconSize: [100, 130], iconAnchor: [50, 65] });
   iconCache.set(key, icon);
@@ -400,46 +397,46 @@ const getFriendIcon = (color?: string, name?: string, nickname?: string, heading
 
 const communityRadarIcon = (isVisible: boolean, isMine: boolean, category: string = 'mobile_radar') => {
   let bgColor = isVisible ? 'bg-blue-600' : 'bg-gray-600';
-  let Icon = null;
+  let iconContent = '';
 
   switch (category) {
     case 'accident':
       bgColor = 'bg-rose-600';
-      Icon = <AlertTriangle className="h-6 w-6 text-white" />;
+      iconContent = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>';
       break;
     case 'works':
       bgColor = 'bg-orange-600';
-      Icon = <Construction className="h-6 w-6 text-white" />;
+      iconContent = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="10" width="20" height="8" rx="2"/><path d="m9 10 1-6"/><path d="m15 10-1-6"/><path d="M5 18v3"/><path d="M19 18v3"/></svg>';
       break;
     case 'object':
       bgColor = 'bg-amber-600';
-      Icon = <Package className="h-6 w-6 text-white" />;
+      iconContent = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>';
       break;
     case 'stopped_vehicle':
       bgColor = 'bg-slate-600';
-      Icon = <Car className="h-6 w-6 text-white" />;
+      iconContent = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>';
       break;
     case 'animal':
       bgColor = 'bg-emerald-600';
-      Icon = <PawPrint className="h-6 w-6 text-white" />;
+      iconContent = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><circle cx="7" cy="21" r="2"/><path d="M7 8c.5-5.7 6-5 6-5s7.1-.5 7.1 5c0 0-12 4.5-13.1 4.5Z"/><path d="M11 10s4 .3 4 3.5"/></svg>';
       break;
     default:
-      Icon = <img src="/radarpolicia.png" alt="P" className="h-7 w-7 object-contain" />;
+      iconContent = '<img src="/radarpolicia.png" alt="P" class="h-7 w-7 object-contain" />';
   }
 
   return L.divIcon({
-    html: renderToStaticMarkup(
-      <div className={`relative h-12 w-12 flex flex-col items-center counter-rotate transition-all duration-500 ${!isVisible && isMine ? 'opacity-60 scale-90' : 'opacity-100 scale-110'}`}>
-        <div className={`h-10 w-10 flex items-center justify-center rounded-full border-2 border-white shadow-xl z-10 ${bgColor}`}>
-           {Icon}
+    html: `
+      <div class="relative h-12 w-12 flex flex-col items-center counter-rotate transition-all duration-500 ${!isVisible && isMine ? 'opacity-60 scale-90' : 'opacity-100 scale-110'}">
+        <div class="h-10 w-10 flex items-center justify-center rounded-full border-2 border-white shadow-xl z-10 ${bgColor}">
+           ${iconContent}
         </div>
-        {!isVisible && isMine && (
-          <div className="absolute -top-1 bg-amber-500 border border-white rounded-md px-1 py-0.5 z-20 shadow-sm">
-            <span className="text-[8px] font-bold text-white uppercase whitespace-nowrap">Pendiente</span>
+        ${!isVisible && isMine ? `
+          <div class="absolute -top-1 bg-amber-500 border border-white rounded-md px-1 py-0.5 z-20 shadow-sm">
+            <span class="text-[8px] font-bold text-white uppercase whitespace-nowrap">Pendiente</span>
           </div>
-        )}
+        ` : ''}
       </div>
-    ),
+    `,
     className: 'custom-community-icon',
     iconSize: [48, 48],
     iconAnchor: [24, 24],
@@ -476,6 +473,16 @@ const AircraftMarker = React.memo(({ aircraft, userPos, viewMode, showCommercial
       interactive={false} 
     />
   );
+}, (prev, next) => {
+  // Custom equality check to avoid re-renders if position and important props are same
+  return prev.aircraft.lat === next.aircraft.lat && 
+         prev.aircraft.lon === next.aircraft.lon && 
+         prev.aircraft.track === next.aircraft.track &&
+         prev.viewMode === next.viewMode &&
+         prev.showCommercialInfo === next.showCommercialInfo &&
+         prev.showSuspectInfo === next.showSuspectInfo &&
+         Math.abs(prev.userPos[0] - next.userPos[0]) < 0.0001 &&
+         Math.abs(prev.userPos[1] - next.userPos[1]) < 0.0001;
 });
 AircraftMarker.displayName = 'AircraftMarker';
 
@@ -989,7 +996,7 @@ function LocationTracker({
 
 
 
-export default function MapUI(props: MapUIProps) {
+function MapUI(props: MapUIProps) {
   const { 
     userPos, heading, carColor, routeCoordinates, radars = [], aircrafts = [], chargers = [],
     gasStations = [], weatherPoints = [], waypoints = [], yachts = [], festivals = [], restaurants = [], speed = 0, hasLocation = false,
@@ -1365,3 +1372,5 @@ export default function MapUI(props: MapUIProps) {
     </div>
   );
 }
+
+export default React.memo(MapUI);
