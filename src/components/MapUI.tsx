@@ -601,22 +601,7 @@ const YachtMarker = React.memo(({ yacht, onClick }: { yacht: YachtPosition, onCl
         click: () => onClick(yacht),
         mousedown: () => onClick(yacht)
       }}
-    >
-      <Tooltip direction="top" offset={[0, -20]} opacity={1}>
-        <div className="flex flex-col items-center p-2 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-2xl min-w-[120px]">
-          {yacht.owner_photo_url && (
-            <img 
-              src={yacht.owner_photo_url} 
-              referrerPolicy="no-referrer"
-              className="w-12 h-12 rounded-full object-cover border-2 border-amber-500 mb-2 shadow-xl"
-              alt={yacht.owner}
-            />
-          )}
-          <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest">{yacht.owner}</span>
-          <span className="text-xs font-bold text-white tracking-tight">{yacht.name}</span>
-        </div>
-      </Tooltip>
-    </Marker>
+    />
   );
 });
 YachtMarker.displayName = 'YachtMarker';
