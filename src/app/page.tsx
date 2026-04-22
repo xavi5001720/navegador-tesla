@@ -1537,14 +1537,37 @@ export default function Home() {
       {selectedYacht && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 md:p-8 pointer-events-none animate-in fade-in zoom-in-95 duration-300">
           <div className="w-full max-w-md bg-black/90 backdrop-blur-3xl border border-blue-500/30 rounded-[32px] overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.9)] pointer-events-auto">
-            {/* Cabecera del Yate */}
-            <div className="p-5 flex items-center gap-4 bg-gradient-to-br from-blue-500/10 to-transparent border-b border-white/5">
-              <div className="h-12 w-12 flex items-center justify-center bg-blue-500/10 rounded-2xl border border-blue-500/20 shadow-inner">
-                <img src="/yacht-icon.png" alt="Y" className="h-10 w-10 object-contain" />
+            {/* Cabecera del Yate Vitaminada con Foto VIP */}
+            <div className="p-5 flex items-center gap-5 bg-gradient-to-br from-blue-500/10 to-transparent border-b border-white/5">
+              <div className="relative shrink-0">
+                {selectedYacht.owner_photo_url ? (
+                  <div className="relative">
+                    <div className="absolute inset-0 rounded-full bg-blue-500/20 blur-lg animate-pulse"></div>
+                    <img 
+                      src={selectedYacht.owner_photo_url} 
+                      className="relative h-16 w-16 rounded-full object-cover border-2 border-blue-500 shadow-2xl"
+                      alt={selectedYacht.owner}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).parentElement!.nextElementSibling!.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="hidden absolute inset-0 h-16 w-16 rounded-full bg-blue-600 flex items-center justify-center text-2xl font-black text-white border-2 border-blue-400">
+                      {selectedYacht.owner.charAt(0)}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="h-16 w-16 rounded-full bg-blue-600 flex items-center justify-center text-2xl font-black text-white border-2 border-blue-400 shadow-xl">
+                    {selectedYacht.owner.charAt(0)}
+                  </div>
+                )}
+                <div className="absolute -bottom-1 -right-1 h-6 w-6 bg-black border-2 border-blue-500 rounded-lg flex items-center justify-center">
+                  <img src="/yacht-icon.png" alt="" className="h-4 w-4 object-contain" />
+                </div>
               </div>
               <div className="flex flex-col flex-1 overflow-hidden">
-                <span className="text-[10px] font-black text-blue-500/80 uppercase tracking-[0.2em] leading-none mb-1.5">RADAR DE LUJO</span>
-                <h2 className="text-xl font-black text-white italic truncate uppercase tracking-tighter leading-tight drop-shadow-md">
+                <span className="text-[10px] font-black text-blue-500/80 uppercase tracking-[0.2em] leading-none mb-1.5">RADAR DE LUJO VIP</span>
+                <h2 className="text-2xl font-black text-white italic truncate uppercase tracking-tighter leading-tight drop-shadow-md">
                   {selectedYacht.name}
                 </h2>
               </div>

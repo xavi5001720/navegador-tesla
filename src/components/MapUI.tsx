@@ -616,52 +616,6 @@ const YachtMarker = React.memo(({ yacht, onClick }: { yacht: YachtPosition, onCl
           <span className="text-xs font-bold text-white tracking-tight">{yacht.name}</span>
         </div>
       </Tooltip>
-
-      <Popup minWidth={250} className="tesla-popup">
-        <div className="p-4 bg-black/95 backdrop-blur-3xl border border-amber-500/30 rounded-2xl flex flex-col items-center text-center gap-3">
-          {yacht.owner_photo_url ? (
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-amber-500/20 blur-xl animate-pulse"></div>
-              <img 
-                src={yacht.owner_photo_url} 
-                referrerPolicy="no-referrer"
-                className="relative w-24 h-24 rounded-full object-cover border-4 border-amber-500 shadow-2xl"
-                alt={yacht.owner}
-              />
-            </div>
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-white/5 border-4 border-white/10 flex items-center justify-center text-4xl font-black text-white/20">
-              {yacht.owner.charAt(0)}
-            </div>
-          )}
-          
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[10px] font-black text-amber-500 uppercase tracking-[0.2em]">Superyate VIP</span>
-            <h3 className="text-2xl font-black text-white tracking-tighter">{yacht.name}</h3>
-            <p className="text-sm font-medium text-gray-400">Propiedad de <strong className="text-white font-black">{yacht.owner}</strong></p>
-          </div>
-
-          <div className="w-full h-px bg-white/10 my-1" />
-          
-          <div className="grid grid-cols-2 gap-2 w-full">
-            <div className="bg-white/5 p-2 rounded-xl border border-white/5">
-              <span className="block text-[8px] text-gray-500 font-black uppercase tracking-widest">Velocidad</span>
-              <span className="text-sm font-black text-white">{yacht.speed?.toFixed(1) || '0.0'} kn</span>
-            </div>
-            <div className="bg-white/5 p-2 rounded-xl border border-white/5">
-              <span className="block text-[8px] text-gray-500 font-black uppercase tracking-widest">Rumbo</span>
-              <span className="text-sm font-black text-white">{(yacht.course || yacht.heading || 0)}º</span>
-            </div>
-          </div>
-
-          <button 
-            onClick={() => onClick(yacht)}
-            className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-amber-900/40"
-          >
-            Ver Telemetría Completa
-          </button>
-        </div>
-      </Popup>
     </Marker>
   );
 });
