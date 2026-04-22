@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
     // Ya que hemos desactivado verify_jwt en el Gateway para permitir llaves opacas sb_publishable,
     // verificamos manualmente que la cabecera Authorization contenga nuestra Anon Key.
     const authHeader = req.headers.get('Authorization')
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
+    const anonKey = Deno.env.get('APP_ANON_KEY')
     
     if (!authHeader || (anonKey && !authHeader.includes(anonKey))) {
       console.error('[Security] Intento de acceso no autorizado detectado.')
