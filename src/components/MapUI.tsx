@@ -164,8 +164,8 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
 
   // Configuración visual basada en amenaza
   const iconSize = isSuspect ? 44 : 32;
-  const opacity = isSuspect ? 1 : 0.65;
-  const finalFilter = isSuspect ? (isThreat ? colorFilter : 'sepia(100%) saturate(300%) hue-rotate(0deg)') : 'grayscale(100%) brightness(1.2) opacity(0.8)';
+  const opacity = 1; // Sólido al 100% para todos
+  const finalFilter = isSuspect ? (isThreat ? colorFilter : 'sepia(100%) saturate(300%) hue-rotate(0deg)') : 'none';
 
   const icon = L.divIcon({
     html: `
