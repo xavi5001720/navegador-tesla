@@ -77,6 +77,17 @@ export default function Home() {
 
 
   const [isSimulatingState, setIsSimulatingState] = useState(false);
+  const [showDebugToggle, setShowDebugToggle] = useState(false);
+  const [isDebugMode, setIsDebugMode] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('xavi')) {
+        setShowDebugToggle(true);
+      }
+    }
+  }, []);
 
   const { 
     userPos, 
@@ -560,7 +571,7 @@ export default function Home() {
   }, [allRadars, route, userPos, isRadarsEnabled, hiddenIds]);
 
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars, inSectionRadar, sectionAverageSpeed } = useAlerts(userPos || [0,0], radars, isSoundEnabled, voiceType, speed, heading || 0, allRadarZones || [], audioMode);
-  const { allAircrafts, aircrafts, visibleAircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount, nextInterval } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates);
+  const { allAircrafts, aircrafts, visibleAircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount, nextInterval } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates, isDebugMode);
  
   // Proyección futura para movimiento fluido vía V11 (Tick 1s) movida a MapUI.tsx (AircraftLayer)
 
@@ -772,6 +783,22 @@ export default function Home() {
           inSectionRadar={inSectionRadar}
           sectionAverageSpeed={sectionAverageSpeed}
         />
+      )}
+
+      {/* Botón Flotante Modo Debug (Solo visible con ?xavi) */}
+      {showDebugToggle && (
+        <div className="fixed top-6 right-6 z-[600]">
+          <button
+            onClick={() => setIsDebugMode(!isDebugMode)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+              isDebugMode 
+                ? 'bg-amber-500/90 text-black border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.5)]' 
+                : 'bg-black/60 text-amber-500 border-amber-500/30 hover:border-amber-500/60 backdrop-blur-md'
+            }`}
+          >
+            {isDebugMode ? '☠️ Modo Dios: ON' : '🛡️ Modo Dios: OFF'}
+          </button>
+        </div>
       )}
 
       {/* Botón de Toggle Sidebar (Mobile) */}

@@ -44,7 +44,8 @@ const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 export function usePegasus(
   userPos          : [number, number] | null,
   isEnabled        : boolean = false,
-  routeCoordinates?: [number, number][]
+  routeCoordinates?: [number, number][],
+  isDebugMode      : boolean = false
 ) {
   const [allAircrafts, setAllAircrafts] = useState<Aircraft[]>([]);
   const [loading,      setLoading     ] = useState(false);
@@ -222,11 +223,7 @@ export function usePegasus(
 
   }, [isEnabled, userPos ? buildBboxKey(userPos) : '']);
 
-  // ── Filtros locales (V11 Restaurada) ──────────────────────────────────────────
   const aircrafts = useMemo(() => {
-    // Modo Debug visual oficial (Directiva Core: UX/QA sin tocar .env)
-    const isDebugMode = typeof window !== 'undefined' && localStorage.getItem('DEBUG_PEGASUS') === 'true';
-
     return allAircrafts.filter(a => {
       // Si estamos en debug, saltamos los filtros cinéticos y sospechosos
       if (isDebugMode) {
@@ -248,7 +245,7 @@ export function usePegasus(
 
       return true;
     });
-  }, [allAircrafts]);
+  }, [allAircrafts, isDebugMode]);
 
   const isAnyPegasusNearby = useMemo(
     () => aircrafts.some(a => a.distanceToUser < 10_000),
