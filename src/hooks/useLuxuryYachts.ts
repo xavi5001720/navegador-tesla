@@ -26,19 +26,31 @@ export function useLuxuryYachts(isEnabled: boolean = false) {
     setLoadingYachts(true);
     try {
       if (triggerSync) {
-        const { data: syncData, error: syncError } = await supabase.functions.invoke('sync-luxury-yachts', {
-          headers: {
-            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+        try {
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+          const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+          
+          if (!supabaseUrl || !anonKey) throw new Error('Faltan variables de entorno de Supabase');
+
+          const response = await fetch(`${supabaseUrl}/functions/v1/sync-luxury-yachts`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': anonKey,
+              // No enviamos Authorization: Bearer para evitar el error de "Invalid JWT" 
+              // cuando la función es pública (verify_jwt = false)
+            }
+          });
+
+          if (!response.ok) {
+            const errorBody = await response.json().catch(() => ({}));
+            console.error('[useLuxuryYachts] Error en Edge Function:', response.status, errorBody);
+          } else {
+            const result = await response.json();
+            console.log('[useLuxuryYachts] Sincronización exitosa:', result);
           }
-        });
-        if (syncError) {
-          console.error('[useLuxuryYachts] Sync error:', syncError);
-          // Intentar obtener el cuerpo del error si es posible
-          try {
-            const errorBody = await (syncError as any).context?.json();
-            if (errorBody) console.error('[useLuxuryYachts] Detalle del error:', errorBody);
-          } catch (e) {}
+        } catch (err: any) {
+          console.error('[useLuxuryYachts] Error al invocar sync:', err.message);
         }
       }
 
