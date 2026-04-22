@@ -45,21 +45,28 @@ function encodePolyline(coordinates: [number, number][]) {
 }
 
 function isFreeCharger(costStr: string | null | undefined, apiIsFree: boolean | null | undefined): boolean {
-  if (apiIsFree === true) return true;
-  if (!costStr) return false; // Por defecto asumimos de pago si no hay info clara
+  // Si la API dice explícitamente que es de pago, lo descartamos
+  if (apiIsFree === false) return false;
+
+  if (!costStr) return false; // Bloqueo estricto: Si no hay info, no es gratis
   const s = costStr.toLowerCase();
   
-  // Palabras clave que confirman gratuidad
-  const freeKeywords = ['free', 'gratis', '0.00', '0,00', 'sin coste', 'incluido', 'no cost'];
-  const hasFreeKeyword = freeKeywords.some(k => s.includes(k));
+  // Lista Blanca: Términos que confirman gratuidad
+  const whiteList = ['gratis', 'free', '0.00', '0,00', 'sin coste', 'no cost', 'incluido'];
+  const isWhiteListed = whiteList.some(k => s.includes(k));
   
-  // Si contiene símbolos de moneda o unidades de cobro, es de pago, 
-  // A MENOS que tenga una palabra de gratuidad explícita (ej: "Parking 5€, carga gratis")
-  const hasPaidMarkers = s.includes('€') || s.includes('kwh') || s.includes('min') || s.includes('price') || s.includes('coste');
+  // Lista Negra: Términos que implican pago
+  const blackList = ['€', 'kwh', 'min', 'pago', 'precio', 'tarifa', 'cost', 'fee', 'eur'];
+  const hasBlackListTerm = blackList.some(k => s.includes(k));
   
-  if (hasFreeKeyword) return true;
-  if (hasPaidMarkers) return false;
+  // Lógica de decisión:
+  // 1. Si está en la blanca, es gratis (incluso si menciona "parking 5€, carga gratis")
+  if (isWhiteListed) return true;
   
+  // 2. Si no está en la blanca y tiene términos de pago, es de pago
+  if (hasBlackListTerm) return false;
+  
+  // 3. Ante cualquier duda o ambigüedad, descartar
   return false;
 }
 
@@ -129,14 +136,25 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
                 }
               });
 
-              // Aplicar filtro de gratuitos aquí si es necesario
-              const finalData = filters.isFree 
-                ? accumulated.filter(c => {
-                    // Buscamos el cargador original en data para pasar el flag de la API si existe
-                    const original = data.find(oc => oc.ID === c.id);
-                    return isFreeCharger(c.usageCost, original?.UsageType?.IsPayAtLocation === false);
-                  })
-                : accumulated;
+              // Embudo de Filtrado Estricto (Stage 1 & 2)
+              const selectedConnectorIds = filters.connectors?.flatMap(c => CONSTANTS.CONNECTOR_MAP[c].split(',').map(Number)) || [];
+
+              const finalData = accumulated.filter(charger => {
+                // REGLA 1: Tipo de Conector (AND obligatorio si hay seleccionados)
+                if (selectedConnectorIds.length > 0) {
+                  const hasConnector = charger.connections.some((conn: any) => selectedConnectorIds.includes(conn.ConnectionTypeID));
+                  if (!hasConnector) return false;
+                }
+
+                // REGLA 2: Gratuidad (AND obligatorio si el toggle está activo)
+                if (filters.isFree) {
+                  const original = data.find(oc => oc.ID === charger.id);
+                  const isFree = isFreeCharger(charger.usageCost, original?.UsageType?.IsPayAtLocation === false);
+                  if (!isFree) return false;
+                }
+
+                return true;
+              });
 
               setChargers([...finalData]);
             }
@@ -145,22 +163,30 @@ export function useChargers(userPos: [number, number] | null, routeCoordinates?:
           params.set('latitude', userPos[0].toString()); params.set('longitude', userPos[1].toString()); params.set('distance', '15');
           const res = await fetch(`${CONSTANTS.BASE_URL}?${params.toString()}`);
           const data = await res.json();
-          if (Array.isArray(data)) {
-            data.forEach(c => {
-              const power = c.Connections?.reduce((max: number, conn: any) => Math.max(max, conn.PowerKW || 0), 0) || 0;
-              accumulated.push({ id: c.ID, lat: c.AddressInfo.Latitude, lon: c.AddressInfo.Longitude, title: c.AddressInfo.Title, address: c.AddressInfo.AddressLine1 || 'Ubicación', operator: c.OperatorInfo?.Title || 'Desconocido', usageCost: c.UsageCost || 'Desconocido', maxPower: power, connections: c.Connections || [] });
-            });
-            
-            // Aplicar filtro de gratuitos para modo local
-            const finalData = filters.isFree 
-              ? accumulated.filter(c => {
-                  const original = data.find(oc => oc.ID === c.id);
-                  return isFreeCharger(c.usageCost, original?.UsageType?.IsPayAtLocation === false);
-                })
-              : accumulated;
+            if (Array.isArray(data)) {
+              data.forEach(c => {
+                const power = c.Connections?.reduce((max: number, conn: any) => Math.max(max, conn.PowerKW || 0), 0) || 0;
+                accumulated.push({ id: c.ID, lat: c.AddressInfo.Latitude, lon: c.AddressInfo.Longitude, title: c.AddressInfo.Title, address: c.AddressInfo.AddressLine1 || 'Ubicación', operator: c.OperatorInfo?.Title || 'Desconocido', usageCost: c.UsageCost || 'Desconocido', maxPower: power, connections: c.Connections || [] });
+              });
               
-            setChargers(finalData);
-          }
+              // Embudo de Filtrado Estricto para modo Local
+              const selectedConnectorIds = filters.connectors?.flatMap(c => CONSTANTS.CONNECTOR_MAP[c].split(',').map(Number)) || [];
+
+              const finalData = accumulated.filter(charger => {
+                if (selectedConnectorIds.length > 0) {
+                  const hasConnector = charger.connections.some((conn: any) => selectedConnectorIds.includes(conn.ConnectionTypeID));
+                  if (!hasConnector) return false;
+                }
+                if (filters.isFree) {
+                  const original = data.find(oc => oc.ID === charger.id);
+                  const isFree = isFreeCharger(charger.usageCost, original?.UsageType?.IsPayAtLocation === false);
+                  if (!isFree) return false;
+                }
+                return true;
+              });
+              
+              setChargers(finalData);
+            }
         }
         lastFetchRef.current = { type: currentType, pos: userPos, routeKey: hasRoute ? currentRouteKey : 'LOCAL', filtersStr };
       } catch (err) {
