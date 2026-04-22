@@ -26,8 +26,15 @@ export function useLuxuryYachts(isEnabled: boolean = false) {
     setLoadingYachts(true);
     try {
       if (triggerSync) {
-        const { data: syncData, error: syncError } = await supabase.functions.invoke('sync-luxury-yachts');
-        if (syncError) {} 
+        const { data: syncData, error: syncError } = await supabase.functions.invoke('sync-luxury-yachts', {
+          headers: {
+            'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`
+          }
+        });
+        if (syncError) {
+          console.error('[useLuxuryYachts] Sync error:', syncError);
+        }
       }
 
       // Consulta con Join para traer datos del yate y su posición
