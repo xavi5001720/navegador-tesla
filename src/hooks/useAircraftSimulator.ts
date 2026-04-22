@@ -20,10 +20,23 @@ import type { Aircraft } from './usePegasus';
 import { SPANISH_AIRPORTS, AIRPORT_LANDING_RADIUS_M } from '@/utils/airports';
 
 // ── Constantes ────────────────────────────────────────────────────────────────
-const SIM_TICK_MS   = 1_000;   // tick de simulación (1 s)
-const TAU_S         = 4;       // constante de tiempo de la interpolación (s)
-const MAX_DRIFT_M   = 5_000;   // umbral de reset directo (m)
-const MIN_MOVE_DEG  = 1e-7;    // umbral mínimo para considerar que ha cambiado
+const SIM_TICK_MS      = 1_000;   // tick de simulación (1 s)
+const TAU_S            = 4;       // constante de tiempo de la interpolación (s)
+const MAX_DRIFT_M      = 5_000;   // umbral de reset directo (m)
+const MIN_MOVE_DEG     = 1e-7;    // umbral mínimo para considerar que ha cambiado
+/**
+ * Latencia estimada de OpenSky (segundos). Los datos que recibimos ya tienen
+ * ~20 s de antigüedad por el pipeline de la API. Backdatamos realTs en esta
+ * cantidad para que la extrapolación empiece desde la posición correcta y
+ * el avión no parezca retroceder al llegar un nuevo lote de datos.
+ */
+const OPENSKY_LATENCY_S = 20;
+/**
+ * Tiempo máximo (s) que extrapolamos desde el último dato real.
+ * Pasado este límite sin datos nuevos, el avión se considera fantasma.
+ * Evita que la extrapolación acumule error indefinidamente.
+ */
+const MAX_EXTRAPOLATION_S = 90;
 
 // ── Física ────────────────────────────────────────────────────────────────────
 // Aproximación plana válida para distancias <100 km
@@ -93,23 +106,28 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
       const existing = map.get(ac.icao24);
 
       if (!existing) {
-        // Primera vez que vemos esta aeronave → inicializar directamente
+        // Primera vez: backdatamos realTs con la latencia de OpenSky para que
+        // la extrapolación inicial coloque el avión donde debería estar AHORA,
+        // no donde estaba hace 20 s (evita el efecto de «retroceso» al aparecer).
+        const backdatedTs = now - OPENSKY_LATENCY_S * 1_000;
+        const initialProj = extrapolate(ac.lat, ac.lon, ac.velocity, ac.track, OPENSKY_LATENCY_S);
         map.set(ac.icao24, {
           realLat : ac.lat,
           realLon : ac.lon,
-          realTs  : now,
-          simLat  : ac.lat,
-          simLon  : ac.lon,
+          realTs  : backdatedTs,
+          simLat  : initialProj.lat,  // posición ya compensada
+          simLon  : initialProj.lon,
           velocity: ac.velocity,
           track   : ac.track,
           meta    : { icao24: ac.icao24, callsign: ac.callsign, origin_country: ac.origin_country, altitude: ac.altitude, velocity: ac.velocity, track: ac.track, isSuspect: ac.isSuspect, distanceToUser: ac.distanceToUser },
         });
       } else {
-        // Actualizar fuente de verdad y datos cinéticos
-        // (la posición simulada sigue con su valor actual — se corregirá en el tick)
+        // Actualizar fuente de verdad y datos cinéticos.
+        // Backdatamos igual para que el nuevo dato también se extrapole
+        // correctamente desde el primer tick tras la actualización.
         existing.realLat  = ac.lat;
         existing.realLon  = ac.lon;
-        existing.realTs   = now;
+        existing.realTs   = now - OPENSKY_LATENCY_S * 1_000;
         existing.velocity = ac.velocity;
         existing.track    = ac.track;
         existing.lostTs   = undefined; // Rescatado de ser fantasma
@@ -157,7 +175,9 @@ export function useAircraftSimulator(realAircrafts: Aircraft[]): Aircraft[] {
           }
         }
 
-        const dtReal = (now - st.realTs) / 1_000; // segundos desde dato real
+        // Clamp: no extrapolamos más de MAX_EXTRAPOLATION_S para evitar
+        // acumulación de error si el feeder tarda más de lo normal.
+        const dtReal = Math.min((now - st.realTs) / 1_000, MAX_EXTRAPOLATION_S);
 
         // Detección de aterrizaje activo (aterrizando sobre la pista: baja altura < 50m y en aeropuerto)
         const isLanding = st.meta.altitude < 50 && isNearAirport;
