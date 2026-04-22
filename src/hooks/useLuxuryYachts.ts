@@ -37,8 +37,7 @@ export function useLuxuryYachts(isEnabled: boolean = false) {
             headers: {
               'Content-Type': 'application/json',
               'apikey': anonKey,
-              // No enviamos Authorization: Bearer para evitar el error de "Invalid JWT" 
-              // cuando la función es pública (verify_jwt = false)
+              'Authorization': `Bearer ${anonKey}`
             }
           });
 
