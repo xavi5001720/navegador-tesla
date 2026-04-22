@@ -145,8 +145,8 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
 
   const labelHtml = (viewMode === 'overview') ? `
     <div class="absolute top-10 left-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none" style="min-width: 150px;">
-      <div class="bg-black/80 backdrop-blur-md border border-${isSuspect ? 'blue' : 'gray'}-500/50 rounded-lg p-2 shadow-2xl text-center">
-        <p class="text-[10px] font-black text-${isSuspect ? 'blue' : 'gray'}-400 uppercase tracking-tighter leading-tight whitespace-nowrap">${isSuspect ? 'Aeronave no identificada' : airlineName}</p>
+      <div class="bg-black/80 backdrop-blur-md border border-${isSuspect ? 'amber' : 'gray'}-500/50 rounded-lg p-2 shadow-2xl text-center">
+        <p class="text-[10px] font-black text-${isSuspect ? 'amber' : 'gray'}-400 uppercase tracking-tighter leading-tight whitespace-nowrap">${isSuspect ? '⚠️ Aeronave no identificada' : airlineName}</p>
         <div class="flex gap-2 mt-1 justify-center">
           <div class="flex flex-col">
             <span class="text-[8px] text-gray-400 uppercase font-bold">Altitud</span>
@@ -162,11 +162,16 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
     </div>
   ` : '';
 
+  // Configuración visual basada en amenaza
+  const iconSize = isSuspect ? 44 : 32;
+  const opacity = isSuspect ? 1 : 0.65;
+  const finalFilter = isSuspect ? (isThreat ? colorFilter : 'sepia(100%) saturate(300%) hue-rotate(0deg)') : 'grayscale(100%) brightness(1.2) opacity(0.8)';
+
   const icon = L.divIcon({
     html: `
-      <div class="aircraft-animation-container">
-        <div class="aircraft-rotate-container" style="transform: rotate(${roundedHeading - 45}deg); width: 40px; height: 40px; ${isThreat ? 'animation: aircraft-pulse 0.8s ease-in-out infinite;' : ''}">
-          <img src="${isSuspect ? '/avion-no-identificado.png' : '/avion-comercial.png'}" style="width: 100%; height: 100%; object-fit: contain; filter: ${colorFilter};" />
+      <div class="aircraft-animation-container" style="opacity: ${opacity};">
+        <div class="aircraft-rotate-container" style="transform: rotate(${roundedHeading - 45}deg); width: ${iconSize}px; height: ${iconSize}px; ${isThreat ? 'animation: aircraft-pulse 0.8s ease-in-out infinite;' : ''}">
+          <img src="${isSuspect ? '/avion-no-identificado.png' : '/avion-comercial.png'}" style="width: 100%; height: 100%; object-fit: contain; filter: ${finalFilter};" />
         </div>
         <div class="aircraft-label-container">
           ${labelHtml}
@@ -174,8 +179,8 @@ const aircraftIcon = (isSuspect: boolean, heading: number, distanceToUser: numbe
       </div>
     `,
     className: 'custom-aircraft-icon',
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
+    iconSize: [iconSize, iconSize],
+    iconAnchor: [iconSize / 2, iconSize / 2],
   });
 
   aircraftIconCache.set(cacheKey, icon);

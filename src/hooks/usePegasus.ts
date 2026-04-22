@@ -264,10 +264,10 @@ export function usePegasus(
     allAircrafts,
     aircrafts,
     visibleAircrafts,
-    // totalCount muestra TODOS los aviones detectados en la macro-zona,
-    // no solo los del radio de 25km que se pintan en el mapa.
-    // Así el usuario ve "91 aviones en zona" aunque ninguno esté cerca.
-    totalCount       : allAircrafts.length,
+    // totalCount muestra TODOS los aviones en el radio de 25km (Conciencia Situacional)
+    totalCount       : visibleAircrafts.length,
+    // suspiciousCount muestra cuántos de esos 25km son amenazas Pegasus
+    suspiciousCount  : visibleAircrafts.filter(a => a.isSuspect).length,
     isAnyPegasusNearby,
     loading,
     isRateLimited,

@@ -571,7 +571,7 @@ export default function Home() {
   }, [allRadars, route, userPos, isRadarsEnabled, hiddenIds]);
 
   const { nearestRadar, distance, isAlertActive, alertType, remainingRadars, inSectionRadar, sectionAverageSpeed } = useAlerts(userPos || [0,0], radars, isSoundEnabled, voiceType, speed, heading || 0, allRadarZones || [], audioMode);
-  const { allAircrafts, aircrafts, visibleAircrafts, totalCount: aircraftCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount, nextInterval } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates, isDebugMode);
+  const { allAircrafts, aircrafts, visibleAircrafts, totalCount: aircraftCount, suspiciousCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount, nextInterval } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates, isDebugMode);
  
   // Proyección futura para movimiento fluido vía V11 (Tick 1s) movida a MapUI.tsx (AircraftLayer)
 
@@ -1153,7 +1153,7 @@ export default function Home() {
           isAnyPegasusNearby={isAnyPegasusNearby}
           isRateLimited={isRateLimited}
           loadingAircrafts={loadingAircrafts}
-          aircraftCount={aircrafts.length}
+          aircraftCount={suspiciousCount}
           isAircraftsEnabled={isAircraftsEnabled}
           setIsAircraftsEnabled={setIsAircraftsEnabled}
           activeAccount={activeAccount}
