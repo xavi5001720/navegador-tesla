@@ -45,10 +45,10 @@ BEGIN
   RETURN QUERY
   SELECT 
     e.id, e.lat, e.lon, e.title, e.address, e.operator, e.usage_cost, e.max_power, e.is_free, e.connections_json,
-    ST_Distance(e.geom, ST_SetSRID(ST_MakePoint(p_lon, p_lat), 4326)::geography) AS distance_meters
+    ST_Distance(e.geom::geography, ST_SetSRID(ST_MakePoint(p_lon, p_lat), 4326)::geography) AS distance_meters
   FROM ev_chargers e
-  WHERE ST_DWithin(e.geom, ST_SetSRID(ST_MakePoint(p_lon, p_lat), 4326)::geography, p_radius_meters)
-    AND (e.max_power >= p_min_power OR p_min_power IS NULL)
+  WHERE ST_DWithin(e.geom::geography, ST_SetSRID(ST_MakePoint(p_lon, p_lat), 4326)::geography, p_radius_meters)
+    AND (COALESCE(e.max_power, 0) >= p_min_power OR p_min_power IS NULL)
     AND (NOT p_only_free OR e.is_free = TRUE)
   ORDER BY distance_meters ASC
   LIMIT 150;
@@ -83,8 +83,8 @@ BEGIN
   SELECT 
     e.id, e.lat, e.lon, e.title, e.address, e.operator, e.usage_cost, e.max_power, e.is_free, e.connections_json
   FROM ev_chargers e
-  WHERE ST_DWithin(e.geom, route_geom::geography, p_buffer_meters)
-    AND (e.max_power >= p_min_power OR p_min_power IS NULL)
+  WHERE ST_DWithin(e.geom::geography, route_geom::geography, p_buffer_meters)
+    AND (COALESCE(e.max_power, 0) >= p_min_power OR p_min_power IS NULL)
     AND (NOT p_only_free OR e.is_free = TRUE)
   ORDER BY e.max_power DESC;
 END;
@@ -127,8 +127,8 @@ $$ LANGUAGE plpgsql;
 
 -- FUNCIÓN: Limpiar la tabla (Truncate)
 CREATE OR REPLACE FUNCTION clean_ev_chargers()
-RETURNS VOID AS 146699
+RETURNS VOID AS $$
 BEGIN
   TRUNCATE TABLE ev_chargers;
 END;
-146699 LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql;

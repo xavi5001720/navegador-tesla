@@ -108,6 +108,12 @@ export function useChargers(
           });
           
           if (error) throw error;
+          
+          console.log(`📡 [useChargers] RPC get_chargers_in_route result:`, data?.length, 'items');
+          if (data?.length === 0) {
+            console.warn(`⚠️ [useChargers] 0 cargadores encontrados en ruta. WKT: ${wkt.substring(0, 100)}...`);
+          }
+
           rpcData = data;
         } else {
           // ESTRATEGIA SUPABASE: Búsqueda cercana con PostGIS
@@ -120,6 +126,12 @@ export function useChargers(
           });
           
           if (error) throw error;
+          
+          console.log(`📡 [useChargers] RPC get_chargers_nearby result:`, data?.length, 'items');
+          if (data?.length === 0) {
+            console.warn(`⚠️ [useChargers] 0 cargadores encontrados cerca de: ${userPos[0]}, ${userPos[1]}`);
+          }
+          
           rpcData = data;
         }
 
