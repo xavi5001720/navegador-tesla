@@ -27,19 +27,19 @@ function checkIsFree(costStr, usageType, isPayAtLocation) {
   const s = (costStr || '').toLowerCase().trim();
   if (!s && usageType === undefined) return false;
 
-  // 2. Keywords de Gratuidad (Prioridad alta)
+  // 2. Filtro de exclusión absoluta (Caja Negra) - PRIORIDAD MÁXIMA
+  // Si detectamos cualquier indicio de pago, salimos con false inmediatamente
+  const payKeywords = ['€', 'kwh', 'min', 'pago', 'precio', 'tarifa', 'pay', 'charge', 'cost'];
+  const hasPayContext = payKeywords.some(k => s.includes(k)) || isPayAtLocation === true;
+  if (hasPayContext) return false;
+
+  // 3. Keywords de Gratuidad
   const freeKeywords = ['gratis', 'free', '0.00', '0,00', '0€', '0 €', 'sin coste', 'incluido', 'cortesia', 'courtesy', 'no charge'];
   if (freeKeywords.some(k => s.includes(k))) return true;
 
-  // 3. Análisis por UsageTypeID (Estándar OCM)
+  // 4. Análisis por UsageTypeID (Estándar OCM)
   const freeUsageIDs = [1, 6];
   const isFreeType = freeUsageIDs.includes(usageType);
-
-  // 4. Filtro de exclusión (Caja Negra)
-  const payKeywords = ['€', 'kwh', 'min', 'pago', 'precio', 'tarifa', 'pay', 'charge', 'cost'];
-  const hasPayContext = payKeywords.some(k => s.includes(k)) || isPayAtLocation === true;
-
-  if (hasPayContext) return false;
   if (isFreeType && s === '') return true;
 
   return false;
