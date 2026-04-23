@@ -132,3 +132,6 @@ BEGIN
   TRUNCATE TABLE ev_chargers;
 END;
 $$ LANGUAGE plpgsql;
+
+-- SEGURIDAD: Desactivar RLS para permitir lectura pública (requerido para visualización en el mapa)
+ALTER TABLE ev_chargers DISABLE ROW LEVEL SECURITY;
