@@ -18,14 +18,30 @@ if (!SUPABASE_URL || !SERVICE_KEY) {
 
 const DB_BATCH_SIZE = 1000; // Tamaño de lote para subir a Supabase
 
-function checkIsFree(costStr, apiIsFree) {
-  const s = (costStr || '').toLowerCase();
-  const whiteList = ['gratis', 'free', '0.00', '0,00', '0€', '0 €', 'sin coste'];
-  if (whiteList.some(k => s.includes(k))) return true;
-  if (apiIsFree === false) return false;
-  const blackList = ['€', 'kwh', 'min', 'pago', 'precio', 'tarifa'];
-  if (blackList.some(k => s.includes(k))) return false;
-  if (apiIsFree === true) return true;
+/**
+ * LÓGICA DE GRATUIDAD ROBUSTA (v2.0)
+ * Evalúa coste por texto, tipo de uso y flags de la API OCM.
+ */
+function checkIsFree(costStr, usageType, isPayAtLocation) {
+  // 1. Limpieza inicial y normalización
+  const s = (costStr || '').toLowerCase().trim();
+  if (!s && usageType === undefined) return false;
+
+  // 2. Keywords de Gratuidad (Prioridad alta)
+  const freeKeywords = ['gratis', 'free', '0.00', '0,00', '0€', '0 €', 'sin coste', 'incluido', 'cortesia', 'courtesy', 'no charge'];
+  if (freeKeywords.some(k => s.includes(k))) return true;
+
+  // 3. Análisis por UsageTypeID (Estándar OCM)
+  const freeUsageIDs = [1, 6];
+  const isFreeType = freeUsageIDs.includes(usageType);
+
+  // 4. Filtro de exclusión (Caja Negra)
+  const payKeywords = ['€', 'kwh', 'min', 'pago', 'precio', 'tarifa', 'pay', 'charge', 'cost'];
+  const hasPayContext = payKeywords.some(k => s.includes(k)) || isPayAtLocation === true;
+
+  if (hasPayContext) return false;
+  if (isFreeType && s === '') return true;
+
   return false;
 }
 
@@ -84,7 +100,7 @@ async function updateChargers() {
         operator: c.OperatorInfo?.Title || 'Desconocido',
         usage_cost: c.UsageCost || null,
         max_power: power,
-        is_free: checkIsFree(c.UsageCost, c.UsageType?.IsPayAtLocation === false),
+        is_free: checkIsFree(c.UsageCost, c.UsageType?.ID, c.UsageType?.IsPayAtLocation),
         connections_json: c.Connections || []
       };
     });
