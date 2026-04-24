@@ -623,7 +623,7 @@ export default function Home() {
   
   // Alerta de proximidad a paradas
   useEffect(() => {
-    if (!userPos || !waypoints || waypoints.length === 0 || !isSoundEnabled || !alertPreferences.stops) return;
+    if (!userPos || !waypoints || waypoints.length === 0 || !isSoundEnabled || !alertPreferences?.stops) return;
     
     waypoints.forEach((wp, index) => {
       const wpKey = `${wp[0].toFixed(5)},${wp[1].toFixed(5)}`;
@@ -635,7 +635,7 @@ export default function Home() {
     });
   }, [userPos, waypoints, isSoundEnabled, voiceType]);
   useEffect(() => {
-    if (!isSoundEnabled || !alertPreferences.aircraft || !aircrafts || aircrafts.length === 0) return;
+    if (!isSoundEnabled || !alertPreferences?.aircraft || !aircrafts || aircrafts.length === 0) return;
 
     aircrafts.forEach(ac => {
       if (ac.distanceToUser < 10000 && !notifiedPegasus.current.has(ac.icao24)) {
@@ -647,7 +647,7 @@ export default function Home() {
   
   // Alerta de tráfico severo próxima (Aviso de colisión / retención)
   useEffect(() => {
-    if (!userPos || !route || !route.sections || !isSoundEnabled || !alertPreferences.traffic) return;
+    if (!userPos || !route || !route.sections || !isSoundEnabled || !alertPreferences?.traffic) return;
     
     // Solo avisamos si vamos por encima de una velocidad mínima (ej: autovía) para evitar falsos positivos en ciudad
     // Sin embargo, el usuario pidió avisar si "los coches deberían ir a más de 80km/h"
@@ -677,7 +677,7 @@ export default function Home() {
 
   // Alerta de clima adverso próximo
   useEffect(() => {
-    if (!userPos || !weatherPoints || weatherPoints.length === 0 || !isSoundEnabled || !isWeatherEnabled || !alertPreferences.weather) return;
+    if (!userPos || !weatherPoints || weatherPoints.length === 0 || !isSoundEnabled || !isWeatherEnabled || !alertPreferences?.weather) return;
     
     weatherPoints.forEach(wp => {
       // Si el clima es lluvia, nieve o tormenta
@@ -1220,6 +1220,8 @@ export default function Home() {
           setAudioMode={setAudioMode}
           voiceType={voiceType}
           setVoiceType={setVoiceType}
+          alertPreferences={alertPreferences}
+          setAlertPreferences={setAlertPreferences}
           onOpenFavorites={() => setIsFavoritesOpen(true)}
           showCommercialInfo={showCommercialInfo}
           setShowCommercialInfo={setShowCommercialInfo}

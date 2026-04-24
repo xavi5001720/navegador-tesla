@@ -392,7 +392,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                        {[
                          { id: 'fixedRadars', label: 'Radares Fijos / Tramo', icon: '📡' },
                          { id: 'mobileRadars', label: 'Radares Móviles', icon: '🚗' },
-                         { id: 'aircraft', label: 'Aeronaves Pegasus', icon: '🚁' },
+                         { id: 'aircraft', label: 'Aeronaves lentas', icon: '🚁' },
                          { id: 'traffic', label: 'Tráfico Lento', icon: '🚦' },
                          { id: 'weather', label: 'Clima Adverso', icon: '⛈️' },
                          { id: 'stops', label: 'Paradas de Ruta', icon: '📍' },
