@@ -13,7 +13,7 @@ Este archivo sirve para auditar la estabilidad de cada módulo del sistema. Cada
 | [IZQ-04] | **Cargadores** | Buscador de puntos de carga EV | ✅ Blindado |
 | [IZQ-05] | **Gasolineras** | Comparador de precios de combustible | ⏳ Pendiente |
 | [IZQ-06] | **Clima** | Sistema meteorológico en tiempo real | ⏳ Pendiente |
-| [IZQ-07] | **Tráfico** | Capa de tráfico de Google Maps | ⏳ Pendiente |
+| [IZQ-07] | **Tráfico** | Capa de tráfico de TomTom / Google | ✅ Blindado |
 | [IZQ-08] | **Fiestas** | Mapa de fiestas tradicionales y eventos | ⏳ Pendiente |
 
 ### ↗️ Zona Superior Derecha (Menús)
