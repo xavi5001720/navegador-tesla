@@ -85,35 +85,44 @@ const playSyntheticBeep = (type: 'beep_short' | 'alarm_clock_beeping') => {
   }
 };
 
-// ── Voice via Native SpeechSynthesis API ────────────────────────────────────
+let currentVoiceAudio: HTMLAudioElement | null = null;
+
+// ── Voice System (Hybrid: Native for Robot, Proxy for Humans) ────────────────
 const playVoice = (msg: string, voiceType: VoiceType) => {
   if (typeof window === 'undefined') return;
 
-  try {
-    // 1. CORRECCIÓN BUCLE/ATASCO: Limpiar cualquier locución fantasma previa
-    window.speechSynthesis.cancel();
-
-    // 2. Instanciar nueva locución (evita reutilizar objetos)
-    const utterance = new SpeechSynthesisUtterance(msg);
-    
-    // Configuración de idioma y tono según el tipo de voz
-    utterance.lang = 'es-ES';
-    
-    if (voiceType === 'hombre') {
-      utterance.pitch = 0.8;
-      utterance.rate = 0.9;
-    } else if (voiceType === 'robot') {
+  // A. MODO ROBOT: SpeechSynthesis Nativo (Más rápido, menos natural)
+  if (voiceType === 'robot') {
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(msg);
+      utterance.lang = 'es-ES';
       utterance.pitch = 1.5;
       utterance.rate = 1.2;
-    } else {
-      utterance.pitch = 1.0;
-      utterance.rate = 1.0;
+      window.speechSynthesis.speak(utterance);
+    } catch (err) {
+      console.error('[Sound] SpeechSynthesis error:', err);
+    }
+    return;
+  }
+
+  // B. MODO MUJER/HOMBRE: Google TTS Proxy (Alta Calidad)
+  try {
+    // FIX ANTI-ATASCO: Detener cualquier audio anterior antes de empezar el nuevo
+    if (currentVoiceAudio) {
+      currentVoiceAudio.pause();
+      currentVoiceAudio.currentTime = 0;
     }
 
-    // Reproducir inmediatamente
-    window.speechSynthesis.speak(utterance);
+    let lang = 'es'; // Mujer (es-ES) por defecto
+    if (voiceType === 'hombre') lang = 'es-US';
+
+    const url = `/api/tts?text=${encodeURIComponent(msg)}&lang=${lang}&v=4`;
+    currentVoiceAudio = new Audio(url);
+    currentVoiceAudio.volume = VOLUME;
+    currentVoiceAudio.play().catch(e => console.warn('[Sound] MP3 Voice blocked:', e));
   } catch (err) {
-    console.error('[Sound] SpeechSynthesis error:', err);
+    console.error('[Sound] playVoice (MP3) error:', err);
   }
 };
 
