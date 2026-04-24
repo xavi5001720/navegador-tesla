@@ -508,7 +508,7 @@ export function useSocial(
     }
   };
 
-  const updateFriendNickname = async (friendId: string, nickname: string) => {
+  const updateFriendNickname = useCallback(async (friendId: string, nickname: string) => {
     if (!session?.user) return { success: false };
     // Validación de longitud de apodo
     if (nickname.length > 30) return { success: false, error: 'El apodo no puede tener más de 30 caracteres.' };
@@ -520,7 +520,7 @@ export function useSocial(
       logger.error('useSocial', 'Error en updateFriendNickname', err);
       return { success: false };
     }
-  };
+  }, [session, fetchFriends]);
 
   const acceptFriend = async (friendId: string) => {
     try {
@@ -534,19 +534,21 @@ export function useSocial(
   };
 
   // Mapeo final para el mapa con GRACE PERIOD (Evita parpadeo por micro-desconexiones)
-  const enhancedFriends = friends.map(f => {
-    const isActuallyInPresence = onlineUserIds.has(f.id);
-    const lastSeen = lastSeenRef.current[f.id] || 0;
-    const isSeenRecently = (Date.now() - lastSeen) < 15000; // 15 segundos de gracia
-    
-    return {
-      ...f,
-      is_online: f.friendship_status === 'accepted' && (isActuallyInPresence || isSeenRecently),
-      last_lat: livePositions[f.id]?.lat ?? f.last_lat,
-      last_lon: livePositions[f.id]?.lon ?? f.last_lon,
-      heading: livePositions[f.id]?.heading ?? 0
-    };
-  });
+  const enhancedFriends = useMemo(() => {
+    return friends.map(f => {
+      const isActuallyInPresence = onlineUserIds.has(f.id);
+      const lastSeen = lastSeenRef.current[f.id] || 0;
+      const isSeenRecently = (Date.now() - lastSeen) < 15000; // 15 segundos de gracia
+      
+      return {
+        ...f,
+        is_online: f.friendship_status === 'accepted' && (isActuallyInPresence || isSeenRecently),
+        last_lat: livePositions[f.id]?.lat ?? f.last_lat,
+        last_lon: livePositions[f.id]?.lon ?? f.last_lon,
+        heading: livePositions[f.id]?.heading ?? 0
+      };
+    });
+  }, [friends, onlineUserIds, livePositions]);
 
   return { 
     friends: enhancedFriends, 

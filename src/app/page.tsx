@@ -60,6 +60,9 @@ const DynamicMap = dynamic(() => import('@/components/MapUI'), {
   ),
 });
 
+const EMPTY_ARRAY: any[] = [];
+const DEFAULT_USER_POS: [number, number] = [40.4168, -3.7038];
+
 export default function Home() {
   const sessionClientId = useMemo(() => {
     if (typeof window === 'undefined') return '';
@@ -816,9 +819,16 @@ export default function Home() {
     updateFriendNickname(friendId, name);
   }, [updateFriendNickname]);
 
-  const radarZonesProp = useMemo(() => isRadarsEnabled ? allRadarZones : [], [isRadarsEnabled, allRadarZones]);
-  const restaurantsProp = useMemo(() => isRestaurantsEnabled ? restaurants : [], [isRestaurantsEnabled, restaurants]);
-  const yachtsProp = useMemo(() => isYachtsEnabled ? yachts : [], [isYachtsEnabled, yachts]);
+  // Propiedades estabilizadas para MapUI para evitar re-renders por cambios en sonido
+  const userPosProp = useMemo(() => userPos || DEFAULT_USER_POS, [userPos]);
+  const routeCoordinatesProp = useMemo(() => route?.coordinates || EMPTY_ARRAY, [route?.coordinates]);
+  const routeSectionsProp = useMemo(() => route?.sections || EMPTY_ARRAY, [route?.sections]);
+  const carColorProp = useMemo(() => profile?.car_color || 'white', [profile?.car_color]);
+  const userIdProp = useMemo(() => session?.user?.id || null, [session?.user?.id]);
+
+  const radarZonesProp = useMemo(() => isRadarsEnabled ? allRadarZones : EMPTY_ARRAY, [isRadarsEnabled, allRadarZones]);
+  const restaurantsProp = useMemo(() => isRestaurantsEnabled ? restaurants : EMPTY_ARRAY, [isRestaurantsEnabled, restaurants]);
+  const yachtsProp = useMemo(() => isYachtsEnabled ? yachts : EMPTY_ARRAY, [isYachtsEnabled, yachts]);
 
   return (
     <main className="flex h-screen w-screen overflow-hidden bg-black font-sans selection:bg-blue-500/30">
@@ -1274,10 +1284,10 @@ export default function Home() {
       {/* Sección del Mapa (Fondo) */}
       <section className="relative flex-1 bg-gray-900 overflow-hidden">
         <DynamicMap 
-          userPos={userPos as [number, number]}
+          userPos={userPosProp}
           heading={heading}
           hasLocation={hasLocation}
-          routeCoordinates={route?.coordinates} 
+          routeCoordinates={routeCoordinatesProp} 
           radars={radars}
           radarZones={radarZonesProp}
           aircrafts={visibleAircrafts}
@@ -1298,8 +1308,8 @@ export default function Home() {
           onGasStationClick={handleGasStationClick}
           onYachtClick={handleOnYachtClick}
           onOpenGarage={handleOnOpenGarage}
-          routeSections={route?.sections}
-          carColor={profile?.car_color}
+          routeSections={routeSectionsProp}
+          carColor={carColorProp}
           friends={friends}
           centerOverride={mapCenterOverride}
           overviewFitTrigger={overviewFitTrigger}
@@ -1309,7 +1319,7 @@ export default function Home() {
           mapMode={mapMode}
           onMapError={handleOnMapError}
           onUpdateFriendNickname={handleOnUpdateFriendNickname}
-          userId={session?.user?.id}
+          userId={userIdProp}
           voteRadar={voteRadar}
           calculateRoute={calculateRoute}
           isTrafficWanted={isTrafficWanted}

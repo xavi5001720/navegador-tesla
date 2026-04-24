@@ -478,7 +478,7 @@ export function useRestaurants(
    *
    * Backward-compatible: callers that omit `fsqId` only get the daily check.
    */
-  const checkCanReview = async (
+  const checkCanReview = useCallback(async (
     userId: string,
     fsqId?: string
   ): Promise<{ canReview: boolean; hoursLeft: number; reason?: 'per_restaurant' | 'daily_limit' }> => {
@@ -523,7 +523,7 @@ export function useRestaurants(
       console.error('[Anti-Spam] Error:', err);
       return { canReview: false, hoursLeft: 1 };
     }
-  };
+  }, []);
 
   return { restaurants, loading, progress, checkCanReview };
 }
