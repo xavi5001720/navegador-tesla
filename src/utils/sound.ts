@@ -2,6 +2,15 @@
 
 export type VoiceType = 'hombre' | 'mujer' | 'robot';
 
+export interface AlertPreferences {
+  fixedRadars: boolean;
+  mobileRadars: boolean;
+  aircraft: boolean;
+  traffic: boolean;
+  weather: boolean;
+  stops: boolean;
+}
+
 const VOLUME = 1.0;
 
 let audioUnlocked = false;
@@ -131,7 +140,10 @@ export const playRadarAlert = (
   voiceType: VoiceType, 
   type: 'safe_first' | 'safe_second' | 'danger' | 'info', 
   radarType: 'fixed' | 'mobile_zone' | 'camera' | 'section' = 'fixed',
-  audioMode: 'voice' | 'beep' = 'voice'
+  audioMode: 'voice' | 'beep' = 'voice',
+  speedLimit?: number,
+  distance?: number,
+  currentSpeed?: number
 ) => {
   if (typeof window === 'undefined') return;
   try {
@@ -156,13 +168,26 @@ export const playRadarAlert = (
     else if (radarType === 'camera') radarStr = 'cámara de vigilancia';
     else if (radarType === 'mobile_zone') radarStr = 'zona de radar móvil';
 
-    if (type === 'danger')        msg = `Peligro. Exceso de velocidad en ${radarStr} próximo. Reduzca la velocidad.`;
-    else if (type === 'safe_first') {
-      if (radarType === 'mobile_zone') msg = 'Atención, entrando en zona probable de radar móvil.';
-      else msg = `Atención, ${radarStr} próximo. Velocidad correcta.`;
+    const limitStr = speedLimit ? ` de ${speedLimit}` : '';
+    const distStr = distance ? ` a ${Math.round(distance)} metros` : ' próximo';
+    const currentSpdStr = currentSpeed ? `. Velocidad actual correcta de ${Math.round(currentSpeed * 3.6)}` : '. Velocidad correcta';
+
+    if (type === 'danger') {
+      msg = `${radarStr.charAt(0).toUpperCase() + radarStr.slice(1)}${limitStr}${distStr}. Velocidad actual de ${Math.round((currentSpeed || 0) * 3.6)}, reduzca la velocidad.`;
     }
-    else if (type === 'safe_second')  msg = `${radarStr} muy cercano. Velocidad correcta.`;
-    else if (type === 'info') msg = `Atención, ${radarStr}.`;
+    else if (type === 'safe_first' || type === 'safe_second') {
+      if (radarType === 'mobile_zone') {
+        msg = `Posible zona de radar móvil${limitStr}${distStr}. Velocidad actual de ${Math.round((currentSpeed || 0) * 3.6)}.`;
+      }
+      else msg = `${radarStr.charAt(0).toUpperCase() + radarStr.slice(1)}${limitStr}${distStr}${currentSpdStr}.`;
+    }
+    else if (type === 'info') {
+      if (radarType === 'mobile_zone') {
+        msg = `Posible zona de radar móvil${limitStr}${distStr}. Velocidad actual de ${Math.round((currentSpeed || 0) * 3.6)}.`;
+      } else {
+        msg = `Atención, ${radarStr}.`;
+      }
+    }
 
     if (msg) playVoice(msg, voiceType);
   } catch (err) {
@@ -186,12 +211,11 @@ export const playTestSound = (voiceType: VoiceType, audioMode: 'voice' | 'beep' 
   }
 };
 
-export const playPegasusAlert = (voiceType: VoiceType, callsign: string, altitude: number, speed_kmh: number) => {
+export const playPegasusAlert = (voiceType: VoiceType, callsign: string, altitude: number, speed_kmh: number, distanceKm: number) => {
   if (typeof window === 'undefined') return;
   try {
     playSyntheticBeep('alarm_clock_beeping');
-    const nameStr = callsign && callsign !== 'N/A' ? `llamada ${callsign}` : 'una aeronave';
-    const msg = `Alerta Pegasus. ${nameStr} detectada a ${Math.round(altitude)} metros de altura. Velocidad ${Math.round(speed_kmh)} kilómetros por hora. Posible vigilancia.`;
+    const msg = `Detectada aeronave a ${distanceKm.toFixed(1)} kilómetros. Altura de la aeronave ${Math.round(altitude)}, velocidad de la aeronave ${Math.round(speed_kmh)}.`;
     playVoice(msg, voiceType);
   } catch (err) {
     console.error('[Sound] playPegasusAlert error:', err);
@@ -213,9 +237,9 @@ export const playWaypointAlert = (voiceType: VoiceType, stopNumber: number, dist
 export const playTrafficJamAlert = (voiceType: VoiceType, distanceKm: number) => {
   if (typeof window === 'undefined') return;
   try {
-    playBeep('alarm_clock_beeping');
+    playSyntheticBeep('alarm_clock_beeping');
     const distStr = distanceKm < 1 ? 'menos de un kilómetro' : `${Math.round(distanceKm)} kilómetros`;
-    const msg = `¡Precaución! Tráfico detenido a ${distStr}. Por favor, reduzca su velocidad. Atasco detectado.`;
+    const msg = `Tráfico lento a ${distStr}.`;
     playVoice(msg, voiceType);
   } catch (err) {
     console.error('[Sound] playTrafficJamAlert error:', err);

@@ -159,6 +159,14 @@ export default function Home() {
   const [isTrafficWanted, setIsTrafficWanted] = useState(true);
   const prevTrafficWantedRef = useRef(isTrafficWanted);
   const [voiceType, setVoiceType] = useState<VoiceType>('mujer');
+  const [alertPreferences, setAlertPreferences] = useState<AlertPreferences>({
+    fixedRadars: true,
+    mobileRadars: true,
+    aircraft: true,
+    traffic: true,
+    weather: true,
+    stops: true
+  });
   const [audioMode, setAudioMode] = useState<'voice' | 'beep'>('voice');
   const [lastRecalculationTime, setLastRecalculationTime] = useState(0);
   const lastTrafficRequestTimeRef = useRef(0);
@@ -320,6 +328,7 @@ export default function Home() {
         if (p.isFestivalsEnabled !== undefined) setIsFestivalsEnabled(p.isFestivalsEnabled);
         if (p.isSoundEnabled !== undefined) setIsSoundEnabled(p.isSoundEnabled);
         if (p.voiceType !== undefined) setVoiceType(p.voiceType);
+        if (p.alertPreferences !== undefined) setAlertPreferences(p.alertPreferences);
         setPrefsLoaded(true);
       });
     }
@@ -346,7 +355,8 @@ export default function Home() {
       isWeatherEnabled,
       isFestivalsEnabled,
       isSoundEnabled,
-      voiceType
+      voiceType,
+      alertPreferences
     };
 
     // Solo guardamos si realmente hay cambios respecto al perfil cargado
@@ -380,7 +390,7 @@ export default function Home() {
   }, [
     isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, 
     chargerFilters, isGasStationsEnabled, gasStationFilters, 
-    isWeatherEnabled, isFestivalsEnabled, isSoundEnabled, voiceType,
+    isWeatherEnabled, isFestivalsEnabled, isSoundEnabled, voiceType, alertPreferences,
     session, prefsLoaded, handleSavePreferences, sessionConflict
   ]);
 
@@ -585,7 +595,7 @@ export default function Home() {
       });
   }, [allRadars, route, userPos, isRadarsEnabled, hiddenIds]);
 
-  const { nearestRadar, distance, isAlertActive, alertType, remainingRadars, inSectionRadar, sectionAverageSpeed } = useAlerts(userPos || [0,0], radars, isSoundEnabled, voiceType, speed, heading || 0, allRadarZones || [], audioMode);
+  const { nearestRadar, distance, isAlertActive, alertType, remainingRadars, inSectionRadar, sectionAverageSpeed } = useAlerts(userPos || [0,0], radars, isSoundEnabled, voiceType, speed, heading || 0, allRadarZones || [], audioMode, alertPreferences);
   const { allAircrafts, aircrafts, visibleAircrafts, totalCount: aircraftCount, suspiciousCount, isAnyPegasusNearby, isRateLimited, loading: loadingAircrafts, activeAccount, nextInterval } = usePegasus(userPos, isAircraftsEnabled, route?.coordinates, isDebugMode);
  
   // Proyección futura para movimiento fluido vía V11 (Tick 1s) movida a MapUI.tsx (AircraftLayer)
@@ -613,7 +623,7 @@ export default function Home() {
   
   // Alerta de proximidad a paradas
   useEffect(() => {
-    if (!userPos || !waypoints || waypoints.length === 0 || !isSoundEnabled) return;
+    if (!userPos || !waypoints || waypoints.length === 0 || !isSoundEnabled || !alertPreferences.stops) return;
     
     waypoints.forEach((wp, index) => {
       const wpKey = `${wp[0].toFixed(5)},${wp[1].toFixed(5)}`;
@@ -625,19 +635,19 @@ export default function Home() {
     });
   }, [userPos, waypoints, isSoundEnabled, voiceType]);
   useEffect(() => {
-    if (!isSoundEnabled || !aircrafts || aircrafts.length === 0) return;
+    if (!isSoundEnabled || !alertPreferences.aircraft || !aircrafts || aircrafts.length === 0) return;
 
     aircrafts.forEach(ac => {
       if (ac.distanceToUser < 10000 && !notifiedPegasus.current.has(ac.icao24)) {
         notifiedPegasus.current.add(ac.icao24);
-        playPegasusAlert(voiceType, ac.callsign, ac.altitude, ac.velocity * 3.6);
+        playPegasusAlert(voiceType, ac.callsign, ac.altitude, ac.velocity * 3.6, ac.distanceToUser / 1000);
       }
     });
   }, [aircrafts, isSoundEnabled, voiceType]);
   
   // Alerta de tráfico severo próxima (Aviso de colisión / retención)
   useEffect(() => {
-    if (!userPos || !route || !route.sections || !isSoundEnabled) return;
+    if (!userPos || !route || !route.sections || !isSoundEnabled || !alertPreferences.traffic) return;
     
     // Solo avisamos si vamos por encima de una velocidad mínima (ej: autovía) para evitar falsos positivos en ciudad
     // Sin embargo, el usuario pidió avisar si "los coches deberían ir a más de 80km/h"
@@ -667,7 +677,7 @@ export default function Home() {
 
   // Alerta de clima adverso próximo
   useEffect(() => {
-    if (!userPos || !weatherPoints || weatherPoints.length === 0 || !isSoundEnabled || !isWeatherEnabled) return;
+    if (!userPos || !weatherPoints || weatherPoints.length === 0 || !isSoundEnabled || !isWeatherEnabled || !alertPreferences.weather) return;
     
     weatherPoints.forEach(wp => {
       // Si el clima es lluvia, nieve o tormenta

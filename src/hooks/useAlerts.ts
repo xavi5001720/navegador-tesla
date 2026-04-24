@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { Radar, RadarZone } from './useRadars';
-import { playRadarAlert, VoiceType } from '@/utils/sound';
+import { playRadarAlert, VoiceType, AlertPreferences } from '@/utils/sound';
 import { getDistance } from '@/utils/geo';
 
 function getHeadingDiff(heading1: number, heading2: number) {
@@ -16,7 +16,8 @@ export function useAlerts(
   currentSpeed: number = 0,
   carHeading: number = 0,
   radarZones: RadarZone[] = [],
-  audioMode: 'voice' | 'beep' = 'voice'
+  audioMode: 'voice' | 'beep' = 'voice',
+  alertPreferences?: AlertPreferences
 ) {
   const [passedRadarIds, setPassedRadarIds] = useState<Set<string>>(new Set());
   const [inSectionRadar, setInSectionRadar] = useState(false);
@@ -110,31 +111,43 @@ export function useAlerts(
         state.radarId = radarId; state.phase = 0; state.lastDangerAlertTime = 0;
       }
 
+      // Filtrado por categorías
+      const isFixedCategory = ['fixed', 'section', 'camera'].includes(radarType);
+      const isMobileCategory = ['mobile', 'community_mobile'].includes(radarType);
+      
+      const shouldSpeak = (isFixedCategory && alertPreferences?.fixedRadars) || 
+                          (isMobileCategory && alertPreferences?.mobileRadars);
+
+      if (!shouldSpeak) return;
+
       if (alertType === 'danger') {
         if (now - state.lastDangerAlertTime > 5000) {
-          playRadarAlert(voiceType, 'danger', radarType, audioMode);
+          playRadarAlert(voiceType, 'danger', radarType, audioMode, nearestRadar.speedLimit, distance, currentSpeed);
           state.lastDangerAlertTime = now;
         }
       } else {
         if (state.phase === 0) {
-          playRadarAlert(voiceType, 'safe_first', radarType, audioMode);
+          playRadarAlert(voiceType, 'safe_first', radarType, audioMode, nearestRadar.speedLimit, distance, currentSpeed);
           state.phase = 1;
         } else if (state.phase === 1 && distance < (currentSpeed > 100 ? 400 : 250)) {
-          playRadarAlert(voiceType, 'safe_second', radarType, audioMode);
+          playRadarAlert(voiceType, 'safe_second', radarType, audioMode, nearestRadar.speedLimit, distance, currentSpeed);
           state.phase = 2;
         }
       }
     }
-  }, [userPos, nearestRadar, distance, isAlertActive, alertType, isSoundEnabled, voiceType, audioMode, currentSpeed]);
+  }, [userPos, nearestRadar, distance, isAlertActive, alertType, isSoundEnabled, voiceType, audioMode, currentSpeed, alertPreferences]);
 
   useEffect(() => {
     if (!userPos) return;
 
     radarZones.forEach(zone => {
       if (passedZoneIdsRef.current.has(String(zone.id))) return;
-      if (getDistance(userPos, [zone.lat, zone.lon]) < zone.radius) {
+      const dist = getDistance(userPos, [zone.lat, zone.lon]);
+      if (dist < zone.radius) {
         passedZoneIdsRef.current.add(String(zone.id));
-        if (isSoundEnabled) playRadarAlert(voiceType, 'info', 'mobile_zone', audioMode);
+        if (isSoundEnabled && alertPreferences?.mobileRadars) {
+          playRadarAlert(voiceType, 'info', 'mobile_zone', audioMode, undefined, dist, currentSpeed);
+        }
       }
     });
 

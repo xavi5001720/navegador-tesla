@@ -34,6 +34,8 @@ interface SidebarProps {
   setAudioMode?: (mode: 'voice' | 'beep') => void;
   voiceType: VoiceType;
   setVoiceType: (v: VoiceType) => void;
+  alertPreferences: import('@/utils/sound').AlertPreferences;
+  setAlertPreferences: (prefs: import('@/utils/sound').AlertPreferences) => void;
 
   isRadarsEnabled: boolean;
   setIsRadarsEnabled: (v: boolean) => void;
@@ -114,6 +116,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   setAudioMode,
   voiceType,
   setVoiceType,
+  alertPreferences,
+  setAlertPreferences,
   isRadarsEnabled,
   setIsRadarsEnabled,
   isAircraftsEnabled,
@@ -379,6 +383,36 @@ const Sidebar: React.FC<SidebarProps> = ({
                            }`}
                          >Pitidos</button>
                        </div>
+                    </div>
+
+                    {/* Menú A la Carta de Alertas */}
+                    <div className="flex flex-col gap-2 bg-black/20 p-3 rounded-xl border border-white/5">
+                       <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-1">Configuración A La Carta</span>
+                       
+                       {[
+                         { id: 'fixedRadars', label: 'Radares Fijos / Tramo', icon: '📡' },
+                         { id: 'mobileRadars', label: 'Radares Móviles', icon: '🚗' },
+                         { id: 'aircraft', label: 'Aeronaves Pegasus', icon: '🚁' },
+                         { id: 'traffic', label: 'Tráfico Lento', icon: '🚦' },
+                         { id: 'weather', label: 'Clima Adverso', icon: '⛈️' },
+                         { id: 'stops', label: 'Paradas de Ruta', icon: '📍' },
+                       ].map((pref) => (
+                         <div key={pref.id} className="flex items-center justify-between bg-white/5 p-2 rounded-lg group hover:bg-white/10 transition-colors">
+                           <div className="flex items-center gap-2">
+                             <span className="text-xs">{pref.icon}</span>
+                             <span className="text-[11px] text-gray-300 font-medium">{pref.label}</span>
+                           </div>
+                           <button 
+                             onClick={() => setAlertPreferences({
+                               ...alertPreferences,
+                               [pref.id]: !alertPreferences[pref.id as keyof typeof alertPreferences]
+                             })}
+                             className={`w-9 h-5 rounded-full transition-all relative ${alertPreferences[pref.id as keyof typeof alertPreferences] ? 'bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.4)]' : 'bg-gray-700'}`}
+                           >
+                              <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-0.75 transition-transform duration-200 ${alertPreferences[pref.id as keyof typeof alertPreferences] ? 'translate-x-4.5' : 'translate-x-1'}`} />
+                           </button>
+                         </div>
+                       ))}
                     </div>
                     {audioMode === 'voice' && (
                        <div className="flex justify-between items-center bg-white/5 p-2 rounded-lg">
