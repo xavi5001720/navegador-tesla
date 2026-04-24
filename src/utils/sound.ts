@@ -6,8 +6,6 @@ const VOLUME = 1.0;
 
 let audioUnlocked = false;
 let beepPlayer: HTMLAudioElement | null = null;
-const audioCtx: AudioContext | null = null;
-
 // ── Unlock audio ─────────────────────────────────────────────────────────────
 export const unlockTeslaAudio = () => {
   if (typeof window === 'undefined' || audioUnlocked) return;
