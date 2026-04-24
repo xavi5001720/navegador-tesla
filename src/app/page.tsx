@@ -782,6 +782,34 @@ export default function Home() {
     addWaypointAfter(origin, [contextMenu.lat, contextMenu.lon]);
   }, [contextMenu, userPos, addWaypointAfter]);
 
+  const handleOnViewModeChange = useCallback((mode: string) => {
+    handleManualViewModeChange(mode as 'navigation' | 'overview');
+  }, [handleManualViewModeChange]);
+
+  const handleOnYachtClick = useCallback((y: YachtPosition) => {
+    setSelectedPOI(null);
+    setSelectedYacht(y);
+  }, []);
+
+  const handleOnOpenGarage = useCallback(() => {
+    setIsGarageOpen(true);
+  }, []);
+
+  const handleOnMapError = useCallback(() => {
+    if (mapMode === 'satellite') {
+      console.warn('[Auto-Fallback] Fallo en satélite detectado. Cambiando a Modo Ligero...');
+      setMapMode('light');
+    }
+  }, [mapMode, setMapMode]);
+
+  const handleOnUpdateFriendNickname = useCallback((friendId: string, name: string) => {
+    updateFriendNickname(friendId, name);
+  }, [updateFriendNickname]);
+
+  const radarZonesProp = useMemo(() => isRadarsEnabled ? allRadarZones : [], [isRadarsEnabled, allRadarZones]);
+  const restaurantsProp = useMemo(() => isRestaurantsEnabled ? restaurants : [], [isRestaurantsEnabled, restaurants]);
+  const yachtsProp = useMemo(() => isYachtsEnabled ? yachts : [], [isYachtsEnabled, yachts]);
+
   return (
     <main className="flex h-screen w-screen overflow-hidden bg-black font-sans selection:bg-blue-500/30">
       {/* SEO: H1 oculto para motores de búsqueda */}
@@ -1239,28 +1267,25 @@ export default function Home() {
           hasLocation={hasLocation}
           routeCoordinates={route?.coordinates} 
           radars={radars}
-          radarZones={isRadarsEnabled ? allRadarZones : []}
+          radarZones={radarZonesProp}
           aircrafts={visibleAircrafts}
           chargers={chargers}
           gasStations={gasStations}
           weatherPoints={weatherPoints}
           festivals={festivals}
-          restaurants={isRestaurantsEnabled ? restaurants : []}
+          restaurants={restaurantsProp}
           waypoints={waypoints}
-          yachts={isYachtsEnabled ? yachts : []}
+          yachts={yachtsProp}
           speed={speed}
           viewMode={viewMode}
-          onViewModeChange={(mode) => handleManualViewModeChange(mode as 'navigation' | 'overview')}
+          onViewModeChange={handleOnViewModeChange}
           customZoom={customZoom}
           onZoomChange={setCustomZoom}
           onMapClick={handleMapClick}
           onChargerClick={handleChargerClick}
           onGasStationClick={handleGasStationClick}
-          onYachtClick={(y) => {
-            setSelectedPOI(null);
-            setSelectedYacht(y);
-          }}
-          onOpenGarage={() => setIsGarageOpen(true)}
+          onYachtClick={handleOnYachtClick}
+          onOpenGarage={handleOnOpenGarage}
           routeSections={route?.sections}
           carColor={profile?.car_color}
           friends={friends}
@@ -1270,15 +1295,8 @@ export default function Home() {
           isSimulating={isSimulating}
           onCurrentZoomChange={setCurrentZoom}
           mapMode={mapMode}
-          onMapError={() => {
-             if (mapMode === 'satellite') {
-               console.warn('[Auto-Fallback] Fallo en satélite detectado. Cambiando a Modo Ligero...');
-               setMapMode('light');
-             }
-          }}
-          onUpdateFriendNickname={(friendId, name) => {
-            updateFriendNickname(friendId, name);
-          }}
+          onMapError={handleOnMapError}
+          onUpdateFriendNickname={handleOnUpdateFriendNickname}
           userId={session?.user?.id}
           voteRadar={voteRadar}
           calculateRoute={calculateRoute}
