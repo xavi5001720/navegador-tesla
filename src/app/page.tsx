@@ -123,7 +123,6 @@ export default function Home() {
     distanceToNextInstruction,
     originalTotalDistance,
     originalTotalDuration,
-    originalTotalDuration,
     updateLiveMetrics,
     lastTrafficTimeRef,
     lastTrafficPosRef
