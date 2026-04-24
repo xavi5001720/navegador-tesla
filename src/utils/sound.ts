@@ -85,68 +85,36 @@ const playSyntheticBeep = (type: 'beep_short' | 'alarm_clock_beeping') => {
   }
 };
 
-// ── Audio Queue Manager ────────────────────────────────────────────────────────
-const audioQueue: { msg: string, voiceType: VoiceType }[] = [];
-let isSpeaking = false;
-let lastPlayedMsg = '';
-
-const processQueue = () => {
-  if (isSpeaking || audioQueue.length === 0) return;
-
-  isSpeaking = true;
-  const nextItem = audioQueue.shift();
-  if (!nextItem) {
-    isSpeaking = false;
-    return;
-  }
-
-  const { msg, voiceType } = nextItem;
-  lastPlayedMsg = msg;
-
-  try {
-    let lang = 'es'; // Mujer (es-ES) por defecto
-    if (voiceType === 'hombre') lang = 'es-US'; // Hombre hispanoamericano
-    if (voiceType === 'robot') lang = 'es-MX';  // Voz femenina diferente (latina alternativa)
-    
-    // Reproduce el MP3 (v=3 fuerza a saltar la caché persistente del navegador)
-    const url = `/api/tts?text=${encodeURIComponent(msg)}&lang=${lang}&v=3`;
-    const audio = new Audio(url);
-    audio.volume = VOLUME;
-
-    audio.onended = () => {
-      isSpeaking = false;
-      processQueue();
-    };
-
-    audio.onerror = (e) => {
-      console.warn('[Sound] Voice error during playback:', e);
-      isSpeaking = false;
-      processQueue();
-    };
-
-    audio.play().catch(e => {
-      console.warn('[Sound] Voice blocked:', e);
-      isSpeaking = false;
-      processQueue();
-    });
-  } catch (err) {
-    console.error('[Sound] playVoice error:', err);
-    isSpeaking = false;
-    processQueue();
-  }
-};
-
-// ── Voice via Google TTS proxy with Locale selection ───────────────────────
-const playVoice = async (msg: string, voiceType: VoiceType) => {
+// ── Voice via Native SpeechSynthesis API ────────────────────────────────────
+const playVoice = (msg: string, voiceType: VoiceType) => {
   if (typeof window === 'undefined') return;
 
-  // 1. Deduplicación Anti-Spam (Filtro estricto)
-  if (msg === lastPlayedMsg) return;
-  if (audioQueue.length > 0 && audioQueue[audioQueue.length - 1].msg === msg) return;
+  try {
+    // 1. CORRECCIÓN BUCLE/ATASCO: Limpiar cualquier locución fantasma previa
+    window.speechSynthesis.cancel();
 
-  // 2. Encolar y procesar (FIFO)
-  audioQueue.push({ msg, voiceType });
-  processQueue();
+    // 2. Instanciar nueva locución (evita reutilizar objetos)
+    const utterance = new SpeechSynthesisUtterance(msg);
+    
+    // Configuración de idioma y tono según el tipo de voz
+    utterance.lang = 'es-ES';
+    
+    if (voiceType === 'hombre') {
+      utterance.pitch = 0.8;
+      utterance.rate = 0.9;
+    } else if (voiceType === 'robot') {
+      utterance.pitch = 1.5;
+      utterance.rate = 1.2;
+    } else {
+      utterance.pitch = 1.0;
+      utterance.rate = 1.0;
+    }
+
+    // Reproducir inmediatamente
+    window.speechSynthesis.speak(utterance);
+  } catch (err) {
+    console.error('[Sound] SpeechSynthesis error:', err);
+  }
 };
 
 // ── Public API ────────────────────────────────────────────────────────────────
