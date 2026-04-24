@@ -639,6 +639,56 @@ const ChargerLayer = React.memo(({ chargers, currentZoom, routeActive, onCharger
 });
 ChargerLayer.displayName = 'ChargerLayer';
 
+const RadarsLayer = React.memo(({ radars, currentZoom, routeActive, userId, onSelect }: { 
+  radars: Radar[], 
+  currentZoom: number, 
+  routeActive: boolean, 
+  userId?: string, 
+  onSelect: (r: Radar) => void 
+}) => {
+  const shouldShow = currentZoom >= 10 || routeActive;
+  if (!shouldShow) return null;
+
+  return (
+    <>
+      {radars.map((radar) => (
+        <RadarMarker key={`radar-${radar.id}`} radar={radar} userId={userId} onSelect={onSelect} />
+      ))}
+    </>
+  );
+}, (prev, next) => {
+  return prev.radars.length === next.radars.length && 
+         prev.radars[0]?.id === next.radars[0]?.id &&
+         prev.currentZoom === next.currentZoom && 
+         prev.routeActive === next.routeActive &&
+         prev.userId === next.userId;
+});
+RadarsLayer.displayName = 'RadarsLayer';
+
+const GasStationsLayer = React.memo(({ gasStations, currentZoom, routeActive, onGasStationClick }: { 
+  gasStations: GasStation[], 
+  currentZoom: number, 
+  routeActive: boolean, 
+  onGasStationClick: (s: GasStation) => void 
+}) => {
+  const shouldShow = currentZoom >= 10 || routeActive;
+  if (!shouldShow) return null;
+
+  return (
+    <>
+      {gasStations.map(station => (
+        <GasStationMarker key={`gas-${station.id}`} station={station} onClick={onGasStationClick} />
+      ))}
+    </>
+  );
+}, (prev, next) => {
+  return prev.gasStations.length === next.gasStations.length && 
+         prev.gasStations[0]?.id === next.gasStations[0]?.id &&
+         prev.currentZoom === next.currentZoom && 
+         prev.routeActive === next.routeActive;
+});
+GasStationsLayer.displayName = 'GasStationsLayer';
+
 const WeatherMarker = React.memo(({ wp }: { wp: WeatherPoint }) => (
   <Marker position={[wp.lat, wp.lon]} icon={createWeatherIcon(wp.temp, wp.condition)} interactive={false} />
 ));
@@ -1256,10 +1306,14 @@ function MapUI(props: MapUIProps) {
           />
         ))}
 
-        {/* 📡 RADARES: Memoizados por zoom y datos */}
-        {useMemo(() => (currentZoom >= 10 || (routeCoordinates && routeCoordinates.length > 0)) && radars.map((radar) => (
-          <RadarMarker key={`radar-${radar.id}`} radar={radar} userId={userId} onSelect={setSelectedCommunityRadar} />
-        )), [radars.length, radars[0]?.id, currentZoom, !!routeCoordinates, userId])}
+        {/* 📡 RADARES: Aislados en RadarsLayer para evitar re-renders por userPos */}
+        <RadarsLayer 
+          radars={radars} 
+          currentZoom={currentZoom} 
+          routeActive={!!routeCoordinates} 
+          userId={userId} 
+          onSelect={setSelectedCommunityRadar} 
+        />
 
         {/* ✈️ AVIONES: Aislados en AircraftLayer para no forzar re-render de MapUI cada 1s */}
         <AircraftLayer 
@@ -1278,12 +1332,13 @@ function MapUI(props: MapUIProps) {
           onChargerClick={onChargerClick || (() => {})} 
         />
 
-        {/* ⛽ GASOLINERAS: Memoizadas */}
-        {useMemo(() => (currentZoom >= 10 || (routeCoordinates && routeCoordinates.length > 0)) && (
-          <>
-            {gasStations.map(station => <GasStationMarker key={`gas-${station.id}`} station={station} onClick={onGasStationClick || (() => {})} />)}
-          </>
-        ), [gasStations.length, currentZoom, !!routeCoordinates])}
+        {/* ⛽ GASOLINERAS: Aisladas en GasStationsLayer */}
+        <GasStationsLayer 
+          gasStations={gasStations} 
+          currentZoom={currentZoom} 
+          routeActive={!!routeCoordinates} 
+          onGasStationClick={onGasStationClick || (() => {})} 
+        />
 
         {useMemo(() => weatherPoints.map(wp => (
           <WeatherMarker key={`weather-${wp.id}`} wp={wp} />

@@ -116,8 +116,6 @@ export default function Home() {
     clearRoute,
     checkTrafficRefresh,
     isTrafficEnabled,
-    lastTrafficTime,
-    lastTrafficPos,
     liveDistance,
     liveDuration,
     nextInstruction,
@@ -125,7 +123,10 @@ export default function Home() {
     distanceToNextInstruction,
     originalTotalDistance,
     originalTotalDuration,
-    updateLiveMetrics
+    originalTotalDuration,
+    updateLiveMetrics,
+    lastTrafficTimeRef,
+    lastTrafficPosRef
   } = useRoute();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -491,28 +492,28 @@ export default function Home() {
     }
   }, [userPos, checkTrafficRefresh, updateLiveMetrics]);
 
-  // Recalcular ruta al cambiar la preferencia de tráfico si hay una ruta activa
+  // 1. CORRECCIÓN BUCLE INFINITO: Recalcular ruta al cambiar la preferencia de tráfico
   useEffect(() => {
     if (route && destination && userPos) {
-      // Protección anti-spam estricta: solo llamamos a la API si han pasado más de 30min Y se ha movido > 1km
+      // Usamos .current para evitar que el efecto se dispare cuando cambian los valores de tráfico
       const now = Date.now();
-      const timeSinceLastRequest = now - lastTrafficTime;
-      
-      // FIX I8: Eliminada copia local de getDistance — se usa la importada de utils/geo
-      const distSinceLastRequest = lastTrafficPos ? getDistance(userPos, lastTrafficPos) : Infinity;
+      const timeSinceLastRequest = now - lastTrafficTimeRef.current;
+      const distSinceLastRequest = lastTrafficPosRef.current ? getDistance(userPos, lastTrafficPosRef.current) : Infinity;
 
       const isTimeOk = timeSinceLastRequest > 1800000; // 30 min
       const isDistOk = distSinceLastRequest > 1000; // 1 km
       
+      // Si el tráfico está activado, aplicamos la protección anti-spam
       if (isTrafficWanted && !(isTimeOk && isDistOk)) {
-        console.log(`[Ahorro Crítico] Tráfico bloqueado. Han pasado ${Math.round(timeSinceLastRequest/60000)}min y movido ${Math.round(distSinceLastRequest)}m. (Faltan: ${isTimeOk ? '0' : 30 - Math.round(timeSinceLastRequest/60000)}min o ${isDistOk ? '0' : 1000 - Math.round(distSinceLastRequest)}m)`);
         return;
       }
 
       console.log(`[page] Preferencia de tráfico cambiada a ${isTrafficWanted ? 'ON' : 'OFF'}. Recalculando ruta...`);
       calculateRoute(userPos, destination, waypoints, true, isTrafficWanted);
     }
-  }, [isTrafficWanted, route, destination, userPos, lastTrafficTime, lastTrafficPos, waypoints, calculateRoute]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTrafficWanted, destination, userPos, waypoints, calculateRoute]); 
+  // Eliminamos 'route' de las dependencias para cortar el bucle infinito
 
 
   // Unlock audio on first interaction

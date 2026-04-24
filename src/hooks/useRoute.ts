@@ -483,6 +483,8 @@ export function useRoute() {
     clearRoute,
     checkTrafficRefresh,
     updateLiveMetrics,
+    lastTrafficTimeRef,
+    lastTrafficPosRef
   };
 }
 
