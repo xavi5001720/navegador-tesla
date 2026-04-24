@@ -157,6 +157,7 @@ export default function Home() {
 
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [isTrafficWanted, setIsTrafficWanted] = useState(true);
+  const prevTrafficWantedRef = useRef(isTrafficWanted);
   const [voiceType, setVoiceType] = useState<VoiceType>('mujer');
   const [audioMode, setAudioMode] = useState<'voice' | 'beep'>('voice');
   const [lastRecalculationTime, setLastRecalculationTime] = useState(0);
@@ -494,25 +495,37 @@ export default function Home() {
   // 1. CORRECCIÓN BUCLE INFINITO: Recalcular ruta al cambiar la preferencia de tráfico
   useEffect(() => {
     if (route && destination && userPos) {
-      // Usamos .current para evitar que el efecto se dispare cuando cambian los valores de tráfico
-      const now = Date.now();
-      const timeSinceLastRequest = now - lastTrafficTimeRef.current;
-      const distSinceLastRequest = lastTrafficPosRef.current ? getDistance(userPos, lastTrafficPosRef.current) : Infinity;
-
-      const isTimeOk = timeSinceLastRequest > 1800000; // 30 min
-      const isDistOk = distSinceLastRequest > 1000; // 1 km
+      const switchToggled = prevTrafficWantedRef.current !== isTrafficWanted;
       
-      // Si el tráfico está activado, aplicamos la protección anti-spam
-      if (isTrafficWanted && !(isTimeOk && isDistOk)) {
+      // Si el interruptor no se ha tocado y el tráfico está en OFF, salimos
+      // Esto evita que el movimiento del coche (userPos) dispare recálculos innecesarios en OFF
+      if (!switchToggled && !isTrafficWanted) {
         return;
+      }
+
+      // Protección anti-spam para el modo ON (mantenemos la lógica de tiempo/distancia)
+      if (isTrafficWanted && !switchToggled) {
+        const now = Date.now();
+        const timeSinceLastRequest = now - lastTrafficTimeRef.current;
+        const distSinceLastRequest = lastTrafficPosRef.current ? getDistance(userPos, lastTrafficPosRef.current) : Infinity;
+
+        const isTimeOk = timeSinceLastRequest > 1800000; // 30 min
+        const isDistOk = distSinceLastRequest > 1000; // 1 km
+
+        if (!(isTimeOk && isDistOk)) {
+          return;
+        }
       }
 
       console.log(`[page] Preferencia de tráfico cambiada a ${isTrafficWanted ? 'ON' : 'OFF'}. Recalculando ruta...`);
       calculateRoute(userPos, destination, waypoints, true, isTrafficWanted);
+      
+      // Actualizamos el ref al final del bloque
+      prevTrafficWantedRef.current = isTrafficWanted;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isTrafficWanted, destination, userPos, waypoints, calculateRoute]); 
-  // Eliminamos 'route' de las dependencias para cortar el bucle infinito
+  }, [isTrafficWanted, destination, userPos, waypoints]); 
+  // Eliminamos 'route' y 'calculateRoute' de las dependencias para cortar el bucle infinito
 
 
   // Unlock audio on first interaction
