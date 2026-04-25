@@ -32,29 +32,38 @@ const endMarkerIcon = L.divIcon({
    iconAnchor: [12, 12],
 });
 
-const radarIcon = (type: string = 'fixed', speedLimit?: number) => L.divIcon({
-  html: `
-    <div class="relative h-10 w-10 flex flex-col items-center counter-rotate">
-      <div class="h-8 w-8 flex items-center justify-center rounded-full border-2 border-white shadow-lg animate-pulse z-10 ${
-        type === 'section' ? 'bg-orange-600' : (type === 'camera' ? 'bg-blue-600' : 'bg-rose-600')
-      }">
-         ${type === 'section' ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.8 2.8 0 1 1-4 4l-12.6-12.7a2.8 2.8 0 1 1 4-4l12.6 12.7Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 13.5 2 2"/><path d="m16.5 10.5 2 2"/></svg>' : 
-          (type === 'camera' ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0-4a9 9 0 0 1 9 9 9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9"/></svg>' : 
-          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>')}
-      </div>
-      ${speedLimit ? `
-        <div class="absolute -bottom-1 bg-white border-2 rounded-full h-5 w-5 flex items-center justify-center shadow-md z-20 ${
-          type === 'section' ? 'border-orange-600' : (type === 'camera' ? 'border-blue-600' : 'border-rose-600')
+const radarIconCache = new Map<string, L.DivIcon>();
+const radarIcon = (type: string = 'fixed', speedLimit?: number) => {
+  const cacheKey = `${type}-${speedLimit || 0}`;
+  if (radarIconCache.has(cacheKey)) return radarIconCache.get(cacheKey)!;
+
+  const icon = L.divIcon({
+    html: `
+      <div class="relative h-10 w-10 flex flex-col items-center counter-rotate">
+        <div class="h-8 w-8 flex items-center justify-center rounded-full border-2 border-white shadow-lg animate-pulse z-10 ${
+          type === 'section' ? 'bg-orange-600' : (type === 'camera' ? 'bg-blue-600' : 'bg-rose-600')
         }">
-          <span class="text-[10px] font-black text-black leading-none">${speedLimit}</span>
+           ${type === 'section' ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.3 15.3a2.8 2.8 0 1 1-4 4l-12.6-12.7a2.8 2.8 0 1 1 4-4l12.6 12.7Z"/><path d="m7.5 10.5 2 2"/><path d="m10.5 7.5 2 2"/><path d="m13.5 13.5 2 2"/><path d="m16.5 10.5 2 2"/></svg>' : 
+            (type === 'camera' ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0-4a9 9 0 0 1 9 9 9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9"/></svg>' : 
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>')}
         </div>
-      ` : ''}
-    </div>
-  `,
-  className: 'custom-radar-icon',
-  iconSize: [40, 44],
-  iconAnchor: [20, 32],
-});
+        ${speedLimit ? `
+          <div class="absolute -bottom-1 bg-white border-2 rounded-full h-5 w-5 flex items-center justify-center shadow-md z-20 ${
+            type === 'section' ? 'border-orange-600' : (type === 'camera' ? 'border-blue-600' : 'border-rose-600')
+          }">
+            <span class="text-[10px] font-black text-black leading-none">${speedLimit}</span>
+          </div>
+        ` : ''}
+      </div>
+    `,
+    className: 'custom-radar-icon',
+    iconSize: [40, 44],
+    iconAnchor: [20, 32],
+  });
+
+  radarIconCache.set(cacheKey, icon);
+  return icon;
+};
 // 1. PRE-GENERACIÓN DE ICONOS ESTÁTICOS (Evita llamar a renderToStaticMarkup en cada render)
 const chargerIcon = L.divIcon({
   html: `
@@ -394,7 +403,11 @@ const getFriendIcon = (color?: string, name?: string, nickname?: string, heading
   return icon;
 };
 
+const communityIconCache = new Map<string, L.DivIcon>();
 const communityRadarIcon = (isVisible: boolean, isMine: boolean, category: string = 'mobile_radar') => {
+  const cacheKey = `${isVisible}-${isMine}-${category}`;
+  if (communityIconCache.has(cacheKey)) return communityIconCache.get(cacheKey)!;
+
   let bgColor = isVisible ? 'bg-blue-600' : 'bg-gray-600';
   let iconContent = '';
 
@@ -423,7 +436,7 @@ const communityRadarIcon = (isVisible: boolean, isMine: boolean, category: strin
       iconContent = '<img src="/radarpolicia.png" alt="P" class="h-7 w-7 object-contain" />';
   }
 
-  return L.divIcon({
+  const icon = L.divIcon({
     html: `
       <div class="relative h-12 w-12 flex flex-col items-center counter-rotate transition-all duration-500 ${!isVisible && isMine ? 'opacity-60 scale-90' : 'opacity-100 scale-110'}">
         <div class="h-10 w-10 flex items-center justify-center rounded-full border-2 border-white shadow-xl z-10 ${bgColor}">
@@ -440,6 +453,9 @@ const communityRadarIcon = (isVisible: boolean, isMine: boolean, category: strin
     iconSize: [48, 48],
     iconAnchor: [24, 24],
   });
+
+  communityIconCache.set(cacheKey, icon);
+  return icon;
 };
 
 function lerpAngle(current: number, target: number, alpha: number): number {
@@ -657,11 +673,16 @@ const RadarsLayer = React.memo(({ radars, currentZoom, routeActive, userId, onSe
     </>
   );
 }, (prev, next) => {
-  return prev.radars.length === next.radars.length && 
-         prev.radars[0]?.id === next.radars[0]?.id &&
-         prev.currentZoom === next.currentZoom && 
-         prev.routeActive === next.routeActive &&
-         prev.userId === next.userId;
+  // Optimización de comparación profunda de radares para evitar re-renders si la lista es la misma
+  if (prev.radars.length !== next.radars.length) return false;
+  if (prev.currentZoom !== next.currentZoom) return false;
+  if (prev.routeActive !== next.routeActive) return false;
+  if (prev.userId !== next.userId) return false;
+  
+  // Si la longitud es la misma, comparar el ID del primero y último para detectar cambios rápidos
+  // sin recorrer todo el array (buen balance rendimiento/precisión)
+  return prev.radars[0]?.id === next.radars[0]?.id && 
+         prev.radars[prev.radars.length - 1]?.id === next.radars[next.radars.length - 1]?.id;
 });
 RadarsLayer.displayName = 'RadarsLayer';
 

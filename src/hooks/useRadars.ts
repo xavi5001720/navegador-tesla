@@ -41,6 +41,12 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
 
   const lastFetchRef = useRef<{pos: [number, number], routeKey: string} | null>(null);
   const fetchedChunksRef = useRef<Set<number>>(new Set());
+  const userPosRef = useRef(userPos);
+
+  // Mantener el Ref actualizado sin disparar renders
+  useEffect(() => {
+    userPosRef.current = userPos;
+  }, [userPos]);
 
   const routeLength = routeCoordinates?.length ?? 0;
   const routeFirstKey = routeCoordinates?.[0] ? `${routeCoordinates[0][0].toFixed(4)},${routeCoordinates[0][1].toFixed(4)}` : '';
@@ -106,6 +112,7 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
     
     // EVITAR DOBLE PETICIÓN
     if (fetchedChunksRef.current.has(chunkIdx)) return;
+    if (!isEnabled) return; // Guard inicial
     fetchedChunksRef.current.add(chunkIdx);
 
     setLoadingRadars(true);
@@ -131,7 +138,7 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
         logger.info('useRadars', `Cache Hit: Tramo ${chunkIdx} recuperado de IndexedDB`);
       }
 
-      if (chunkData) {
+      if (chunkData && isEnabled) { // Verificar si sigue activo
         setRadars(prev => {
           const newOnes = chunkData.filter((r: any) => !prev.some(p => p.id === r.id));
           return [...prev, ...newOnes];
@@ -151,6 +158,7 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
         setRadars([]);
         setRadarZones([]);
         fetchedChunksRef.current.clear();
+        lastFetchRef.current = null; // CRÍTICO: Permitir re-fetch al encender
       }
       return;
     }
@@ -199,8 +207,10 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
           if (!r || !r.lat || !r.lon) return;
 
           // Solo procesamos si está a menos de 60km (Burbuja de interés)
-          // Esto evita procesar radares de otra punta de España
-          const dist = getDist(userPos, [r.lat, r.lon]);
+          // Usamos el Ref para evitar re-subscribir cada segundo
+          const currentPos = userPosRef.current;
+          if (!currentPos) return;
+          const dist = getDist(currentPos, [r.lat, r.lon]);
           if (dist > 60000) return;
 
           if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
@@ -234,7 +244,7 @@ export function useRadars(userPos: [number, number] | null, routeCoordinates?: [
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [isEnabled, userPos?.[0], userPos?.[1]]);
+  }, [isEnabled]); // ELIMINADO userPos de dependencias para evitar bucle de red
 
   return { radars, radarZones, loadingRadars, progress, refreshRadars: () => { fetchedChunksRef.current.clear(); setRefreshTrigger(prev => prev + 1); } };
 }
