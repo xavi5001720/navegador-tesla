@@ -2,15 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-function getDataPath(filename: string, fallbackPath: string) {
-  const local = path.join(process.cwd(), 'public', 'data', filename);
-  if (fs.existsSync(local)) return local;
+function getLivePath(primaryPath: string, fallbackPath: string) {
+  if (fs.existsSync(primaryPath)) return primaryPath;
   return fallbackPath;
 }
 
-const INVENTARIO_PATH = getDataPath('inventario_global.json', path.join(process.cwd(), '..', '1-referidos', 'inventarios', 'inventario_global.json'));
-const COMENTARIOS_PATH = getDataPath('comentarios.json', path.join(process.cwd(), '..', '1-referidos', 'inventarios', 'comentarios.json'));
-const VOTOS_PATH = getDataPath('votos_globales.json', path.join(process.cwd(), '..', '1-referidos', 'inventarios', 'votos_globales.json'));
+const INVENTARIO_PATH = getLivePath(
+  '/home/xavi/proyectos-antigravity/1-referidos/inventarios/inventario_global.json',
+  path.join(process.cwd(), 'public', 'data', 'inventario_global.json')
+);
+const COMENTARIOS_PATH = getLivePath(
+  '/home/xavi/proyectos-antigravity/1-referidos/inventarios/comentarios.json',
+  path.join(process.cwd(), 'public', 'data', 'comentarios.json')
+);
+const VOTOS_PATH = getLivePath(
+  '/home/xavi/proyectos-antigravity/1-referidos/inventarios/votos_globales.json',
+  path.join(process.cwd(), 'public', 'data', 'votos_globales.json')
+);
 
 const TESLA_GROUP_ID = '-1003731237376';
 const TOPIC_MODEL3 = '7';
@@ -125,7 +133,7 @@ export async function GET(req: NextRequest) {
   // Filtro por versión
   if (version) {
     productos = productos.filter((p: any) =>
-      p.versiones.some((v: string) => v.toLowerCase() === version.toLowerCase() || v === '__todas__')
+      p.versiones.some((v: string) => v.toLowerCase() === version.toLowerCase())
     );
   }
 

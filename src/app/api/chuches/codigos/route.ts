@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-const CODIGOS_PATH = fs.existsSync(path.join(process.cwd(), 'public', 'data', 'ultimos_codigos.txt'))
-  ? path.join(process.cwd(), 'public', 'data', 'ultimos_codigos.txt')
-  : path.join(process.cwd(), '..', '1-referidos', '..', '6-Codigosaliexpress', 'ultimos_codigos.txt');
+const CODIGOS_PATH = fs.existsSync('/home/xavi/proyectos-antigravity/6-Codigosaliexpress/ultimos_codigos.txt')
+  ? '/home/xavi/proyectos-antigravity/6-Codigosaliexpress/ultimos_codigos.txt'
+  : path.join(process.cwd(), 'public', 'data', 'ultimos_codigos.txt');
 
 function parseCodigos(txt: string) {
   const lines = txt.split('\n').map(l => l.trim()).filter(Boolean);
