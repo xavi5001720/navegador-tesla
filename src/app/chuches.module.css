@@ -45,18 +45,39 @@
   gap: 0.5rem;
   text-decoration: none;
 }
-.logoT {
-  width: 32px;
-  height: 32px;
-  background: var(--red);
-  color: white;
-  border-radius: 8px;
+.logoImg {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(227,25,55,0.4);
+  box-shadow: 0 0 10px rgba(227,25,55,0.2);
+}
+.heroAvatarWrap {
   display: flex;
-  align-items: center;
   justify-content: center;
-  font-weight: 900;
-  font-size: 1.1rem;
-  flex-shrink: 0;
+  margin-bottom: 1.2rem;
+}
+.heroAvatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--red);
+  box-shadow: 0 0 25px rgba(227,25,55,0.4);
+  transition: transform 0.3s;
+}
+.heroAvatar:hover {
+  transform: scale(1.06);
+}
+.footerAvatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--red);
+  box-shadow: 0 0 15px rgba(227,25,55,0.3);
+  margin-bottom: 0.8rem;
 }
 .logoText {
   font-size: 1rem;

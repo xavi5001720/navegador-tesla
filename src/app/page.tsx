@@ -436,7 +436,7 @@ export default function ChuchesPage() {
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <a href="/" className={styles.logo}>
-            <span className={styles.logoT}>T</span>
+            <img src="/logo-teslachuches.png" alt="Tesla Chuches" className={styles.logoImg} />
             <span className={styles.logoText}>Viajando en Tesla</span>
           </a>
           <a href="https://t.me/tesla_chuches" target="_blank" rel="noopener noreferrer" className={styles.headerTgBtn}>
@@ -447,6 +447,9 @@ export default function ChuchesPage() {
 
       {/* ── Hero ── */}
       <section className={styles.hero}>
+        <div className={styles.heroAvatarWrap}>
+          <img src="/logo-teslachuches.png" alt="Tesla Chuches" className={styles.heroAvatar} />
+        </div>
         <h1 className={styles.heroTitle}>
           Los mejores accesorios para tu <span className={styles.heroTesla}>Tesla</span>
         </h1>
@@ -620,6 +623,7 @@ export default function ChuchesPage() {
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
           <div className={styles.footerComunidad}>
+            <img src="/logo-teslachuches.png" alt="Tesla Chuches" className={styles.footerAvatar} />
             <h3>💬 Comunidad Tesla Chuches</h3>
             <p>Únete a miles de propietarios de Tesla que comparten sus mejores descuentos, accesorios y experiencias cada día.</p>
             <a href="https://t.me/tesla_chuches" target="_blank" rel="noopener noreferrer" className={styles.btnTelegramBig}>
