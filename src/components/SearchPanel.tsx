@@ -151,21 +151,8 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
             id="tesla-search-field-obscure"
             autoCorrect="off"
             spellCheck={false}
-            className={`w-full rounded-2xl border border-white/10 bg-black/70 backdrop-blur-xl shadow-2xl py-4 pl-10 pr-12 text-sm text-white placeholder:text-gray-400 hover:bg-black/80 focus:outline-none focus:border-blue-500/50 focus:bg-black/90 focus:ring-4 focus:ring-blue-500/10 transition-all ${showFilters ? 'ring-2 ring-blue-500/50' : ''}`}
+            className="w-full rounded-2xl border border-white/10 bg-black/70 backdrop-blur-xl shadow-2xl py-4 pl-10 pr-4 text-sm text-white placeholder:text-gray-400 hover:bg-black/80 focus:outline-none focus:border-blue-500/50 focus:bg-black/90 focus:ring-4 focus:ring-blue-500/10 transition-all"
           />
-          <button
-            type="button"
-            onClick={() => { setShowFilters(!showFilters); setShowDropdown(false); }}
-            className={`absolute inset-y-0 right-0 flex items-center pr-4 transition-colors relative ${showFilters ? 'text-blue-500' : 'text-gray-400 hover:text-white'}`}
-            title="Búsqueda Avanzada"
-          >
-            {showFilters ? <ChevronUp className="h-5 w-5" /> : <SlidersHorizontal className="h-4 w-4" />}
-            
-            {/* Punto indicador de filtros activos */}
-            {!showFilters && (cityFilter || postalFilter || (countryFilter && countryFilter !== 'España')) && (
-              <span className="absolute top-3 right-3 h-2 w-2 bg-blue-500 rounded-full border-2 border-black animate-pulse" />
-            )}
-          </button>
         </div>
         <button 
           type="submit"
@@ -216,53 +203,6 @@ export default function SearchPanel({ onSearch, isLoading = false, onOpenFavorit
               <span className="text-gray-400 text-xs pl-5.5 ml-[22px] block">{s.address}</span>
             </button>
           ))}
-        </div>
-      )}
-      
-      {/* Filtros Avanzados Dropdown */}
-      {showFilters && (
-        <div className="absolute top-[64px] left-0 w-full bg-black/90 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,1)] overflow-hidden z-[1002] p-4 animate-in fade-in slide-in-from-top-4 duration-200">
-          <div className="flex flex-col gap-3">
-            <h4 className="text-xs font-bold uppercase tracking-widest text-blue-400 mb-1">Afinar Búsqueda</h4>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Ciudad"
-                value={cityFilter}
-                onChange={(e) => setCityFilter(e.target.value)}
-                autoComplete="no-city-autofill"
-                name="tesla-city-obscure"
-                id="tesla-city-obscure"
-                autoCorrect="off"
-                spellCheck={false}
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50"
-              />
-              <input
-                type="text"
-                placeholder="C.Postal"
-                value={postalFilter}
-                onChange={(e) => setPostalFilter(e.target.value)}
-                autoComplete="no-postal-autofill"
-                name="tesla-postal-obscure"
-                id="tesla-postal-obscure"
-                autoCorrect="off"
-                spellCheck={false}
-                className="w-24 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50"
-              />
-            </div>
-            <input
-              type="text"
-              placeholder="País"
-              value={countryFilter}
-              onChange={(e) => setCountryFilter(e.target.value)}
-              autoComplete="no-country-autofill"
-              name="tesla-country-obscure"
-              id="tesla-country-obscure"
-              autoCorrect="off"
-              spellCheck={false}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-blue-500/50"
-            />
-          </div>
         </div>
       )}
     </div>
