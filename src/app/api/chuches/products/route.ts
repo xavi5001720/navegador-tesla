@@ -19,7 +19,6 @@ const TOPIC_CARGAR = '9';
 const TOPIC_MANTENIMIENTO = '12';
 const TOPIC_MERCHANDISING = '625';
 
-// Categorías de cargadores en topics de modelos (para unificar en sección Cargar)
 const CAT_CARGADORES = 'Cargadores';
 
 function readJSON(filePath: string) {
@@ -72,6 +71,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const section = searchParams.get('section') || 'model3';
   const categoria = searchParams.get('cat') || '';
+  const version = searchParams.get('ver') || '';
   const busqueda = searchParams.get('q') || '';
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '48');
@@ -92,7 +92,6 @@ export async function GET(req: NextRequest) {
   } else if (section === 'modely') {
     items = teslaData[TOPIC_MODELY]?.items || [];
   } else if (section === 'cargar') {
-    // Unificar: topic 9 + cargadores del topic 7 y 8 (sin duplicados por product_id)
     const cargarItems = teslaData[TOPIC_CARGAR]?.items || [];
     const m3Cargadores = (teslaData[TOPIC_MODEL3]?.items || []).filter((i: any) =>
       (i.categorias || []).includes(CAT_CARGADORES)
@@ -123,6 +122,13 @@ export async function GET(req: NextRequest) {
     );
   }
 
+  // Filtro por versión
+  if (version) {
+    productos = productos.filter((p: any) =>
+      p.versiones.some((v: string) => v.toLowerCase() === version.toLowerCase() || v === '__todas__')
+    );
+  }
+
   // Filtro por búsqueda
   if (busqueda) {
     const q = busqueda.toLowerCase();
@@ -131,15 +137,25 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Obtener categorías únicas para esta sección (para el filtro del frontend)
+  // Obtener categorías únicas con su contador exacto
   const allItems = buildProductList(items, {}, {}, section);
   const categoriasMap: Record<string, number> = {};
+  const versionesMap: Record<string, number> = {};
+
   for (const p of allItems) {
     for (const c of p.categorias) {
       if (c) categoriasMap[c] = (categoriasMap[c] || 0) + 1;
     }
+    for (const v of p.versiones) {
+      if (v && v !== '__todas__') versionesMap[v] = (versionesMap[v] || 0) + 1;
+    }
   }
+
   const categorias = Object.entries(categoriasMap)
+    .sort((a, b) => a[0].localeCompare(b[0])) // Orden alfabético para encontrar fácil
+    .map(([nombre, count]) => ({ nombre, count }));
+
+  const versiones = Object.entries(versionesMap)
     .sort((a, b) => b[1] - a[1])
     .map(([nombre, count]) => ({ nombre, count }));
 
@@ -155,6 +171,7 @@ export async function GET(req: NextRequest) {
     page,
     totalPages,
     categorias,
+    versiones,
     productos: paginated,
   });
 }

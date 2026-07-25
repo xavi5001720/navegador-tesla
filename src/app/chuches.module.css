@@ -191,10 +191,23 @@
 /* Sidebar */
 .catalogoSidebar {
   position: sticky;
-  top: 130px;
+  top: 120px;
+  max-height: calc(100vh - 140px);
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  overflow-y: auto;
+  padding-right: 0.4rem;
+}
+.catalogoSidebar::-webkit-scrollbar {
+  width: 5px;
+}
+.catalogoSidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.catalogoSidebar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 4px;
 }
 .searchBox {}
 .searchInput {
@@ -210,15 +223,41 @@
   box-sizing: border-box;
 }
 .searchInput:focus { border-color: var(--red); }
+
+.catSearchInput {
+  width: 100%;
+  padding: 0.4rem 0.7rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text);
+  font-size: 0.8rem;
+  outline: none;
+  margin-bottom: 0.4rem;
+  box-sizing: border-box;
+}
+.catSearchInput:focus { border-color: var(--red); }
+
+.catScrollList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+.catScrollList::-webkit-scrollbar { width: 4px; }
+.catScrollList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+
 .catFilter {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
 }
 .catFilterTitle {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   color: var(--text2);
   margin: 0.5rem 0 0.3rem;
 }
@@ -232,10 +271,11 @@
   font-size: 0.82rem;
   cursor: pointer;
   transition: all 0.15s;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
+.catCount { opacity: 0.6; font-size: 0.75rem; }
 .catChip:hover { background: var(--glass); color: var(--text); }
 .catChipActive {
   background: rgba(227,25,55,0.12) !important;

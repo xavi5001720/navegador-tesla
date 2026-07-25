@@ -13,6 +13,7 @@ interface Producto {
   recommendations: number;
   votes: number;
   categorias: string[];
+  versiones: string[];
   num_comentarios: number;
   comentarios: { username: string; text: string; date: string }[];
   sale_price: string | null;
@@ -22,6 +23,7 @@ interface Producto {
 }
 
 interface CategoriaItem { nombre: string; count: number; }
+interface VersionItem { nombre: string; count: number; }
 
 interface ApiResponse {
   section: string;
@@ -29,6 +31,7 @@ interface ApiResponse {
   page: number;
   totalPages: number;
   categorias: CategoriaItem[];
+  versiones: VersionItem[];
   productos: Producto[];
 }
 
@@ -216,7 +219,6 @@ function AyudasSection() {
         ))}
       </div>
 
-      {/* Total */}
       <div className={styles.totalBox}>
         <div className={styles.totalLabel}>💵 AHORRO TOTAL EN LA COMPRA</div>
         <div className={styles.totalImporte}>{ayuda.total_compra?.importe}</div>
@@ -229,7 +231,6 @@ function AyudasSection() {
         </div>
       </div>
 
-      {/* Ahorro día a día */}
       <div className={styles.ahorroGrid}>
         <h3 className={styles.ahorroTitulo}>🔌 Ahorro en el Día a Día</h3>
         {ayuda.ahorro_dia_a_dia?.map((a: any, i: number) => (
@@ -356,6 +357,8 @@ function ReferidosSection() {
 export default function ChuchesPage() {
   const [section, setSection] = useState('model3');
   const [categoria, setCategoria] = useState('');
+  const [versionFilter, setVersionFilter] = useState('');
+  const [catSearch, setCatSearch] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [buscadorInput, setBuscadorInput] = useState('');
   const [data, setData] = useState<ApiResponse | null>(null);
@@ -363,12 +366,13 @@ export default function ChuchesPage() {
   const [page, setPage] = useState(1);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const fetchProducts = useCallback(async (sec: string, cat: string, q: string, pg: number) => {
+  const fetchProducts = useCallback(async (sec: string, cat: string, ver: string, q: string, pg: number) => {
     if (['ayudas', 'codigos', 'referidos'].includes(sec)) return;
     setLoading(true);
     try {
       const params = new URLSearchParams({ section: sec, page: String(pg), limit: '48' });
       if (cat) params.set('cat', cat);
+      if (ver) params.set('ver', ver);
       if (q) params.set('q', q);
       const res = await fetch(`/api/chuches/products?${params}`);
       const json = await res.json();
@@ -382,17 +386,26 @@ export default function ChuchesPage() {
 
   useEffect(() => {
     setCategoria('');
+    setVersionFilter('');
+    setCatSearch('');
     setBusqueda('');
     setBuscadorInput('');
     setPage(1);
-    fetchProducts(section, '', '', 1);
+    fetchProducts(section, '', '', '', 1);
   }, [section, fetchProducts]);
 
   const handleCatChange = (cat: string) => {
     const newCat = cat === categoria ? '' : cat;
     setCategoria(newCat);
     setPage(1);
-    fetchProducts(section, newCat, busqueda, 1);
+    fetchProducts(section, newCat, versionFilter, busqueda, 1);
+  };
+
+  const handleVersionChange = (ver: string) => {
+    const newVer = ver === versionFilter ? '' : ver;
+    setVersionFilter(newVer);
+    setPage(1);
+    fetchProducts(section, categoria, newVer, busqueda, 1);
   };
 
   const handleSearch = (q: string) => {
@@ -401,17 +414,21 @@ export default function ChuchesPage() {
     debounceRef.current = setTimeout(() => {
       setBusqueda(q);
       setPage(1);
-      fetchProducts(section, categoria, q, 1);
+      fetchProducts(section, categoria, versionFilter, q, 1);
     }, 400);
   };
 
   const handlePage = (pg: number) => {
     setPage(pg);
-    fetchProducts(section, categoria, busqueda, pg);
+    fetchProducts(section, categoria, versionFilter, busqueda, pg);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const isSpecial = ['ayudas', 'codigos', 'referidos'].includes(section);
+
+  const filteredCategories = data?.categorias?.filter(c =>
+    !catSearch || c.nombre.toLowerCase().includes(catSearch.toLowerCase())
+  ) || [];
 
   return (
     <div className={styles.wrap}>
@@ -434,12 +451,12 @@ export default function ChuchesPage() {
           Los mejores accesorios para tu <span className={styles.heroTesla}>Tesla</span>
         </h1>
         <p className={styles.heroSub}>
-          Seleccionados y valorados por la comunidad. Más de <strong>1.000 productos</strong> con enlace directo a Amazon, AliExpress y más.
+          Seleccionados y valorados por la comunidad. Más de <strong>1.000 productos</strong> clasificados por modelo y categoría.
         </p>
         <div className={styles.heroStats}>
           <div className={styles.heroStat}><strong>1.043</strong><span>accesorios</span></div>
+          <div className={styles.heroStat}><strong>46</strong><span>categorías</span></div>
           <div className={styles.heroStat}><strong>59</strong><span>referidos</span></div>
-          <div className={styles.heroStat}><strong>57</strong><span>reseñas</span></div>
         </div>
       </section>
 
@@ -472,7 +489,7 @@ export default function ChuchesPage() {
       {!isSpecial && (
         <main className={styles.catalogoWrap}>
           <div className={styles.catalogoSidebar}>
-            {/* Buscador */}
+            {/* Buscador de productos */}
             <div className={styles.searchBox}>
               <input
                 type="text"
@@ -483,25 +500,61 @@ export default function ChuchesPage() {
               />
             </div>
 
-            {/* Categorías */}
+            {/* Filtro por Versión */}
+            {data?.versiones && data.versiones.length > 0 && (
+              <div className={styles.catFilter}>
+                <h4 className={styles.catFilterTitle}>🚗 Versión Tesla</h4>
+                <button
+                  className={`${styles.catChip} ${!versionFilter ? styles.catChipActive : ''}`}
+                  onClick={() => handleVersionChange('')}
+                >
+                  Todas las versiones
+                </button>
+                {data.versiones.map(v => (
+                  <button
+                    key={v.nombre}
+                    className={`${styles.catChip} ${versionFilter === v.nombre ? styles.catChipActive : ''}`}
+                    onClick={() => handleVersionChange(v.nombre)}
+                  >
+                    {v.nombre} ({v.count})
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Categorías con buscador interno */}
             {data?.categorias && data.categorias.length > 0 && (
               <div className={styles.catFilter}>
-                <h4 className={styles.catFilterTitle}>Categorías</h4>
+                <h4 className={styles.catFilterTitle}>📁 Categorías ({data.categorias.length})</h4>
+                
+                {data.categorias.length > 10 && (
+                  <input
+                    type="text"
+                    placeholder="Filtrar categorías..."
+                    value={catSearch}
+                    onChange={e => setCatSearch(e.target.value)}
+                    className={styles.catSearchInput}
+                  />
+                )}
+
                 <button
                   className={`${styles.catChip} ${!categoria ? styles.catChipActive : ''}`}
                   onClick={() => handleCatChange('')}
                 >
-                  Todas ({data.total})
+                  Todas las categorías ({data.total})
                 </button>
-                {data.categorias.map(c => (
-                  <button
-                    key={c.nombre}
-                    className={`${styles.catChip} ${categoria === c.nombre ? styles.catChipActive : ''}`}
-                    onClick={() => handleCatChange(c.nombre)}
-                  >
-                    {c.nombre} ({c.count})
-                  </button>
-                ))}
+
+                <div className={styles.catScrollList}>
+                  {filteredCategories.map(c => (
+                    <button
+                      key={c.nombre}
+                      className={`${styles.catChip} ${categoria === c.nombre ? styles.catChipActive : ''}`}
+                      onClick={() => handleCatChange(c.nombre)}
+                    >
+                      {c.nombre} <span className={styles.catCount}>({c.count})</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -511,8 +564,9 @@ export default function ChuchesPage() {
             <div className={styles.catalogoHeader}>
               <span className={styles.catalogoCount}>
                 {loading ? 'Cargando...' : `${data?.total || 0} productos`}
-                {categoria && ` en "${categoria}"`}
-                {busqueda && ` buscando "${busqueda}"`}
+                {categoria && ` · ${categoria}`}
+                {versionFilter && ` · ${versionFilter}`}
+                {busqueda && ` · "${busqueda}"`}
               </span>
             </div>
 
@@ -551,10 +605,10 @@ export default function ChuchesPage() {
               </>
             ) : (
               <div className={styles.empty}>
-                No hay productos para esta búsqueda.
+                No hay productos para este filtro.
                 <button className={styles.clearBtn} onClick={() => {
-                  setBuscadorInput(''); setBusqueda(''); setCategoria('');
-                  fetchProducts(section, '', '', 1);
+                  setBuscadorInput(''); setBusqueda(''); setCategoria(''); setVersionFilter(''); setCatSearch('');
+                  fetchProducts(section, '', '', '', 1);
                 }}>Limpiar filtros</button>
               </div>
             )}
