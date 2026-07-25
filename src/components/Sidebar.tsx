@@ -222,26 +222,33 @@ const Sidebar: React.FC<SidebarProps> = ({
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 backdrop-blur-3xl shadow-2xl transition-transform duration-500 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       {/* Header Fijo (Espaciador para la marca NavegaPRO y SearchPanel) */}
       <div className="shrink-0">
-        <div className="px-6 pt-4 pb-1">
-          <a
-            href="/"
-            className="flex items-center justify-center gap-2.5 w-full py-2.5 px-4 rounded-xl bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-white font-bold text-xs shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <span className="text-sm">⚡</span>
-            <span>Volver a Tesla Chuches</span>
-          </a>
-        </div>
-        <div className="h-20 hidden md:block px-6 pt-2" />
+        <div className="h-16 hidden md:block px-6 pt-4" />
         
         <div className="px-6">
-          <div className="mb-4 flex items-center justify-end md:hidden">
+          <div className="mb-2 flex items-center justify-end md:hidden">
             <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-gray-400">
               <X className="h-5 w-5" />
             </button>
           </div>
 
-          {/* Espaciador fijo para el SearchPanel que ahora flota en page.tsx */}
-          <div className="h-[62px] w-full mb-4" />
+          {/* Espaciador fijo para el SearchPanel ("¿A dónde vamos?") */}
+          <div className="h-[62px] w-full mb-3" />
+
+          {/* Botón Volver a Tesla Chuches (Justo debajo de "¿A dónde vamos?") */}
+          <a
+            href="/"
+            className="flex items-center gap-3 w-full py-2.5 px-4 mb-2 rounded-2xl bg-gradient-to-r from-red-600/25 via-red-500/15 to-transparent hover:from-red-600/35 hover:to-red-500/25 border border-red-500/40 text-white font-bold text-sm shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] group"
+          >
+            <img 
+              src="/logo-teslachuches.png" 
+              alt="Tesla Chuches" 
+              className="w-8 h-8 rounded-full border border-red-500/60 object-cover shadow-md group-hover:scale-110 transition-transform" 
+            />
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-red-400 uppercase tracking-widest leading-none mb-0.5">Volver a</span>
+              <span className="text-sm font-extrabold text-white leading-none">Tesla Chuches</span>
+            </div>
+          </a>
         </div>
       </div>
       
