@@ -62,6 +62,8 @@ function ProductCard({ p }: { p: Producto }) {
   const badge = PLATFORM_BADGE[p.platform] || { label: p.platform, color: '#666' };
   const cat = p.categorias[0] || '';
 
+  const displayImage = !imgError && p.image ? p.image : p.image_remote;
+
   const telegramUrl = p.affiliate_url
     ? `https://t.me/tesla_chuches`
     : 'https://t.me/tesla_chuches';
@@ -70,11 +72,18 @@ function ProductCard({ p }: { p: Producto }) {
     <div className={styles.card}>
       {/* Imagen */}
       <div className={styles.cardImg}>
-        {p.image && !imgError ? (
+        {displayImage ? (
           <img
-            src={p.image}
+            src={displayImage}
             alt={p.title}
-            onError={() => setImgError(true)}
+            onError={() => {
+              if (displayImage !== p.image_remote && p.image_remote) {
+                // Probamos imagen remota si la local falla
+                (event?.target as HTMLImageElement).src = p.image_remote;
+              } else {
+                setImgError(true);
+              }
+            }}
             loading="lazy"
           />
         ) : (
