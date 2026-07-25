@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.viajandoentesla.es"),
-  title: "Viajando en Tesla | Accesorios Tesla España y Navegador Inteligente",
-  description: "Comunidad oficial Tesla España. Descubre más de 1.000 accesorios recomendados para Model 3 y Model Y, navegador con avisador de radares, cargadores y descuentos.",
+  title: "Viajando en Tesla | Comunidad y Accesorios Tesla en España",
+  description: "Comunidad de propietarios y apasionados de Tesla en España. Más de 1.000 accesorios recomendados para Model 3 y Model Y, navegador con avisador de radares y ofertas.",
   keywords: [
     "Viajando en Tesla", 
     "Tesla Chuches", 
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Viajando en Tesla | Comunidad y Accesorios Tesla España",
-    description: "El mejor escaparate de accesorios, chuches recomendadas y navegador inteligente con avisador de radares para tu Tesla Model 3 y Model Y.",
+    description: "El mejor escaparate independiente de accesorios, chuches recomendadas y navegador inteligente con avisador de radares para tu Tesla Model 3 y Model Y.",
     url: "https://www.viajandoentesla.es",
     siteName: "Viajando en Tesla",
     images: [
@@ -86,7 +86,7 @@ export default function RootLayout({
     "name": "Viajando en Tesla",
     "alternateName": ["Tesla Chuches", "Viajando en Tesla España"],
     "url": "https://www.viajandoentesla.es",
-    "description": "Escaparate de la comunidad con más de 1.000 accesorios recomendados para Tesla Model 3, Model Y y navegador inteligente con aviso de radares en tiempo real."
+    "description": "Escaparate independiente de la comunidad con más de 1.000 accesorios recomendados para Tesla Model 3, Model Y y navegador inteligente con aviso de radares en tiempo real."
   };
 
   return (
