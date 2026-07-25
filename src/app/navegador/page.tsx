@@ -1144,12 +1144,12 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="fixed top-4 left-6 z-[100] flex items-center gap-3 pointer-events-auto cursor-pointer select-none"
+          className="fixed top-3.5 left-6 z-[100] flex items-center gap-2.5 pointer-events-auto cursor-pointer select-none"
         >
           <img 
             src="/favicon-logo.png" 
             alt="NavegaPRO Logo" 
-            className="h-10 w-auto object-contain drop-shadow-xl" 
+            className="h-14 w-auto object-contain drop-shadow-2xl hover:scale-105 transition-transform" 
           />
           <AnimatePresence>
             {isSidebarOpen && (
@@ -1158,7 +1158,7 @@ export default function Home() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
-                className="text-2xl font-black italic tracking-tighter bg-gradient-to-r from-blue-200 via-blue-400 to-blue-600 bg-clip-text text-transparent drop-shadow-md"
+                className="text-3xl font-black italic tracking-tight bg-gradient-to-r from-blue-200 via-blue-400 to-blue-600 bg-clip-text text-transparent drop-shadow-md pr-6 py-1 whitespace-nowrap"
               >
                 NavegaPRO
               </motion.h1>
