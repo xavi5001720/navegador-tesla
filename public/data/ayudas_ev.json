@@ -1,0 +1,95 @@
+{
+    "ultima_actualizacion": "2026-07-25",
+    "ayudas": [
+        {
+            "id": "guia_2026",
+            "titulo": "🚨 GUÍA DEFINITIVA 2026: AYUDAS Y AHORRO EN TU COCHE ELÉCTRICO",
+            "subtitulo": "Desglose completo del nuevo Plan Auto+ aprobado con efecto retroactivo desde el 1 de enero de 2026",
+            "intro": "Tras aprobarse el nuevo Plan Auto+, su publicación en el BOE es inminente. Aquí tienes el desglose completo de todas las subvenciones, descuentos del concesionario, ventajas fiscales y ahorro diario que puedes conseguir.",
+            "destacados": [
+                { "emoji": "🗓️", "label": "Efecto Retroactivo", "valor": "Compras desde el 1 de enero de 2026" },
+                { "emoji": "🏛️", "label": "Pago más rápido", "valor": "Gestión centralizada por el Estado (Ministerio de Industria / IDAE)" },
+                { "emoji": "💰", "label": "Presupuesto total", "valor": "400 millones de euros" }
+            ],
+            "secciones": [
+                {
+                    "id": "plan_auto_plus",
+                    "numero": "1",
+                    "emoji": "⚙️",
+                    "titulo": "PLAN AUTO+ — Ayuda Estatal: Hasta 4.500 €",
+                    "descripcion": "Base máxima de 4.500 € para turismos 100% eléctricos según el sistema EEE (Eléctrico + Económico + Europeo).",
+                    "tramos": [
+                        { "emoji": "🔋", "nombre": "Eléctrico", "porcentaje": "50%", "importe": "2.250 €", "condicion": "Cero emisiones (BEV)" },
+                        { "emoji": "📉", "nombre": "Económico", "porcentaje": "25% / 15%", "importe": "1.125 € / 675 €", "condicion": "Base Imponible < 35.000 € (~42.000 € PVP): 25%. Entre 35k€ y 45k€: 15%" },
+                        { "emoji": "🇪🇺", "nombre": "Europeo", "porcentaje": "hasta 25%", "importe": "hasta 1.125 €", "condicion": "15% por ensamblaje en la UE + 10% si la batería también es de la UE" }
+                    ],
+                    "nota": "Si el vehículo se fabrica fuera de la UE, pierdes el tramo Europeo pero mantienes los otros dos. La ayuda tributa en la Renta."
+                },
+                {
+                    "id": "demo_km0",
+                    "numero": "2",
+                    "emoji": "🚗",
+                    "titulo": "DEMO Y KM 0 — ¡También entran!",
+                    "descripcion": "Seminuevos vendidos por concesionario o marca con 1ª matriculación posterior al 1 de enero de 2025 (máximo 12 meses de antigüedad).",
+                    "tramos": [],
+                    "nota": null
+                },
+                {
+                    "id": "descuento_concesionario",
+                    "numero": "3",
+                    "emoji": "🤝",
+                    "titulo": "DESCUENTO DEL CONCESIONARIO — 1.000 €",
+                    "descripcion": "Obligatorio por ley. Te restan 1.000 € directamente en factura, sin esperas ni trámites adicionales.",
+                    "tramos": [],
+                    "nota": null
+                },
+                {
+                    "id": "achatarramiento",
+                    "numero": "4",
+                    "emoji": "♻️",
+                    "titulo": "ACHATARRAMIENTO CAE — Hasta 1.000 €",
+                    "descripcion": "Vía Certificados de Ahorro Energético: hasta 1.000 € de descuento directo en factura al entregar tu coche viejo.",
+                    "tramos": [],
+                    "nota": "Requisitos: mínimo 12 meses como titular e ITV al día."
+                },
+                {
+                    "id": "irpf",
+                    "numero": "5",
+                    "emoji": "🧾",
+                    "titulo": "DEDUCCIÓN EN IRPF — Hasta 3.000 €",
+                    "descripcion": "15% de deducción en la Renta sobre lo invertido (máximo 20.000 € de base de deducción).",
+                    "tramos": [],
+                    "nota": null
+                }
+            ],
+            "total_compra": {
+                "importe": "Hasta 9.500 €",
+                "desglose": [
+                    { "concepto": "Plan Auto+", "importe": "4.500 €" },
+                    { "concepto": "Descuento Concesionario", "importe": "1.000 €" },
+                    { "concepto": "Achatarramiento CAE", "importe": "1.000 €" },
+                    { "concepto": "Deducción IRPF", "importe": "3.000 €" }
+                ]
+            },
+            "otros": [
+                {
+                    "emoji": "💼",
+                    "titulo": "Autónomos y PYMEs",
+                    "texto": "La ayuda estatal sube a 6.000 € en turismos y 7.500 € en furgonetas."
+                },
+                {
+                    "emoji": "🔄",
+                    "titulo": "Renting / Leasing",
+                    "texto": "100% compatible con la ayuda (descuento en cuota o abono directo)."
+                }
+            ],
+            "ahorro_dia_a_dia": [
+                { "emoji": "⛽", "concepto": "Combustible", "detalle": "En casa cuesta 1,50 € - 2,50 € / 100 km (vs 10 € - 12 € de gasolina). Ahorras 1.200 € - 1.500 € al año (~7.000 € en 5 años)." },
+                { "emoji": "⚡", "concepto": "Cargador doméstico", "detalle": "15% de deducción en IRPF por su instalación (hasta 600 €)." },
+                { "emoji": "🏷️", "concepto": "Impuestos", "detalle": "Impuesto de Matriculación al 0% (ahorro de 1.000 € - 2.500 € sobre el PVP) e Impuesto de Circulación con hasta 75% de bonificación." },
+                { "emoji": "🅿️", "concepto": "Movilidad urbana", "detalle": "Zonas azul y verde gratis o bonificadas y peajes con descuento por etiqueta CERO." }
+            ],
+            "enlace_telegram": "https://t.me/tesla_chuches"
+        }
+    ]
+}

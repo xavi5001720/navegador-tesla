@@ -17,13 +17,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Viajando en Tesla v3.0 | Navegador Premium & Detector de Radares",
-  description: "Navegación inteligente optimizada para la pantalla de tu Tesla. Incluye detección de radares Pegasus en tiempo real, tráfico, cargadores y radares meteorológicos.",
-  keywords: ["Tesla", "Navegador", "Radares", "Pegasus", "Cargadores Tesla", "Navegación Social"],
+  title: "Accesorios Tesla España | Tesla Chuches — Viajando en Tesla",
+  description: "Los mejores accesorios para Tesla Model 3 y Model Y seleccionados por la comunidad. Más de 1.000 productos con enlaces de Amazon y AliExpress. Ayudas EV 2026, códigos AliExpress y referidos Tesla.",
+  keywords: ["accesorios Tesla", "Tesla Model 3", "Tesla Model Y", "cargador Tesla", "alfombrillas Tesla", "referidos Tesla", "ayudas coche eléctrico 2026", "Plan Auto+", "wallbox Tesla"],
   authors: [{ name: "Viajando en Tesla" }],
   openGraph: {
-    title: "Viajando en Tesla | Navegador Premium para tu Tesla",
-    description: "La mejor experiencia de navegación con alertas en tiempo real de radares Pegasus y tráfico.",
+    title: "Accesorios Tesla España | Tesla Chuches — Viajando en Tesla",
+    description: "Más de 1.000 accesorios para Tesla Model 3 y Model Y, seleccionados y valorados por la comunidad Tesla en Telegram.",
     url: "https://www.viajandoentesla.es",
     siteName: "Viajando en Tesla",
     images: [
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Navegador Premium para Tesla",
+        alt: "Accesorios Tesla España - Tesla Chuches",
       },
     ],
     locale: "es_ES",
@@ -39,8 +39,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Viajando en Tesla | Navegador Premium",
-    description: "Navegación inteligente y radares Pegasus para tu Tesla.",
+    title: "Accesorios Tesla España | Tesla Chuches",
+    description: "Los mejores accesorios para tu Tesla, seleccionados por la comunidad.",
     images: ["/og-image.png"],
   },
 };
