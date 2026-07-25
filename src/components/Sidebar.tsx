@@ -220,11 +220,9 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 backdrop-blur-3xl shadow-2xl transition-transform duration-500 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-      {/* Header Fijo (Espaciador para la marca NavegaPRO y SearchPanel) */}
+      {/* Header Fijo (Espaciador para SearchPanel y Botón Volver) */}
       <div className="shrink-0">
-        <div className="h-16 hidden md:block px-6 pt-4" />
-        
-        <div className="px-6">
+        <div className="px-6 pt-6">
           <div className="mb-2 flex items-center justify-end md:hidden">
             <button onClick={() => setIsSidebarOpen(false)} className="p-2 text-gray-400">
               <X className="h-5 w-5" />
@@ -234,7 +232,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           {/* Espaciador fijo para el SearchPanel ("¿A dónde vamos?") */}
           <div className="h-[62px] w-full mb-3" />
 
-          {/* Botón Volver a Tesla Chuches (Justo debajo de "¿A dónde vamos?") */}
+          {/* Botón Volver a Tesla Chuches (Justo debajo de "¿A dónde vamos?" y encima de "Alertas de Sonido") */}
           <a
             href="/"
             className="flex items-center gap-3 w-full py-2.5 px-4 mb-2 rounded-2xl bg-gradient-to-r from-red-600/25 via-red-500/15 to-transparent hover:from-red-600/35 hover:to-red-500/25 border border-red-500/40 text-white font-bold text-sm shadow-xl transition-all hover:scale-[1.02] active:scale-[0.98] group"

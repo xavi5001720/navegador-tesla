@@ -1185,7 +1185,7 @@ export default function Home() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed top-[120px] left-6 right-6 md:left-8 md:w-[332px] md:right-auto z-[90] pointer-events-auto"
+            className="fixed top-6 left-6 right-6 md:left-6 md:w-[332px] md:right-auto z-[90] pointer-events-auto"
           >
             <DevGuard moduleId="[MAP-04]">
             <SearchPanel 
