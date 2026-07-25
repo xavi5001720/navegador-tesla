@@ -47,7 +47,7 @@ function buildProductList(items: any[], comentarios: Record<string, any[]>, voto
       platform: item.platform,
       title: item.title,
       affiliate_url: item.affiliate_url || item.link || null,
-      image: imgPath ? `/api/chuches/imagen?path=${encodeURIComponent(imgPath)}` : null,
+      image: imgPath ? `/${imgPath}` : null,
       image_remote: item.image_remote || null,
       recommendations: (item.recommendations || 0) + totalVotos,
       votes: totalVotos,

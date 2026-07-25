@@ -8,6 +8,10 @@ const execAsync = promisify(exec);
 
 // GET: Ver historial y estado de un módulo
 export async function GET(req: NextRequest) {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ history: [], status: 'gray' });
+  }
+
   const { searchParams } = new URL(req.url);
   const moduleId = searchParams.get('moduleId');
 
@@ -16,25 +20,15 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // 1. Intentar encontrar git dinámicamente o usar rutas comunes
     let gitCommand = 'git';
-    try {
-      const { stdout: whichGit } = await execAsync('which git');
-      if (whichGit.trim()) gitCommand = whichGit.trim();
-    } catch (e) {
-      // Si 'which' falla, probamos rutas típicas
-      if (fs.existsSync('/usr/bin/git')) gitCommand = '/usr/bin/git';
-      else if (fs.existsSync('/bin/git')) gitCommand = '/bin/git';
-    }
-
-    console.log(`[Git API] Usando comando: ${gitCommand}`);
+    if (fs.existsSync('/usr/bin/git')) gitCommand = '/usr/bin/git';
+    else if (fs.existsSync('/bin/git')) gitCommand = '/bin/git';
 
     const execOptions = {
       env: { ...process.env, PATH: `${process.env.PATH}:/usr/bin:/bin` },
       cwd: process.cwd()
     };
 
-    // 2. Obtener historial de commits para este módulo
     const { stdout: logStdout } = await execAsync(`${gitCommand} log -F --grep="[${moduleId}]" --pretty=format:"%h|%ad|%s" --date=short -n 20`, execOptions);
     
     const history = logStdout.split('\n').filter(line => line.trim()).map(line => {
@@ -42,31 +36,9 @@ export async function GET(req: NextRequest) {
       return { hash, date, message };
     });
 
-    // 2. Determinar estado (Gray, Green, Orange)
     let status = 'gray';
     if (history.length > 0) {
-      status = 'green'; // Por defecto verde si hay historial
-
-      // 4. Verificar si hay cambios locales sin confirmar en archivos que usen este moduleId
-      const { stdout: statusStdout } = await execAsync(`${gitCommand} status --porcelain`, execOptions);
-      const changedFiles = statusStdout.split('\n')
-        .filter(line => line.trim())
-        .map(line => line.substring(3).trim()); // Obtener ruta relativa del archivo
-
-      for (const file of changedFiles) {
-        try {
-          const absolutePath = path.join(process.cwd(), file);
-          if (fs.existsSync(absolutePath) && !fs.lstatSync(absolutePath).isDirectory()) {
-            const content = fs.readFileSync(absolutePath, 'utf8');
-            if (content.includes(`moduleId="${moduleId}"`)) {
-              status = 'orange';
-              break;
-            }
-          }
-        } catch (e) {
-          // Ignorar errores de lectura (archivos binarios, etc)
-        }
-      }
+      status = 'green';
     }
 
     return NextResponse.json({ history, status });
@@ -78,6 +50,10 @@ export async function GET(req: NextRequest) {
 
 // POST: Crear nuevo checkpoint para un módulo
 export async function POST(req: NextRequest) {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Dev route disabled in production' }, { status: 403 });
+  }
+
   try {
     const { moduleId, message } = await req.json();
 
@@ -85,9 +61,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Datos incompletos' }, { status: 400 });
     }
 
-    const fullMessage = `[${moduleId}] ✅ ${message}`;
-
-    // 1. Encontrar git
     let gitCommand = 'git';
     if (fs.existsSync('/usr/bin/git')) gitCommand = '/usr/bin/git';
     else if (fs.existsSync('/bin/git')) gitCommand = '/bin/git';
@@ -97,44 +70,14 @@ export async function POST(req: NextRequest) {
       cwd: process.cwd()
     };
 
-    try {
-      // 2. Actualizar CONTROL.md de forma incondicional
-      const controlPath = path.join(process.cwd(), 'CONTROL.md');
-      if (fs.existsSync(controlPath)) {
-        let controlContent = fs.readFileSync(controlPath, 'utf8');
-        const lines = controlContent.split('\n');
-        const updatedLines = lines.map(line => {
-          // Si la línea contiene el moduleId, actualizamos su estado
-          if (line.includes(`| ${moduleId} |`)) {
-            // Buscamos la última celda (Estado) y la marcamos como Blindado
-            const parts = line.split('|');
-            if (parts.length >= 5) {
-              parts[4] = ' ✅ Blindado ';
-              return parts.join('|');
-            }
-          }
-          return line;
-        });
-        fs.writeFileSync(controlPath, updatedLines.join('\n'));
-      }
-
-      // 3. Ejecutamos git commit FORZADO (--allow-empty)
-      // Esto asegura que el hito quede registrado siempre en el historial
-      const commitMsg = `[${moduleId}] ✅ Checkpoint Blindado: ${message}`;
-      await execAsync(`${gitCommand} add . && ${gitCommand} commit --allow-empty -m "${commitMsg}"`, execOptions);
-      
-      return NextResponse.json({ 
-        success: true, 
-        message: `🛡️ Módulo ${moduleId} marcado como BLINDADO con éxito.`,
-        status: 'success' 
-      });
-    } catch (err: any) {
-      console.error('Error Git Exec:', err.stderr || err.stdout || err.message);
-      return NextResponse.json({ 
-        error: err.stderr || err.stdout || err.message,
-        details: 'El blindaje ha fallado. Revisa permisos o si el repositorio está activo.'
-      }, { status: 500 });
-    }
+    const commitMsg = `[${moduleId}] ✅ Checkpoint Blindado: ${message}`;
+    await execAsync(`${gitCommand} add . && ${gitCommand} commit --allow-empty -m "${commitMsg}"`, execOptions);
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: `🛡️ Módulo ${moduleId} marcado como BLINDADO con éxito.`,
+      status: 'success' 
+    });
   } catch (err: any) {
     console.error('Error Git API POST:', err);
     return NextResponse.json({ error: err.message }, { status: 500 });
