@@ -1137,34 +1137,34 @@ export default function Home() {
       />
 
       {/* Panel Izquierdo (Bloque de Control) */}
-      {/* Branding NavegaPRO (Siempre Visible) */}
+      {/* Branding NavegaPRO (Siempre Visible arriba del todo) */}
       <AnimatePresence>
         <motion.div 
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="fixed top-8 left-8 z-[100] flex items-center gap-5 pointer-events-auto cursor-pointer select-none"
-          >
-            <img 
-              src="/favicon-logo.png" 
-              alt="NavegaPRO Logo" 
-              className="h-20 w-auto object-contain drop-shadow-2xl" 
-            />
-            <AnimatePresence>
-              {isSidebarOpen && (
-                <motion.h1
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                  className="text-4xl font-black italic tracking-tighter bg-gradient-to-r from-blue-200 via-blue-500 to-blue-900 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(59,130,246,0.4)] pr-4 pb-1"
-                >
-                  NavegaPRO
-                </motion.h1>
-              )}
-            </AnimatePresence>
-          </motion.div>
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="fixed top-4 left-6 z-[100] flex items-center gap-3 pointer-events-auto cursor-pointer select-none"
+        >
+          <img 
+            src="/favicon-logo.png" 
+            alt="NavegaPRO Logo" 
+            className="h-10 w-auto object-contain drop-shadow-xl" 
+          />
+          <AnimatePresence>
+            {isSidebarOpen && (
+              <motion.h1
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+                className="text-2xl font-black italic tracking-tighter bg-gradient-to-r from-blue-200 via-blue-400 to-blue-600 bg-clip-text text-transparent drop-shadow-md"
+              >
+                NavegaPRO
+              </motion.h1>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </AnimatePresence>
 
       <NavigationPanel 
@@ -1178,14 +1178,14 @@ export default function Home() {
         isSidebarOpen={isSidebarOpen}
       />
 
-      {/* Panel Flotante de Búsqueda (Siempre Visible) */}
+      {/* Panel Flotante de Búsqueda (Debajo de NavegaPRO) */}
       <AnimatePresence>
         {(!route || isSidebarOpen) && (
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed top-6 left-6 right-6 md:left-6 md:w-[332px] md:right-auto z-[90] pointer-events-auto"
+            className="fixed top-[64px] left-6 right-6 md:left-6 md:w-[332px] md:right-auto z-[90] pointer-events-auto"
           >
             <DevGuard moduleId="[MAP-04]">
             <SearchPanel 
