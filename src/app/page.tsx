@@ -45,6 +45,7 @@ const SECTIONS = [
   { id: 'ayudas', label: 'Ayudas 2026', emoji: '💶' },
   { id: 'codigos', label: 'Códigos Ali', emoji: '🏷️' },
   { id: 'referidos', label: 'Referidos Tesla', emoji: '🎰' },
+  { id: 'navegador', label: 'Navegador (en construcción)', emoji: '🛰️', isLink: true, href: '/navegador' },
 ];
 
 const PLATFORM_BADGE: Record<string, { label: string; color: string }> = {
@@ -475,14 +476,25 @@ export default function ChuchesPage() {
       {/* ── Navegación de secciones ── */}
       <nav className={styles.sectionsNav}>
         {SECTIONS.map(s => (
-          <button
-            key={s.id}
-            className={`${styles.sectionBtn} ${section === s.id ? styles.sectionBtnActive : ''}`}
-            onClick={() => setSection(s.id)}
-          >
-            <span>{s.emoji}</span>
-            <span>{s.label}</span>
-          </button>
+          s.isLink ? (
+            <a
+              key={s.id}
+              href={s.href}
+              className={`${styles.sectionBtn} ${styles.sectionBtnLink}`}
+            >
+              <span>{s.emoji}</span>
+              <span>{s.label}</span>
+            </a>
+          ) : (
+            <button
+              key={s.id}
+              className={`${styles.sectionBtn} ${section === s.id ? styles.sectionBtnActive : ''}`}
+              onClick={() => setSection(s.id)}
+            >
+              <span>{s.emoji}</span>
+              <span>{s.label}</span>
+            </button>
+          )
         ))}
       </nav>
 

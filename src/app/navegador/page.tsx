@@ -875,6 +875,15 @@ export default function Home() {
         </>
       )}
 
+      {/* Botón Volver a Tesla Chuches (Flotante) */}
+      <a 
+        href="/"
+        className="fixed top-6 left-6 z-[600] hidden md:flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-black/80 backdrop-blur-xl border border-red-500/40 text-white font-bold text-xs shadow-2xl hover:bg-red-600/30 transition-all hover:scale-105"
+      >
+        <span className="text-sm">⚡</span>
+        <span>Volver a Tesla Chuches</span>
+      </a>
+
       {/* Botón de Toggle Sidebar (Mobile) */}
       <button 
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}

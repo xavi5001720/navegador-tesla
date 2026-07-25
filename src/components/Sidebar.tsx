@@ -222,7 +222,16 @@ const Sidebar: React.FC<SidebarProps> = ({
     <aside className={`fixed inset-y-0 left-0 z-50 flex w-full md:w-[380px] shrink-0 flex-col border-r border-white/10 bg-black/80 backdrop-blur-3xl shadow-2xl transition-transform duration-500 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       {/* Header Fijo (Espaciador para la marca NavegaPRO y SearchPanel) */}
       <div className="shrink-0">
-        <div className="h-28 hidden md:block px-6 pt-6" />
+        <div className="px-6 pt-4 pb-1">
+          <a
+            href="/"
+            className="flex items-center justify-center gap-2.5 w-full py-2.5 px-4 rounded-xl bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-white font-bold text-xs shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <span className="text-sm">⚡</span>
+            <span>Volver a Tesla Chuches</span>
+          </a>
+        </div>
+        <div className="h-20 hidden md:block px-6 pt-2" />
         
         <div className="px-6">
           <div className="mb-4 flex items-center justify-end md:hidden">
