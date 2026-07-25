@@ -4,6 +4,7 @@ import "./globals.css";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Providers } from "@/components/Providers";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
+import { Analytics } from "@vercel/analytics/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -101,6 +102,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
         <AnalyticsTracker />
+        <Analytics />
         {/* ErrorBoundary global: captura renders rotos sin blanquear toda la app */}
         <ErrorBoundary>
           <Providers>
