@@ -18,21 +18,43 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Accesorios Tesla España | Tesla Chuches — Viajando en Tesla",
-  description: "Los mejores accesorios para Tesla Model 3 y Model Y seleccionados por la comunidad. Más de 1.000 productos con enlaces de Amazon y AliExpress. Ayudas EV 2026, códigos AliExpress y referidos Tesla.",
-  keywords: ["accesorios Tesla", "Tesla Model 3", "Tesla Model Y", "cargador Tesla", "alfombrillas Tesla", "referidos Tesla", "ayudas coche eléctrico 2026", "Plan Auto+", "wallbox Tesla"],
-  authors: [{ name: "Viajando en Tesla" }],
+  metadataBase: new URL("https://www.viajandoentesla.es"),
+  title: "Viajando en Tesla | Accesorios Tesla España y Navegador Inteligente",
+  description: "Comunidad oficial Tesla España. Descubre más de 1.000 accesorios recomendados para Model 3 y Model Y, navegador con avisador de radares, cargadores y descuentos.",
+  keywords: [
+    "Viajando en Tesla", 
+    "Tesla Chuches", 
+    "accesorios Tesla España", 
+    "accesorios Tesla Model 3", 
+    "accesorios Tesla Model Y", 
+    "navegador Tesla", 
+    "radares Tesla", 
+    "cargadores Tesla", 
+    "códigos AliExpress Tesla"
+  ],
+  authors: [{ name: "Comunidad Viajando en Tesla" }],
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   openGraph: {
-    title: "Accesorios Tesla España | Tesla Chuches — Viajando en Tesla",
-    description: "Más de 1.000 accesorios para Tesla Model 3 y Model Y, seleccionados y valorados por la comunidad Tesla en Telegram.",
+    title: "Viajando en Tesla | Comunidad y Accesorios Tesla España",
+    description: "El mejor escaparate de accesorios, chuches recomendadas y navegador inteligente con avisador de radares para tu Tesla Model 3 y Model Y.",
     url: "https://www.viajandoentesla.es",
     siteName: "Viajando en Tesla",
     images: [
       {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Accesorios Tesla España - Tesla Chuches",
+        url: "/logo-teslachuches.png",
+        width: 800,
+        height: 800,
+        alt: "Comunidad Tesla Chuches - Viajando en Tesla",
       },
     ],
     locale: "es_ES",
@@ -40,9 +62,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Accesorios Tesla España | Tesla Chuches",
-    description: "Los mejores accesorios para tu Tesla, seleccionados por la comunidad.",
-    images: ["/og-image.png"],
+    title: "Viajando en Tesla | Accesorios y Navegador Tesla",
+    description: "Accesorios recomendados por la comunidad para tu Tesla y navegador inteligente con aviso de radares.",
+    images: ["/logo-teslachuches.png"],
   },
 };
 
@@ -58,8 +80,23 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Viajando en Tesla",
+    "alternateName": ["Tesla Chuches", "Viajando en Tesla España"],
+    "url": "https://www.viajandoentesla.es",
+    "description": "Escaparate de la comunidad con más de 1.000 accesorios recomendados para Tesla Model 3, Model Y y navegador inteligente con aviso de radares en tiempo real."
+  };
+
   return (
     <html lang="es">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
