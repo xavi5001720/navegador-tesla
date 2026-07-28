@@ -93,10 +93,31 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
+        {/* PWA */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#e31937" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Tesla Chuches" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        {/* JSON-LD */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        {/* Service Worker */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+              navigator.serviceWorker.register('/sw.js')
+                .then(function(reg) { console.log('SW registrado:', reg.scope); })
+                .catch(function(err) { console.log('SW error:', err); });
+            });
+          }
+        `}} />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}

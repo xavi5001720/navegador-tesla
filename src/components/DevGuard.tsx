@@ -13,7 +13,7 @@ interface DevGuardProps {
 type ModuleStatus = 'gray' | 'green' | 'orange';
 
 export default function DevGuard({ moduleId, children }: DevGuardProps) {
-  const { isDevMode } = useDevMode();
+  const { isDevMode, setDevMode } = useDevMode();
   const [showModal, setShowModal] = useState(false);
   const [message, setMessage] = useState('');
   const [history, setHistory] = useState<any[]>([]);
@@ -162,6 +162,19 @@ export default function DevGuard({ moduleId, children }: DevGuardProps) {
                       ))
                     )}
                   </div>
+                </div>
+
+                {/* Desactivar Modo Desarrollador */}
+                <div className="pt-2 border-t border-white/5 flex justify-end">
+                  <button
+                    onClick={() => {
+                      setDevMode(false);
+                      setShowModal(false);
+                    }}
+                    className="text-xs text-rose-400 hover:text-rose-300 font-bold flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition-all"
+                  >
+                    🔒 Desactivar Modo Desarrollador (Quitar Engranajes)
+                  </button>
                 </div>
               </div>
             </motion.div>

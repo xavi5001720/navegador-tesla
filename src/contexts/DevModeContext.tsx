@@ -15,14 +15,24 @@ export function DevModeProvider({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Activación vía URL: /?xavi
-    if (searchParams.get('xavi') !== null) {
+    const xaviParam = searchParams.get('xavi');
+
+    // Desactivar si se pasa ?xavi=off, ?xavi=0, ?xavi=salir
+    if (xaviParam === 'off' || xaviParam === '0' || xaviParam === 'false' || xaviParam === 'salir') {
+      setIsDevMode(false);
+      localStorage.removeItem('tesla_dev_mode');
+      return;
+    }
+
+    // Activación vía URL: /?xavi=...
+    if (xaviParam !== null) {
       const pass = prompt('Modo Desarrollador Protegido. Introduce la clave:');
-      if (pass === 'tesla2026') { // Contraseña de ejemplo, el usuario puede cambiarla
+      if (pass === 'tesla2026') {
         setIsDevMode(true);
         localStorage.setItem('tesla_dev_mode', 'active');
       }
     } else if (localStorage.getItem('tesla_dev_mode') === 'active') {
+      // Solo mantener activo si no estamos en producción o si fue activado explícitamente
       setIsDevMode(true);
     }
   }, [searchParams]);

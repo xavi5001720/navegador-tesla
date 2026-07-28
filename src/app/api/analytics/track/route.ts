@@ -1,58 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-function getLivePath() {
-  const primaryDir = '/home/xavi/proyectos-antigravity/1-referidos/inventarios';
-  if (fs.existsSync(primaryDir)) {
-    return path.join(primaryDir, 'site_visits.json');
-  }
-  const fallbackDir = path.join(process.cwd(), 'public', 'data');
-  if (!fs.existsSync(fallbackDir)) {
-    fs.mkdirSync(fallbackDir, { recursive: true });
-  }
-  return path.join(fallbackDir, 'site_visits.json');
-}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { path: pagePath, referrer, userAgent } = body;
 
-    const visitsFile = getLivePath();
-    let visits: any[] = [];
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://uoejbgifzstyugjsnwkc.supabase.co';
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-    if (fs.existsSync(visitsFile)) {
-      try {
-        const raw = fs.readFileSync(visitsFile, 'utf-8');
-        visits = JSON.parse(raw);
-      } catch (e) {
-        visits = [];
-      }
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json({ error: 'Supabase credentials missing' }, { status: 500 });
     }
 
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    const newEntry = {
-      timestamp: now.toISOString(),
-      date: today,
-      path: pagePath || '/',
-      referrer: referrer || 'Directo',
-      userAgent: userAgent || 'Desconocido'
+    const payload = {
+      bbox_key: `${pagePath || '/'}|||${referrer || 'Directo'}|||${userAgent || 'Desconocido'}`,
+      ulat: userAgent && /mobile|android|iphone|ipad/i.test(userAgent) ? 1 : 0,
+      ulon: referrer && (referrer.includes('t.me') || referrer.includes('telegram')) ? 1 : 0
     };
 
-    visits.push(newEntry);
-    // Keep last 20,000 entries
-    if (visits.length > 20000) {
-      visits = visits.slice(-20000);
-    }
+    const res = await fetch(`${supabaseUrl}/rest/v1/opensky_requests`, {
+      method: 'POST',
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    });
 
-    const dir = path.dirname(visitsFile);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
+    if (!res.ok) {
+      const errText = await res.text();
+      return NextResponse.json({ error: errText }, { status: res.status });
     }
-
-    fs.writeFileSync(visitsFile, JSON.stringify(visits, null, 2), 'utf-8');
 
     return NextResponse.json({ ok: true });
   } catch (error: any) {

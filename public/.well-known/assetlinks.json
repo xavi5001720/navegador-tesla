@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "es.viajandoentesla.teslachuches",
+    "sha256_cert_fingerprints": [
+      "95:68:10:E6:7C:0D:FD:5E:C8:66:E7:0A:23:2F:96:60:1E:BE:9C:E5:88:FC:64:FB:F1:5A:A5:EC:33:B2:A4:D0"
+    ]
+  }
+}]

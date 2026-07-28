@@ -43,20 +43,31 @@ function getVotos(votos: Record<string, Record<string, number>>, key: string): n
   return Object.values(entry).reduce((sum, v) => sum + v, 0);
 }
 
-function buildProductList(items: any[], comentarios: Record<string, any[]>, votos: Record<string, any>, section: string) {
+function buildProductList(items: any[], comentarios: Record<string, any[]>, votos: Record<string, any>, section: string, globalMaxRecs: Record<string, number> = {}) {
   return items.map((item: any) => {
     const key = `${item.platform}_${item.product_id}`;
     const cmts = comentarios?.[key] || [];
     const totalVotos = getVotos(votos, key);
+    const baseRecs = globalMaxRecs[key] !== undefined ? globalMaxRecs[key] : (item.recommendations || 0);
     const imgPath = item.image || '';
+    let finalImg = null;
+    if (imgPath) {
+      if (imgPath.startsWith('http://') || imgPath.startsWith('https://')) {
+        finalImg = imgPath;
+      } else if (imgPath.startsWith('/')) {
+        finalImg = imgPath;
+      } else {
+        finalImg = `/${imgPath}`;
+      }
+    }
     return {
       id: item.product_id,
       platform: item.platform,
-      title: item.title,
+      title: (item.title || '').replace(/^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\s]+/u, '').trim(),
       affiliate_url: item.affiliate_url || item.link || null,
-      image: imgPath ? `/${imgPath}` : null,
+      image: finalImg,
       image_remote: item.image_remote || null,
-      recommendations: (item.recommendations || 0) + totalVotos,
+      recommendations: baseRecs + totalVotos,
       votes: totalVotos,
       categorias: item.categorias || [],
       versiones: item.versiones || [],
@@ -118,10 +129,35 @@ export async function GET(req: NextRequest) {
   } else if (section === 'mantenimiento') {
     items = teslaData[TOPIC_MANTENIMIENTO]?.items || [];
   } else if (section === 'lifestyle') {
-    items = teslaData[TOPIC_MERCHANDISING]?.items || [];
+    const lifestyleItems = teslaData[TOPIC_MERCHANDISING]?.items || [];
+    const m3Merch = (teslaData[TOPIC_MODEL3]?.items || []).filter((i: any) =>
+      (i.categorias || []).some((c: string) => ['merchandising', 'lifestyle'].includes(c.toLowerCase()))
+    );
+    const myMerch = (teslaData[TOPIC_MODELY]?.items || []).filter((i: any) =>
+      (i.categorias || []).some((c: string) => ['merchandising', 'lifestyle'].includes(c.toLowerCase()))
+    );
+    const seen = new Set<string>();
+    for (const item of [...lifestyleItems, ...m3Merch, ...myMerch]) {
+      const k = `${item.platform}_${item.product_id}`;
+      if (!seen.has(k)) {
+        seen.add(k);
+        items.push(item);
+      }
+    }
   }
 
-  let productos = buildProductList(items, comentarios, votos, section);
+  const globalMaxRecs: Record<string, number> = {};
+  for (const tid of Object.keys(teslaData)) {
+    for (const item of teslaData[tid]?.items || []) {
+      const k = `${item.platform}_${item.product_id}`;
+      const r = item.recommendations || 0;
+      if (!globalMaxRecs[k] || r > globalMaxRecs[k]) {
+        globalMaxRecs[k] = r;
+      }
+    }
+  }
+
+  let productos = buildProductList(items, comentarios, votos, section, globalMaxRecs);
 
   // Filtro por categoría
   if (categoria) {
@@ -167,6 +203,21 @@ export async function GET(req: NextRequest) {
     .sort((a, b) => b[1] - a[1])
     .map(([nombre, count]) => ({ nombre, count }));
 
+  // Cálculo dinámico de totales globales para el banner principal
+  const globalProductsSet = new Set<string>();
+  const globalCategoriesSet = new Set<string>();
+
+  for (const tid of Object.keys(teslaData)) {
+    const tItems = teslaData[tid]?.items || [];
+    for (const item of tItems) {
+      const k = `${item.platform}_${item.product_id}`;
+      globalProductsSet.add(k);
+      for (const c of item.categorias || []) {
+        if (c) globalCategoriesSet.add(c);
+      }
+    }
+  }
+
   // Paginación
   const total = productos.length;
   const totalPages = Math.ceil(total / limit);
@@ -181,5 +232,10 @@ export async function GET(req: NextRequest) {
     categorias,
     versiones,
     productos: paginated,
+    stats: {
+      totalProducts: globalProductsSet.size,
+      totalCategories: globalCategoriesSet.size,
+      totalReferidos: 59,
+    }
   });
 }

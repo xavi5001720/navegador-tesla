@@ -37,7 +37,7 @@
   height: 60px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
 }
 .logo {
   display: flex;
@@ -64,8 +64,8 @@
   margin-bottom: 1.5rem;
 }
 .heroAvatar {
-  width: 140px;
-  height: 140px;
+  width: 210px;
+  height: 210px;
   border-radius: 50%;
   object-fit: cover;
   border: 3px solid var(--red);
@@ -267,6 +267,36 @@
   box-sizing: border-box;
 }
 .catSearchInput:focus { border-color: var(--red); }
+
+/* Dropdown selects para filtros */
+.filterSelect {
+  width: 100%;
+  padding: 0.55rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  color: var(--text);
+  font-size: 0.88rem;
+  font-family: inherit;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a0a0b0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.8rem center;
+  padding-right: 2rem;
+}
+.filterSelect:focus {
+  border-color: var(--red);
+  box-shadow: 0 0 0 2px rgba(227,25,55,0.15);
+}
+.filterSelect option {
+  background: #1a1a1f;
+  color: var(--text);
+}
 
 .catScrollList {
   display: flex;

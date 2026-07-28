@@ -37,8 +37,8 @@ interface ApiResponse {
 
 // ── Constantes ────────────────────────────────────────────────────────────────
 const SECTIONS = [
-  { id: 'model3', label: 'Model 3', emoji: '🔵' },
-  { id: 'modely', label: 'Model Y', emoji: '🔴' },
+  { id: 'model3', label: 'Model 3', emoji: '🚗' },
+  { id: 'modely', label: 'Model Y', emoji: '🚗' },
   { id: 'cargar', label: 'Cargar en Casa', emoji: '⚡' },
   { id: 'mantenimiento', label: 'Mantenimiento', emoji: '🧽' },
   { id: 'lifestyle', label: 'Lifestyle', emoji: '👕' },
@@ -59,7 +59,7 @@ const PLATFORM_BADGE: Record<string, { label: string; color: string }> = {
 // ── Componente Tarjeta de Producto ────────────────────────────────────────────
 function ProductCard({ p }: { p: Producto }) {
   const [imgError, setImgError] = useState(false);
-  const [showComments, setShowComments] = useState(false);
+  const [showComments, setShowComments] = useState(true);
   const badge = PLATFORM_BADGE[p.platform] || { label: p.platform, color: '#666' };
   const cat = p.categorias[0] || '';
 
@@ -405,17 +405,15 @@ export default function ChuchesPage() {
   }, [section, fetchProducts]);
 
   const handleCatChange = (cat: string) => {
-    const newCat = cat === categoria ? '' : cat;
-    setCategoria(newCat);
+    setCategoria(cat);
     setPage(1);
-    fetchProducts(section, newCat, versionFilter, busqueda, 1);
+    fetchProducts(section, cat, versionFilter, busqueda, 1);
   };
 
   const handleVersionChange = (ver: string) => {
-    const newVer = ver === versionFilter ? '' : ver;
-    setVersionFilter(newVer);
+    setVersionFilter(ver);
     setPage(1);
-    fetchProducts(section, categoria, newVer, busqueda, 1);
+    fetchProducts(section, categoria, ver, busqueda, 1);
   };
 
   const handleSearch = (q: string) => {
@@ -445,10 +443,6 @@ export default function ChuchesPage() {
       {/* ── Header ── */}
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <a href="/" className={styles.logo}>
-            <span className={styles.logoT}>T</span>
-            <span className={styles.logoText}>Viajando en Tesla</span>
-          </a>
           <a href="https://t.me/tesla_chuches" target="_blank" rel="noopener noreferrer" className={styles.headerTgBtn}>
             ✈️ Comunidad Telegram
           </a>
@@ -467,9 +461,18 @@ export default function ChuchesPage() {
           Seleccionados y valorados por la comunidad. Más de <strong>1.000 productos</strong> clasificados por modelo y categoría.
         </p>
         <div className={styles.heroStats}>
-          <div className={styles.heroStat}><strong>1.043</strong><span>accesorios</span></div>
-          <div className={styles.heroStat}><strong>46</strong><span>categorías</span></div>
-          <div className={styles.heroStat}><strong>59</strong><span>referidos</span></div>
+          <div className={styles.heroStat}>
+            <strong>{data?.stats?.totalProducts ? data.stats.totalProducts.toLocaleString('es-ES') : '943'}</strong>
+            <span>accesorios</span>
+          </div>
+          <div className={styles.heroStat}>
+            <strong>{data?.stats?.totalCategories || 47}</strong>
+            <span>categorías</span>
+          </div>
+          <div className={styles.heroStat}>
+            <strong>{data?.stats?.totalReferidos || 59}</strong>
+            <span>referidos</span>
+          </div>
         </div>
       </section>
 
@@ -524,61 +527,41 @@ export default function ChuchesPage() {
               />
             </div>
 
-            {/* Filtro por Versión */}
+            {/* Filtro por Versión — dropdown */}
             {data?.versiones && data.versiones.length > 0 && (
               <div className={styles.catFilter}>
                 <h4 className={styles.catFilterTitle}>🚗 Versión Tesla</h4>
-                <button
-                  className={`${styles.catChip} ${!versionFilter ? styles.catChipActive : ''}`}
-                  onClick={() => handleVersionChange('')}
+                <select
+                  className={styles.filterSelect}
+                  value={versionFilter}
+                  onChange={e => handleVersionChange(e.target.value)}
                 >
-                  Todas las versiones
-                </button>
-                {data.versiones.map(v => (
-                  <button
-                    key={v.nombre}
-                    className={`${styles.catChip} ${versionFilter === v.nombre ? styles.catChipActive : ''}`}
-                    onClick={() => handleVersionChange(v.nombre)}
-                  >
-                    {v.nombre} ({v.count})
-                  </button>
-                ))}
+                  <option value="">Todas las versiones</option>
+                  {data.versiones.map(v => (
+                    <option key={v.nombre} value={v.nombre}>
+                      {v.nombre} ({v.count})
+                    </option>
+                  ))}
+                </select>
               </div>
             )}
 
-            {/* Categorías con buscador interno */}
+            {/* Categorías — dropdown */}
             {data?.categorias && data.categorias.length > 0 && (
               <div className={styles.catFilter}>
-                <h4 className={styles.catFilterTitle}>📁 Categorías ({data.categorias.length})</h4>
-                
-                {data.categorias.length > 10 && (
-                  <input
-                    type="text"
-                    placeholder="Filtrar categorías..."
-                    value={catSearch}
-                    onChange={e => setCatSearch(e.target.value)}
-                    className={styles.catSearchInput}
-                  />
-                )}
-
-                <button
-                  className={`${styles.catChip} ${!categoria ? styles.catChipActive : ''}`}
-                  onClick={() => handleCatChange('')}
+                <h4 className={styles.catFilterTitle}>📁 Categoría</h4>
+                <select
+                  className={styles.filterSelect}
+                  value={categoria}
+                  onChange={e => handleCatChange(e.target.value)}
                 >
-                  Todas las categorías ({data.total})
-                </button>
-
-                <div className={styles.catScrollList}>
-                  {filteredCategories.map(c => (
-                    <button
-                      key={c.nombre}
-                      className={`${styles.catChip} ${categoria === c.nombre ? styles.catChipActive : ''}`}
-                      onClick={() => handleCatChange(c.nombre)}
-                    >
-                      {c.nombre} <span className={styles.catCount}>({c.count})</span>
-                    </button>
+                  <option value="">Todas las categorías ({data.total})</option>
+                  {data.categorias.map(c => (
+                    <option key={c.nombre} value={c.nombre}>
+                      {c.nombre} ({c.count})
+                    </option>
                   ))}
-                </div>
+                </select>
               </div>
             )}
           </div>
@@ -654,6 +637,8 @@ export default function ChuchesPage() {
             <a href="/navegador">🗺️ Navegador Tesla</a>
             <span>·</span>
             <a href="https://t.me/tesla_chuches" target="_blank" rel="noopener noreferrer">Telegram</a>
+            <span>·</span>
+            <a href="/privacidad">🔒 Política de Privacidad</a>
           </div>
           <p className={styles.footerDisclaimer}>
             Los precios y disponibilidad pueden variar. Los enlaces son de afiliado y ayudan a mantener la comunidad.
