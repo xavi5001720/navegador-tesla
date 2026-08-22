@@ -3,6 +3,9 @@ import type { NextConfig } from 'next';
 import { withSentryConfig } from '@sentry/nextjs';
 
 const nextConfig: NextConfig = {
+  outputFileTracingIncludes: {
+    '/api/**/*': ['./public/data/**/*'],
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
