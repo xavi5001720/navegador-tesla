@@ -509,6 +509,10 @@ export default function ChuchesPage() {
             <strong>{data?.stats?.totalReferidos || 73}</strong>
             <span>referidos</span>
           </div>
+          <div className={styles.heroStat}>
+            <strong>{data?.stats?.totalMiembros || 432}</strong>
+            <span>miembros</span>
+          </div>
         </div>
 
         <div className={styles.heroAppBanner}>

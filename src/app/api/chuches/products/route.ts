@@ -238,9 +238,15 @@ export async function GET(req: NextRequest) {
   const paginated = productos.slice(offset, offset + limit);
 
   let totalReferidos = 73;
+  let totalMiembros = 432;
   const refData = readJSON(REFERIDOS_PATH);
-  if (refData && refData.referidos && typeof refData.referidos === 'object') {
-    totalReferidos = Object.keys(refData.referidos).length;
+  if (refData) {
+    if (refData.referidos && typeof refData.referidos === 'object') {
+      totalReferidos = Object.keys(refData.referidos).length;
+    }
+    if (refData.total_miembros) {
+      totalMiembros = refData.total_miembros;
+    }
   }
 
   return NextResponse.json({
@@ -255,6 +261,7 @@ export async function GET(req: NextRequest) {
       totalProducts: globalProductsSet.size,
       totalCategories: globalCategoriesSet.size,
       totalReferidos,
+      totalMiembros,
     }
   });
 }
