@@ -2,9 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
-const CODIGOS_PATH = fs.existsSync('/home/xavi/proyectos-antigravity/6-Codigosaliexpress/ultimos_codigos.txt')
-  ? '/home/xavi/proyectos-antigravity/6-Codigosaliexpress/ultimos_codigos.txt'
-  : path.join(process.cwd(), 'public', 'data', 'ultimos_codigos.txt');
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+function getCodigosPath() {
+  const primary = '/home/xavi/proyectos-antigravity/6-Codigosaliexpress/ultimos_codigos.txt';
+  if (fs.existsSync(primary)) return primary;
+  const secondary = path.join(process.cwd(), 'public', 'data', 'ultimos_codigos.txt');
+  if (fs.existsSync(secondary)) return secondary;
+  return null;
+}
 
 function parseCodigos(txt: string) {
   const lines = txt.split('\n').map(l => l.trim()).filter(Boolean);
@@ -36,9 +43,17 @@ function parseCodigos(txt: string) {
 
 export async function GET(_req: NextRequest) {
   try {
-    const txt = fs.readFileSync(CODIGOS_PATH, 'utf-8');
+    const filePath = getCodigosPath();
+    if (!filePath) {
+      return NextResponse.json({ codigos: [], mensaje: 'Sin códigos activos en este momento' });
+    }
+    const txt = fs.readFileSync(filePath, 'utf-8');
     const data = parseCodigos(txt);
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0'
+      }
+    });
   } catch {
     return NextResponse.json({ codigos: [], mensaje: 'Sin códigos activos en este momento' });
   }
