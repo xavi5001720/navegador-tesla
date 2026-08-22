@@ -247,7 +247,7 @@ export async function GET(req: NextRequest) {
     if (refData.referidos && typeof refData.referidos === 'object') {
       totalReferidos = Object.keys(refData.referidos).length;
     }
-    if (refData.total_miembros) {
+    if (refData.total_miembros && typeof refData.total_miembros === 'number' && refData.total_miembros > 0) {
       totalMiembros = refData.total_miembros;
     }
   }
