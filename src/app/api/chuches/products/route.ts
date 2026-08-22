@@ -266,5 +266,9 @@ export async function GET(req: NextRequest) {
       totalReferidos,
       totalMiembros,
     }
+  }, {
+    headers: {
+      'Cache-Control': 'no-store, max-age=0'
+    }
   });
 }
