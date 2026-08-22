@@ -19,6 +19,10 @@ const VOTOS_PATH = getLivePath(
   '/home/xavi/proyectos-antigravity/1-referidos/inventarios/votos_globales.json',
   path.join(process.cwd(), 'public', 'data', 'votos_globales.json')
 );
+const REFERIDOS_PATH = getLivePath(
+  '/home/xavi/proyectos-antigravity/1-referidos/inventarios/referidos_tesla.json',
+  path.join(process.cwd(), 'public', 'data', 'referidos_tesla.json')
+);
 
 const TESLA_GROUP_ID = '-1003731237376';
 const TOPIC_MODEL3 = '7';
@@ -29,9 +33,18 @@ const TOPIC_MERCHANDISING = '625';
 
 const CAT_CARGADORES = 'Cargadores';
 
+const jsonCache: Record<string, { data: any; mtime: number }> = {};
+
 function readJSON(filePath: string) {
   try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    const stat = fs.statSync(filePath);
+    const cached = jsonCache[filePath];
+    if (cached && cached.mtime === stat.mtimeMs) {
+      return cached.data;
+    }
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    jsonCache[filePath] = { data, mtime: stat.mtimeMs };
+    return data;
   } catch {
     return null;
   }
@@ -224,6 +237,12 @@ export async function GET(req: NextRequest) {
   const offset = (page - 1) * limit;
   const paginated = productos.slice(offset, offset + limit);
 
+  let totalReferidos = 73;
+  const refData = readJSON(REFERIDOS_PATH);
+  if (refData && refData.referidos && typeof refData.referidos === 'object') {
+    totalReferidos = Object.keys(refData.referidos).length;
+  }
+
   return NextResponse.json({
     section,
     total,
@@ -235,7 +254,7 @@ export async function GET(req: NextRequest) {
     stats: {
       totalProducts: globalProductsSet.size,
       totalCategories: globalCategoriesSet.size,
-      totalReferidos: 59,
+      totalReferidos,
     }
   });
 }

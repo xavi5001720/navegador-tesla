@@ -100,6 +100,7 @@ export default function Home() {
     heading,
     setHeading,
     hasLocation,
+    isMoving,
     gpsError,
     requestGPS 
   } = useGeolocation(isSimulatingState);
@@ -132,24 +133,50 @@ export default function Home() {
   } = useRoute();
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isRadarsEnabled, setIsRadarsEnabled] = useState(false);
-  const [isAircraftsEnabled, setIsAircraftsEnabled] = useState(false);
-  const [isChargersEnabled, setIsChargersEnabled] = useState(false);
-  const [isWeatherEnabled, setIsWeatherEnabled] = useState(false);
-  const [isFestivalsEnabled, setIsFestivalsEnabled] = useState(false);
-  const [isRestaurantsEnabled, setIsRestaurantsEnabled] = useState(false);
-  const [mapMode, setMapMode] = useState<'satellite' | 'light'>('satellite');
-  
-  const [chargerFilters, setChargerFilters] = useState<ChargerFilters>({
-    isFree: false, connectors: [], minPower: 0
-  });
 
-  const [isGasStationsEnabled, setIsGasStationsEnabled] = useState(false);
-  const [gasStationFilters, setGasStationFilters] = useState<GasStationFilters>({
-    fuels: [], maxPrice: null
+  // Elementos ocultables en modo pantalla completa
+  const [hiddenElements, setHiddenElements] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const saved = localStorage.getItem('navegapro_hidden_elements');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
   });
+  const toggleHiddenElement = (key: string) => {
+    setHiddenElements(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      try { localStorage.setItem('navegapro_hidden_elements', JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  };
+  // Helper: visible si sidebar abierto O si el elemento no está oculto
+  const isVisible = (key: string) => isSidebarOpen || !hiddenElements.has(key);
+  // Helper: leer preferencias del sidebar desde localStorage
+  const _lsp = (() => {
+    if (typeof window === 'undefined') return {};
+    try { return JSON.parse(localStorage.getItem('navegapro_sidebar_prefs') || '{}'); } catch { return {}; }
+  })();
+
+  const [isRadarsEnabled, setIsRadarsEnabled] = useState<boolean>(_lsp.isRadarsEnabled ?? false);
+  const [isAircraftsEnabled, setIsAircraftsEnabled] = useState<boolean>(_lsp.isAircraftsEnabled ?? false);
+  const [isChargersEnabled, setIsChargersEnabled] = useState<boolean>(_lsp.isChargersEnabled ?? false);
+  const [isWeatherEnabled, setIsWeatherEnabled] = useState<boolean>(_lsp.isWeatherEnabled ?? false);
+  const [isFestivalsEnabled, setIsFestivalsEnabled] = useState<boolean>(_lsp.isFestivalsEnabled ?? false);
+  const [isRestaurantsEnabled, setIsRestaurantsEnabled] = useState<boolean>(_lsp.isRestaurantsEnabled ?? false);
+  const [mapMode, setMapMode] = useState<'satellite' | 'light'>(_lsp.mapMode ?? 'satellite');
+  
+  const [chargerFilters, setChargerFilters] = useState<ChargerFilters>(
+    _lsp.chargerFilters ?? { isFree: false, connectors: [], minPower: 0 }
+  );
+
+  const [isGasStationsEnabled, setIsGasStationsEnabled] = useState<boolean>(_lsp.isGasStationsEnabled ?? false);
+  const [gasStationFilters, setGasStationFilters] = useState<GasStationFilters>(
+    _lsp.gasStationFilters ?? { fuels: [], maxPrice: null }
+  );
 
   const [restaurantFilters, setRestaurantFilters] = useState<RestaurantFilters>(() => {
+    if (_lsp.restaurantFilters) return _lsp.restaurantFilters;
     const currentHour = new Date().getHours();
     return {
       smartOptimization: true, 
@@ -158,19 +185,21 @@ export default function Home() {
     };
   });
 
-  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
-  const [isTrafficWanted, setIsTrafficWanted] = useState(true);
+  const [isSoundEnabled, setIsSoundEnabled] = useState<boolean>(_lsp.isSoundEnabled ?? true);
+  const [isTrafficWanted, setIsTrafficWanted] = useState<boolean>(_lsp.isTrafficWanted ?? true);
   const prevTrafficWantedRef = useRef(isTrafficWanted);
-  const [voiceType, setVoiceType] = useState<VoiceType>('mujer');
-  const [alertPreferences, setAlertPreferences] = useState<AlertPreferences>({
-    fixedRadars: true,
-    mobileRadars: true,
-    aircraft: true,
-    traffic: true,
-    weather: true,
-    stops: true
-  });
-  const [audioMode, setAudioMode] = useState<'voice' | 'beep'>('voice');
+  const [voiceType, setVoiceType] = useState<VoiceType>(_lsp.voiceType ?? 'mujer');
+  const [alertPreferences, setAlertPreferences] = useState<AlertPreferences>(
+    _lsp.alertPreferences ?? {
+      fixedRadars: true,
+      mobileRadars: true,
+      aircraft: true,
+      traffic: true,
+      weather: true,
+      stops: true
+    }
+  );
+  const [audioMode, setAudioMode] = useState<'voice' | 'beep'>(_lsp.audioMode ?? 'voice');
   const [lastRecalculationTime, setLastRecalculationTime] = useState(0);
   const lastTrafficRequestTimeRef = useRef(0);
   const [customZoom, setCustomZoom] = useState<number | null>(null);
@@ -187,7 +216,7 @@ export default function Home() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isGarageOpen, setIsGarageOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
-  const [isYachtsEnabled, setIsYachtsEnabled] = useState(false);
+  const [isYachtsEnabled, setIsYachtsEnabled] = useState<boolean>(_lsp.isYachtsEnabled ?? false);
   const [isSocialOpen, setIsSocialOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
@@ -248,6 +277,17 @@ export default function Home() {
     setCustomZoom(null);
     if (mode === 'overview') {
       setOverviewFitTrigger(prev => prev + 1);
+    }
+  }, []);
+
+  // Limpiar la URL si viene con parámetros de error OAuth (ej: ?error=access_denied)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    const hasError = url.searchParams.has('error');
+    const hasHash = window.location.hash.includes('access_token') || window.location.hash.includes('error');
+    if (hasError || hasHash) {
+      window.history.replaceState({}, '', '/navegador');
     }
   }, []);
 
@@ -344,6 +384,24 @@ export default function Home() {
     }
   }, [userPos, session]);
 
+  // 2b. Auto-guardar toggles del sidebar en localStorage (instantáneo, sin login)
+  useEffect(() => {
+    try {
+      const prefs = {
+        isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, chargerFilters,
+        isGasStationsEnabled, gasStationFilters, restaurantFilters,
+        isWeatherEnabled, isFestivalsEnabled, isRestaurantsEnabled, isYachtsEnabled,
+        isSoundEnabled, isTrafficWanted, voiceType, alertPreferences, audioMode, mapMode,
+      };
+      localStorage.setItem('navegapro_sidebar_prefs', JSON.stringify(prefs));
+    } catch {}
+  }, [
+    isRadarsEnabled, isAircraftsEnabled, isChargersEnabled, chargerFilters,
+    isGasStationsEnabled, gasStationFilters, restaurantFilters,
+    isWeatherEnabled, isFestivalsEnabled, isRestaurantsEnabled, isYachtsEnabled,
+    isSoundEnabled, isTrafficWanted, voiceType, alertPreferences, audioMode, mapMode,
+  ]);
+
   // 2. Guardar preferencias explícitamente cuando el usuario pulse el botón Guardar
   const handleSavePreferences = useCallback(async () => {
     if (!session || !profile) return;
@@ -359,7 +417,7 @@ export default function Home() {
       isFestivalsEnabled,
       isSoundEnabled,
       voiceType,
-      alertPreferences
+      alertPreferences,
     };
 
     // Solo guardamos si realmente hay cambios respecto al perfil cargado
@@ -950,7 +1008,7 @@ export default function Home() {
             </div>
 
             {/* Recuadro de Lista de Amigos */}
-            <motion.div 
+            {isVisible('friends') && <motion.div 
               drag 
               dragMomentum={false}
               onPointerDown={() => setIsDraggingFriends(true)}
@@ -1087,9 +1145,10 @@ export default function Home() {
                   </button>
                 </div>
               )}
-            </motion.div>
+            </motion.div>}
 
             {/* Botón de Reportar Alerta (Alineado debajo de Amigos) */}
+            {isVisible('incidentReporter') && (
             <DevGuard moduleId="[MAP-05]">
             <div className="mt-2">
               <IncidentReporter 
@@ -1104,6 +1163,7 @@ export default function Home() {
               />
             </div>
             </DevGuard>
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center gap-1.5 animate-in fade-in slide-in-from-top-4 duration-700">
@@ -1129,6 +1189,8 @@ export default function Home() {
         onToggleMapMode={() => setMapMode(prev => prev === 'satellite' ? 'light' : 'satellite')}
         onOpenAbout={() => setIsAboutOpen(true)}
         onLogout={handleSignOut}
+        hiddenElements={hiddenElements}
+        onToggleHidden={toggleHiddenElement}
       />
 
       <AboutModal 
@@ -1168,7 +1230,7 @@ export default function Home() {
       </AnimatePresence>
 
       <NavigationPanel 
-        isVisible={!isSidebarOpen && (!!(route || nextInstruction) || isSimulating)}
+        isVisible={!isSidebarOpen && isVisible('nextInstruction') && (!!(route || nextInstruction) || isSimulating)}
         instruction={nextInstruction || (route ? { message: 'Iniciando ruta...', maneuver: 'STRAIGHT' } : null)}
         distance={distanceToNextInstruction}
         activeLaneGuidance={activeLaneGuidance}
@@ -1180,7 +1242,7 @@ export default function Home() {
 
       {/* Panel Flotante de Búsqueda (Debajo de NavegaPRO) */}
       <AnimatePresence>
-        {(!route || isSidebarOpen) && (
+        {isVisible('searchBar') && (!route || isSidebarOpen) && (
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1299,6 +1361,7 @@ export default function Home() {
           waypoints={waypoints}
           yachts={yachtsProp}
           speed={speed}
+          isMoving={isMoving}
           viewMode={viewMode}
           onViewModeChange={handleOnViewModeChange}
           customZoom={customZoom}
@@ -1331,17 +1394,15 @@ export default function Home() {
 
         {/* Nuevo Dashboard de Ruta Compacto (Solo en Pantalla Completa + Ruta Activa) */}
         <AnimatePresence>
-          {!isSidebarOpen && route && (
+          {!isSidebarOpen && route && isVisible('routeDashboard') && (
             <RouteDashboard 
               totalDistance={originalTotalDistance || route.distance}
               totalDuration={originalTotalDuration || route.duration}
               remainingDistance={liveDistance ?? route.distance}
               remainingDuration={liveDuration ?? route.duration}
               remainingRadarsCount={remainingRadars}
+              nextRadarDistance={remainingRadars > 0 && distance != null ? distance : null}
               onEndRoute={clearRoute}
-              isSimulating={isSimulating}
-              onStartSimulation={() => { setViewMode('navigation'); startSimulation(); }}
-              onStopSimulation={stopSimulation}
               isNavMinimized={isNavMinimized}
               onUnminimizeNav={() => setIsNavMinimized(false)}
               instruction={nextInstruction || (route ? { message: 'Iniciando ruta...', maneuver: 'STRAIGHT' } : null)}
@@ -1353,9 +1414,9 @@ export default function Home() {
 
         {/* Panel de Avisos Rápidos y Velocímetro */}
         <div className="absolute bottom-6 right-6 z-[500] flex flex-col items-end gap-3 md:flex-row md:items-center md:gap-4 md:bottom-8 md:right-8">
-          <Speedometer speed={speed} />
+          {isVisible('speedometer') && <Speedometer speed={speed} />}
           
-          <div className="flex flex-col gap-5">
+          {isVisible('viewModeButtons') && <div className="flex flex-col gap-5">
             {viewMode === 'navigation' && (
              <DevGuard moduleId="[MAP-02]">
               <div className="flex flex-col items-center gap-1.5">
@@ -1398,7 +1459,7 @@ export default function Home() {
                 </DevGuard>
               </>
             )}
-          </div>
+          </div>}
         </div>
       </section>
 

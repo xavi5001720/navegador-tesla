@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, MapPin, Navigation, XCircle, Camera, Play, Square, Plus } from 'lucide-react';
+import { Clock, MapPin, Navigation, XCircle, Camera, Plus } from 'lucide-react';
 import ManeuverIcon from './ManeuverIcon';
 
 interface RouteDashboardProps {
@@ -11,6 +11,7 @@ interface RouteDashboardProps {
   remainingDistance: number; // metros
   remainingDuration: number; // segundos
   remainingRadarsCount: number;
+  nextRadarDistance?: number | null; // metros al próximo radar
   onEndRoute: () => void;
   isSimulating?: boolean;
   onStartSimulation?: () => void;
@@ -35,10 +36,8 @@ export default function RouteDashboard({
   remainingDistance,
   remainingDuration,
   remainingRadarsCount,
+  nextRadarDistance,
   onEndRoute,
-  isSimulating = false,
-  onStartSimulation,
-  onStopSimulation,
   isNavMinimized = false,
   onUnminimizeNav,
   instruction,
@@ -171,32 +170,14 @@ export default function RouteDashboard({
                 <span className="text-lg font-black text-rose-400 italic leading-none">{remainingRadarsCount}</span>
               </div>
             </div>
+            {nextRadarDistance != null && (
+              <span className="text-[10px] font-bold text-rose-300/70 mt-1 tabular-nums">
+                {nextRadarDistance >= 1000
+                  ? `${(nextRadarDistance / 1000).toFixed(1)} km`
+                  : `${Math.round(nextRadarDistance)} m`}
+              </span>
+            )}
           </div>
-
-          <div className="h-10 w-[1px] bg-white/10" />
-
-          <div className="h-10 w-[1px] bg-white/10" />
-
-          {/* Botón Simulación */}
-          <button
-            onClick={isSimulating ? onStopSimulation : onStartSimulation}
-            className={`flex flex-col items-center group transition-all ${isSimulating ? 'text-amber-500' : 'text-blue-500'}`}
-          >
-            <span className="text-[9px] font-black uppercase tracking-tighter mb-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
-              {isSimulating ? 'DETENER' : 'SIMULAR'}
-            </span>
-            <div className={`h-10 w-10 flex items-center justify-center rounded-2xl border transition-all shadow-xl ${
-              isSimulating 
-                ? 'bg-amber-500/10 border-amber-500/20 group-hover:bg-amber-500 group-hover:border-amber-500' 
-                : 'bg-blue-500/10 border-blue-500/20 group-hover:bg-blue-500 group-hover:border-blue-500'
-            }`}>
-              {isSimulating ? (
-                <Square className={`h-5 w-5 ${isSimulating ? 'text-amber-500 group-hover:text-white' : ''}`} />
-              ) : (
-                <Play className="h-5 w-5 text-blue-500 group-hover:text-white" />
-              )}
-            </div>
-          </button>
 
           <div className="h-10 w-[1px] bg-white/10" />
 

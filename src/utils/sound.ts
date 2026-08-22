@@ -14,27 +14,38 @@ export interface AlertPreferences {
 const VOLUME = 1.0;
 
 let audioUnlocked = false;
-let beepPlayer: HTMLAudioElement | null = null;
+let persistentVoiceAudio: HTMLAudioElement | null = null;
+
+const getPersistentVoiceAudio = () => {
+  if (!persistentVoiceAudio && typeof window !== 'undefined') {
+    persistentVoiceAudio = new Audio();
+  }
+  return persistentVoiceAudio;
+};
+
 // ── Unlock audio ─────────────────────────────────────────────────────────────
 export const unlockTeslaAudio = () => {
   if (typeof window === 'undefined' || audioUnlocked) return;
   try {
-    // Inicializar AudioContext en la primera interacción
     const ctx = getAudioContext();
     if (ctx && ctx.state === 'suspended') {
       ctx.resume();
     }
 
-    if (!beepPlayer) {
-      beepPlayer = new Audio();
-      beepPlayer.preload = 'auto';
+    const player = getPersistentVoiceAudio();
+    if (player) {
+      const silentAudio = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==';
+      player.src = silentAudio;
+      player.play().then(() => player.pause()).catch(() => {});
     }
-    // Silent WAV (previo MP3 estaba roto y causaba errores de metadatos)
-    const silentAudio = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==';
-    beepPlayer.src = silentAudio;
-    beepPlayer.play().then(() => beepPlayer?.pause()).catch(() => {});
+
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const u = new SpeechSynthesisUtterance('');
+      window.speechSynthesis.speak(u);
+    }
+
     audioUnlocked = true;
-    console.log('[Sound] Audio and WebAudio Context unlocked');
+    console.log('[Sound] Persistent Audio and Voice Player unlocked');
   } catch (err) {
     console.error('[Sound] Unlock error:', err);
   }
@@ -57,7 +68,6 @@ const playSyntheticBeep = (type: 'beep_short' | 'alarm_clock_beeping') => {
   const ctx = getAudioContext();
   if (!ctx) return;
 
-  // Reanudar contexto si está suspendido (política de navegadores)
   if (ctx.state === 'suspended') {
     ctx.resume();
   }
@@ -69,7 +79,6 @@ const playSyntheticBeep = (type: 'beep_short' | 'alarm_clock_beeping') => {
   gain.connect(ctx.destination);
 
   if (type === 'beep_short') {
-    // Tono simple y corto (880Hz - La5)
     osc.type = 'sine';
     osc.frequency.setValueAtTime(880, ctx.currentTime);
     gain.gain.setValueAtTime(0, ctx.currentTime);
@@ -78,7 +87,6 @@ const playSyntheticBeep = (type: 'beep_short' | 'alarm_clock_beeping') => {
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.12);
   } else {
-    // Tono de alarma más agresivo (Doble tono rápido)
     osc.type = 'square';
     osc.frequency.setValueAtTime(440, ctx.currentTime);
     osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
@@ -94,13 +102,14 @@ const playSyntheticBeep = (type: 'beep_short' | 'alarm_clock_beeping') => {
   }
 };
 
-let currentVoiceAudio: HTMLAudioElement | null = null;
+let isSpeaking = false;
 
-// ── Voice System (Hybrid: Native for Robot, Proxy for Humans) ────────────────
+export const isVoiceSpeaking = () => isSpeaking;
+
 const playVoice = (msg: string, voiceType: VoiceType) => {
   if (typeof window === 'undefined') return;
 
-  // A. MODO ROBOT: SpeechSynthesis Nativo (Más rápido, menos natural)
+  // A. MODO ROBOT: SpeechSynthesis Nativo
   if (voiceType === 'robot') {
     try {
       window.speechSynthesis.cancel();
@@ -108,85 +117,110 @@ const playVoice = (msg: string, voiceType: VoiceType) => {
       utterance.lang = 'es-ES';
       utterance.pitch = 1.5;
       utterance.rate = 1.2;
+      isSpeaking = true;
+      utterance.onend = () => { isSpeaking = false; };
+      utterance.onerror = () => { isSpeaking = false; };
       window.speechSynthesis.speak(utterance);
     } catch (err) {
       console.error('[Sound] SpeechSynthesis error:', err);
+      isSpeaking = false;
     }
     return;
   }
 
-  // B. MODO MUJER/HOMBRE: Google TTS Proxy (Alta Calidad)
+  // B. MODO MUJER/HOMBRE: Google TTS Proxy (con reproductor persistente)
   try {
-    // FIX ANTI-ATASCO: Detener cualquier audio anterior antes de empezar el nuevo
-    if (currentVoiceAudio) {
-      currentVoiceAudio.pause();
-      currentVoiceAudio.currentTime = 0;
-    }
+    const player = getPersistentVoiceAudio();
+    if (!player) return;
 
-    let lang = 'es'; // Mujer (es-ES) por defecto
+    player.pause();
+    player.currentTime = 0;
+
+    let lang = 'es';
     if (voiceType === 'hombre') lang = 'es-US';
 
     const url = `/api/tts?text=${encodeURIComponent(msg)}&lang=${lang}&v=4`;
-    currentVoiceAudio = new Audio(url);
-    currentVoiceAudio.volume = VOLUME;
-    currentVoiceAudio.play().catch(e => console.warn('[Sound] MP3 Voice blocked:', e));
+    player.src = url;
+    player.volume = VOLUME;
+    isSpeaking = true;
+    player.onended = () => { isSpeaking = false; };
+    player.onerror = () => { isSpeaking = false; };
+    player.play().catch(e => {
+      console.warn('[Sound] MP3 Voice blocked by browser policy, using native TTS fallback:', e);
+      isSpeaking = false;
+      try {
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(msg);
+          utterance.lang = 'es-ES';
+          utterance.rate = 1.0;
+          window.speechSynthesis.speak(utterance);
+        }
+      } catch (errFallback) {
+        console.error('[Sound] Native fallback error:', errFallback);
+      }
+    });
   } catch (err) {
     console.error('[Sound] playVoice (MP3) error:', err);
+    isSpeaking = false;
   }
 };
 
 // ── Public API ────────────────────────────────────────────────────────────────
 export const playRadarAlert = (
   voiceType: VoiceType, 
-  type: 'safe_first' | 'safe_second' | 'danger' | 'info', 
-  radarType: 'fixed' | 'mobile_zone' | 'camera' | 'section' = 'fixed',
+  type: 'safe_30s' | 'safe_10s' | 'safe_passing' | 'danger' | 'info' | 'safe_first' | 'safe_second', 
+  radarType: 'fixed' | 'mobile_zone' | 'camera' | 'section' | 'mobile' | 'community_mobile' = 'fixed',
   audioMode: 'voice' | 'beep' = 'voice',
   speedLimit?: number,
-  distance?: number,
+  distanceM?: number,
   currentSpeed?: number
 ) => {
   if (typeof window === 'undefined') return;
   try {
-    // Modo Pitido (Beep Mode)
     if (audioMode === 'beep') {
       if (type === 'danger') playSyntheticBeep('alarm_clock_beeping');
-      else if (type === 'info') playSyntheticBeep('beep_short'); // Tono simple para zonas
+      else if (type === 'info') playSyntheticBeep('beep_short');
       else {
-        // Doble pitido simple para fija/tramo correctos
         playSyntheticBeep('beep_short');
         setTimeout(() => playSyntheticBeep('beep_short'), 400);
       }
       return; 
     }
 
-    // Modo Voz Defecto
     playSyntheticBeep(type === 'danger' ? 'alarm_clock_beeping' : 'beep_short');
 
-    let msg = '';
-    let radarStr = 'radar';
+    let radarStr = 'radar fijo';
     if (radarType === 'section') radarStr = 'radar de tramo';
     else if (radarType === 'camera') radarStr = 'cámara de vigilancia';
-    else if (radarType === 'mobile_zone') radarStr = 'zona de radar móvil';
+    else if (radarType === 'mobile_zone' || radarType === 'mobile' || radarType === 'community_mobile') radarStr = 'zona de radar móvil';
 
     const limitStr = speedLimit ? ` de ${speedLimit}` : '';
-    const distStr = distance ? ` a ${Math.round(distance)} metros` : ' próximo';
-    const currentSpdStr = currentSpeed ? `. Velocidad actual correcta de ${Math.round(currentSpeed * 3.6)}` : '. Velocidad correcta';
+    const distStr = distanceM != null
+      ? (distanceM >= 1000 ? ` a ${(distanceM / 1000).toFixed(1)} kilómetros` : ` a ${Math.round(distanceM)} metros`)
+      : '';
+    const currentSpdStr = currentSpeed ? `. Vas a ${Math.round(currentSpeed)}` : '';
 
+    let msg = '';
     if (type === 'danger') {
-      msg = `${radarStr.charAt(0).toUpperCase() + radarStr.slice(1)}${limitStr}${distStr}. Velocidad actual de ${Math.round((currentSpeed || 0) * 3.6)}, reduzca la velocidad.`;
+      // Mensaje corto para que no se solape en la repetición
+      msg = `¡Radar${limitStr}${distStr}! Vas a ${Math.round(currentSpeed || 0)}, reduce velocidad.`;
     }
-    else if (type === 'safe_first' || type === 'safe_second') {
-      if (radarType === 'mobile_zone') {
-        msg = `Posible zona de radar móvil${limitStr}${distStr}. Velocidad actual de ${Math.round((currentSpeed || 0) * 3.6)}.`;
+    else if (type === 'safe_30s' || type === 'safe_first') {
+      if (radarStr === 'zona de radar móvil') {
+        msg = `Posible zona de radar móvil${limitStr}${distStr}${currentSpdStr}.`;
+      } else {
+        msg = `${radarStr.charAt(0).toUpperCase() + radarStr.slice(1)}${limitStr}${distStr}${currentSpdStr}, velocidad correcta.`;
       }
-      else msg = `${radarStr.charAt(0).toUpperCase() + radarStr.slice(1)}${limitStr}${distStr}${currentSpdStr}.`;
+    }
+    else if (type === 'safe_10s' || type === 'safe_second') {
+      msg = `${radarStr.charAt(0).toUpperCase() + radarStr.slice(1)}${limitStr}${distStr}, velocidad correcta.`;
+    }
+    else if (type === 'safe_passing') {
+      msg = `Pasando ${radarStr}${limitStr}, velocidad correcta.`;
     }
     else if (type === 'info') {
-      if (radarType === 'mobile_zone') {
-        msg = `Posible zona de radar móvil${limitStr}${distStr}. Velocidad actual de ${Math.round((currentSpeed || 0) * 3.6)}.`;
-      } else {
-        msg = `Atención, ${radarStr}.`;
-      }
+      msg = `Atención, ${radarStr}${limitStr}.`;
     }
 
     if (msg) playVoice(msg, voiceType);

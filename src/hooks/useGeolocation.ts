@@ -7,6 +7,7 @@ export function useGeolocation(isPaused?: boolean) {
   const [userPos, setUserPos] = useState<[number, number]>([40.4168, -3.7038]); 
   const [heading, setHeading] = useState<number>(0);
   const [hasLocation, setHasLocation] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
   // FIX I1: Nuevo estado de error — elimina el uso de alert() bloqueante
   const [gpsError, setGpsError] = useState<string | null>(null);
 
@@ -26,22 +27,40 @@ export function useGeolocation(isPaused?: boolean) {
     return brng;
   };
 
-  const updatePosition = useCallback((newPos: [number, number]) => {
+  const updatePosition = useCallback((newPos: [number, number], nativeHeading?: number | null, nativeSpeed?: number | null) => {
     setGpsError(null); // Limpiar error al recibir posición válida
-    setUserPos((prev) => {
-      const last = lastPosRef.current;
-      if (last) {
-        const dist = Math.sqrt(Math.pow(newPos[0] - last[0], 2) + Math.pow(newPos[1] - last[1], 2));
-        if (dist > 0.00001) {
-          const newHeading = calculateHeading(last, newPos);
-          if (!isNaN(newHeading)) {
-            setHeading(newHeading);
+
+    // El GPS nativo del dispositivo (Tesla, móvil) devuelve heading=null cuando el vehículo
+    // está parado. Usamos eso directamente: si viene válido, orientamos el mapa; si es null,
+    // el mapa se queda congelado en la última dirección conocida.
+    const moving = nativeSpeed != null && nativeSpeed > 0.3; // > ~1 km/h
+    setIsMoving(moving);
+
+    if (moving && nativeHeading != null && !isNaN(nativeHeading)) {
+      // Heading nativo del GPS: más preciso a cualquier velocidad
+      setHeading(nativeHeading);
+    } else {
+      // Fallback: calcular heading desde diferencia de posiciones (para navegadores sin GPS nativo)
+      setUserPos((prev) => {
+        const last = lastPosRef.current;
+        if (last) {
+          const dist = Math.sqrt(Math.pow(newPos[0] - last[0], 2) + Math.pow(newPos[1] - last[1], 2));
+          if (dist > 0.00002 && moving) {
+            const newHeading = calculateHeading(last, newPos);
+            if (!isNaN(newHeading)) {
+              setHeading(newHeading);
+            }
           }
         }
-      }
-      lastPosRef.current = newPos;
-      return newPos;
-    });
+        lastPosRef.current = newPos;
+        return newPos;
+      });
+      setHasLocation(true);
+      return;
+    }
+
+    setUserPos(newPos);
+    lastPosRef.current = newPos;
     setHasLocation(true);
   }, []);
 
@@ -53,7 +72,7 @@ export function useGeolocation(isPaused?: boolean) {
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        updatePosition([pos.coords.latitude, pos.coords.longitude]);
+        updatePosition([pos.coords.latitude, pos.coords.longitude], pos.coords.heading, pos.coords.speed);
       },
       (err) => {
         logger.warn('useGeolocation', 'Error GPS manual', err.message);
@@ -79,7 +98,7 @@ export function useGeolocation(isPaused?: boolean) {
 
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
-        updatePosition([pos.coords.latitude, pos.coords.longitude]);
+        updatePosition([pos.coords.latitude, pos.coords.longitude], pos.coords.heading, pos.coords.speed);
       },
       (err) => {
         logger.warn('useGeolocation', 'Error en watchPosition', err.message);
@@ -100,6 +119,7 @@ export function useGeolocation(isPaused?: boolean) {
     heading,
     setHeading,
     hasLocation,
+    isMoving,
     gpsError,
     requestGPS
   };

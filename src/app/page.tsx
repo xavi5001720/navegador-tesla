@@ -374,6 +374,7 @@ export default function ChuchesPage() {
   const [data, setData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const [showIosModal, setShowIosModal] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchProducts = useCallback(async (sec: string, cat: string, ver: string, q: string, pg: number) => {
@@ -393,6 +394,30 @@ export default function ChuchesPage() {
       setLoading(false);
     }
   }, []);
+
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handler = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallPwa = () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then((choiceResult: any) => {
+        if (choiceResult.outcome === 'accepted') {
+          setDeferredPrompt(null);
+        }
+      });
+    } else {
+      setShowIosModal(true);
+    }
+  };
 
   useEffect(() => {
     setCategoria('');
@@ -443,9 +468,20 @@ export default function ChuchesPage() {
       {/* ── Header ── */}
       <header className={styles.header}>
         <div className={styles.headerInner}>
-          <a href="https://t.me/tesla_chuches" target="_blank" rel="noopener noreferrer" className={styles.headerTgBtn}>
-            ✈️ Comunidad Telegram
-          </a>
+          <div className={styles.headerBtns}>
+            <a
+              href="https://play.google.com/store/apps/details?id=es.viajandoentesla.teslachuches&pcampaignid=web_share"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.headerAppBtn}
+            >
+              <span>📱</span>
+              <span>App Android</span>
+            </a>
+            <a href="https://t.me/tesla_chuches" target="_blank" rel="noopener noreferrer" className={styles.headerTgBtn}>
+              ✈️ Comunidad Telegram
+            </a>
+          </div>
         </div>
       </header>
 
@@ -470,9 +506,26 @@ export default function ChuchesPage() {
             <span>categorías</span>
           </div>
           <div className={styles.heroStat}>
-            <strong>{data?.stats?.totalReferidos || 59}</strong>
+            <strong>{data?.stats?.totalReferidos || 73}</strong>
             <span>referidos</span>
           </div>
+        </div>
+
+        <div className={styles.heroAppBanner}>
+          <a
+            href="https://play.google.com/store/apps/details?id=es.viajandoentesla.teslachuches&pcampaignid=web_share"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.playStoreBtn}
+          >
+            <svg className={styles.playStoreIcon} viewBox="0 0 512 512" fill="currentColor">
+              <path d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l220.7-221.3 60.1 60.1L104.6 499z" />
+            </svg>
+            <div className={styles.playStoreText}>
+              <span className={styles.playStoreSub}>DISPONIBLE EN</span>
+              <span className={styles.playStoreTitle}>Google Play</span>
+            </div>
+          </a>
         </div>
       </section>
 

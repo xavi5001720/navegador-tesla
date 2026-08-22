@@ -317,6 +317,7 @@ interface MapUIProps {
    restaurants?: Restaurant[];
    speed?: number;
    hasLocation?: boolean;
+   isMoving?: boolean;
    viewMode?: 'navigation' | 'overview';
    onViewModeChange?: (mode: 'navigation' | 'overview') => void;
    customZoom?: number | null;
@@ -968,14 +969,15 @@ HybridRestaurantMarker.displayName = 'HybridRestaurantMarker';
 
 
 
-function MapRotator({ heading, rawHeading, viewMode, speed = 0 }: { heading: number, rawHeading: number, viewMode: string, speed?: number }) {
+function MapRotator({ heading, rawHeading, viewMode, isMoving = false }: { heading: number, rawHeading: number, viewMode: string, isMoving?: boolean }) {
   const map = useMap();
   const smoothedHeadingRef = useRef<number>(heading);
   const rafRef = useRef<number | null>(null);
   const targetHeadingRef = useRef<number>(heading);
 
-  // Actualiza el target con el heading efectivo (que ya viene corregido si el snap se ha roto)
-  useEffect(() => { if (speed * 3.6 >= 4) targetHeadingRef.current = heading; }, [heading, speed]);
+  // Solo actualiza el target de rotación cuando el GPS confirma que el coche está en movimiento.
+  // Cuando isMoving=false (parado), el mapa se congela en la última dirección conocida.
+  useEffect(() => { if (isMoving) targetHeadingRef.current = heading; }, [heading, isMoving]);
 
   useEffect(() => {
     const container = map.getContainer();
@@ -1094,7 +1096,7 @@ function LocationTracker({
 function MapUI(props: MapUIProps) {
   const { 
     userPos, heading, carColor, routeCoordinates, radars = [], aircrafts = [], chargers = [],
-    gasStations = [], weatherPoints = [], waypoints = [], yachts = [], festivals = [], restaurants = [], speed = 0, hasLocation = false,
+    gasStations = [], weatherPoints = [], waypoints = [], yachts = [], festivals = [], restaurants = [], speed = 0, hasLocation = false, isMoving = false,
     viewMode = 'overview', onViewModeChange, customZoom, onZoomChange, onMapClick, onChargerClick,
     onGasStationClick, onYachtClick, onOpenGarage, onCurrentZoomChange, routeSections = [], friends = [], centerOverride = null, overviewFitTrigger = 0, distanceToNextInstruction = null, isSimulating = false,
     mapMode = 'satellite', onMapError, followingFriendId, onUpdateFriendNickname, radarZones = [],
@@ -1211,7 +1213,7 @@ function MapUI(props: MapUIProps) {
       `}</style>
       <MapContainer center={userPos} zoom={15} className="h-full w-full z-0" zoomControl={false} doubleClickZoom={false}>
         <MapEvents viewMode={viewMode} onViewModeChange={onViewModeChange} onMapClick={onMapClick} />
-        <MapRotator heading={snappedHeading} rawHeading={heading} viewMode={viewMode} speed={speed} />
+        <MapRotator heading={snappedHeading} rawHeading={heading} viewMode={viewMode} isMoving={isMoving} />
         
         {mapMode === 'satellite' ? (
           <TileLayer 
