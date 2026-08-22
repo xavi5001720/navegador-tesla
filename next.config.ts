@@ -4,7 +4,8 @@ import { withSentryConfig } from '@sentry/nextjs';
 
 const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
-    '/api/**/*': ['./public/data/**/*'],
+    '/api/chuches/products': ['./public/data/inventario_global.json', './public/data/comentarios.json', './public/data/votos_globales.json', './public/data/referidos_tesla.json'],
+    '/api/chuches/codigos': ['./public/data/ultimos_codigos.txt'],
   },
   eslint: {
     ignoreDuringBuilds: true,
