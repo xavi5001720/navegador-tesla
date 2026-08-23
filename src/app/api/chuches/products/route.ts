@@ -243,13 +243,8 @@ export async function GET(req: NextRequest) {
   let totalReferidos = 73;
   let totalMiembros = 434;
   const refData = readJSON(REFERIDOS_PATH);
-  if (refData) {
-    if (refData.referidos && typeof refData.referidos === 'object') {
-      totalReferidos = Object.keys(refData.referidos).length;
-    }
-    if (refData.total_miembros && typeof refData.total_miembros === 'number' && refData.total_miembros > 0) {
-      totalMiembros = refData.total_miembros;
-    }
+  if (refData && refData.referidos && typeof refData.referidos === 'object') {
+    totalReferidos = Object.keys(refData.referidos).length;
   }
 
   // 🔄 Consulta directa y en tiempo real a Telegram API desde Vercel
@@ -262,10 +257,16 @@ export async function GET(req: NextRequest) {
       const tgData = await tgRes.json();
       if (tgData.ok && typeof tgData.result === 'number' && tgData.result > 0) {
         totalMiembros = tgData.result;
+      } else if (refData && refData.total_miembros && typeof refData.total_miembros === 'number' && refData.total_miembros > 0) {
+        totalMiembros = refData.total_miembros;
       }
+    } else if (refData && refData.total_miembros && typeof refData.total_miembros === 'number' && refData.total_miembros > 0) {
+      totalMiembros = refData.total_miembros;
     }
   } catch (e) {
-    // Si falla la conexión, se mantiene la cifra de respaldo (Anti-cero)
+    if (refData && refData.total_miembros && typeof refData.total_miembros === 'number' && refData.total_miembros > 0) {
+      totalMiembros = refData.total_miembros;
+    }
   }
 
   return NextResponse.json({
