@@ -252,11 +252,11 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // 🔄 Consulta directa y segura a Telegram API desde Vercel (Revalidación cada hora)
+  // 🔄 Consulta directa y en tiempo real a Telegram API desde Vercel
   try {
     const tgRes = await fetch(
       'https://api.telegram.org/bot8461047506:AAGDD8YUf7Oomf8h0arKfkShoklhMSTjBA4/getChatMemberCount?chat_id=-1003731237376',
-      { next: { revalidate: 3600 } }
+      { cache: 'no-store' }
     );
     if (tgRes.ok) {
       const tgData = await tgRes.json();
