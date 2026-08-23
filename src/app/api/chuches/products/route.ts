@@ -241,7 +241,7 @@ export async function GET(req: NextRequest) {
   const paginated = productos.slice(offset, offset + limit);
 
   let totalReferidos = 73;
-  let totalMiembros = 432;
+  let totalMiembros = 434;
   const refData = readJSON(REFERIDOS_PATH);
   if (refData) {
     if (refData.referidos && typeof refData.referidos === 'object') {
@@ -250,6 +250,22 @@ export async function GET(req: NextRequest) {
     if (refData.total_miembros && typeof refData.total_miembros === 'number' && refData.total_miembros > 0) {
       totalMiembros = refData.total_miembros;
     }
+  }
+
+  // 🔄 Consulta directa y segura a Telegram API desde Vercel (Revalidación cada hora)
+  try {
+    const tgRes = await fetch(
+      'https://api.telegram.org/bot8461047506:AAGDD8YUf7Oomf8h0arKfkShoklhMSTjBA4/getChatMemberCount?chat_id=-1003731237376',
+      { next: { revalidate: 3600 } }
+    );
+    if (tgRes.ok) {
+      const tgData = await tgRes.json();
+      if (tgData.ok && typeof tgData.result === 'number' && tgData.result > 0) {
+        totalMiembros = tgData.result;
+      }
+    }
+  } catch (e) {
+    // Si falla la conexión, se mantiene la cifra de respaldo (Anti-cero)
   }
 
   return NextResponse.json({

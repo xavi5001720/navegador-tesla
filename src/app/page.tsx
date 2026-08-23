@@ -510,7 +510,7 @@ export default function ChuchesPage() {
             <span>referidos</span>
           </div>
           <div className={styles.heroStat}>
-            <strong>{data?.stats?.totalMiembros || 432}</strong>
+            <strong>{data?.stats?.totalMiembros || 434}</strong>
             <span>miembros</span>
           </div>
         </div>

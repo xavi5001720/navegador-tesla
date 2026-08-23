@@ -11392,30 +11392,6 @@
                         "bot_message_id": 5093
                     },
                     {
-                        "product_id": "1005009078063288",
-                        "platform": "aliexpress",
-                        "title": "Para Tesla Model Y 3 Highland mejora almohadillas de Pedal cubierta antideslizante acelerador freno reposapiés rendimiento esteras de aluminio Accesorios",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3iXoPDh",
-                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005009078063288.jpg",
-                        "recommendations": 1,
-                        "votes": {},
-                        "timestamp": "2026-07-19T12:10:50.834298+00:00",
-                        "sale_price": "8.23",
-                        "original_price": "17.67",
-                        "discount": "53%",
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "bot_message_id": 5096,
-                        "status_clasificacion": "clasificado",
-                        "categorias": [
-                            "Pedales"
-                        ],
-                        "versiones": [
-                            "__todas__"
-                        ]
-                    },
-                    {
                         "product_id": "1005006768229383",
                         "platform": "aliexpress",
                         "title": "Organizador de Maletero Delantero para Tesla Model 3 Y YL Juniper Highland 2025-2020 2026, Bolsa de Aislamiento para Almacenamiento en el Maletero Delantero",
@@ -12768,7 +12744,7 @@
                         "versiones": [
                             "Highland (2024+) - Premium"
                         ],
-                        "bot_message_id": 5909
+                        "bot_message_id": 6259
                     },
                     {
                         "product_id": "1005005992415332",
@@ -13084,31 +13060,6 @@
                             "__todas__"
                         ],
                         "bot_message_id": 6019
-                    },
-                    {
-                        "product_id": "1005011824902001",
-                        "platform": "aliexpress",
-                        "title": "Rejillas de malla para la nueva Tesla Model 3 Highland 2026 2027 con versión de cámara frontal, cubierta de rejilla de ventilación de entrada de aire del parachoques delantero",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3YXQkeb",
-                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005011824902001.jpg",
-                        "recommendations": 2,
-                        "votes": {},
-                        "timestamp": "2026-08-18T16:44:17.414455+00:00",
-                        "sale_price": "24.50",
-                        "original_price": "50.00",
-                        "discount": "51%",
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "categorias": [
-                            "Molduras"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "Highland (2024+) - Premium",
-                            "Highland (2024+) - Standard"
-                        ],
-                        "bot_message_id": 6035
                     },
                     {
                         "product_id": "1005012403699807",
@@ -13449,6 +13400,103 @@
                             "__todas__"
                         ],
                         "bot_message_id": 6249
+                    },
+                    {
+                        "product_id": "1005012133490981",
+                        "platform": "aliexpress",
+                        "title": "Cubierta de Ventilación Bajo el Asiento para Tesla Model 3 Y Juniper 2025 2026, Protector de Salida de Aire Acondicionado, Rejilla de Ventilación del Asiento Trasero, Accesorios",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3U8m5cr",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005012133490981.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-08-22T13:45:04.470830+00:00",
+                        "sale_price": "4.07",
+                        "original_price": "8.67",
+                        "discount": "53%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 6267,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005009078063288",
+                        "platform": "aliexpress",
+                        "title": "Para Tesla Model Y 3 Highland mejora almohadillas de Pedal cubierta antideslizante acelerador freno reposapiés rendimiento esteras de aluminio Accesorios",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c34Nlr4r",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005009078063288.jpg",
+                        "recommendations": 4,
+                        "votes": {},
+                        "timestamp": "2026-08-22T13:45:34.836105+00:00",
+                        "sale_price": "7.78",
+                        "original_price": "17.43",
+                        "discount": "55%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Pedales"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 6269
+                    },
+                    {
+                        "product_id": "1005011824902001",
+                        "platform": "aliexpress",
+                        "title": "Rejillas de malla para la nueva Tesla Model 3 Highland 2026 2027 con versión de cámara frontal, cubierta de rejilla de ventilación de entrada de aire del parachoques delantero",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3RmGB3z",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005011824902001.jpg",
+                        "recommendations": 3,
+                        "votes": {},
+                        "timestamp": "2026-08-22T14:46:59.363179+00:00",
+                        "sale_price": "24.32",
+                        "original_price": "49.64",
+                        "discount": "51%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Molduras"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "Highland (2024+) - Premium",
+                            "Highland (2024+) - Standard"
+                        ],
+                        "bot_message_id": 6275
+                    },
+                    {
+                        "product_id": "B0H9H3Z6J7",
+                        "platform": "amazon",
+                        "title": "Cubierta lateral exterior del asiento para Tesla Model 3 2017-2026, panel delantero izquierdo del conductor 1088964, pieza de repuesto de plástico ABS negro (asiento del conductor)",
+                        "affiliate_url": "https://www.amazon.es/Cubierta-2017-2026-delantero-izquierdo-conductor/dp/B0H9H3Z6J7/ref=asc_df_B0H9H3Z6J7?mcid=f3275d3d0f463c25a946fd5070d54036&tag=energia0d1-21&linkCode=df0&hvadid=817312928831&hvpos=&hvnetw=g&hvrand=251681839115581829&hvpone=&hvptwo=&hvqmt=&hvdev=c&hvdvcmdl=&hvlocint=&hvlocphy=9215219&hvtargid=pla-2495288181278&hvocijid=251681839115581829-B0H9H3Z6J7-&hvexpln=0&th=1",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B0H9H3Z6J7.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-08-22T19:21:11.440457+00:00",
+                        "sale_price": "19.78",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Molduras"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 6296
                     }
                 ],
                 "topic_name": "Tesla Model 3"
@@ -20095,31 +20143,6 @@
                         ]
                     },
                     {
-                        "product_id": "1005006904589094",
-                        "platform": "aliexpress",
-                        "title": "Parasol para Tesla Model Y YL Juniper Standard Model 3 Highland 2025-2020 2026, Tela Antideslizante con Hebilla, para Techo Solar Delantero y Trasero",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c2JnA2HZ",
-                        "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005006904589094.jpg",
-                        "recommendations": 7,
-                        "votes": {},
-                        "timestamp": "2026-07-24T18:10:40.039380+00:00",
-                        "sale_price": "27.36",
-                        "original_price": "65.69",
-                        "discount": "58%",
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "categorias": [
-                            "Parasoles"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "Juniper (2025+) - Premium",
-                            "Juniper (2025+) - Standard"
-                        ],
-                        "bot_message_id": 5357
-                    },
-                    {
                         "product_id": "1005006242339342",
                         "platform": "aliexpress",
                         "title": "Organizador para Tesla Model Y, ABS Flocado, 3 Pzas",
@@ -20748,30 +20771,6 @@
                         ]
                     },
                     {
-                        "product_id": "1005012102405874",
-                        "platform": "aliexpress",
-                        "title": "LUCKEASY para Tesla Model Y Juniper Standard RWD 2026, Portavasos para Consola Central, Accesorios para Auto, Porta Bebidas, Caja de Almacenamiento",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c4dcgtjN",
-                        "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005012102405874.jpg",
-                        "recommendations": 2,
-                        "votes": {},
-                        "timestamp": "2026-08-12T04:59:39.710971+00:00",
-                        "sale_price": "20.57",
-                        "original_price": "43.29",
-                        "discount": "52%",
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "categorias": [
-                            "Consola"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "Juniper (2025+) - Standard"
-                        ],
-                        "bot_message_id": 5865
-                    },
-                    {
                         "product_id": "B0CSK279VR",
                         "platform": "amazon",
                         "title": "NMD&LR Soporte De Teléfono Diseñado para El Model 3 Model Y, Soporte Magnético De Teléfono De Fácil Instalación para Tesla, Compatible con MagSafe",
@@ -21204,6 +21203,79 @@
                             "Juniper (2025+) - Standard"
                         ],
                         "bot_message_id": 6236
+                    },
+                    {
+                        "product_id": "1005007294391207",
+                        "platform": "aliexpress",
+                        "title": "YZ para Tesla Model 3 Y Highland Juniper soporte para teléfono de coche Clip de ventilación de aire soporte para teléfono móvil en salida de aire de silicona líquida para coche",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3cyU7Lz",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005007294391207.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-08-22T15:12:09.159028+00:00",
+                        "sale_price": "6.43",
+                        "original_price": "12.36",
+                        "discount": "48%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 6282,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Soportes"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005006904589094",
+                        "platform": "aliexpress",
+                        "title": "Parasol para Tesla Model Y YL Juniper Standard Model 3 Highland 2025-2020 2026, Tela Antideslizante con Hebilla, para Techo Solar Delantero y Trasero",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3yah4kT",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005006904589094.jpg",
+                        "recommendations": 8,
+                        "votes": {},
+                        "timestamp": "2026-08-22T19:22:42.412452+00:00",
+                        "sale_price": "31.68",
+                        "original_price": "64.65",
+                        "discount": "51%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Parasoles"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "Juniper (2025+) - Premium",
+                            "Juniper (2025+) - Standard"
+                        ],
+                        "bot_message_id": 6298
+                    },
+                    {
+                        "product_id": "1005012102405874",
+                        "platform": "aliexpress",
+                        "title": "LUCKEASY para Tesla Model Y Juniper Standard RWD 2026, Portavasos para Consola Central, Accesorios para Auto, Porta Bebidas, Caja de Almacenamiento",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c38zku0T",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005012102405874.jpg",
+                        "recommendations": 3,
+                        "votes": {},
+                        "timestamp": "2026-08-22T19:30:17.371991+00:00",
+                        "sale_price": "19.31",
+                        "original_price": "43.31",
+                        "discount": "55%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Consola"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "Juniper (2025+) - Standard"
+                        ],
+                        "bot_message_id": 6303
                     }
                 ],
                 "topic_name": "Tesla Model Y"
@@ -35495,7 +35567,7 @@
                         "bot_message_id": 1182,
                         "status_clasificacion": "clasificado",
                         "categorias": [
-                            "Varios"
+                            "Pantallas"
                         ],
                         "versiones": [
                             "__todas__"
@@ -35663,7 +35735,7 @@
                         "bot_message_id": 1205,
                         "status_clasificacion": "clasificado",
                         "categorias": [
-                            "Varios"
+                            "Consola"
                         ],
                         "versiones": [
                             "__todas__"
@@ -36100,6 +36172,30 @@
                             "__todas__"
                         ],
                         "bot_message_id": 1260
+                    },
+                    {
+                        "product_id": "1005010768458974",
+                        "platform": "aliexpress",
+                        "title": "Cubierta de Pinza de Freno para Rueda Especial para Xpeng G9/G6/P7/P5/N5 P9+, Cubierta de Pinza de Freno Modificada Personalizada de Aleación de Aluminio",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c4qRaCQn",
+                        "image": "img/Xpeng_chuches/Xpeng_G6/aliexpress_1005010768458974.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-08-22T20:53:12.258701+00:00",
+                        "sale_price": "84.04",
+                        "original_price": "195.45",
+                        "discount": "57%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1270,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Ruedas"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
                     }
                 ],
                 "topic_name": "Xpeng G6"
@@ -39335,30 +39431,6 @@
                         ]
                     },
                     {
-                        "product_id": "B073GDKB82",
-                        "platform": "amazon",
-                        "title": "BOSCH Wischblatt A156S 3397014156",
-                        "affiliate_url": "https://www.amazon.es/dp/B073GDKB82/ref=cm_sw_r_as_gl_apa_gl_i_6BV9SG2G4YXBM84H6V1Y?linkCode=ml1&tag=energia0d1-21&linkId=428abfad36f836f67d2c57abd97eeb09",
-                        "image": "img/Toyota_chuches/Toyota_C_HR/amazon_B073GDKB82.jpg",
-                        "recommendations": 2,
-                        "votes": {},
-                        "timestamp": "2026-07-17T05:30:53.098546+00:00",
-                        "sale_price": "15.83",
-                        "original_price": null,
-                        "discount": null,
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "categorias": [
-                            "Limpiaparabrisas"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "__todas__"
-                        ],
-                        "bot_message_id": 706
-                    },
-                    {
                         "product_id": "B0D9K2VGK2",
                         "platform": "amazon",
                         "title": "dé Cargador Coche Electrico 8m [3,7kW, 6-16A] Cargador EV Tipo 2 Portátil con Enfuse Schuko, Pantalla Digital Controlable para Model Y/3 y Otros BEV/PHEV",
@@ -39645,6 +39717,30 @@
                         "versiones": [
                             "__todas__"
                         ]
+                    },
+                    {
+                        "product_id": "B073GDKB82",
+                        "platform": "amazon",
+                        "title": "BOSCH Wischblatt A156S 3397014156",
+                        "affiliate_url": "https://www.amazon.es/dp/B073GDKB82?ref=cm_sw_r_cso_cp_apan_dp_C1C1P74EZ8XJ8C36GPFT&ref_=cm_sw_r_cso_cp_apan_dp_C1C1P74EZ8XJ8C36GPFT&social_share=cm_sw_r_cso_cp_apan_dp_C1C1P74EZ8XJ8C36GPFT&tag=energia0d1-21",
+                        "image": "img/Toyota_chuches/Toyota_C_HR/amazon_B073GDKB82.jpg",
+                        "recommendations": 3,
+                        "votes": {},
+                        "timestamp": "2026-08-22T11:35:24.209868+00:00",
+                        "sale_price": "26.27",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Limpiaparabrisas"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 847
                     }
                 ],
                 "topic_name": "Toyota C-HR"
@@ -42040,6 +42136,30 @@
                         "status_clasificacion": "clasificado",
                         "categorias": [
                             "Diagnosis"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005012647846305",
+                        "platform": "aliexpress",
+                        "title": "Base para Teléfono Móvil Específica para Toyota Corolla e210 2019-2025 2026, Soporte Inteligente para Teléfono de Coche con Carga de 66W, Accesorios",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3UwCyKB",
+                        "image": "img/Toyota_chuches/Toyota_corolla_hibrido/aliexpress_1005012647846305.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-08-22T12:03:33.313507+00:00",
+                        "sale_price": "4.40",
+                        "original_price": "5.00",
+                        "discount": "11%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 849,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Soportes"
                         ],
                         "versiones": [
                             "__todas__"
@@ -61375,7 +61495,13 @@
                         "reviews_count": null,
                         "price_corrected": false,
                         "bot_message_id": 4361,
-                        "status_clasificacion": "pendiente"
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Soportes"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
                     },
                     {
                         "product_id": "1005006955575428",
