@@ -5,7 +5,34 @@ import path from 'path';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-function getRawText(): string | null {
+async function getRawText(): Promise<string | null> {
+  // 1. Intentar obtener los códigos desde Supabase (funciona en tiempo real en Vercel)
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://uoejbgifzstyugjsnwkc.supabase.co';
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_LcxIB1UQ7fRvYlLMCbQsDg_ESjWuQwd';
+
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/estado_bot?id_destino=eq.GLOBAL_ULTIMOS_CODIGOS&select=email_id`,
+      {
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+        cache: 'no-store',
+      }
+    );
+
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0 && data[0]?.email_id) {
+        return data[0].email_id;
+      }
+    }
+  } catch (e) {
+    console.error('Error al obtener códigos desde Supabase:', e);
+  }
+
+  // 2. Fallback a archivos locales
   const paths = [
     '/home/xavi/proyectos-antigravity/6-Codigosaliexpress/ultimos_codigos.txt',
     path.join(process.cwd(), 'public', 'data', 'ultimos_codigos.txt'),
@@ -53,7 +80,7 @@ function parseCodigos(txt: string) {
 
 export async function GET(_req: NextRequest) {
   try {
-    const txt = getRawText();
+    const txt = await getRawText();
     if (!txt) {
       return NextResponse.json({ codigos: [], mensaje: 'Sin códigos activos en este momento' });
     }
