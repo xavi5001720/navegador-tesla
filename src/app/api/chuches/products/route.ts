@@ -240,8 +240,8 @@ export async function GET(req: NextRequest) {
   const offset = (page - 1) * limit;
   const paginated = productos.slice(offset, offset + limit);
 
-  let totalReferidos = 73;
-  let totalMiembros = 434;
+  let totalReferidos = 76;
+  let totalMiembros = 488;
   const refData = readJSON(REFERIDOS_PATH);
   if (refData && refData.referidos && typeof refData.referidos === 'object') {
     totalReferidos = Object.keys(refData.referidos).length;

@@ -498,7 +498,7 @@ export default function ChuchesPage() {
         </p>
         <div className={styles.heroStats}>
           <div className={styles.heroStat}>
-            <strong>{data?.stats?.totalProducts ? data.stats.totalProducts.toLocaleString('es-ES') : '943'}</strong>
+            <strong>{data?.stats?.totalProducts ? data.stats.totalProducts.toLocaleString('es-ES') : '1.039'}</strong>
             <span>accesorios</span>
           </div>
           <div className={styles.heroStat}>
@@ -506,11 +506,11 @@ export default function ChuchesPage() {
             <span>categorías</span>
           </div>
           <div className={styles.heroStat}>
-            <strong>{data?.stats?.totalReferidos || 73}</strong>
+            <strong>{data?.stats?.totalReferidos || 76}</strong>
             <span>referidos</span>
           </div>
           <div className={styles.heroStat}>
-            <strong>{data?.stats?.totalMiembros || 434}</strong>
+            <strong>{data?.stats?.totalMiembros || 488}</strong>
             <span>miembros</span>
           </div>
         </div>
