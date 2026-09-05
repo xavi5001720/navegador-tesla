@@ -67,6 +67,9 @@ export const metadata: Metadata = {
     description: "Accesorios recomendados por la comunidad para tu Tesla y navegador inteligente con aviso de radares.",
     images: ["/logo-teslachuches.png"],
   },
+  other: {
+    'impact-site-verification': '3a5df70b-bdb2-4e0a-8a89-aee1e57188f0',
+  },
 };
 
 export const viewport = {
@@ -93,6 +96,8 @@ export default function RootLayout({
   return (
     <html lang="es">
       <head>
+        {/* Impact.com / Skyscanner verification */}
+        <meta name="impact-site-verification" content="3a5df70b-bdb2-4e0a-8a89-aee1e57188f0" />
         {/* PWA */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#e31937" />
