@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0a0f">
+  <meta name="description" content="HUD Radar DGT — Detector de radares con visualización para parabrisas">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="HUD Radar">
+  <title>HUD Radar DGT</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚗</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════
+       OVERLAY: Pantalla inicial de permisos
+  ═══════════════════════════════════════════════ -->
+  <div id="overlay-permission" class="overlay active" role="dialog" aria-modal="true" aria-label="Solicitar permisos GPS">
+    <div class="overlay-content">
+      <div class="overlay-logo">
+        <div class="logo-icon">◈</div>
+        <div class="logo-lines">
+          <div class="logo-line"></div>
+          <div class="logo-line"></div>
+          <div class="logo-line"></div>
+        </div>
+      </div>
+      <h1 class="overlay-title">HUD <span class="text-accent">Radar</span> DGT</h1>
+      <p class="overlay-subtitle">Detector de radares con visualización para parabrisas</p>
+      <ul class="overlay-features">
+        <li>📍 GPS de alta precisión</li>
+        <li>⚠️ Radares DGT en tiempo real</li>
+        <li>🔊 Avisos acústicos automáticos</li>
+        <li>🪟 Modo HUD para parabrisas</li>
+      </ul>
+      <button id="btn-request-gps" class="btn-primary" aria-label="Activar GPS y comenzar">
+        <span class="btn-icon">📍</span> Activar GPS
+      </button>
+      <button id="btn-demo-mode" class="btn-secondary" aria-label="Iniciar modo de demostración">
+        <span class="btn-icon">▶</span> Modo Demo
+      </button>
+      <p class="overlay-note">Requiere permiso de ubicación. Solo se usa localmente.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       OVERLAY: Error GPS
+  ═══════════════════════════════════════════════ -->
+  <div id="overlay-error" class="overlay" role="alert" aria-label="Error de GPS">
+    <div class="overlay-content">
+      <div class="overlay-logo">
+        <div class="logo-icon error-icon">✕</div>
+      </div>
+      <h2 class="overlay-title">Sin GPS</h2>
+      <p id="error-message" class="overlay-subtitle">Error desconocido</p>
+      <button id="btn-retry-gps" class="btn-primary">Reintentar</button>
+      <button id="btn-use-demo" class="btn-secondary">Usar Modo Demo</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       MAIN HUD DISPLAY
+  ═══════════════════════════════════════════════ -->
+  <div id="hud-container" class="hud-container" role="main" aria-label="Panel HUD principal">
+
+    <!-- Scan lines overlay (visual effect) -->
+    <div class="scan-lines" aria-hidden="true"></div>
+
+    <!-- Corner decorations -->
+    <div class="corner corner-tl" aria-hidden="true"></div>
+    <div class="corner corner-tr" aria-hidden="true"></div>
+    <div class="corner corner-bl" aria-hidden="true"></div>
+    <div class="corner corner-br" aria-hidden="true"></div>
+
+    <!-- ─── STATUS BAR (top) ─── -->
+    <div id="status-bar" class="status-bar" role="status" aria-label="Estado del sistema">
+      <div class="status-gps" id="gps-status-indicator" title="Estado GPS">
+        <span id="gps-dot" class="status-dot dot-searching" aria-hidden="true"></span>
+        <span id="gps-label" class="status-label">GPS…</span>
+      </div>
+      <div id="demo-badge" class="demo-badge hidden" aria-live="polite">DEMO</div>
+      <div id="radares-count" class="radares-count hidden" title="Radares detectados en zona">
+        <span id="radares-count-num">0</span>
+        <span class="radares-count-label">RAD</span>
+      </div>
+      <div id="current-time" class="current-time" aria-label="Hora actual">--:--</div>
+    </div>
+
+    <!-- ─── RADAR WARNING PANEL ─── -->
+    <div id="radar-panel" class="radar-panel hidden" role="alert" aria-live="assertive" aria-label="Alerta de radar próximo">
+      <div class="radar-panel-inner">
+        <div class="radar-icon-wrap" aria-hidden="true">
+          <div class="radar-icon-pulse"></div>
+          <div class="radar-icon">⚠</div>
+        </div>
+        <div class="radar-info-center">
+          <div id="radar-label-top" class="radar-label-top">RADAR</div>
+          <div id="radar-distance-display" class="radar-distance-display">-- km</div>
+          <div id="radar-type-label" class="radar-type-label">velocidad</div>
+        </div>
+        <div class="radar-limit-wrap">
+          <div class="radar-limit-ring">
+            <div id="radar-limit-value" class="radar-limit-value">--</div>
+            <div class="radar-limit-unit">km/h</div>
+          </div>
+        </div>
+      </div>
+      <div id="radar-progress-bar" class="radar-progress-bar">
+        <div id="radar-progress-fill" class="radar-progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- ─── SPEED DISPLAY (main element) ─── -->
+    <div id="speed-section" class="speed-section">
+      <div id="speed-display" class="speed-display" aria-label="Velocidad actual">
+        <div id="speed-value" class="speed-value state-neutral" aria-live="polite">--</div>
+        <div class="speed-unit-wrap">
+          <div class="speed-unit">km/h</div>
+          <div id="speed-status-text" class="speed-status-text"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── INFO BAR (heading + accuracy) ─── -->
+    <div id="info-bar" class="info-bar" aria-label="Información de navegación">
+      <div class="heading-wrap" id="heading-wrap" aria-label="Dirección de marcha">
+        <div id="compass-arrow" class="compass-arrow" aria-hidden="true">↑</div>
+        <div class="heading-text">
+          <span id="heading-degrees" class="heading-degrees">---°</span>
+          <span id="heading-cardinal" class="heading-cardinal">N</span>
+        </div>
+      </div>
+      <div id="accuracy-wrap" class="accuracy-wrap hidden" aria-label="Precisión GPS">
+        <span class="accuracy-icon" aria-hidden="true">◎</span>
+        <span id="accuracy-value" class="accuracy-value">± -- m</span>
+      </div>
+    </div>
+
+    <!-- ─── CONTROL BAR (bottom) ─── -->
+    <div id="control-bar" class="control-bar" role="toolbar" aria-label="Controles de la app">
+      <button id="btn-hud-toggle" class="ctrl-btn ctrl-btn--active" title="Activar/desactivar modo HUD espejado" aria-pressed="true">
+        <span class="ctrl-icon" aria-hidden="true">⟺</span>
+        <span class="ctrl-label">HUD</span>
+      </button>
+      <button id="btn-fullscreen" class="ctrl-btn" title="Pantalla completa" aria-label="Pantalla completa">
+        <span class="ctrl-icon" aria-hidden="true">⛶</span>
+        <span class="ctrl-label">FULL</span>
+      </button>
+      <button id="btn-mute" class="ctrl-btn" title="Silenciar/activar avisos" aria-label="Silenciar avisos" aria-pressed="false">
+        <span id="mute-icon" class="ctrl-icon" aria-hidden="true">🔊</span>
+        <span class="ctrl-label">SND</span>
+      </button>
+      <button id="btn-settings" class="ctrl-btn" title="Ajustes" aria-label="Abrir ajustes">
+        <span class="ctrl-icon" aria-hidden="true">⚙</span>
+        <span class="ctrl-label">CFG</span>
+      </button>
+    </div>
+
+  </div><!-- /#hud-container -->
+
+  <!-- ═══════════════════════════════════════════════
+       SETTINGS PANEL (slide-up drawer)
+  ═══════════════════════════════════════════════ -->
+  <div id="settings-panel" class="settings-panel hidden" role="dialog" aria-modal="true" aria-label="Panel de ajustes">
+    <div class="settings-content">
+      <div class="settings-header">
+        <h2>⚙ Ajustes</h2>
+        <button id="btn-close-settings" class="btn-icon-close" aria-label="Cerrar ajustes">✕</button>
+      </div>
+
+      <div class="settings-section">
+        <h3>Detección de radares</h3>
+        <div class="setting-row">
+          <label for="set-radius">Radio de búsqueda</label>
+          <select id="set-radius">
+            <option value="3000">3 km</option>
+            <option value="5000" selected>5 km</option>
+            <option value="10000">10 km</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Distancias de aviso acústico</h3>
+        <div class="setting-row">
+          <label for="set-alert1">🔔 Aviso 1 (1 beep)</label>
+          <select id="set-alert1">
+            <option value="1000">1000 m</option>
+            <option value="750">750 m</option>
+            <option value="500" selected>500 m</option>
+            <option value="300">300 m</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <label for="set-alert2">🔔🔔 Aviso 2 (2 beeps)</label>
+          <select id="set-alert2">
+            <option value="400">400 m</option>
+            <option value="300" selected>300 m</option>
+            <option value="200">200 m</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <label for="set-alert3">🔔🔔🔔 Aviso 3 (3 beeps)</label>
+          <select id="set-alert3">
+            <option value="200">200 m</option>
+            <option value="150" selected>150 m</option>
+            <option value="100">100 m</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>Pantalla</h3>
+        <div class="setting-row">
+          <label for="set-brightness">Brillo HUD</label>
+          <select id="set-brightness">
+            <option value="0.6">Bajo (noche)</option>
+            <option value="0.8">Medio</option>
+            <option value="1.0" selected>Alto (día)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-footer">
+        <p class="settings-note">Los datos de radares provienen de OpenStreetMap (Overpass API). La cobertura puede variar.</p>
+        <button id="btn-force-reload-radares" class="btn-secondary btn-sm">🔄 Recargar radares</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts (load order matters) -->
+  <script src="audio.js"></script>
+  <script src="gps.js"></script>
+  <script src="radares.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

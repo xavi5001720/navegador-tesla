@@ -1,0 +1,28 @@
+{
+  "name": "HUD Radar DGT",
+  "short_name": "HUD Radar",
+  "description": "Detector de radares con visualización HUD para parabrisas. Datos oficiales de España y Francia.",
+  "start_url": "/hud/",
+  "scope": "/hud/",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#080810",
+  "theme_color": "#080810",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["navigation", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
