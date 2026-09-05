@@ -77,7 +77,6 @@ const els = {
   btnRetryGps:       $('btn-retry-gps'),
   btnUseDemo:        $('btn-use-demo'),
   btnHudToggle:      $('btn-hud-toggle'),
-  btnFullscreen:     $('btn-fullscreen'),
   btnMute:           $('btn-mute'),
   muteIcon:          $('mute-icon'),
   btnSettings:       $('btn-settings'),
@@ -132,9 +131,6 @@ function bindButtons() {
     state.hudMode = !state.hudMode;
     applyHudMode();
   });
-
-  // Fullscreen
-  els.btnFullscreen.addEventListener('click', toggleFullscreen);
 
   // Mute
   els.btnMute.addEventListener('click', () => {
@@ -220,8 +216,8 @@ async function onGpsUpdate(data) {
     els.accuracyWrap.classList.remove('hidden');
   }
 
-  // Consultar motor de radares
-  const nearest = await radarEngine.update(data.lat, data.lon, data.heading);
+  // Consultar motor de radares (solo activo si hay movimiento real > 5 km/h)
+  const nearest = await radarEngine.update(data.lat, data.lon, data.heading, data.speed);
   updateRadarUI(nearest, data.speed);
 }
 
@@ -401,19 +397,21 @@ function updateRadarUI(radar, speed) {
     els.radarPanel.classList.remove('urgent');
   }
 
-  // Avisos acústicos
+  // Avisos acústicos (solo si estamos conduciendo a velocidad >= 5 km/h)
   const alertLevel = radarEngine.getAlertLevel(radar);
 
-  // Detectar cambio de radar
-  if (radar.id !== state.lastRadarId) {
-    state.lastRadarId   = radar.id;
-    state.lastAlertLevel = 0;
-    audioEngine.resetCooldowns();
-  }
+  if (speed >= 5) {
+    // Detectar cambio de radar
+    if (radar.id !== state.lastRadarId) {
+      state.lastRadarId   = radar.id;
+      state.lastAlertLevel = 0;
+      audioEngine.resetCooldowns();
+    }
 
-  if (alertLevel > 0 && !radarEngine.hasAlerted(radar.id, alertLevel)) {
-    const played = audioEngine.playAlert(alertLevel);
-    if (played) radarEngine.markAlerted(radar.id, alertLevel);
+    if (alertLevel > 0 && !radarEngine.hasAlerted(radar.id, alertLevel)) {
+      const played = audioEngine.playAlert(alertLevel);
+      if (played) radarEngine.markAlerted(radar.id, alertLevel);
+    }
   }
   state.lastAlertLevel = alertLevel;
 }

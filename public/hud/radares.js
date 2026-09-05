@@ -59,8 +59,15 @@ class RadarEngine {
 
   // ── API PRINCIPAL ─────────────────────────────────────────────────────
 
-  async update(lat, lon, heading) {
+  async update(lat, lon, heading, speed = 0) {
     await this._maybeQuery(lat, lon);
+
+    // Si estamos parados o a velocidad < 5 km/h, la dirección del GPS no es fiable.
+    // No podemos saber en qué carretera ni en qué sentido conducimos, así que no alertamos.
+    if (speed < 5) {
+      this.lastNearestId = null;
+      return null;
+    }
 
     const nearest = this._getNearestAhead(lat, lon, heading);
 
