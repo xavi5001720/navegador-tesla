@@ -418,7 +418,14 @@ function updateRadarUI(radar, speed) {
 
 // ── UI: HEADING ───────────────────────────────────────────────────────────
 
-function updateHeadingDisplay(heading) {
+function updateHeadingDisplay(heading, speed = 0) {
+  if (speed < 5) {
+    els.headingDegrees.textContent  = '--°';
+    els.headingCardinal.textContent = 'PARADO';
+    els.compassArrow.style.transform = 'rotate(0deg)';
+    return;
+  }
+
   const h = Math.round(heading);
   els.headingDegrees.textContent  = `${h}°`;
   els.headingCardinal.textContent = headingToCardinal(h);
@@ -432,6 +439,7 @@ function updateHeadingDisplay(heading) {
 // ── UI: STATUS GPS ────────────────────────────────────────────────────────
 
 function setGpsStatus(status) {
+  const prevStatus = state.gpsStatus;
   state.gpsStatus = status;
   const dot   = els.gpsDot;
   const label = els.gpsLabel;
@@ -447,7 +455,9 @@ function setGpsStatus(status) {
     case 'active':
       dot.classList.add('dot-active');
       label.textContent = 'GPS';
-      audioEngine.playConfirm();
+      if (prevStatus !== 'active') {
+        audioEngine.playConfirm();
+      }
       break;
     case 'error':
       dot.classList.add('dot-error');

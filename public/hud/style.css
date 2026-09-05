@@ -175,6 +175,13 @@ html, body {
   transform: scaleX(-1);
 }
 
+/* Mantiene los botones en la misma posición física de la pantalla al activar HUD */
+.hud-container.mirrored .status-bar,
+.hud-container.mirrored .info-bar,
+.hud-container.mirrored .control-bar {
+  flex-direction: row-reverse;
+}
+
 /* Scan lines CRT overlay */
 .scan-lines {
   position: fixed;
