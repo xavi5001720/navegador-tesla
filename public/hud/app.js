@@ -14,7 +14,6 @@ const audioEngine  = new AudioEngine();
 const state = {
   hudMode:    true,   // pantalla espejada
   muted:      false,
-  demoMode:   false,
   settingsOpen: false,
   gpsStatus:  'idle', // idle | requesting | active | error
   wakeLock:   null,
@@ -46,7 +45,6 @@ const els = {
   // Status
   gpsDot:            $('gps-dot'),
   gpsLabel:          $('gps-label'),
-  demoBadge:         $('demo-badge'),
   radaresCount:      $('radares-count'),
   radaresCountNum:   $('radares-count-num'),
   currentTime:       $('current-time'),
@@ -73,9 +71,7 @@ const els = {
 
   // Buttons
   btnRequestGps:     $('btn-request-gps'),
-  btnDemoMode:       $('btn-demo-mode'),
   btnRetryGps:       $('btn-retry-gps'),
-  btnUseDemo:        $('btn-use-demo'),
   btnHudToggle:      $('btn-hud-toggle'),
   btnMute:           $('btn-mute'),
   muteIcon:          $('mute-icon'),
@@ -110,19 +106,11 @@ function bindButtons() {
     audioEngine.unlock();
     startGPS();
   });
-  els.btnDemoMode.addEventListener('click', () => {
-    audioEngine.unlock();
-    startDemo();
-  });
 
   // Overlay de error
   els.btnRetryGps.addEventListener('click', () => {
     hideOverlay('error');
     startGPS();
-  });
-  els.btnUseDemo.addEventListener('click', () => {
-    hideOverlay('error');
-    startDemo();
   });
 
   // HUD toggle
@@ -227,91 +215,6 @@ const DEMO = {
   // Simulación: conduciendo en la A-2 (Madrid → Zaragoza)
   // Posición base: Alcalá de Henares
   baseLat: 40.4817, baseLon: -3.3640,
-  heading: 75,  // hacia el este
-  speed: 0,
-  step: 0,
-  // Radar ficticio a ~500m de distancia
-  radarLat: 40.4817 + 0.0045,
-  radarLon: -3.3640 + 0.0065,
-  radarSpeed: 100,
-};
-
-function startDemo() {
-  state.demoMode = true;
-  hideOverlay('permission');
-  hideOverlay('error');
-  els.demoBadge.classList.remove('hidden');
-
-  // Inyectar un radar ficticio en el motor
-  radarEngine.radares = [{
-    id: 'demo_1',
-    lat: DEMO.radarLat,
-    lon: DEMO.radarLon,
-    maxspeed: DEMO.radarSpeed,
-    direction: DEMO.heading,
-    type: 'fixed'
-  }];
-  radarEngine.onRadaresUpdated?.(1);
-
-  setGpsStatus('active');
-  requestWakeLock();
-
-  let stepCount = 0;
-  const totalSteps = 120; // 2 min de demo a 1s/step
-
-  demoInterval = setInterval(() => {
-    stepCount++;
-    if (stepCount > totalSteps) {
-      stepCount = 0;
-      radarEngine.passedRadares.clear();
-      radarEngine.alertState = {};
-      audioEngine.resetCooldowns();
-    }
-
-    // Velocidad: sube hasta 110
-    DEMO.speed = Math.min(110, stepCount * 1.2);
-
-    // Avanzar posición en la dirección del heading
-    const progress = stepCount / totalSteps;
-    const lat = DEMO.baseLat + progress * 0.009;
-    const lon = DEMO.baseLon + progress * 0.013;
-
-    // Simular que el radar queda fijo
-    const fakeGps = {
-      lat, lon,
-      speed:    Math.round(DEMO.speed),
-      heading:  DEMO.heading,
-      accuracy: 8,
-    };
-
-    state.lat = lat; state.lon = lon;
-    state.speed = fakeGps.speed;
-    state.heading = fakeGps.heading;
-
-    updateSpeedDisplay(fakeGps.speed);
-    updateHeadingDisplay(fakeGps.heading);
-
-    // Calcular distancia al radar demo
-    const dist = geoDistance(lat, lon, DEMO.radarLat, DEMO.radarLon);
-    const inRange = dist < 5000 && dist > 0;
-
-    if (inRange) {
-      const fakeRadar = { ...radarEngine.radares[0], distance: dist };
-      updateRadarUI(fakeRadar, fakeGps.speed);
-    } else {
-      updateRadarUI(null, fakeGps.speed);
-    }
-
-  }, 1000);
-}
-
-function stopDemo() {
-  if (demoInterval) clearInterval(demoInterval);
-  demoInterval = null;
-  state.demoMode = false;
-  els.demoBadge.classList.add('hidden');
-}
-
 // ── UI: VELOCIDAD ─────────────────────────────────────────────────────────
 
 function updateSpeedDisplay(speed) {
@@ -557,7 +460,7 @@ async function requestWakeLock() {
     state.wakeLock.addEventListener('release', () => {
       // Re-adquirir cuando la página vuelve a ser visible
       document.addEventListener('visibilitychange', async () => {
-        if (document.visibilityState === 'visible' && !state.demoMode) {
+        if (document.visibilityState === 'visible') {
           requestWakeLock();
         }
       }, { once: true });
