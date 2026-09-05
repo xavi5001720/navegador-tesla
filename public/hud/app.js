@@ -89,7 +89,6 @@ const els = {
   setAlert2:         $('set-alert2'),
   setAlert3:         $('set-alert3'),
   setBrightness:     $('set-brightness'),
-  btnForceReload:    $('btn-force-reload-radares'),
 };
 
 // ── INICIALIZACIÓN ────────────────────────────────────────────────────────
@@ -159,12 +158,6 @@ function bindButtons() {
     settings.brightness = parseFloat(els.setBrightness.value);
     els.hudContainer.style.filter = `brightness(${settings.brightness})`;
     saveSettings();
-  });
-
-  // Force reload radares
-  els.btnForceReload.addEventListener('click', () => {
-    radarEngine.forceRequery();
-    if (state.lat) radarEngine.update(state.lat, state.lon, state.heading);
   });
 
   // Cerrar settings al hacer click fuera del panel
