@@ -24,15 +24,6 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  async redirects() {
-    return [
-      {
-        source: '/hud',
-        destination: '/hud/',
-        permanent: true,
-      },
-    ];
-  },
 };
 
 export default withSentryConfig(nextConfig, {
