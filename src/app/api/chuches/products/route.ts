@@ -272,6 +272,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     section,
     total,
+    totalSection: allItems.length,
     page,
     totalPages,
     categorias,

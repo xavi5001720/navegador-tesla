@@ -28,6 +28,7 @@ interface VersionItem { nombre: string; count: number; }
 interface ApiResponse {
   section: string;
   total: number;
+  totalSection?: number;
   page: number;
   totalPages: number;
   categorias: CategoriaItem[];
@@ -594,7 +595,7 @@ export default function ChuchesPage() {
                   value={versionFilter}
                   onChange={e => handleVersionChange(e.target.value)}
                 >
-                  <option value="">Todas las versiones</option>
+                  <option value="">Todas las versiones ({data.totalSection || data.total})</option>
                   {data.versiones.map(v => (
                     <option key={v.nombre} value={v.nombre}>
                       {v.nombre} ({v.count})
@@ -613,7 +614,7 @@ export default function ChuchesPage() {
                   value={categoria}
                   onChange={e => handleCatChange(e.target.value)}
                 >
-                  <option value="">Todas las categorías</option>
+                  <option value="">Todas las categorías ({data.totalSection || data.total})</option>
                   {data.categorias.map(c => (
                     <option key={c.nombre} value={c.nombre}>
                       {c.nombre} ({c.count})
