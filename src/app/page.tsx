@@ -376,6 +376,7 @@ export default function ChuchesPage() {
   const [page, setPage] = useState(1);
   const [showIosModal, setShowIosModal] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialUrlApplied = useRef(false);
 
   const fetchProducts = useCallback(async (sec: string, cat: string, ver: string, q: string, pg: number) => {
     if (['ayudas', 'codigos', 'referidos'].includes(sec)) return;
@@ -419,7 +420,27 @@ export default function ChuchesPage() {
     }
   };
 
+  // Leer parámetros de la URL al cargar (ej: desde botón de Telegram)
+  // Permite que /?section=modely&categoria=Pedales active la pestaña y filtro correctos
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sec = params.get('section');
+    const cat = params.get('categoria');
+    const validSec = sec && ['model3', 'modely'].includes(sec) ? sec : null;
+    if (validSec || cat) {
+      initialUrlApplied.current = true;
+      if (validSec) setSection(validSec);
+      if (cat) setCategoria(cat);
+      fetchProducts(validSec || 'model3', cat || '', '', '', 1);
+    }
+  }, [fetchProducts]);
+
+  useEffect(() => {
+    // Si venimos de URL params, saltamos el reset de filtros esta vez
+    if (initialUrlApplied.current) {
+      initialUrlApplied.current = false;
+      return;
+    }
     setCategoria('');
     setVersionFilter('');
     setCatSearch('');
