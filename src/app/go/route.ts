@@ -1,11 +1,3 @@
-// /go — Redirect intermediario para preservar comisiones de referidos
-// Uso: /go?url=https://s.click.aliexpress.com/e/_xxx
-//
-// El tráfico de Telegram pasa PRIMERO por viajandoentesla.es
-// y desde aquí se redirige al affiliate link. Esto garantiza
-// que las cookies de sesión del programa de referidos se establezcan
-// correctamente (las apps de Telegram rompen el tracking directo).
-
 import { NextRequest, NextResponse } from 'next/server';
 
 // Dominios permitidos como destino (lista blanca de seguridad)
@@ -28,6 +20,40 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url), { status: 302 });
   }
 
-  // Redirect 302 (temporal, no cacheable) → el affiliate link real
-  return NextResponse.redirect(dest, { status: 302 });
+  const safeDest = dest.replace(/"/g, '&quot;');
+  const safeJsonDest = JSON.stringify(dest);
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="referrer" content="origin">
+  <meta http-equiv="refresh" content="1;url=${safeDest}">
+  <title>Redirigiendo...</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #0f172a; color: #f8fafc; text-align: center; }
+    .loader { border: 3px solid #1e293b; border-top: 3px solid #38bdf8; border-radius: 50%; width: 32px; height: 32px; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div>
+    <div class="loader"></div>
+    <p>Redirigiendo al producto...</p>
+    <p><small>Si no eres redirigido automáticamente, <a href="${safeDest}" style="color: #38bdf8;">haz clic aquí</a>.</small></p>
+  </div>
+  <script>
+    window.location.href = ${safeJsonDest};
+  </script>
+</body>
+</html>`;
+
+  return new NextResponse(html, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
+    },
+  });
 }
+
