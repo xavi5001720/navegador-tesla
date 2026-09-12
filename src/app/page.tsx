@@ -613,7 +613,7 @@ export default function ChuchesPage() {
                   value={categoria}
                   onChange={e => handleCatChange(e.target.value)}
                 >
-                  <option value="">Todas las categorías ({data.total})</option>
+                  <option value="">Todas las categorías</option>
                   {data.categorias.map(c => (
                     <option key={c.nombre} value={c.nombre}>
                       {c.nombre} ({c.count})
