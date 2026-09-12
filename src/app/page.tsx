@@ -375,6 +375,32 @@ export default function ChuchesPage() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [showIosModal, setShowIosModal] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const fetchProducts = useCallback(async (sec: string, cat: string, ver: string, q: string, pg: number) => {
+    if (['ayudas', 'codigos', 'referidos'].includes(sec)) return;
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ section: sec, page: String(pg), limit: '48' });
+      if (cat) params.set('cat', cat);
+      if (ver) params.set('ver', ver);
+      if (q) params.set('q', q);
+      const res = await fetch(`/api/chuches/products?${params}`);
+      const json = await res.json();
+      setData(json);
+      if (cat && json.categorias) {
+        const matched = json.categorias.find((c: { nombre: string }) => c.nombre.toLowerCase() === cat.toLowerCase());
+        if (matched) {
+          setCategoria(matched.nombre);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   const handleSectionChange = (sec: string) => {
     setSection(sec);
     setCategoria('');
