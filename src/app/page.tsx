@@ -375,80 +375,34 @@ export default function ChuchesPage() {
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [showIosModal, setShowIosModal] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingUrlCategoria = useRef<string | null>(null);
-
-  const fetchProducts = useCallback(async (sec: string, cat: string, ver: string, q: string, pg: number) => {
-    if (['ayudas', 'codigos', 'referidos'].includes(sec)) return;
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({ section: sec, page: String(pg), limit: '48' });
-      if (cat) params.set('cat', cat);
-      if (ver) params.set('ver', ver);
-      if (q) params.set('q', q);
-      const res = await fetch(`/api/chuches/products?${params}`);
-      const json = await res.json();
-      setData(json);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-
-  useEffect(() => {
-    const handler = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
-  }, []);
-
-  const handleInstallPwa = () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      deferredPrompt.userChoice.then((choiceResult: any) => {
-        if (choiceResult.outcome === 'accepted') {
-          setDeferredPrompt(null);
-        }
-      });
-    } else {
-      setShowIosModal(true);
-    }
-  };
-
-  // Leer parámetros de la URL al cargar (ej: desde botón de Telegram)
-  // Permite que /?section=modely&categoria=Pedales active la pestaña y filtro correctos
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const sec = params.get('section');
-    const cat = params.get('categoria');
-    const validSec = sec && ['model3', 'modely'].includes(sec) ? sec : null;
-    if (cat) pendingUrlCategoria.current = cat; // guardar para que lo use el efecto de sección
-    if (validSec) {
-      setSection(validSec); // dispara el efecto de sección, que ya leerá pendingUrlCategoria
-    } else if (cat) {
-      // Solo categoría sin cambio de sección
-      setCategoria(cat);
-      fetchProducts('model3', cat, '', '', 1);
-    }
-  }, [fetchProducts]);
-
-  useEffect(() => {
-    // Si hay una categoría pendiente de URL, usarla en vez de resetear a vacío
-    const cat = pendingUrlCategoria.current ?? '';
-    pendingUrlCategoria.current = null;
-    setCategoria(cat);
+  const handleSectionChange = (sec: string) => {
+    setSection(sec);
+    setCategoria('');
     setVersionFilter('');
     setCatSearch('');
     setBusqueda('');
     setBuscadorInput('');
     setPage(1);
-    fetchProducts(section, cat, '', '', 1);
-  }, [section, fetchProducts]);
+    fetchProducts(sec, '', '', '', 1);
+  };
+
+  // Carga inicial: lee parámetros de la URL (?section= y ?categoria=) si existen
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sec = params.get('section');
+    const cat = params.get('categoria');
+    const validSec = sec && ['model3', 'modely', 'cargar', 'mantenimiento', 'lifestyle', 'ayudas', 'codigos', 'referidos'].includes(sec) ? sec : 'model3';
+    const initialCat = cat || '';
+
+    if (validSec !== 'model3') {
+      setSection(validSec);
+    }
+    if (initialCat) {
+      setCategoria(initialCat);
+    }
+
+    fetchProducts(validSec, initialCat, '', '', 1);
+  }, [fetchProducts]);
 
   const handleCatChange = (cat: string) => {
     setCategoria(cat);
@@ -570,7 +524,7 @@ export default function ChuchesPage() {
             <button
               key={s.id}
               className={`${styles.sectionBtn} ${section === s.id ? styles.sectionBtnActive : ''}`}
-              onClick={() => setSection(s.id)}
+              onClick={() => handleSectionChange(s.id)}
             >
               <span>{s.emoji}</span>
               <span>{s.label}</span>
