@@ -376,7 +376,7 @@ export default function ChuchesPage() {
   const [page, setPage] = useState(1);
   const [showIosModal, setShowIosModal] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const initialUrlApplied = useRef(false);
+  const pendingUrlCategoria = useRef<string | null>(null);
 
   const fetchProducts = useCallback(async (sec: string, cat: string, ver: string, q: string, pg: number) => {
     if (['ayudas', 'codigos', 'referidos'].includes(sec)) return;
@@ -427,27 +427,27 @@ export default function ChuchesPage() {
     const sec = params.get('section');
     const cat = params.get('categoria');
     const validSec = sec && ['model3', 'modely'].includes(sec) ? sec : null;
-    if (validSec || cat) {
-      initialUrlApplied.current = true;
-      if (validSec) setSection(validSec);
-      if (cat) setCategoria(cat);
-      fetchProducts(validSec || 'model3', cat || '', '', '', 1);
+    if (cat) pendingUrlCategoria.current = cat; // guardar para que lo use el efecto de sección
+    if (validSec) {
+      setSection(validSec); // dispara el efecto de sección, que ya leerá pendingUrlCategoria
+    } else if (cat) {
+      // Solo categoría sin cambio de sección
+      setCategoria(cat);
+      fetchProducts('model3', cat, '', '', 1);
     }
   }, [fetchProducts]);
 
   useEffect(() => {
-    // Si venimos de URL params, saltamos el reset de filtros esta vez
-    if (initialUrlApplied.current) {
-      initialUrlApplied.current = false;
-      return;
-    }
-    setCategoria('');
+    // Si hay una categoría pendiente de URL, usarla en vez de resetear a vacío
+    const cat = pendingUrlCategoria.current ?? '';
+    pendingUrlCategoria.current = null;
+    setCategoria(cat);
     setVersionFilter('');
     setCatSearch('');
     setBusqueda('');
     setBuscadorInput('');
     setPage(1);
-    fetchProducts(section, '', '', '', 1);
+    fetchProducts(section, cat, '', '', 1);
   }, [section, fetchProducts]);
 
   const handleCatChange = (cat: string) => {
