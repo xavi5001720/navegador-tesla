@@ -1,6 +1,6 @@
 /**
- * Librería cliente para integrarse con la API de Travelpayouts / Aviasales.
- * Permite buscar ofertas de vuelos y generar enlaces con el marker de afiliado.
+ * Librería cliente para integrarse con la API de Travelpayouts.
+ * Permite buscar ofertas de vuelos y generar enlaces con el marker de afiliado para Booking.com y Skyscanner.es.
  */
 
 export interface FlightDeal {
@@ -25,7 +25,9 @@ export interface FlightDeal {
   nights: number;
   hotelStars: number;
   imageUrl: string;
-  affiliateUrl: string;
+  affiliateUrl: string; // Enlace principal
+  flightAffiliateUrl?: string; // Enlace directo Skyscanner.es
+  hotelAffiliateUrl?: string; // Enlace directo Booking.com (TP)
   airline?: string;
   transfers?: number;
   hasEvChargerHotel?: boolean;
@@ -78,6 +80,17 @@ export function getOriginCityName(code: string): string {
   return ORIGIN_CITIES[code.toUpperCase()] || code;
 }
 
+export function buildSkyscannerUrl(origin: string, dest: string, depDateStr: string, retDateStr: string, adults: number): string {
+  const depYymmdd = depDateStr.replace(/-/g, '').slice(2);
+  const retYymmdd = retDateStr.replace(/-/g, '').slice(2);
+  return `https://www.skyscanner.es/transport/vuelos/${origin.toLowerCase()}/${dest.toLowerCase()}/${depYymmdd}/${retYymmdd}/?adultsv2=${adults}`;
+}
+
+export function buildBookingUrl(cityName: string, depDateStr: string, retDateStr: string, adults: number, marker: string): string {
+  const bookingTarget = `https://www.booking.com/searchresults.es.html?ss=${encodeURIComponent(cityName)}&checkin=${depDateStr}&checkout=${retDateStr}&group_adults=${adults}`;
+  return `https://tp.media/r?marker=${marker}&p=4115&u=${encodeURIComponent(bookingTarget)}`;
+}
+
 export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<FlightDeal[]> {
   const token = process.env.TRAVELPAYOUTS_TOKEN || '596d62e5f9f6d2f1574865feeb424c75';
   const marker = process.env.TRAVELPAYOUTS_MARKER || '778425';
@@ -94,7 +107,6 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
   const duration = query.durationDays || 2;
   const minStars = query.minStars || 3;
 
-  // Si se selecciona "Iré en Coche", generamos ofertas exclusivas de solo Hotel
   if (isByCar) {
     return generateCarHotelDeals(query, marker);
   }
@@ -148,9 +160,8 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
       const depDateStr = item.departure_at ? item.departure_at.slice(0, 10) : new Date().toISOString().slice(0, 10);
       const retDateStr = item.return_at ? item.return_at.slice(0, 10) : new Date(Date.now() + duration * 86400000).toISOString().slice(0, 10);
 
-      const paxString = `${adults}${children > 0 ? `c${children}` : ''}${infants > 0 ? `i${infants}` : ''}`;
-      // Enlace directo oficial de Aviasales en español con marker de afiliado
-      const affiliateUrl = `https://www.aviasales.es/search/${origin}${depDateStr.replace(/-/g, '')}${destCode}${retDateStr.replace(/-/g, '')}${paxString}?marker=${marker}`;
+      const flightAffiliateUrl = buildSkyscannerUrl(origin, destCode, depDateStr, retDateStr, adults);
+      const hotelAffiliateUrl = buildBookingUrl(cityInfo.city, depDateStr, retDateStr, adults, marker);
 
       return {
         id: `deal-${idx}-${destCode}`,
@@ -174,7 +185,9 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
         nights: duration,
         hotelStars: minStars,
         imageUrl: cityInfo.image,
-        affiliateUrl,
+        affiliateUrl: flightAffiliateUrl,
+        flightAffiliateUrl,
+        hotelAffiliateUrl,
         airline: item.airline || 'Vuelo Directo',
         transfers: item.transfers || 0,
         hasEvChargerHotel: idx % 2 === 0
@@ -231,9 +244,7 @@ function generateCarHotelDeals(query: EscapadaSearchQuery, marker: string): Flig
     const depDateStr = new Date(Date.now() + (i + 1) * 86400000 * 7).toISOString().slice(0, 10);
     const retDateStr = new Date(Date.now() + ((i + 1) * 7 + duration) * 86400000).toISOString().slice(0, 10);
 
-    // Deep link pre-rellenado de Booking.com vía Travelpayouts (p=4115) con ciudad, fechas y adultos pre-cargados
-    const bookingTarget = `https://www.booking.com/searchresults.es.html?ss=${encodeURIComponent(info.city)}&checkin=${depDateStr}&checkout=${retDateStr}&group_adults=${adults}`;
-    const affiliateUrl = `https://tp.media/r?marker=${marker}&p=4115&u=${encodeURIComponent(bookingTarget)}`;
+    const hotelAffiliateUrl = buildBookingUrl(info.city, depDateStr, retDateStr, adults, marker);
 
     return {
       id: `car-deal-${i}-${d.code}`,
@@ -257,7 +268,8 @@ function generateCarHotelDeals(query: EscapadaSearchQuery, marker: string): Flig
       nights: duration,
       hotelStars: minStars,
       imageUrl: info.image,
-      affiliateUrl,
+      affiliateUrl: hotelAffiliateUrl,
+      hotelAffiliateUrl,
       airline: 'Sin Vuelo (Viaje en Coche)',
       transfers: 0,
       hasEvChargerHotel: true
@@ -301,8 +313,9 @@ function generateFallbackDeals(query: EscapadaSearchQuery, marker: string): Flig
 
     const depDateStr = new Date(Date.now() + (i + 1) * 86400000 * 7).toISOString().slice(0, 10);
     const retDateStr = new Date(Date.now() + ((i + 1) * 7 + duration) * 86400000).toISOString().slice(0, 10);
-    const paxString = `${adults}${children > 0 ? `c${children}` : ''}${infants > 0 ? `i${infants}` : ''}`;
-    const affiliateUrl = `https://www.aviasales.es/search/${origin}${depDateStr.replace(/-/g, '')}${d.code}${retDateStr.replace(/-/g, '')}${paxString}?marker=${marker}`;
+
+    const flightAffiliateUrl = buildSkyscannerUrl(origin, d.code, depDateStr, retDateStr, adults);
+    const hotelAffiliateUrl = buildBookingUrl(info.city, depDateStr, retDateStr, adults, marker);
 
     return {
       id: `fallback-${i}-${d.code}`,
@@ -321,12 +334,14 @@ function generateFallbackDeals(query: EscapadaSearchQuery, marker: string): Flig
       hotelEstimatedPrice: hotelPrice,
       totalPrice,
       pricePerAdult,
-      departureDate: new Date(Date.now() + (i + 1) * 86400000 * 7).toISOString().slice(0, 10),
-      returnDate: new Date(Date.now() + ((i + 1) * 7 + duration) * 86400000).toISOString().slice(0, 10),
+      departureDate: depDateStr,
+      returnDate: retDateStr,
       nights: duration,
       hotelStars: minStars,
       imageUrl: info.image,
-      affiliateUrl,
+      affiliateUrl: flightAffiliateUrl,
+      flightAffiliateUrl,
+      hotelAffiliateUrl,
       airline: 'Vuelo Directo',
       transfers: 0,
       hasEvChargerHotel: true

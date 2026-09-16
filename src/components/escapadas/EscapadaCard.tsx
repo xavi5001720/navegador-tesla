@@ -68,19 +68,17 @@ export const EscapadaCard: React.FC<EscapadaCardProps> = ({ deal }) => {
           </p>
 
           <div className="mt-4 space-y-2 text-sm text-slate-300">
-            {/* Detalle Vuelo / Coche */}
-            <div className="flex items-center justify-between p-2.5 bg-slate-800/50 rounded-xl border border-slate-800">
-              <span className="flex items-center space-x-2 text-xs">
-                {deal.isByCar ? (
-                  <span>🚗 Transporte en coche</span>
-                ) : (
+            {/* Detalle Vuelo */}
+            {!deal.isByCar && (
+              <div className="flex items-center justify-between p-2.5 bg-slate-800/50 rounded-xl border border-slate-800">
+                <span className="flex items-center space-x-2 text-xs">
                   <span>✈️ Vuelos ({formatTravelersSummary()})</span>
-                )}
-              </span>
-              <span className="font-semibold text-white text-xs">
-                {deal.isByCar ? '0 €' : `${deal.flightPriceTotal} €`}
-              </span>
-            </div>
+                </span>
+                <span className="font-semibold text-white text-xs">
+                  {deal.flightPriceTotal} €
+                </span>
+              </div>
+            )}
 
             {/* Detalle Hotel */}
             <div className="flex items-center justify-between p-2.5 bg-slate-800/50 rounded-xl border border-slate-800">
@@ -92,15 +90,42 @@ export const EscapadaCard: React.FC<EscapadaCardProps> = ({ deal }) => {
           </div>
         </div>
 
-        {/* Botón de Reserva Monetizado */}
-        <a
-          href={deal.affiliateUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full py-3 bg-slate-800 hover:bg-red-600 text-slate-200 hover:text-white font-bold rounded-xl text-center text-sm transition-all duration-300 shadow-md flex items-center justify-center space-x-2 border border-slate-700 hover:border-red-500 mt-4"
-        >
-          <span>{deal.isByCar ? `👉 Ver Oferta Hotel (${deal.totalPrice} €)` : `👉 Ver Oferta y Reservar Pack (${deal.totalPrice} €)`}</span>
-        </a>
+        {/* Botones de Reserva Monetizados */}
+        <div className="space-y-2 mt-4">
+          {!deal.isByCar ? (
+            <>
+              {/* Botón Skyscanner.es */}
+              <a
+                href={deal.flightAffiliateUrl || deal.affiliateUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl text-center text-xs transition-all duration-300 shadow-md flex items-center justify-center space-x-2"
+              >
+                <span>✈️ Ver Vuelos en Skyscanner.es ({deal.flightPriceTotal} €)</span>
+              </a>
+
+              {/* Botón Booking.com */}
+              <a
+                href={deal.hotelAffiliateUrl || deal.affiliateUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-center text-xs transition-all duration-300 shadow-md flex items-center justify-center space-x-2"
+              >
+                <span>🏨 Ver Hoteles en Booking.com ({deal.hotelEstimatedPrice} €)</span>
+              </a>
+            </>
+          ) : (
+            /* Botón Coche - Booking.com */
+            <a
+              href={deal.hotelAffiliateUrl || deal.affiliateUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-center text-sm transition-all duration-300 shadow-md flex items-center justify-center space-x-2"
+            >
+              <span>🏨 Ver Hoteles en Booking.com ({deal.totalPrice} €)</span>
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );
