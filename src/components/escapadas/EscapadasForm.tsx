@@ -8,15 +8,16 @@ interface EscapadasFormProps {
   isLoading: boolean;
 }
 
-const ORIGIN_AIRPORTS = [
-  { code: 'MAD', name: 'Madrid (MAD)' },
-  { code: 'BCN', name: 'Barcelona (BCN)' },
-  { code: 'VLC', name: 'Valencia (VLC)' },
-  { code: 'AGP', name: 'Málaga (AGP)' },
-  { code: 'SVQ', name: 'Sevilla (SVQ)' },
-  { code: 'BIO', name: 'Bilbao (BIO)' },
-  { code: 'ALC', name: 'Alicante (ALC)' },
-  { code: 'SCQ', name: 'Santiago (SCQ)' },
+const ORIGIN_OPTIONS = [
+  { code: 'BY_CAR', name: '🚗 Iré en Coche / Coche Eléctrico (Solo Ofertas de Hotel)' },
+  { code: 'MAD', name: '✈️ Madrid (MAD)' },
+  { code: 'BCN', name: '✈️ Barcelona (BCN)' },
+  { code: 'VLC', name: '✈️ Valencia (VLC)' },
+  { code: 'AGP', name: '✈️ Málaga (AGP)' },
+  { code: 'SVQ', name: '✈️ Sevilla (SVQ)' },
+  { code: 'BIO', name: '✈️ Bilbao (BIO)' },
+  { code: 'ALC', name: '✈️ Alicante (ALC)' },
+  { code: 'SCQ', name: '✈️ Santiago (SCQ)' },
 ];
 
 export const EscapadasForm: React.FC<EscapadasFormProps> = ({ onSearch, isLoading }) => {
@@ -55,18 +56,18 @@ export const EscapadasForm: React.FC<EscapadasFormProps> = ({ onSearch, isLoadin
     >
       {/* SECCIÓN 1: DÓNDE Y A DÓNDE */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Origen */}
+        {/* Origen (Incluye Iré en Coche) */}
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            ✈️ Origen (Desde dónde vuelas)
+            🚘 Origen / Medio de Transporte
           </label>
           <select
             value={origin}
             onChange={(e) => setOrigin(e.target.value)}
-            className="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 transition-all cursor-pointer"
+            className="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 transition-all cursor-pointer font-medium text-amber-300"
           >
-            {ORIGIN_AIRPORTS.map((a) => (
-              <option key={a.code} value={a.code}>
+            {ORIGIN_OPTIONS.map((a) => (
+              <option key={a.code} value={a.code} className="text-white">
                 {a.name}
               </option>
             ))}

@@ -53,20 +53,32 @@ export const EscapadaCard: React.FC<EscapadaCardProps> = ({ deal }) => {
       <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
         <div>
           <h3 className="text-xl font-bold text-white group-hover:text-red-400 transition-colors">
-            Escapada a {deal.destinationCityName} ({deal.nights} noches)
+            {deal.isByCar ? `Hotel en ${deal.destinationCityName}` : `Escapada a ${deal.destinationCityName}`} ({deal.nights} noches)
           </h3>
           <p className="text-xs text-slate-400 mt-1">
-            Salida desde <span className="text-slate-200 font-semibold">{deal.originCityName}</span> • {deal.departureDate} al {deal.returnDate}
+            {deal.isByCar ? (
+              <span className="text-emerald-400 font-semibold flex items-center space-x-1">
+                <span>🚗 Viaje en coche (Sin billetes de avión)</span>
+              </span>
+            ) : (
+              <span>
+                Salida desde <span className="text-slate-200 font-semibold">{deal.originCityName}</span> • {deal.departureDate} al {deal.returnDate}
+              </span>
+            )}
           </p>
 
           <div className="mt-4 space-y-2 text-sm text-slate-300">
-            {/* Detalle Vuelo */}
+            {/* Detalle Vuelo / Coche */}
             <div className="flex items-center justify-between p-2.5 bg-slate-800/50 rounded-xl border border-slate-800">
               <span className="flex items-center space-x-2 text-xs">
-                <span>✈️ Vuelos ({formatTravelersSummary()})</span>
+                {deal.isByCar ? (
+                  <span>🚗 Transporte en coche</span>
+                ) : (
+                  <span>✈️ Vuelos ({formatTravelersSummary()})</span>
+                )}
               </span>
               <span className="font-semibold text-white text-xs">
-                {deal.flightPriceTotal} €
+                {deal.isByCar ? '0 €' : `${deal.flightPriceTotal} €`}
               </span>
             </div>
 
@@ -87,7 +99,7 @@ export const EscapadaCard: React.FC<EscapadaCardProps> = ({ deal }) => {
           rel="noopener noreferrer"
           className="w-full py-3 bg-slate-800 hover:bg-red-600 text-slate-200 hover:text-white font-bold rounded-xl text-center text-sm transition-all duration-300 shadow-md flex items-center justify-center space-x-2 border border-slate-700 hover:border-red-500 mt-4"
         >
-          <span>👉 Ver Oferta y Reservar Pack ({deal.totalPrice} €)</span>
+          <span>{deal.isByCar ? `👉 Ver Oferta Hotel (${deal.totalPrice} €)` : `👉 Ver Oferta y Reservar Pack (${deal.totalPrice} €)`}</span>
         </a>
       </div>
     </div>

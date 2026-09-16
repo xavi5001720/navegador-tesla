@@ -14,6 +14,8 @@ export interface FlightDeal {
   children: number;
   infants: number;
   totalPassengers: number;
+  isByCar: boolean;
+  flightPricePerPerson: number;
   flightPriceTotal: number;
   hotelEstimatedPrice: number;
   totalPrice: number; // Precio total del paquete para todos los viajeros
@@ -30,7 +32,7 @@ export interface FlightDeal {
 }
 
 export interface EscapadaSearchQuery {
-  origin: string; // IATA code, e.g. 'MAD', 'BCN'
+  origin: string; // IATA code, e.g. 'MAD', 'BCN', or 'BY_CAR'
   destination?: string; // IATA code, e.g. 'MIL', 'ANY'
   adults: number; // 1 to 6
   children: number; // 0 to 4
@@ -68,7 +70,8 @@ const ORIGIN_CITIES: Record<string, string> = {
   SVQ: 'Sevilla',
   BIO: 'Bilbao',
   ALC: 'Alicante',
-  SCQ: 'Santiago'
+  SCQ: 'Santiago',
+  BY_CAR: '🚗 En Coche / Coche Eléctrico (Sin Vuelo)'
 };
 
 export function getOriginCityName(code: string): string {
@@ -80,7 +83,9 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
   const marker = process.env.TRAVELPAYOUTS_MARKER || '778425';
 
   const origin = query.origin || 'MAD';
+  const isByCar = origin === 'BY_CAR';
   const selectedDest = query.destination && query.destination !== 'ANY' ? query.destination : undefined;
+
   const adults = Math.max(1, query.adults || 2);
   const children = Math.max(0, query.children || 0);
   const infants = Math.max(0, query.infants || 0);
@@ -88,6 +93,11 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
 
   const duration = query.durationDays || 2;
   const minStars = query.minStars || 3;
+
+  // Si se selecciona "Iré en Coche", generamos ofertas exclusivas de solo Hotel
+  if (isByCar) {
+    return generateCarHotelDeals(query, marker);
+  }
 
   let url = `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=${origin}&currency=eur&direct=true&limit=35&token=${token}`;
   if (selectedDest) {
@@ -127,10 +137,8 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
       };
 
       const baseFlightPrice = Math.round(item.price || 45);
-      // Precio billetes por edades
       const flightPriceTotal = Math.round(baseFlightPrice * adults + baseFlightPrice * 0.75 * children + baseFlightPrice * 0.15 * infants);
 
-      // Calcular precio de hotel según habitaciones necesarias
       const rooms = Math.ceil((adults + children) / 2);
       const hotelRatePerNight = minStars === 5 ? 135 : minStars === 4 ? 75 : 45;
       const hotelPrice = hotelRatePerNight * duration * rooms;
@@ -140,7 +148,6 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
       const depDateStr = item.departure_at ? item.departure_at.slice(0, 10) : new Date().toISOString().slice(0, 10);
       const retDateStr = item.return_at ? item.return_at.slice(0, 10) : new Date(Date.now() + duration * 86400000).toISOString().slice(0, 10);
 
-      // Parámetros Aviasales pasajes: e.g. /search/MAD2210MIL24102c1i0 (adults, children, infants)
       const paxString = `${adults}${children > 0 ? `c${children}` : ''}${infants > 0 ? `i${infants}` : ''}`;
       const targetUrl = `https://www.aviasales.com/search/${origin}${depDateStr.replace(/-/g, '')}${destCode}${retDateStr.replace(/-/g, '')}${paxString}`;
       const affiliateUrl = `https://tp.media/r?marker=${marker}&p=4114&u=${encodeURIComponent(targetUrl)}`;
@@ -156,6 +163,7 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
         children,
         infants,
         totalPassengers,
+        isByCar: false,
         flightPricePerPerson: baseFlightPrice,
         flightPriceTotal,
         hotelEstimatedPrice: hotelPrice,
@@ -185,6 +193,72 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
     console.error('Error fetching Travelpayouts deals:', error);
     return generateFallbackDeals(query, marker);
   }
+}
+
+function generateCarHotelDeals(query: EscapadaSearchQuery, marker: string): FlightDeal[] {
+  const selectedDest = query.destination && query.destination !== 'ANY' ? query.destination : undefined;
+  const adults = Math.max(1, query.adults || 2);
+  const children = Math.max(0, query.children || 0);
+  const infants = Math.max(0, query.infants || 0);
+  const totalPassengers = adults + children + infants;
+  const duration = query.durationDays || 2;
+  const minStars = query.minStars || 3;
+
+  let destinations = [
+    { code: 'OPO', city: 'Oporto', country: 'Portugal' },
+    { code: 'LIS', city: 'Lisboa', country: 'Portugal' },
+    { code: 'PMI', city: 'Palma de Mallorca', country: 'España' },
+    { code: 'MIL', city: 'Milán', country: 'Italia' },
+    { code: 'PAR', city: 'París', country: 'Francia' },
+    { code: 'ROM', city: 'Roma', country: 'Italia' },
+  ];
+
+  if (selectedDest) {
+    destinations = destinations.filter(d => d.code === selectedDest);
+    if (destinations.length === 0) {
+      destinations = [{ code: selectedDest, city: selectedDest, country: 'Europa' }];
+    }
+  }
+
+  return destinations.map((d, i) => {
+    const info = AIRPORTS_MAP[d.code] || { city: d.city, country: d.country, image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=800&auto=format&fit=crop' };
+    const rooms = Math.ceil((adults + children) / 2);
+    const hotelRatePerNight = minStars === 5 ? 120 : minStars === 4 ? 70 : 40;
+    const hotelPrice = hotelRatePerNight * duration * rooms;
+    const totalPrice = hotelPrice; // Vuelo 0€
+    const pricePerAdult = Math.round(totalPrice / adults);
+
+    const targetUrl = `https://www.hotellook.com`;
+    const affiliateUrl = `https://tp.media/r?marker=${marker}&p=4114&u=${encodeURIComponent(targetUrl)}`;
+
+    return {
+      id: `car-deal-${i}-${d.code}`,
+      origin: 'BY_CAR',
+      originCityName: '🚗 En Coche / Coche Eléctrico',
+      destination: d.code,
+      destinationCityName: info.city,
+      destinationCountry: info.country,
+      adults,
+      children,
+      infants,
+      totalPassengers,
+      isByCar: true,
+      flightPricePerPerson: 0,
+      flightPriceTotal: 0,
+      hotelEstimatedPrice: hotelPrice,
+      totalPrice,
+      pricePerAdult,
+      departureDate: new Date(Date.now() + (i + 1) * 86400000 * 7).toISOString().slice(0, 10),
+      returnDate: new Date(Date.now() + ((i + 1) * 7 + duration) * 86400000).toISOString().slice(0, 10),
+      nights: duration,
+      hotelStars: minStars,
+      imageUrl: info.image,
+      affiliateUrl,
+      airline: 'Sin Vuelo (Viaje en Coche)',
+      transfers: 0,
+      hasEvChargerHotel: true
+    };
+  });
 }
 
 function generateFallbackDeals(query: EscapadaSearchQuery, marker: string): FlightDeal[] {
@@ -235,6 +309,7 @@ function generateFallbackDeals(query: EscapadaSearchQuery, marker: string): Flig
       children,
       infants,
       totalPassengers,
+      isByCar: false,
       flightPricePerPerson: d.price,
       flightPriceTotal,
       hotelEstimatedPrice: hotelPrice,
