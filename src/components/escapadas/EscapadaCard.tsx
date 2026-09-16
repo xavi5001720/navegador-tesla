@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import Image from 'next/image';
 import { FlightDeal } from '@/lib/travelpayouts';
 
 interface EscapadaCardProps {
@@ -34,8 +33,11 @@ export const EscapadaCard: React.FC<EscapadaCardProps> = ({ deal }) => {
         )}
 
         {/* Precio Destacado */}
-        <div className="absolute bottom-3 right-3 bg-red-600/90 backdrop-blur-md text-white px-3.5 py-1.5 rounded-xl font-extrabold text-lg shadow-lg">
-          {deal.totalPrice} € <span className="text-xs font-normal opacity-90">pack total</span>
+        <div className="absolute bottom-3 right-3 bg-red-600/90 backdrop-blur-md text-white px-3.5 py-1.5 rounded-xl font-extrabold text-lg shadow-lg text-right">
+          {deal.pricePerPerson} € <span className="text-xs font-normal opacity-90">/ persona</span>
+          <div className="text-[10px] font-medium opacity-80">
+            Total {deal.totalPrice} € ({deal.passengers} {deal.passengers === 1 ? 'viajero' : 'viajeros'})
+          </div>
         </div>
       </div>
 
@@ -53,9 +55,11 @@ export const EscapadaCard: React.FC<EscapadaCardProps> = ({ deal }) => {
             {/* Detalle Vuelo */}
             <div className="flex items-center justify-between p-2.5 bg-slate-800/50 rounded-xl border border-slate-800">
               <span className="flex items-center space-x-2 text-xs">
-                <span>✈️ Vuelo Ida y Vuelta</span>
+                <span>✈️ Vuelos ({deal.passengers} {deal.passengers === 1 ? 'persona' : 'personas'})</span>
               </span>
-              <span className="font-semibold text-white text-xs">{deal.flightPrice} €</span>
+              <span className="font-semibold text-white text-xs">
+                {deal.flightPriceTotal} € ({deal.flightPricePerPerson} €/pers)
+              </span>
             </div>
 
             {/* Detalle Hotel */}
@@ -75,7 +79,7 @@ export const EscapadaCard: React.FC<EscapadaCardProps> = ({ deal }) => {
           rel="noopener noreferrer"
           className="w-full py-3 bg-slate-800 hover:bg-red-600 text-slate-200 hover:text-white font-bold rounded-xl text-center text-sm transition-all duration-300 shadow-md flex items-center justify-center space-x-2 border border-slate-700 hover:border-red-500 mt-4"
         >
-          <span>👉 Ver Oferta y Reservar Pack</span>
+          <span>👉 Ver Oferta y Reservar Pack ({deal.totalPrice} €)</span>
         </a>
       </div>
     </div>

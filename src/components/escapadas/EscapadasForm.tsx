@@ -21,6 +21,7 @@ const AIRPORTS = [
 
 export const EscapadasForm: React.FC<EscapadasFormProps> = ({ onSearch, isLoading }) => {
   const [origin, setOrigin] = useState('MAD');
+  const [passengers, setPassengers] = useState(2);
   const [durationDays, setDurationDays] = useState(2);
   const [flexibility, setFlexibility] = useState<'weekend' | 'month' | 'dates'>('weekend');
   const [month, setMonth] = useState('2026-10');
@@ -31,6 +32,7 @@ export const EscapadasForm: React.FC<EscapadasFormProps> = ({ onSearch, isLoadin
     e.preventDefault();
     onSearch({
       origin,
+      passengers,
       durationDays,
       flexibility,
       month: flexibility === 'month' ? month : undefined,
@@ -44,11 +46,11 @@ export const EscapadasForm: React.FC<EscapadasFormProps> = ({ onSearch, isLoadin
       onSubmit={handleSubmit}
       className="bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6 text-white"
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {/* Aeropuerto Origen */}
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            ✈️ Origen (Provincia / Aeropuerto)
+            ✈️ Origen (Provincia)
           </label>
           <select
             value={origin}
@@ -63,19 +65,36 @@ export const EscapadasForm: React.FC<EscapadasFormProps> = ({ onSearch, isLoadin
           </select>
         </div>
 
+        {/* Nº de Pasajeros / Personas */}
+        <div className="space-y-2">
+          <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            👥 ¿Cuántos Viajan?
+          </label>
+          <select
+            value={passengers}
+            onChange={(e) => setPassengers(Number(e.target.value))}
+            className="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 transition-all cursor-pointer font-medium"
+          >
+            <option value={1}>1 Persona (Solo)</option>
+            <option value={2}>2 Personas (En Pareja)</option>
+            <option value={3}>3 Personas (Grupo)</option>
+            <option value={4}>4 Personas (Familia/Amigos)</option>
+          </select>
+        </div>
+
         {/* Duración */}
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            ⏳ Duración del Viaje
+            ⏳ Duración
           </label>
           <select
             value={durationDays}
             onChange={(e) => setDurationDays(Number(e.target.value))}
             className="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 transition-all cursor-pointer"
           >
-            <option value={2}>2 Días (Fin de Semana Corto)</option>
+            <option value={2}>2 Días (Fin de Semana)</option>
             <option value={3}>3 Días (Fin de Semana Largo)</option>
-            <option value={4}>4-5 Días (Escapada / Puente)</option>
+            <option value={4}>4-5 Días (Puente)</option>
             <option value={7}>7 Días (Semana Completa)</option>
           </select>
         </div>
@@ -90,7 +109,7 @@ export const EscapadasForm: React.FC<EscapadasFormProps> = ({ onSearch, isLoadin
             onChange={(e) => setFlexibility(e.target.value as any)}
             className="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 transition-all cursor-pointer"
           >
-            <option value="weekend">En Próximos Fines de Semana</option>
+            <option value="weekend">Próximos Fines de Semana</option>
             <option value="month">En un Mes Concreto</option>
           </select>
         </div>
@@ -98,14 +117,14 @@ export const EscapadasForm: React.FC<EscapadasFormProps> = ({ onSearch, isLoadin
         {/* Categoría de Hotel */}
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            🏨 Mínimo Estrellas Hotel
+            🏨 Mínimo Hotel
           </label>
           <select
             value={minStars}
             onChange={(e) => setMinStars(Number(e.target.value))}
             className="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 transition-all cursor-pointer"
           >
-            <option value={3}>3★ Estándar Confort</option>
+            <option value={3}>3★ Confort</option>
             <option value={4}>4★ Calidad Superior</option>
             <option value={5}>5★ Lujo & Premium</option>
           </select>
@@ -121,7 +140,7 @@ export const EscapadasForm: React.FC<EscapadasFormProps> = ({ onSearch, isLoadin
             onChange={(e) => setEvChargingOnly(e.target.checked)}
             className="w-4 h-4 rounded border-slate-700 text-red-600 focus:ring-red-500 bg-slate-800"
           />
-          <span>⚡ Solo hoteles recomendados con punto de carga Coche Eléctrico / Tesla</span>
+          <span>⚡ Prevalecer hoteles con punto de carga Coche Eléctrico / Tesla</span>
         </label>
 
         <button
@@ -135,11 +154,11 @@ export const EscapadasForm: React.FC<EscapadasFormProps> = ({ onSearch, isLoadin
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <span>Buscando mejores combinaciones...</span>
+              <span>Buscando chollos...</span>
             </>
           ) : (
             <>
-              <span>🔍 Buscar la Mejor Escapada Chollo</span>
+              <span>🔍 Buscar la Mejor Combinación</span>
             </>
           )}
         </button>

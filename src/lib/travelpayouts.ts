@@ -10,9 +10,12 @@ export interface FlightDeal {
   destination: string;
   destinationCityName: string;
   destinationCountry: string;
-  flightPrice: number;
+  passengers: number;
+  flightPricePerPerson: number;
+  flightPriceTotal: number;
   hotelEstimatedPrice: number;
-  totalPrice: number;
+  totalPrice: number; // Precio total del paquete para todos los viajeros
+  pricePerPerson: number; // Precio por persona (Paquete)
   departureDate: string;
   returnDate: string;
   nights: number;
@@ -26,6 +29,7 @@ export interface FlightDeal {
 
 export interface EscapadaSearchQuery {
   origin: string; // IATA code, e.g. 'MAD', 'BCN'
+  passengers: number; // 1, 2, 3, 4
   durationDays: number; // 2, 3, 4, 7
   flexibility: 'weekend' | 'month' | 'dates';
   month?: string; // e.g. '2026-10'
@@ -71,6 +75,7 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
   const marker = process.env.TRAVELPAYOUTS_MARKER || '778425';
 
   const origin = query.origin || 'MAD';
+  const passengers = Math.max(1, query.passengers || 2);
   const duration = query.durationDays || 2;
   const minStars = query.minStars || 3;
 
@@ -104,16 +109,20 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
         image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=800&auto=format&fit=crop'
       };
 
-      const flightPrice = Math.round(item.price || 45);
-      
+      const flightPricePerPerson = Math.round(item.price || 45);
+      const flightPriceTotal = flightPricePerPerson * passengers;
+
+      // Calcular precio de hotel según habitaciones necesarias (1 habitación por cada 2 personas)
+      const rooms = Math.ceil(passengers / 2);
       const hotelRatePerNight = minStars === 5 ? 130 : minStars === 4 ? 75 : 45;
-      const hotelPrice = hotelRatePerNight * duration;
-      const totalPrice = flightPrice + hotelPrice;
+      const hotelPrice = hotelRatePerNight * duration * rooms;
+      const totalPrice = flightPriceTotal + hotelPrice;
+      const pricePerPerson = Math.round(totalPrice / passengers);
 
       const depDateStr = item.departure_at ? item.departure_at.slice(0, 10) : new Date().toISOString().slice(0, 10);
       const retDateStr = item.return_at ? item.return_at.slice(0, 10) : new Date(Date.now() + duration * 86400000).toISOString().slice(0, 10);
 
-      const targetUrl = `https://www.aviasales.com/search/${origin}${depDateStr.replace(/-/g, '')}${destCode}${retDateStr.replace(/-/g, '')}1`;
+      const targetUrl = `https://www.aviasales.com/search/${origin}${depDateStr.replace(/-/g, '')}${destCode}${retDateStr.replace(/-/g, '')}${passengers}`;
       const affiliateUrl = `https://tp.media/r?marker=${marker}&p=4114&u=${encodeURIComponent(targetUrl)}`;
 
       return {
@@ -123,9 +132,12 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
         destination: destCode,
         destinationCityName: cityInfo.city,
         destinationCountry: cityInfo.country,
-        flightPrice,
+        passengers,
+        flightPricePerPerson,
+        flightPriceTotal,
         hotelEstimatedPrice: hotelPrice,
         totalPrice,
+        pricePerPerson,
         departureDate: depDateStr,
         returnDate: retDateStr,
         nights: duration,
@@ -154,6 +166,7 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
 
 function generateFallbackDeals(query: EscapadaSearchQuery, marker: string): FlightDeal[] {
   const origin = query.origin || 'MAD';
+  const passengers = Math.max(1, query.passengers || 2);
   const duration = query.durationDays || 2;
   const minStars = query.minStars || 3;
 
@@ -168,7 +181,12 @@ function generateFallbackDeals(query: EscapadaSearchQuery, marker: string): Flig
 
   return fallbackDestinations.map((d, i) => {
     const info = AIRPORTS_MAP[d.code] || { city: d.code, country: 'Europa', image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=800&auto=format&fit=crop' };
-    const hotelPrice = (minStars === 5 ? 120 : minStars === 4 ? 70 : 40) * duration;
+    const flightPriceTotal = d.price * passengers;
+    const rooms = Math.ceil(passengers / 2);
+    const hotelPrice = (minStars === 5 ? 120 : minStars === 4 ? 70 : 40) * duration * rooms;
+    const totalPrice = flightPriceTotal + hotelPrice;
+    const pricePerPerson = Math.round(totalPrice / passengers);
+
     const targetUrl = `https://www.aviasales.com`;
     const affiliateUrl = `https://tp.media/r?marker=${marker}&p=4114&u=${encodeURIComponent(targetUrl)}`;
 
@@ -179,9 +197,12 @@ function generateFallbackDeals(query: EscapadaSearchQuery, marker: string): Flig
       destination: d.code,
       destinationCityName: info.city,
       destinationCountry: info.country,
-      flightPrice: d.price,
+      passengers,
+      flightPricePerPerson: d.price,
+      flightPriceTotal,
       hotelEstimatedPrice: hotelPrice,
-      totalPrice: d.price + hotelPrice,
+      totalPrice,
+      pricePerPerson,
       departureDate: new Date(Date.now() + (i + 1) * 86400000 * 7).toISOString().slice(0, 10),
       returnDate: new Date(Date.now() + ((i + 1) * 7 + duration) * 86400000).toISOString().slice(0, 10),
       nights: duration,
