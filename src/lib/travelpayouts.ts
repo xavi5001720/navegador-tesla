@@ -149,8 +149,8 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
       const retDateStr = item.return_at ? item.return_at.slice(0, 10) : new Date(Date.now() + duration * 86400000).toISOString().slice(0, 10);
 
       const paxString = `${adults}${children > 0 ? `c${children}` : ''}${infants > 0 ? `i${infants}` : ''}`;
-      const targetUrl = `https://www.aviasales.com/search/${origin}${depDateStr.replace(/-/g, '')}${destCode}${retDateStr.replace(/-/g, '')}${paxString}`;
-      const affiliateUrl = `https://tp.media/r?marker=${marker}&p=4114&u=${encodeURIComponent(targetUrl)}`;
+      // Enlace directo oficial de Aviasales en español con marker de afiliado
+      const affiliateUrl = `https://www.aviasales.es/search/${origin}${depDateStr.replace(/-/g, '')}${destCode}${retDateStr.replace(/-/g, '')}${paxString}?marker=${marker}`;
 
       return {
         id: `deal-${idx}-${destCode}`,
@@ -228,8 +228,10 @@ function generateCarHotelDeals(query: EscapadaSearchQuery, marker: string): Flig
     const totalPrice = hotelPrice; // Vuelo 0€
     const pricePerAdult = Math.round(totalPrice / adults);
 
-    const targetUrl = `https://www.hotellook.com`;
-    const affiliateUrl = `https://tp.media/r?marker=${marker}&p=4114&u=${encodeURIComponent(targetUrl)}`;
+    const depDateStr = new Date(Date.now() + (i + 1) * 86400000 * 7).toISOString().slice(0, 10);
+    const retDateStr = new Date(Date.now() + ((i + 1) * 7 + duration) * 86400000).toISOString().slice(0, 10);
+
+    const affiliateUrl = `https://hotellook.tp.st/?marker=${marker}`;
 
     return {
       id: `car-deal-${i}-${d.code}`,
@@ -248,8 +250,8 @@ function generateCarHotelDeals(query: EscapadaSearchQuery, marker: string): Flig
       hotelEstimatedPrice: hotelPrice,
       totalPrice,
       pricePerAdult,
-      departureDate: new Date(Date.now() + (i + 1) * 86400000 * 7).toISOString().slice(0, 10),
-      returnDate: new Date(Date.now() + ((i + 1) * 7 + duration) * 86400000).toISOString().slice(0, 10),
+      departureDate: depDateStr,
+      returnDate: retDateStr,
       nights: duration,
       hotelStars: minStars,
       imageUrl: info.image,
@@ -295,8 +297,10 @@ function generateFallbackDeals(query: EscapadaSearchQuery, marker: string): Flig
     const totalPrice = flightPriceTotal + hotelPrice;
     const pricePerAdult = Math.round(totalPrice / adults);
 
-    const targetUrl = `https://www.aviasales.com`;
-    const affiliateUrl = `https://tp.media/r?marker=${marker}&p=4114&u=${encodeURIComponent(targetUrl)}`;
+    const depDateStr = new Date(Date.now() + (i + 1) * 86400000 * 7).toISOString().slice(0, 10);
+    const retDateStr = new Date(Date.now() + ((i + 1) * 7 + duration) * 86400000).toISOString().slice(0, 10);
+    const paxString = `${adults}${children > 0 ? `c${children}` : ''}${infants > 0 ? `i${infants}` : ''}`;
+    const affiliateUrl = `https://www.aviasales.es/search/${origin}${depDateStr.replace(/-/g, '')}${d.code}${retDateStr.replace(/-/g, '')}${paxString}?marker=${marker}`;
 
     return {
       id: `fallback-${i}-${d.code}`,
