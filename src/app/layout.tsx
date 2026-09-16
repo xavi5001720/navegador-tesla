@@ -113,26 +113,21 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        {/* Travelpayouts Verification Script */}
-        <script dangerouslySetInnerHTML={{ __html: `
-          (function () {
-              var script = document.createElement("script");
-              script.async = 1;
-              script.setAttribute("data-cmp-ab","2");
-              script.src = 'https://tpembars.com/NTc0NzIw.js?t=574720';
-              document.head.appendChild(script);
-          })();
-        `}} />
-        {/* Service Worker */}
-        <script dangerouslySetInnerHTML={{ __html: `
-          if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-              navigator.serviceWorker.register('/sw.js')
-                .then(function(reg) { console.log('SW registrado:', reg.scope); })
-                .catch(function(err) { console.log('SW error:', err); });
-            });
-          }
-        `}} />
+        {/* Travelpayouts Drive Script */}
+        <script
+          data-cmp-ab="2"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                  var script = document.createElement("script");
+                  script.async = 1;
+                  script.setAttribute("data-cmp-ab","2");
+                  script.src = 'https://tpembars.com/NTc0NzIw.js?t=574720';
+                  document.head.appendChild(script);
+              })();
+            `
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
