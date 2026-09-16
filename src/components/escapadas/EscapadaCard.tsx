@@ -8,18 +8,41 @@ interface EscapadaCardProps {
 }
 
 export const EscapadaCard: React.FC<EscapadaCardProps> = ({ deal }) => {
-  // Formateador de Fechas Bonito en Español (ej: 24 Oct - 26 Oct 2026)
+  const formatTravelersSummary = () => {
+    const parts = [];
+    if (deal.adults) parts.push(`${deal.adults} ${deal.adults === 1 ? 'Adulto' : 'Adultos'}`);
+    if (deal.children) parts.push(`${deal.children} ${deal.children === 1 ? 'Niño' : 'Niños'}`);
+    if (deal.infants) parts.push(`${deal.infants} ${deal.infants === 1 ? 'Bebé' : 'Bebés'}`);
+    return parts.join(', ');
+  };
+
+  // Formateador de Fechas Bonito en Español (ej: 24 Oct - 26 Oct 2026) con autocorrección si vienen invertidas
   const formatDateSpan = (depStr: string, retStr: string) => {
-    try {
-      const dep = new Date(depStr);
-      const ret = new Date(retStr);
-      const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-      const depFormatted = `${dep.getDate()} ${months[dep.getMonth()]}`;
-      const retFormatted = `${ret.getDate()} ${months[ret.getMonth()]}`;
-      return `${depFormatted} - ${retFormatted} (${dep.getFullYear()})`;
-    } catch {
-      return `${depStr} al ${retStr}`;
+    if (!depStr) return '';
+    const depParts = depStr.split('-');
+    const retParts = retStr ? retStr.split('-') : [];
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+    if (depParts.length === 3) {
+      const depYear = parseInt(depParts[0], 10);
+      const depMonthIndex = parseInt(depParts[1], 10) - 1;
+      const depDay = parseInt(depParts[2], 10);
+
+      const depDate = new Date(depYear, depMonthIndex, depDay);
+      let retDate = retParts.length === 3 ? new Date(parseInt(retParts[0], 10), parseInt(retParts[1], 10) - 1, parseInt(retParts[2], 10)) : null;
+
+      // Si la fecha de regreso viene al revés o es inválida, sumamos la duración de la estancia
+      if (!retDate || isNaN(retDate.getTime()) || retDate <= depDate) {
+        retDate = new Date(depDate.getTime() + deal.nights * 86400000);
+      }
+
+      const depMonthStr = months[depMonthIndex] || depParts[1];
+      const retMonthStr = months[retDate.getMonth()];
+      const retDayStr = retDate.getDate();
+
+      return `${depDay} ${depMonthStr} - ${retDayStr} ${retMonthStr} (${depYear})`;
     }
+    return `${depStr} al ${retStr}`;
   };
 
   // Construcción de la fórmula matemática de Vuelos (ej: "2 Adultos x 50€ + 2 Niños x 20€")
@@ -94,26 +117,26 @@ export const EscapadaCard: React.FC<EscapadaCardProps> = ({ deal }) => {
             )}
           </p>
 
-          {/* Caja con la Operación Matemática Explicita (Sin texto duplicado) */}
+          {/* Caja con la Operación Matemática Explicita */}
           <div className="mt-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800 space-y-2.5 text-xs">
             {/* Fila Vuelos */}
             {!deal.isByCar && (
-              <div className="flex items-center justify-between text-slate-300">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between text-slate-300 gap-1">
                 <span>
-                  ✈️ <strong>Vuelos:</strong> {renderFlightFormula()}
+                  ✈️ <strong>Vuelos Ida/Vuelta:</strong> {renderFlightFormula()}
                 </span>
-                <span className="font-extrabold text-white text-sm ml-2">
+                <span className="font-extrabold text-white text-sm">
                   = {deal.flightPriceTotal} €
                 </span>
               </div>
             )}
 
             {/* Fila Hotel */}
-            <div className="flex items-center justify-between text-slate-300">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-slate-300 gap-1">
               <span>
-                🏨 <strong>Hotel {deal.hotelStars}★:</strong> {deal.nights} {deal.nights === 1 ? 'noche' : 'noches'} x {hotelRatePerNight}€/noche
+                🏨 <strong>Hotel {deal.hotelStars}★ (para {formatTravelersSummary()}):</strong> {deal.nights} {deal.nights === 1 ? 'noche' : 'noches'} x {hotelRatePerNight}€/noche
               </span>
-              <span className="font-extrabold text-white text-sm ml-2">
+              <span className="font-extrabold text-white text-sm">
                 = {deal.hotelEstimatedPrice} €
               </span>
             </div>
@@ -178,5 +201,6 @@ export const EscapadaCard: React.FC<EscapadaCardProps> = ({ deal }) => {
     </div>
   );
 };
+
 
 
