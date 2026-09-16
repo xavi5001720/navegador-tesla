@@ -11,7 +11,10 @@ export default function EscapadasPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentQuery, setCurrentQuery] = useState<EscapadaSearchQuery>({
     origin: 'MAD',
-    passengers: 2,
+    destination: 'ANY',
+    adults: 2,
+    children: 0,
+    infants: 0,
     durationDays: 2,
     flexibility: 'weekend',
     minStars: 3,
@@ -24,7 +27,10 @@ export default function EscapadasPage() {
     try {
       const params = new URLSearchParams({
         origin: query.origin,
-        passengers: (query.passengers || 2).toString(),
+        destination: query.destination || 'ANY',
+        adults: (query.adults || 2).toString(),
+        children: (query.children || 0).toString(),
+        infants: (query.infants || 0).toString(),
         durationDays: query.durationDays.toString(),
         flexibility: query.flexibility,
         minStars: (query.minStars || 3).toString(),

@@ -8,6 +8,14 @@ interface EscapadaCardProps {
 }
 
 export const EscapadaCard: React.FC<EscapadaCardProps> = ({ deal }) => {
+  const formatTravelersSummary = () => {
+    const parts = [];
+    if (deal.adults) parts.push(`${deal.adults} ${deal.adults === 1 ? 'Adulto' : 'Adultos'}`);
+    if (deal.children) parts.push(`${deal.children} ${deal.children === 1 ? 'Niño' : 'Niños'}`);
+    if (deal.infants) parts.push(`${deal.infants} ${deal.infants === 1 ? 'Bebé' : 'Bebés'}`);
+    return parts.join(', ');
+  };
+
   return (
     <div className="group relative bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden hover:border-red-500/50 transition-all duration-300 shadow-xl hover:shadow-2xl hover:shadow-red-900/10 flex flex-col justify-between">
       {/* Imagen de Destino */}
@@ -34,9 +42,9 @@ export const EscapadaCard: React.FC<EscapadaCardProps> = ({ deal }) => {
 
         {/* Precio Destacado */}
         <div className="absolute bottom-3 right-3 bg-red-600/90 backdrop-blur-md text-white px-3.5 py-1.5 rounded-xl font-extrabold text-lg shadow-lg text-right">
-          {deal.pricePerPerson} € <span className="text-xs font-normal opacity-90">/ persona</span>
+          {deal.pricePerAdult} € <span className="text-xs font-normal opacity-90">/ adulto</span>
           <div className="text-[10px] font-medium opacity-80">
-            Total {deal.totalPrice} € ({deal.passengers} {deal.passengers === 1 ? 'viajero' : 'viajeros'})
+            Total {deal.totalPrice} € ({formatTravelersSummary()})
           </div>
         </div>
       </div>
@@ -55,10 +63,10 @@ export const EscapadaCard: React.FC<EscapadaCardProps> = ({ deal }) => {
             {/* Detalle Vuelo */}
             <div className="flex items-center justify-between p-2.5 bg-slate-800/50 rounded-xl border border-slate-800">
               <span className="flex items-center space-x-2 text-xs">
-                <span>✈️ Vuelos ({deal.passengers} {deal.passengers === 1 ? 'persona' : 'personas'})</span>
+                <span>✈️ Vuelos ({formatTravelersSummary()})</span>
               </span>
               <span className="font-semibold text-white text-xs">
-                {deal.flightPriceTotal} € ({deal.flightPricePerPerson} €/pers)
+                {deal.flightPriceTotal} €
               </span>
             </div>
 

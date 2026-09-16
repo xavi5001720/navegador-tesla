@@ -6,7 +6,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     const origin = searchParams.get('origin') || 'MAD';
-    const passengers = parseInt(searchParams.get('passengers') || '2', 10);
+    const destination = searchParams.get('destination') || 'ANY';
+    const adults = parseInt(searchParams.get('adults') || '2', 10);
+    const children = parseInt(searchParams.get('children') || '0', 10);
+    const infants = parseInt(searchParams.get('infants') || '0', 10);
+
     const durationDays = parseInt(searchParams.get('durationDays') || '2', 10);
     const flexibility = (searchParams.get('flexibility') || 'weekend') as EscapadaSearchQuery['flexibility'];
     const month = searchParams.get('month') || undefined;
@@ -15,7 +19,10 @@ export async function GET(request: NextRequest) {
 
     const query: EscapadaSearchQuery = {
       origin,
-      passengers,
+      destination,
+      adults,
+      children,
+      infants,
       durationDays,
       flexibility,
       month,

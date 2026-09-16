@@ -10,12 +10,14 @@ export interface FlightDeal {
   destination: string;
   destinationCityName: string;
   destinationCountry: string;
-  passengers: number;
-  flightPricePerPerson: number;
+  adults: number;
+  children: number;
+  infants: number;
+  totalPassengers: number;
   flightPriceTotal: number;
   hotelEstimatedPrice: number;
   totalPrice: number; // Precio total del paquete para todos los viajeros
-  pricePerPerson: number; // Precio por persona (Paquete)
+  pricePerAdult: number; // Precio estimado por adulto
   departureDate: string;
   returnDate: string;
   nights: number;
@@ -29,7 +31,10 @@ export interface FlightDeal {
 
 export interface EscapadaSearchQuery {
   origin: string; // IATA code, e.g. 'MAD', 'BCN'
-  passengers: number; // 1, 2, 3, 4
+  destination?: string; // IATA code, e.g. 'MIL', 'ANY'
+  adults: number; // 1 to 6
+  children: number; // 0 to 4
+  infants: number; // 0 to 2
   durationDays: number; // 2, 3, 4, 7
   flexibility: 'weekend' | 'month' | 'dates';
   month?: string; // e.g. '2026-10'
@@ -37,7 +42,7 @@ export interface EscapadaSearchQuery {
   evChargingOnly?: boolean;
 }
 
-const AIRPORTS_MAP: Record<string, { city: string; country: string; image: string }> = {
+export const AIRPORTS_MAP: Record<string, { city: string; country: string; image: string }> = {
   MIL: { city: 'Milán', country: 'Italia', image: 'https://images.unsplash.com/photo-1513581166391-887a96ddeafd?q=80&w=800&auto=format&fit=crop' },
   ROM: { city: 'Roma', country: 'Italia', image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?q=80&w=800&auto=format&fit=crop' },
   PAR: { city: 'París', country: 'Francia', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=800&auto=format&fit=crop' },
@@ -75,11 +80,19 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
   const marker = process.env.TRAVELPAYOUTS_MARKER || '778425';
 
   const origin = query.origin || 'MAD';
-  const passengers = Math.max(1, query.passengers || 2);
+  const selectedDest = query.destination && query.destination !== 'ANY' ? query.destination : undefined;
+  const adults = Math.max(1, query.adults || 2);
+  const children = Math.max(0, query.children || 0);
+  const infants = Math.max(0, query.infants || 0);
+  const totalPassengers = adults + children + infants;
+
   const duration = query.durationDays || 2;
   const minStars = query.minStars || 3;
 
-  const url = `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=${origin}&currency=eur&direct=true&limit=30&token=${token}`;
+  let url = `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=${origin}&currency=eur&direct=true&limit=35&token=${token}`;
+  if (selectedDest) {
+    url += `&destination=${selectedDest}`;
+  }
 
   try {
     const res = await fetch(url, {
@@ -95,7 +108,11 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
     }
 
     const data = await res.json();
-    const items = data.data || [];
+    let items = data.data || [];
+
+    if (selectedDest) {
+      items = items.filter((it: any) => it.destination === selectedDest);
+    }
 
     if (!items || items.length === 0) {
       return generateFallbackDeals(query, marker);
@@ -109,20 +126,23 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
         image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=800&auto=format&fit=crop'
       };
 
-      const flightPricePerPerson = Math.round(item.price || 45);
-      const flightPriceTotal = flightPricePerPerson * passengers;
+      const baseFlightPrice = Math.round(item.price || 45);
+      // Precio billetes por edades
+      const flightPriceTotal = Math.round(baseFlightPrice * adults + baseFlightPrice * 0.75 * children + baseFlightPrice * 0.15 * infants);
 
-      // Calcular precio de hotel según habitaciones necesarias (1 habitación por cada 2 personas)
-      const rooms = Math.ceil(passengers / 2);
-      const hotelRatePerNight = minStars === 5 ? 130 : minStars === 4 ? 75 : 45;
+      // Calcular precio de hotel según habitaciones necesarias
+      const rooms = Math.ceil((adults + children) / 2);
+      const hotelRatePerNight = minStars === 5 ? 135 : minStars === 4 ? 75 : 45;
       const hotelPrice = hotelRatePerNight * duration * rooms;
       const totalPrice = flightPriceTotal + hotelPrice;
-      const pricePerPerson = Math.round(totalPrice / passengers);
+      const pricePerAdult = Math.round(totalPrice / adults);
 
       const depDateStr = item.departure_at ? item.departure_at.slice(0, 10) : new Date().toISOString().slice(0, 10);
       const retDateStr = item.return_at ? item.return_at.slice(0, 10) : new Date(Date.now() + duration * 86400000).toISOString().slice(0, 10);
 
-      const targetUrl = `https://www.aviasales.com/search/${origin}${depDateStr.replace(/-/g, '')}${destCode}${retDateStr.replace(/-/g, '')}${passengers}`;
+      // Parámetros Aviasales pasajes: e.g. /search/MAD2210MIL24102c1i0 (adults, children, infants)
+      const paxString = `${adults}${children > 0 ? `c${children}` : ''}${infants > 0 ? `i${infants}` : ''}`;
+      const targetUrl = `https://www.aviasales.com/search/${origin}${depDateStr.replace(/-/g, '')}${destCode}${retDateStr.replace(/-/g, '')}${paxString}`;
       const affiliateUrl = `https://tp.media/r?marker=${marker}&p=4114&u=${encodeURIComponent(targetUrl)}`;
 
       return {
@@ -132,12 +152,15 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
         destination: destCode,
         destinationCityName: cityInfo.city,
         destinationCountry: cityInfo.country,
-        passengers,
-        flightPricePerPerson,
+        adults,
+        children,
+        infants,
+        totalPassengers,
+        flightPricePerPerson: baseFlightPrice,
         flightPriceTotal,
         hotelEstimatedPrice: hotelPrice,
         totalPrice,
-        pricePerPerson,
+        pricePerAdult,
         departureDate: depDateStr,
         returnDate: retDateStr,
         nights: duration,
@@ -166,11 +189,15 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
 
 function generateFallbackDeals(query: EscapadaSearchQuery, marker: string): FlightDeal[] {
   const origin = query.origin || 'MAD';
-  const passengers = Math.max(1, query.passengers || 2);
+  const selectedDest = query.destination && query.destination !== 'ANY' ? query.destination : undefined;
+  const adults = Math.max(1, query.adults || 2);
+  const children = Math.max(0, query.children || 0);
+  const infants = Math.max(0, query.infants || 0);
+  const totalPassengers = adults + children + infants;
   const duration = query.durationDays || 2;
   const minStars = query.minStars || 3;
 
-  const fallbackDestinations = [
+  let fallbackDestinations = [
     { code: 'MIL', price: 29 },
     { code: 'OPO', price: 34 },
     { code: 'PMI', price: 38 },
@@ -179,13 +206,20 @@ function generateFallbackDeals(query: EscapadaSearchQuery, marker: string): Flig
     { code: 'LIS', price: 52 },
   ];
 
+  if (selectedDest) {
+    fallbackDestinations = fallbackDestinations.filter(d => d.code === selectedDest);
+    if (fallbackDestinations.length === 0) {
+      fallbackDestinations = [{ code: selectedDest, price: 45 }];
+    }
+  }
+
   return fallbackDestinations.map((d, i) => {
     const info = AIRPORTS_MAP[d.code] || { city: d.code, country: 'Europa', image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=800&auto=format&fit=crop' };
-    const flightPriceTotal = d.price * passengers;
-    const rooms = Math.ceil(passengers / 2);
+    const flightPriceTotal = Math.round(d.price * adults + d.price * 0.75 * children + d.price * 0.15 * infants);
+    const rooms = Math.ceil((adults + children) / 2);
     const hotelPrice = (minStars === 5 ? 120 : minStars === 4 ? 70 : 40) * duration * rooms;
     const totalPrice = flightPriceTotal + hotelPrice;
-    const pricePerPerson = Math.round(totalPrice / passengers);
+    const pricePerAdult = Math.round(totalPrice / adults);
 
     const targetUrl = `https://www.aviasales.com`;
     const affiliateUrl = `https://tp.media/r?marker=${marker}&p=4114&u=${encodeURIComponent(targetUrl)}`;
@@ -197,12 +231,15 @@ function generateFallbackDeals(query: EscapadaSearchQuery, marker: string): Flig
       destination: d.code,
       destinationCityName: info.city,
       destinationCountry: info.country,
-      passengers,
+      adults,
+      children,
+      infants,
+      totalPassengers,
       flightPricePerPerson: d.price,
       flightPriceTotal,
       hotelEstimatedPrice: hotelPrice,
       totalPrice,
-      pricePerPerson,
+      pricePerAdult,
       departureDate: new Date(Date.now() + (i + 1) * 86400000 * 7).toISOString().slice(0, 10),
       returnDate: new Date(Date.now() + ((i + 1) * 7 + duration) * 86400000).toISOString().slice(0, 10),
       nights: duration,
