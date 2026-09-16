@@ -231,7 +231,8 @@ function generateCarHotelDeals(query: EscapadaSearchQuery, marker: string): Flig
     const depDateStr = new Date(Date.now() + (i + 1) * 86400000 * 7).toISOString().slice(0, 10);
     const retDateStr = new Date(Date.now() + ((i + 1) * 7 + duration) * 86400000).toISOString().slice(0, 10);
 
-    const affiliateUrl = `https://hotellook.tp.st/?marker=${marker}`;
+    // Enlace oficial directo de búsqueda de hoteles en español con parámetros de fecha, ciudad y marker
+    const affiliateUrl = `https://www.aviasales.es/hotels?destination=${encodeURIComponent(info.city)}&checkIn=${depDateStr}&checkOut=${retDateStr}&adults=${adults}&marker=${marker}`;
 
     return {
       id: `car-deal-${i}-${d.code}`,
