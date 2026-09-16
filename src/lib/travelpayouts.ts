@@ -157,8 +157,14 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
       const totalPrice = flightPriceTotal + hotelPrice;
       const pricePerAdult = Math.round(totalPrice / adults);
 
-      const depDateStr = item.departure_at ? item.departure_at.slice(0, 10) : new Date().toISOString().slice(0, 10);
-      const retDateStr = item.return_at ? item.return_at.slice(0, 10) : new Date(Date.now() + duration * 86400000).toISOString().slice(0, 10);
+      let depDateObj = item.departure_at ? new Date(item.departure_at) : new Date(Date.now() + (idx + 1) * 7 * 86400000);
+      if (isNaN(depDateObj.getTime()) || depDateObj.getTime() < Date.now()) {
+        depDateObj = new Date(Date.now() + (idx + 1) * 7 * 86400000);
+      }
+      const retDateObj = new Date(depDateObj.getTime() + duration * 86400000);
+
+      const depDateStr = depDateObj.toISOString().slice(0, 10);
+      const retDateStr = retDateObj.toISOString().slice(0, 10);
 
       const flightAffiliateUrl = buildSkyscannerUrl(origin, destCode, depDateStr, retDateStr, adults);
       const hotelAffiliateUrl = buildBookingUrl(cityInfo.city, depDateStr, retDateStr, adults, marker);
