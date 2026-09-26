@@ -78,6 +78,7 @@ export async function GET(req: NextRequest) {
   const origin = (searchParams.get('origin') || 'MAD').toUpperCase();
   const destination = (searchParams.get('destination') || 'ANY').toUpperCase();
   const departureAt = searchParams.get('departureAt') || '';
+  const departureEndAt = searchParams.get('departureEndAt') || departureAt;
   const returnAt = searchParams.get('returnAt') || null;
   const adults = Math.max(1, parseInt(searchParams.get('adults') || '2', 10));
   const children = Math.max(0, parseInt(searchParams.get('children') || '0', 10));
@@ -88,13 +89,14 @@ export async function GET(req: NextRequest) {
 
   const effectiveReturnAt = isOneWay ? null : returnAt;
 
-  // Build API URL
+  // Build API URL — Aviasales works per-month; use departure month of the start date
   const anyDest = !destination || destination === 'ANY';
 
   let apiUrl = `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=${origin}&currency=eur&limit=30&direct=false&token=${TOKEN}`;
   if (!anyDest) apiUrl += `&destination=${destination}`;
   if (departureAt) apiUrl += `&departure_at=${departureAt.slice(0, 7)}`; // YYYY-MM
   if (effectiveReturnAt) apiUrl += `&return_at=${effectiveReturnAt.slice(0, 7)}`;
+
 
   try {
     const res = await fetch(apiUrl, {
@@ -117,18 +119,44 @@ export async function GET(req: NextRequest) {
       if (!byDest[dc] || item.price < byDest[dc].price) byDest[dc] = item;
     }
 
-    // Filter by trip duration range (when both departure_at and return_at are known)
+    const depWindowStart = departureAt ? new Date(departureAt) : null;
+    const depWindowEnd   = departureEndAt ? new Date(departureEndAt) : depWindowStart;
+
+    // Filter by: (1) departure date inside the user's travel window, AND (2) trip duration in range
     const filtered = Object.values(byDest).filter((item) => {
-      if (isOneWay) return true;
       const dep = item.departure_at ? new Date(item.departure_at) : null;
-      const ret = item.return_at ? new Date(item.return_at) : null;
-      if (!dep || !ret) return true; // keep if we can't determine duration
-      const days = Math.round((ret.getTime() - dep.getTime()) / 86400000);
-      return days >= durationMin && days <= durationMax;
+      const ret = item.return_at   ? new Date(item.return_at)    : null;
+
+      // Check departure window
+      const inWindow = !dep || !depWindowStart || !depWindowEnd
+        ? true
+        : dep >= depWindowStart && dep <= depWindowEnd;
+
+      // Check duration range
+      const inDuration = isOneWay || !dep || !ret
+        ? true
+        : (() => {
+            const days = Math.round((ret.getTime() - dep.getTime()) / 86400000);
+            return days >= durationMin && days <= durationMax;
+          })();
+
+      return inWindow && inDuration;
     });
 
-    // If the filter is too strict and leaves nothing, fall back to all results
-    const pool = filtered.length > 0 ? filtered : Object.values(byDest);
+    // Graceful fallbacks: relax progressively if too strict
+    const pool =
+      filtered.length > 0
+        ? filtered
+        : Object.values(byDest).filter((item) => {
+            // Only duration filter
+            if (isOneWay) return true;
+            const dep = item.departure_at ? new Date(item.departure_at) : null;
+            const ret = item.return_at ? new Date(item.return_at) : null;
+            if (!dep || !ret) return true;
+            const days = Math.round((ret.getTime() - dep.getTime()) / 86400000);
+            return days >= durationMin && days <= durationMax;
+          }).concat(Object.values(byDest)).slice(0, 20); // last resort: all
+
 
     const midDays = Math.round((durationMin + durationMax) / 2);
 

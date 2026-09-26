@@ -57,9 +57,10 @@ export interface VuelosQuery {
   infants: number;
   oneWay: boolean;
   dateMode: 'exact' | 'flexible';
-  flexDeparture: string;     // fecha aproximada de salida
-  flexDurationMin: number;   // mínimo de días que quieres estar
-  flexDurationMax: number;   // máximo de días que quieres estar
+  flexDeparture: string;      // primer día en que puedes salir
+  flexDepartureEnd: string;   // último día en que puedes salir
+  flexDurationMin: number;    // mínimo de días que quieres estar
+  flexDurationMax: number;    // máximo de días que quieres estar
 }
 
 interface Props {
@@ -79,8 +80,9 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
   const [departureAt, setDepartureAt] = useState(defDep);
   const [returnAt, setReturnAt] = useState(defRet);
 
-  // Flexible dates: solo necesitamos la fecha de salida y cuántos días
+  // Flexible dates: ventana de disponibilidad + rango de duración
   const [flexDeparture, setFlexDeparture] = useState(defDep);
+  const [flexDepartureEnd, setFlexDepartureEnd] = useState(defRet);
   const [flexDurationMin, setFlexDurationMin] = useState(3);
   const [flexDurationMax, setFlexDurationMax] = useState(7);
 
@@ -91,7 +93,7 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // En modo flexible usamos el punto medio del rango como fecha de vuelta orientativa
+    // En modo flexible usamos el punto medio del rango de días como fecha de vuelta orientativa
     const flexReturnAt = (() => {
       if (oneWay) return '';
       const midDays = Math.round((flexDurationMin + flexDurationMax) / 2);
@@ -110,6 +112,7 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
       oneWay,
       dateMode,
       flexDeparture,
+      flexDepartureEnd,
       flexDurationMin,
       flexDurationMax,
     });
@@ -264,16 +267,35 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
           </div>
         ) : (
           <div className="space-y-3">
-            {/* Fecha aproximada de salida */}
+            {/* Ventana de disponibilidad: desde / hasta */}
             <div>
-              <label className="block text-xs text-slate-600 mb-1">¿A partir de cuándo puedes salir?</label>
-              <input
-                type="date"
-                value={flexDeparture}
-                onChange={(e) => setFlexDeparture(e.target.value)}
-                min={new Date().toISOString().slice(0, 10)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 transition-colors"
-              />
+              <label className="block text-xs text-slate-600 mb-1.5">📆 ¿En qué fechas puedes viajar?</label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-[10px] text-slate-500 mb-1">Desde (salida más pronto)</p>
+                  <input
+                    type="date"
+                    value={flexDeparture}
+                    onChange={(e) => {
+                      setFlexDeparture(e.target.value);
+                      // Si el fin queda antes que el inicio, lo adelantamos
+                      if (flexDepartureEnd < e.target.value) setFlexDepartureEnd(e.target.value);
+                    }}
+                    min={new Date().toISOString().slice(0, 10)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 transition-colors"
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-500 mb-1">Hasta (salida más tarde)</p>
+                  <input
+                    type="date"
+                    value={flexDepartureEnd}
+                    onChange={(e) => setFlexDepartureEnd(e.target.value)}
+                    min={flexDeparture}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 transition-colors"
+                  />
+                </div>
+              </div>
             </div>
             {/* Duración rango min/max */}
             {!oneWay && (
@@ -338,7 +360,7 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
               </div>
             )}
             <p className="text-[11px] text-slate-600">
-              Buscaremos los mejores precios dentro de tu rango de días preferido
+              Buscaremos el mejor precio saliendo entre esas fechas y quedándote entre {flexDurationMin} y {flexDurationMax} días
             </p>
           </div>
         )}

@@ -38,6 +38,7 @@ const DEFAULT_QUERY: VuelosQuery = {
   oneWay: false,
   dateMode: 'flexible',
   flexDeparture: defDep,
+  flexDepartureEnd: defRet,
   flexDurationMin: 3,
   flexDurationMax: 7,
 };
@@ -57,6 +58,7 @@ export default function VuelosPage() {
         origin: q.origin,
         destination: q.destination || 'ANY',
         departureAt: q.departureAt,
+        departureEndAt: q.flexDepartureEnd || q.departureAt,
         returnAt: q.oneWay ? '' : q.returnAt,
         adults: String(q.adults),
         children: String(q.children),
