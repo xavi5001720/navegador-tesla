@@ -85,8 +85,9 @@ export default function VuelosPage() {
         oneWay: q.oneWay ? 'true' : 'false',
         durationMin: String(q.flexDurationMin ?? 1),
         durationMax: String(q.flexDurationMax ?? 30),
+        _t: String(Date.now()),
       });
-      const res = await fetch(`/api/vuelos/search?${params.toString()}`);
+      const res = await fetch(`/api/vuelos/search?${params.toString()}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.success && data.results) {
         setResults(data.results);
