@@ -287,13 +287,6 @@ export async function GET(req: NextRequest) {
       throw new Error('No results');
     }
 
-    // Aggregate by destination (take cheapest per dest)
-    const byDest: Record<string, any> = {};
-    for (const item of items) {
-      const dc = item.destination;
-      if (!byDest[dc] || item.price < byDest[dc].price) byDest[dc] = item;
-    }
-
     const depWindowStart = departureAt ? new Date(`${departureAt}T00:00:00`) : null;
     const depWindowEnd   = departureEndAt
       ? new Date(`${departureEndAt}T23:59:59.999`)
@@ -301,8 +294,8 @@ export async function GET(req: NextRequest) {
       ? new Date(`${departureAt}T23:59:59.999`)
       : null;
 
-    // Filter by: (1) departure date inside the user's travel window, AND (2) trip duration in range
-    const filtered = Object.values(byDest).filter((item) => {
+    // STEP 1: Filter raw items by travel window and trip duration FIRST (before destination grouping)
+    const validItems = items.filter((item) => {
       const dep = item.departure_at ? new Date(item.departure_at) : null;
       const ret = item.return_at   ? new Date(item.return_at)    : null;
 
@@ -322,18 +315,19 @@ export async function GET(req: NextRequest) {
       return inWindow && inDuration;
     });
 
-    // If user specified a departure date constraint, DO NOT relax the departure window!
-    const hasDepConstraint = Boolean(departureAt);
-    const candidatePool = hasDepConstraint ? filtered : (filtered.length > 0 ? filtered : Object.values(byDest));
+    const candidatePool = hasDepConstraint
+      ? validItems
+      : (validItems.length > 0 ? validItems : items);
 
-    // Deduplicate by destination code to guarantee unique cards
-    const uniquePoolMap: Record<string, any> = {};
+    // STEP 2: Aggregate by destination (take cheapest VALID deal per destination)
+    const byDest: Record<string, any> = {};
     for (const item of candidatePool) {
-      if (!uniquePoolMap[item.destination]) {
-        uniquePoolMap[item.destination] = item;
+      const dc = item.destination;
+      if (!byDest[dc] || item.price < byDest[dc].price) {
+        byDest[dc] = item;
       }
     }
-    const pool = Object.values(uniquePoolMap);
+    const pool = Object.values(byDest);
 
     const results = pool
       .map((item) => {
