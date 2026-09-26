@@ -324,15 +324,31 @@ export async function GET(req: NextRequest) {
       ? validItems
       : (validItems.length > 0 ? validItems : items);
 
-    // STEP 2: Aggregate by destination (take cheapest VALID deal per destination)
-    const byDest: Record<string, any> = {};
-    for (const item of candidatePool) {
-      const dc = item.destination;
-      if (!byDest[dc] || item.price < byDest[dc].price) {
-        byDest[dc] = item;
+    // STEP 2: Pool candidate deals.
+    // If searching ANY destination, aggregate by destination (1 best deal per city).
+    // If searching a specific destination (e.g. MIL), return top deals for that destination across different dates/airports.
+    let pool: any[] = [];
+    if (anyDest) {
+      const byDest: Record<string, any> = {};
+      for (const item of candidatePool) {
+        const dc = item.destination;
+        if (!byDest[dc] || item.price < byDest[dc].price) {
+          byDest[dc] = item;
+        }
       }
+      pool = Object.values(byDest);
+    } else {
+      const byDateKey: Record<string, any> = {};
+      for (const item of candidatePool) {
+        const depStr = item.departure_at ? item.departure_at.slice(0, 10) : '';
+        const retStr = item.return_at ? item.return_at.slice(0, 10) : '';
+        const key = `${item.destination}-${item.destination_airport || ''}-${depStr}-${retStr}`;
+        if (!byDateKey[key] || item.price < byDateKey[key].price) {
+          byDateKey[key] = item;
+        }
+      }
+      pool = Object.values(byDateKey);
     }
-    const pool = Object.values(byDest);
 
     const results = pool
       .map((item) => {
