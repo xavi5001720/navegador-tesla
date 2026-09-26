@@ -269,10 +269,18 @@ export async function GET(req: NextRequest) {
 
     const data = await res.json();
     const rawItems: any[] = data.data || [];
-    // Strictly filter items to ensure origin matches requested origin (prevents Aviasales from injecting deals from other airports like MAD)
     const items = rawItems.filter((item) => !item.origin || item.origin.toUpperCase() === origin);
+    const hasDepConstraint = Boolean(departureAt);
 
-    if (items.length === 0) throw new Error('No results');
+    if (items.length === 0) {
+      if (hasDepConstraint) {
+        return NextResponse.json(
+          { success: true, results: [], source: 'api' },
+          { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
+        );
+      }
+      throw new Error('No results');
+    }
 
     // Aggregate by destination (take cheapest per dest)
     const byDest: Record<string, any> = {};
