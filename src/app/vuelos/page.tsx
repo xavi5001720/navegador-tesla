@@ -59,6 +59,7 @@ export default function VuelosPage() {
         durationMax: String(q.flexDurationMax ?? 30),
         includeHotel: q.includeHotel ? 'true' : 'false',
         hotelStars: String(q.hotelStars || 3),
+        hotelFilters: (q.hotelFilters || []).join(','),
         _t: String(Date.now()),
       });
       const res = await fetch(`/api/vuelos/search?${params.toString()}`, { cache: 'no-store' });

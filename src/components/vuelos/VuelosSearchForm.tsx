@@ -284,7 +284,66 @@ export interface VuelosQuery {
   flexDurationMax?: number;
   includeHotel?: boolean;
   hotelStars?: number;
+  hotelFilters?: string[];
 }
+
+export interface HotelFilterItem {
+  id: string;
+  label: string;
+  nfltParam: string;
+  icon: string;
+}
+
+export interface HotelFilterCategory {
+  title: string;
+  icon: string;
+  items: HotelFilterItem[];
+}
+
+export const HOTEL_FILTER_CATEGORIES: HotelFilterCategory[] = [
+  {
+    title: 'Comidas',
+    icon: '🍽️',
+    items: [
+      { id: 'breakfast', label: 'Desayuno incluido', nfltParam: 'mealplan=1', icon: '🥐' },
+      { id: 'half_board', label: 'Desayuno y cena incluidos', nfltParam: 'mealplan=2', icon: '🍽️' },
+      { id: 'all_inclusive', label: 'Todas las comidas (Todo incluido)', nfltParam: 'mealplan=4', icon: '🍹' },
+      { id: 'kitchen', label: 'Con cocina', nfltParam: 'room_facility=11', icon: '🍳' },
+    ],
+  },
+  {
+    title: 'Instalaciones y Servicios',
+    icon: '⚡',
+    items: [
+      { id: 'ev_charger', label: 'Estación de carga de vehículos eléctricos', nfltParam: 'hotelfacility=210', icon: '⚡' },
+      { id: 'pool', label: 'Piscina', nfltParam: 'hotelfacility=43', icon: '🏊' },
+      { id: 'beachfront', label: 'Situado frente a la playa', nfltParam: 'hotelfacility=107', icon: '🏖️' },
+      { id: 'parking', label: 'Parking', nfltParam: 'hotelfacility=2', icon: '🅿️' },
+      { id: 'wifi', label: 'WiFi gratis', nfltParam: 'inet=1', icon: '📶' },
+      { id: 'spa', label: 'Spa y centro de bienestar', nfltParam: 'hotelfacility=54', icon: '🧘' },
+      { id: 'jacuzzi', label: 'Bañera de hidromasaje', nfltParam: 'hotelfacility=29', icon: '🛁' },
+      { id: 'gym', label: 'Gimnasio', nfltParam: 'hotelfacility=11', icon: '🏋️' },
+      { id: 'restaurant', label: 'Restaurante', nfltParam: 'hotelfacility=3', icon: '🍷' },
+      { id: 'shuttle', label: 'Traslado aeropuerto', nfltParam: 'hotelfacility=17', icon: '🚐' },
+      { id: 'smoke_free', label: 'Habitaciones sin humo', nfltParam: 'hotelfacility=16', icon: '🚭' },
+      { id: 'reception_24h', label: 'Recepción 24 horas', nfltParam: 'hotelfacility=12', icon: '🛎️' },
+      { id: 'accessible', label: 'Adaptado para sillas de ruedas', nfltParam: 'hotelfacility=25', icon: '♿' },
+      { id: 'room_service', label: 'Servicio de habitaciones', nfltParam: 'hotelfacility=14', icon: '🛎️' },
+    ],
+  },
+  {
+    title: 'Tipo de alojamiento',
+    icon: '🏠',
+    items: [
+      { id: 'hotels', label: 'Hoteles', nfltParam: 'ht_id=204', icon: '🏨' },
+      { id: 'apartments', label: 'Apartamentos', nfltParam: 'ht_id=201', icon: '🏢' },
+      { id: 'villas', label: 'Villas', nfltParam: 'ht_id=213', icon: '🏡' },
+      { id: 'houses', label: 'Casas y chalets', nfltParam: 'ht_id=220', icon: '🏠' },
+      { id: 'rural', label: 'Casas rurales / Agroturismos', nfltParam: 'ht_id=222', icon: '🌿' },
+      { id: 'family', label: 'Alojamientos ideales para familias', nfltParam: 'privacy_type=3', icon: '👨‍👩‍👧‍👦' },
+    ],
+  },
+];
 
 interface Props {
   onSearch: (q: VuelosQuery) => void;
@@ -317,10 +376,19 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
   // Hotel (Booking.com)
   const [includeHotel, setIncludeHotel] = useState(false);
   const [hotelStars, setHotelStars] = useState(3);
+  const [selectedHotelFilters, setSelectedHotelFilters] = useState<string[]>([]);
+  const [showHotelFilters, setShowHotelFilters] = useState(true);
+
+  const toggleHotelFilter = (nfltParam: string) => {
+    if (selectedHotelFilters.includes(nfltParam)) {
+      setSelectedHotelFilters(selectedHotelFilters.filter((p) => p !== nfltParam));
+    } else {
+      setSelectedHotelFilters([...selectedHotelFilters, nfltParam]);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // En modo flexible usamos el punto medio del rango de días como fecha de vuelta orientativa
     const flexReturnAt = (() => {
       if (oneWay) return '';
       const midDays = Math.round((flexDurationMin + flexDurationMax) / 2);
@@ -344,6 +412,7 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
       flexDurationMax,
       includeHotel,
       hotelStars,
+      hotelFilters: selectedHotelFilters,
     });
   };
 
@@ -634,19 +703,83 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
         </div>
 
         {includeHotel && (
-          <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between flex-wrap gap-2">
-            <span className="text-xs text-slate-300 font-semibold">Estrellas mínimas del hotel:</span>
-            <div className="flex bg-slate-900 border border-slate-800 rounded-xl overflow-hidden text-xs font-bold">
-              {[3, 4, 5].map((stars) => (
+          <div className="pt-3 border-t border-slate-800/80 space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <span className="text-xs text-slate-300 font-semibold">Estrellas mínimas del hotel:</span>
+              <div className="flex bg-slate-900 border border-slate-800 rounded-xl overflow-hidden text-xs font-bold">
+                {[3, 4, 5].map((stars) => (
+                  <button
+                    key={stars}
+                    type="button"
+                    onClick={() => setHotelStars(stars)}
+                    className={`px-3 py-1.5 transition-colors ${hotelStars === stars ? 'bg-sky-600 text-white font-black' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    {'⭐'.repeat(stars)} ({stars}★)
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Expandable Advanced Hotel Filters */}
+            <div className="border border-slate-800/80 bg-slate-950/90 rounded-xl p-3.5 space-y-3">
+              <div className="flex items-center justify-between">
                 <button
-                  key={stars}
                   type="button"
-                  onClick={() => setHotelStars(stars)}
-                  className={`px-3 py-1.5 transition-colors ${hotelStars === stars ? 'bg-sky-600 text-white font-black' : 'text-slate-400 hover:text-white'}`}
+                  onClick={() => setShowHotelFilters(!showHotelFilters)}
+                  className="flex items-center space-x-2 text-xs font-bold text-sky-400 hover:text-sky-300 transition-colors"
                 >
-                  {'⭐'.repeat(stars)} ({stars}★)
+                  <span>⚙️ Filtros avanzados de Hotel en Booking.com</span>
+                  {selectedHotelFilters.length > 0 && (
+                    <span className="bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[10px] px-2 py-0.5 rounded-full font-extrabold">
+                      {selectedHotelFilters.length} activos
+                    </span>
+                  )}
+                  <span className="text-slate-500 text-[11px] ml-1">{showHotelFilters ? '▲ Ocultar' : '▼ Ver opciones'}</span>
                 </button>
-              ))}
+                {selectedHotelFilters.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedHotelFilters([])}
+                    className="text-[11px] text-red-400 hover:text-red-300 font-semibold underline"
+                  >
+                    Limpiar todos
+                  </button>
+                )}
+              </div>
+
+              {showHotelFilters && (
+                <div className="space-y-4 pt-3 border-t border-slate-800/80">
+                  {HOTEL_FILTER_CATEGORIES.map((cat) => (
+                    <div key={cat.title} className="space-y-2">
+                      <div className="flex items-center space-x-1.5 text-xs font-bold text-slate-300">
+                        <span>{cat.icon}</span>
+                        <span>{cat.title}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {cat.items.map((item) => {
+                          const isSelected = selectedHotelFilters.includes(item.nfltParam);
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => toggleHotelFilter(item.nfltParam)}
+                              className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center space-x-1.5 transition-all ${
+                                isSelected
+                                  ? 'bg-emerald-950/90 border border-emerald-500 text-emerald-300 font-bold shadow-sm shadow-emerald-950/50'
+                                  : 'bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800/80'
+                              }`}
+                            >
+                              <span>{item.icon}</span>
+                              <span>{item.label}</span>
+                              {isSelected && <span className="text-emerald-400 text-xs font-black ml-1">✓</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

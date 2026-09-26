@@ -96,6 +96,7 @@ export function buildBookingUrl(
   children: number = 0,
   rooms: number = 1,
   stars: number = 3,
+  extraFilters: string[] = [],
   marker: string = '778425'
 ): string {
   let bookingTarget = `https://www.booking.com/searchresults.es.html?ss=${encodeURIComponent(cityName)}&checkin=${depDateStr}&checkout=${retDateStr}&group_adults=${adults}`;
@@ -108,9 +109,22 @@ export function buildBookingUrl(
   if (rooms > 1) {
     bookingTarget += `&no_rooms=${rooms}`;
   }
+
+  const nfltParts: string[] = [];
   if (stars >= 3 && stars <= 5) {
-    bookingTarget += `&nflt=class%3D${stars}%3B`;
+    nfltParts.push(`class=${stars}`);
   }
+  if (extraFilters && extraFilters.length > 0) {
+    extraFilters.forEach((f) => {
+      if (f && !nfltParts.includes(f)) {
+        nfltParts.push(f);
+      }
+    });
+  }
+  if (nfltParts.length > 0) {
+    bookingTarget += `&nflt=${encodeURIComponent(nfltParts.join(';') + ';')}`;
+  }
+
   return `https://tp.media/r?marker=${marker}&p=4115&u=${encodeURIComponent(bookingTarget)}`;
 }
 
