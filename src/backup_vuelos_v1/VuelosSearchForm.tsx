@@ -278,12 +278,10 @@ export interface VuelosQuery {
   infants: number;
   oneWay: boolean;
   dateMode: 'exact' | 'flexible';
-  flexDeparture?: string;
-  flexDepartureEnd?: string;
-  flexDurationMin?: number;
-  flexDurationMax?: number;
-  includeHotel?: boolean;
-  hotelStars?: number;
+  flexDeparture: string;      // primer día en que puedes salir
+  flexDepartureEnd: string;   // último día en que puedes salir
+  flexDurationMin: number;    // mínimo de días que quieres estar
+  flexDurationMax: number;    // máximo de días que quieres estar
 }
 
 interface Props {
@@ -314,10 +312,6 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
   const [children, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
 
-  // Hotel (Booking.com)
-  const [includeHotel, setIncludeHotel] = useState(false);
-  const [hotelStars, setHotelStars] = useState(3);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // En modo flexible usamos el punto medio del rango de días como fecha de vuelta orientativa
@@ -342,8 +336,6 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
       flexDepartureEnd,
       flexDurationMin,
       flexDurationMax,
-      includeHotel,
-      hotelStars,
     });
   };
 
@@ -614,63 +606,21 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
         </p>
       </div>
 
-      {/* Row 5: Alojamiento / Hotel (Booking.com) */}
-      <div className="bg-slate-950/60 rounded-xl border border-slate-800 p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2.5">
-            <span className="text-xl">🏨</span>
-            <div>
-              <label className="text-xs font-bold text-white uppercase tracking-wide">¿Incluir Hotel? (Booking.com)</label>
-              <p className="text-[11px] text-slate-400">Calcula y suma el precio del hotel más barato a cada vuelo</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIncludeHotel(!includeHotel)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${includeHotel ? 'bg-sky-500' : 'bg-slate-800'}`}
-          >
-            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${includeHotel ? 'translate-x-6' : 'translate-x-1'}`} />
-          </button>
-        </div>
-
-        {includeHotel && (
-          <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between flex-wrap gap-2">
-            <span className="text-xs text-slate-300 font-semibold">Estrellas mínimas del hotel:</span>
-            <div className="flex bg-slate-900 border border-slate-800 rounded-xl overflow-hidden text-xs font-bold">
-              {[3, 4, 5].map((stars) => (
-                <button
-                  key={stars}
-                  type="button"
-                  onClick={() => setHotelStars(stars)}
-                  className={`px-3 py-1.5 transition-colors ${hotelStars === stars ? 'bg-sky-600 text-white font-black' : 'text-slate-400 hover:text-white'}`}
-                >
-                  {'⭐'.repeat(stars)} ({stars}★)
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* Submit */}
       <button
         type="submit"
         disabled={isLoading}
-        className={`w-full py-3.5 text-white font-black rounded-xl text-sm transition-all duration-300 shadow-lg flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed ${
-          includeHotel
-            ? 'bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-500 hover:to-emerald-500 shadow-sky-600/25'
-            : 'bg-red-600 hover:bg-red-500 shadow-red-600/25'
-        }`}
+        className="w-full py-3.5 bg-red-600 hover:bg-red-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-black rounded-xl text-sm transition-all duration-300 shadow-lg hover:shadow-red-600/25 flex items-center justify-center space-x-2"
       >
         {isLoading ? (
           <>
             <span className="animate-spin text-lg">⟳</span>
-            <span>{includeHotel ? 'Buscando Paquetes Vuelo + Hotel...' : 'Buscando vuelos baratos...'}</span>
+            <span>Buscando vuelos baratos...</span>
           </>
         ) : (
           <>
             <span>🔍</span>
-            <span>{includeHotel ? 'Buscar Vuelo + Hotel más barato' : 'Buscar vuelos más baratos'}</span>
+            <span>Buscar vuelos más baratos</span>
           </>
         )}
       </button>

@@ -57,8 +57,6 @@ export default function VuelosPage() {
         oneWay: q.oneWay ? 'true' : 'false',
         durationMin: String(q.flexDurationMin ?? 1),
         durationMax: String(q.flexDurationMax ?? 30),
-        includeHotel: q.includeHotel ? 'true' : 'false',
-        hotelStars: String(q.hotelStars || 3),
         _t: String(Date.now()),
       });
       const res = await fetch(`/api/vuelos/search?${params.toString()}`, { cache: 'no-store' });
@@ -81,7 +79,7 @@ export default function VuelosPage() {
 
   const originName = getAirportCityName(lastQuery.origin);
   const isAnyDest = !lastQuery.destination || lastQuery.destination === 'ANY';
-  const cheapestPrice = results.length > 0 ? (lastQuery.includeHotel ? (results[0].totalPackagePrice ?? results[0].totalPrice) : results[0].totalPrice) : null;
+  const cheapestPrice = results.length > 0 ? results[0].totalPrice : null;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-sky-500 selection:text-white">
@@ -147,11 +145,10 @@ export default function VuelosPage() {
               )}
             </h2>
             <p className="text-xs text-slate-500 mt-1">
-              {lastQuery.includeHotel ? 'Ordenado por precio total de paquete (Vuelo + Hotel)' : 'Ordenado por precio total de vuelos'} · {lastQuery.oneWay ? 'Solo Ida' : 'Ida y Vuelta'} ·{' '}
+              Ordenado por precio total · {lastQuery.oneWay ? 'Solo Ida' : 'Ida y Vuelta'} ·{' '}
               {lastQuery.adults + lastQuery.children + lastQuery.infants} viajero{lastQuery.adults + lastQuery.children + lastQuery.infants !== 1 ? 's' : ''}
-              {lastQuery.includeHotel && ` · Hotel ${lastQuery.hotelStars}★ (Booking.com)`}
               {source === 'fallback' && (
-                <span className="ml-2 text-amber-500">· Precios orientativos</span>
+                <span className="ml-2 text-amber-500">· Precios orientativos (abre Skyscanner para precio exacto)</span>
               )}
             </p>
           </div>
@@ -160,7 +157,7 @@ export default function VuelosPage() {
             <div className="text-right">
               <div className="text-xs text-slate-500">Desde</div>
               <div className="text-2xl font-black text-sky-400">{cheapestPrice} €</div>
-              <div className="text-[10px] text-slate-500">{lastQuery.includeHotel ? 'Vuelo + Hotel' : 'precio total'}</div>
+              <div className="text-[10px] text-slate-500">precio total</div>
             </div>
           )}
         </div>

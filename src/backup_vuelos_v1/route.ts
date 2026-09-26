@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAirportInfo } from '@/lib/airports';
-import { buildBookingUrl } from '@/lib/travelpayouts';
 
 const TOKEN = process.env.TRAVELPAYOUTS_TOKEN || '596d62e5f9f6d2f1574865feeb424c75';
 const MARKER = process.env.TRAVELPAYOUTS_MARKER || '778425';
@@ -245,8 +244,6 @@ export async function GET(req: NextRequest) {
   const children = Math.max(0, parseInt(searchParams.get('children') || '0', 10));
   const infants = Math.max(0, parseInt(searchParams.get('infants') || '0', 10));
   const isOneWay = searchParams.get('oneWay') === 'true';
-  const includeHotel = searchParams.get('includeHotel') === 'true';
-  const hotelStars = Math.max(3, Math.min(5, parseInt(searchParams.get('hotelStars') || '3', 10)));
   const durationMin = Math.max(1, parseInt(searchParams.get('durationMin') || '1', 10));
   const durationMax = Math.max(durationMin, parseInt(searchParams.get('durationMax') || '30', 10));
   const midDays = Math.round((durationMin + durationMax) / 2);
@@ -372,29 +369,6 @@ export async function GET(req: NextRequest) {
         })();
         const skyscannerUrl = buildSkyscannerUrl(origin, destCode, depDateStr, retDateStr, adults, children, infants);
 
-        // Calculate hotel package if requested
-        let hotelNights = 0;
-        let hotelRooms = 0;
-        let hotelEstimatedPrice = 0;
-        let hotelBookingUrl = '';
-        let totalPackagePrice = totalPrice;
-
-        if (includeHotel) {
-          if (retDateStr && depDateStr) {
-            const depTime = new Date(depDateStr).getTime();
-            const retTime = new Date(retDateStr).getTime();
-            hotelNights = Math.max(1, Math.round((retTime - depTime) / 86400000));
-          } else {
-            hotelNights = 2; // Default 2 nights
-          }
-
-          hotelRooms = Math.ceil((adults + children) / 2);
-          const ratePerNight = hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45;
-          hotelEstimatedPrice = ratePerNight * hotelNights * hotelRooms;
-          totalPackagePrice = totalPrice + hotelEstimatedPrice;
-          hotelBookingUrl = buildBookingUrl(cityInfo.city, depDateStr, retDateStr || depDateStr, adults, MARKER);
-        }
-
         return {
           id: `${origin}-${destCode}-${depDateStr}`,
           origin,
@@ -412,16 +386,9 @@ export async function GET(req: NextRequest) {
           transfers: item.transfers ?? null,
           skyscannerUrl,
           marker: MARKER,
-          includeHotel,
-          hotelStars: includeHotel ? hotelStars : undefined,
-          hotelNights: includeHotel ? hotelNights : undefined,
-          hotelRooms: includeHotel ? hotelRooms : undefined,
-          hotelEstimatedPrice: includeHotel ? hotelEstimatedPrice : undefined,
-          hotelBookingUrl: includeHotel ? hotelBookingUrl : undefined,
-          totalPackagePrice: includeHotel ? totalPackagePrice : totalPrice,
         };
       })
-      .sort((a, b) => (a.totalPackagePrice ?? a.totalPrice) - (b.totalPackagePrice ?? b.totalPrice))
+      .sort((a, b) => a.totalPrice - b.totalPrice)
       .slice(0, 20);
 
     return NextResponse.json(
@@ -451,28 +418,6 @@ export async function GET(req: NextRequest) {
 
       const skyscannerUrl = buildSkyscannerUrl(origin, d.code, depDateStr, retDateStr, adults, children, infants);
 
-      let hotelNights = 0;
-      let hotelRooms = 0;
-      let hotelEstimatedPrice = 0;
-      let hotelBookingUrl = '';
-      let totalPackagePrice = totalPrice;
-
-      if (includeHotel) {
-        if (retDateStr && depDateStr) {
-          const depTime = new Date(depDateStr).getTime();
-          const retTime = new Date(retDateStr).getTime();
-          hotelNights = Math.max(1, Math.round((retTime - depTime) / 86400000));
-        } else {
-          hotelNights = 2;
-        }
-
-        hotelRooms = Math.ceil((adults + children) / 2);
-        const ratePerNight = hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45;
-        hotelEstimatedPrice = ratePerNight * hotelNights * hotelRooms;
-        totalPackagePrice = totalPrice + hotelEstimatedPrice;
-        hotelBookingUrl = buildBookingUrl(d.city, depDateStr, retDateStr || depDateStr, adults, MARKER);
-      }
-
       return {
         id: `fallback-${origin}-${d.code}-${i}`,
         origin,
@@ -490,18 +435,11 @@ export async function GET(req: NextRequest) {
         transfers: null,
         skyscannerUrl,
         marker: MARKER,
-        includeHotel,
-        hotelStars: includeHotel ? hotelStars : undefined,
-        hotelNights: includeHotel ? hotelNights : undefined,
-        hotelRooms: includeHotel ? hotelRooms : undefined,
-        hotelEstimatedPrice: includeHotel ? hotelEstimatedPrice : undefined,
-        hotelBookingUrl: includeHotel ? hotelBookingUrl : undefined,
-        totalPackagePrice: includeHotel ? totalPackagePrice : totalPrice,
       };
     });
 
     return NextResponse.json(
-      { success: true, results: results.sort((a, b) => (a.totalPackagePrice ?? a.totalPrice) - (b.totalPackagePrice ?? b.totalPrice)), source: 'fallback' },
+      { success: true, results: results.sort((a, b) => a.totalPrice - b.totalPrice), source: 'fallback' },
       { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
     );
   }
