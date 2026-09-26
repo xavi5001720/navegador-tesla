@@ -99,13 +99,27 @@ export function buildBookingUrl(
   extraFilters: string[] = [],
   marker: string = '778425'
 ): string {
-  let bookingTarget = `https://www.booking.com/searchresults.es.html?ss=${encodeURIComponent(cityName)}&checkin=${depDateStr}&checkout=${retDateStr}&group_adults=${adults}`;
+  // Booking.com no permite buscar disponibilidad a mas de 330 dias en el futuro
+  const now = new Date();
+  const maxBookingDate = new Date(now.getTime() + 330 * 86400000);
+  const depDate = depDateStr ? new Date(depDateStr) : null;
+  const isValidDateRange = depDate && depDate <= maxBookingDate;
+
+  let bookingTarget = `https://www.booking.com/searchresults.es.html?ss=${encodeURIComponent(cityName)}`;
+
+  if (isValidDateRange && depDateStr && retDateStr) {
+    bookingTarget += `&checkin=${depDateStr}&checkout=${retDateStr}`;
+  }
+
+  bookingTarget += `&group_adults=${adults}`;
+
   if (children > 0) {
     bookingTarget += `&group_children=${children}`;
     for (let i = 0; i < children; i++) {
       bookingTarget += `&age=5`;
     }
   }
+
   if (rooms > 1) {
     bookingTarget += `&no_rooms=${rooms}`;
   }
@@ -122,7 +136,8 @@ export function buildBookingUrl(
     });
   }
   if (nfltParts.length > 0) {
-    bookingTarget += `&nflt=${encodeURIComponent(nfltParts.join(';') + ';')}`;
+    // No usar encodeURIComponent aqui porque ya se codifica la URL completa al final para tp.media
+    bookingTarget += `&nflt=${nfltParts.join(';')};`;
   }
 
   return `https://tp.media/r?marker=${marker}&p=4115&u=${encodeURIComponent(bookingTarget)}`;
