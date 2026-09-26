@@ -133,9 +133,14 @@ export function buildBookingUrl(
   bookingTarget += `&order=price`;
 
   const nfltParts: string[] = [];
-  if (stars >= 3 && stars <= 5) {
-    nfltParts.push(`class=${stars}`);
+  if (stars === 3) {
+    nfltParts.push('class=3', 'class=4', 'class=5');
+  } else if (stars === 4) {
+    nfltParts.push('class=4', 'class=5');
+  } else if (stars === 5) {
+    nfltParts.push('class=5');
   }
+
   if (extraFilters && extraFilters.length > 0) {
     extraFilters.forEach((f) => {
       if (f && !nfltParts.includes(f)) {
@@ -143,9 +148,18 @@ export function buildBookingUrl(
       }
     });
   }
+
   if (nfltParts.length > 0) {
-    // No usar encodeURIComponent aqui porque ya se codifica la URL completa al final para tp.media
-    bookingTarget += `&nflt=${nfltParts.join(';')};`;
+    // Booking.com requiere el valor de nflt con formato key%3Dvalue%3B (ej. class%3D4%3Bclass%3D5%3B)
+    const formattedFilters = nfltParts
+      .map((item) => {
+        if (item.includes('%3D')) return item.endsWith('%3B') ? item : `${item}%3B`;
+        const [k, v] = item.split('=');
+        return `${k}%3D${v}%3B`;
+      })
+      .join('');
+
+    bookingTarget += `&nflt=${formattedFilters}`;
   }
 
   return `https://tp.media/r?marker=${marker}&p=4115&u=${encodeURIComponent(bookingTarget)}`;
