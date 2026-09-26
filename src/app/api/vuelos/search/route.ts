@@ -377,6 +377,7 @@ export async function GET(req: NextRequest) {
         // Calculate hotel package if requested
         let hotelNights = 0;
         let hotelRooms = 0;
+        let hotelRatePerNight = 0;
         let hotelEstimatedPrice = 0;
         let hotelBookingUrl = '';
         let totalPackagePrice = totalPrice;
@@ -393,8 +394,8 @@ export async function GET(req: NextRequest) {
           hotelRooms = Math.max(1, Math.ceil(adults / 2));
           const baseRatePerNight = hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45;
           const familyMultiplier = children > 0 ? (1 + children * 0.35) : 1;
-          const ratePerNight = Math.round(baseRatePerNight * familyMultiplier);
-          hotelEstimatedPrice = ratePerNight * hotelNights * hotelRooms;
+          hotelRatePerNight = Math.round(baseRatePerNight * familyMultiplier);
+          hotelEstimatedPrice = hotelRatePerNight * hotelNights * hotelRooms;
           totalPackagePrice = totalPrice + hotelEstimatedPrice;
           hotelBookingUrl = buildBookingUrl(cityInfo.city, depDateStr, retDateStr || depDateStr, adults, children, hotelRooms, hotelStars, hotelFilters, MARKER);
         }
@@ -421,7 +422,7 @@ export async function GET(req: NextRequest) {
           hotelName: includeHotel ? getHotelName(destCode, cityInfo.city, hotelStars) : undefined,
           hotelNights: includeHotel ? hotelNights : undefined,
           hotelRooms: includeHotel ? hotelRooms : undefined,
-          hotelRatePerNight: includeHotel ? ratePerNight : undefined,
+          hotelRatePerNight: includeHotel ? hotelRatePerNight : undefined,
           hotelEstimatedPrice: includeHotel ? hotelEstimatedPrice : undefined,
           hotelBookingUrl: includeHotel ? hotelBookingUrl : undefined,
           totalPackagePrice: includeHotel ? totalPackagePrice : totalPrice,
@@ -434,7 +435,8 @@ export async function GET(req: NextRequest) {
       { success: true, results, source: 'api' },
       { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
     );
-  } catch {
+  } catch (err) {
+    console.error('Error in search route, using fallback deals:', err);
     // Fallback: generate estimated results
     const destsToShow = anyDest
       ? DESTINATIONS_FALLBACK
@@ -451,7 +453,7 @@ export async function GET(req: NextRequest) {
       const depDateStr = departureAt || new Date(baseMs).toISOString().slice(0, 10);
       const retDateStr = isOneWay
         ? null
-        : effectiveReturnAt && effectiveReturnAt > depDateStr
+        : effectiveReturnAt && effectiveReturnAt >= depDateStr
         ? effectiveReturnAt
         : new Date(new Date(depDateStr).getTime() + midDays * 86400000).toISOString().slice(0, 10);
 
@@ -459,6 +461,7 @@ export async function GET(req: NextRequest) {
 
       let hotelNights = 0;
       let hotelRooms = 0;
+      let hotelRatePerNight = 0;
       let hotelEstimatedPrice = 0;
       let hotelBookingUrl = '';
       let totalPackagePrice = totalPrice;
@@ -475,8 +478,8 @@ export async function GET(req: NextRequest) {
         hotelRooms = Math.max(1, Math.ceil(adults / 2));
         const baseRatePerNight = hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45;
         const familyMultiplier = children > 0 ? (1 + children * 0.35) : 1;
-        const ratePerNight = Math.round(baseRatePerNight * familyMultiplier);
-        hotelEstimatedPrice = ratePerNight * hotelNights * hotelRooms;
+        hotelRatePerNight = Math.round(baseRatePerNight * familyMultiplier);
+        hotelEstimatedPrice = hotelRatePerNight * hotelNights * hotelRooms;
         totalPackagePrice = totalPrice + hotelEstimatedPrice;
         hotelBookingUrl = buildBookingUrl(d.city, depDateStr, retDateStr || depDateStr, adults, children, hotelRooms, hotelStars, hotelFilters, MARKER);
       }
@@ -503,7 +506,7 @@ export async function GET(req: NextRequest) {
         hotelName: includeHotel ? getHotelName(d.code, d.city, hotelStars) : undefined,
         hotelNights: includeHotel ? hotelNights : undefined,
         hotelRooms: includeHotel ? hotelRooms : undefined,
-        hotelRatePerNight: includeHotel ? ratePerNight : undefined,
+        hotelRatePerNight: includeHotel ? hotelRatePerNight : undefined,
         hotelEstimatedPrice: includeHotel ? hotelEstimatedPrice : undefined,
         hotelBookingUrl: includeHotel ? hotelBookingUrl : undefined,
         totalPackagePrice: includeHotel ? totalPackagePrice : totalPrice,
