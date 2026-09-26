@@ -281,8 +281,12 @@ export async function GET(req: NextRequest) {
       if (!byDest[dc] || item.price < byDest[dc].price) byDest[dc] = item;
     }
 
-    const depWindowStart = departureAt ? new Date(departureAt) : null;
-    const depWindowEnd   = departureEndAt ? new Date(departureEndAt) : depWindowStart;
+    const depWindowStart = departureAt ? new Date(`${departureAt}T00:00:00`) : null;
+    const depWindowEnd   = departureEndAt
+      ? new Date(`${departureEndAt}T23:59:59.999`)
+      : departureAt
+      ? new Date(`${departureAt}T23:59:59.999`)
+      : null;
 
     // Filter by: (1) departure date inside the user's travel window, AND (2) trip duration in range
     const filtered = Object.values(byDest).filter((item) => {
@@ -305,21 +309,9 @@ export async function GET(req: NextRequest) {
       return inWindow && inDuration;
     });
 
-    // Graceful fallbacks: relax progressively if too strict, without duplicating items
-    const durationOnly = Object.values(byDest).filter((item) => {
-      if (isOneWay) return true;
-      const dep = item.departure_at ? new Date(item.departure_at) : null;
-      const ret = item.return_at ? new Date(item.return_at) : null;
-      if (!dep || !ret) return true;
-      const days = Math.round((ret.getTime() - dep.getTime()) / 86400000);
-      return days >= durationMin && days <= durationMax;
-    });
-
-    const candidatePool = filtered.length > 0
-      ? filtered
-      : durationOnly.length > 0
-      ? durationOnly
-      : Object.values(byDest);
+    // If user specified a departure date constraint, DO NOT relax the departure window!
+    const hasDepConstraint = Boolean(departureAt);
+    const candidatePool = hasDepConstraint ? filtered : (filtered.length > 0 ? filtered : Object.values(byDest));
 
     // Deduplicate by destination code to guarantee unique cards
     const uniquePoolMap: Record<string, any> = {};
