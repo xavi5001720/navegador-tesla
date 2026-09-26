@@ -284,13 +284,7 @@ export async function GET(req: NextRequest) {
     const hasDepConstraint = Boolean(departureAt);
 
     if (items.length === 0) {
-      if (hasDepConstraint) {
-        return NextResponse.json(
-          { success: true, results: [], source: 'api' },
-          { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
-        );
-      }
-      throw new Error('No results');
+      throw new Error('No results from API');
     }
 
     const depWindowStart = departureAt ? new Date(`${departureAt}T00:00:00`) : null;
@@ -314,8 +308,8 @@ export async function GET(req: NextRequest) {
         ? true
         : dep >= depWindowStart && dep <= depWindowEnd;
 
-      // Check duration range
-      const inDuration = isOneWay || !dep || !ret
+      // Check duration range (si hay fechas exactas de ida y vuelta, se permite la duracion exacta)
+      const inDuration = isOneWay || !dep || !ret || (departureAt && returnAt)
         ? true
         : (() => {
             const days = Math.round((ret.getTime() - dep.getTime()) / 86400000);
@@ -325,9 +319,11 @@ export async function GET(req: NextRequest) {
       return inWindow && inDuration;
     });
 
-    const candidatePool = hasDepConstraint
-      ? validItems
-      : (validItems.length > 0 ? validItems : items);
+    const candidatePool = validItems.length > 0 ? validItems : items;
+
+    if (candidatePool.length === 0) {
+      throw new Error('No candidate items in pool');
+    }
 
     // STEP 2: Pool candidate deals.
     // If searching ANY destination, aggregate by destination (1 best deal per city).
