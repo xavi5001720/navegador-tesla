@@ -227,7 +227,9 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
       const flightPriceTotal = Math.round(baseFlightPrice * adults + baseFlightPrice * 0.75 * children + baseFlightPrice * 0.15 * infants);
 
       const rooms = Math.max(1, Math.ceil(adults / 2));
-      const hotelRatePerNight = minStars === 5 ? 135 : minStars === 4 ? 75 : 45;
+      const baseRatePerNight = minStars === 5 ? 135 : minStars === 4 ? 75 : 45;
+      const familyMultiplier = children > 0 ? (1 + children * 0.35) : 1;
+      const hotelRatePerNight = Math.round(baseRatePerNight * familyMultiplier);
       const hotelPrice = hotelRatePerNight * duration * rooms;
       const totalPrice = flightPriceTotal + hotelPrice;
       const pricePerAdult = Math.round(totalPrice / adults);

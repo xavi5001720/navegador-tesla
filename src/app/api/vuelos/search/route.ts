@@ -391,7 +391,9 @@ export async function GET(req: NextRequest) {
           }
 
           hotelRooms = Math.max(1, Math.ceil(adults / 2));
-          const ratePerNight = hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45;
+          const baseRatePerNight = hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45;
+          const familyMultiplier = children > 0 ? (1 + children * 0.35) : 1;
+          const ratePerNight = Math.round(baseRatePerNight * familyMultiplier);
           hotelEstimatedPrice = ratePerNight * hotelNights * hotelRooms;
           totalPackagePrice = totalPrice + hotelEstimatedPrice;
           hotelBookingUrl = buildBookingUrl(cityInfo.city, depDateStr, retDateStr || depDateStr, adults, children, hotelRooms, hotelStars, hotelFilters, MARKER);
@@ -419,7 +421,7 @@ export async function GET(req: NextRequest) {
           hotelName: includeHotel ? getHotelName(destCode, cityInfo.city, hotelStars) : undefined,
           hotelNights: includeHotel ? hotelNights : undefined,
           hotelRooms: includeHotel ? hotelRooms : undefined,
-          hotelRatePerNight: includeHotel ? (hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45) : undefined,
+          hotelRatePerNight: includeHotel ? ratePerNight : undefined,
           hotelEstimatedPrice: includeHotel ? hotelEstimatedPrice : undefined,
           hotelBookingUrl: includeHotel ? hotelBookingUrl : undefined,
           totalPackagePrice: includeHotel ? totalPackagePrice : totalPrice,
@@ -471,7 +473,9 @@ export async function GET(req: NextRequest) {
         }
 
         hotelRooms = Math.max(1, Math.ceil(adults / 2));
-        const ratePerNight = hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45;
+        const baseRatePerNight = hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45;
+        const familyMultiplier = children > 0 ? (1 + children * 0.35) : 1;
+        const ratePerNight = Math.round(baseRatePerNight * familyMultiplier);
         hotelEstimatedPrice = ratePerNight * hotelNights * hotelRooms;
         totalPackagePrice = totalPrice + hotelEstimatedPrice;
         hotelBookingUrl = buildBookingUrl(d.city, depDateStr, retDateStr || depDateStr, adults, children, hotelRooms, hotelStars, hotelFilters, MARKER);
@@ -499,7 +503,7 @@ export async function GET(req: NextRequest) {
         hotelName: includeHotel ? getHotelName(d.code, d.city, hotelStars) : undefined,
         hotelNights: includeHotel ? hotelNights : undefined,
         hotelRooms: includeHotel ? hotelRooms : undefined,
-        hotelRatePerNight: includeHotel ? (hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45) : undefined,
+        hotelRatePerNight: includeHotel ? ratePerNight : undefined,
         hotelEstimatedPrice: includeHotel ? hotelEstimatedPrice : undefined,
         hotelBookingUrl: includeHotel ? hotelBookingUrl : undefined,
         totalPackagePrice: includeHotel ? totalPackagePrice : totalPrice,
