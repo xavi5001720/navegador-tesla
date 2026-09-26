@@ -65,6 +65,10 @@ const AIRPORT_NAMES: Record<string, string> = {
   GRX: 'Granada',
   MJV: 'Murcia',
   XRY: 'Jerez',
+  REU: 'Reus',
+  GRO: 'Girona',
+  MAH: 'Menorca',
+  SPC: 'La Palma',
   // Italia
   MIL: 'Milán',
   ROM: 'Roma',

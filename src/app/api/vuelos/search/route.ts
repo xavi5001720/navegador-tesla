@@ -212,8 +212,13 @@ function buildSkyscannerUrl(
   const dep = depDate.replace(/-/g, '').slice(2);
   const base = `https://www.skyscanner.es/transport/vuelos/${origin.toLowerCase()}/${dest.toLowerCase()}/${dep}`;
   const params = new URLSearchParams({ adultsv2: String(adults) });
-  if (children > 0) params.append('childrenv2', String(children));
-  if (infants > 0) params.append('infantsv2', String(infants));
+  if (children > 0) {
+    // Skyscanner expects childrenv2 with child ages separated by | (e.g. 5|5 for 2 children)
+    params.append('childrenv2', Array(children).fill('5').join('|'));
+  }
+  if (infants > 0) {
+    params.append('infantsv2', String(infants));
+  }
   if (retDate) {
     const ret = retDate.replace(/-/g, '').slice(2);
     return `${base}/${ret}/?${params.toString()}`;
@@ -238,6 +243,7 @@ export async function GET(req: NextRequest) {
   const isOneWay = searchParams.get('oneWay') === 'true';
   const durationMin = Math.max(1, parseInt(searchParams.get('durationMin') || '1', 10));
   const durationMax = Math.max(durationMin, parseInt(searchParams.get('durationMax') || '30', 10));
+  const midDays = Math.round((durationMin + durationMax) / 2);
 
   const effectiveReturnAt = isOneWay ? null : returnAt;
 
@@ -308,9 +314,6 @@ export async function GET(req: NextRequest) {
             const days = Math.round((ret.getTime() - dep.getTime()) / 86400000);
             return days >= durationMin && days <= durationMax;
           }).concat(Object.values(byDest)).slice(0, 20); // last resort: all
-
-
-    const midDays = Math.round((durationMin + durationMax) / 2);
 
     const results = pool
       .map((item) => {
