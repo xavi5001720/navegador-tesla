@@ -305,19 +305,30 @@ export async function GET(req: NextRequest) {
       return inWindow && inDuration;
     });
 
-    // Graceful fallbacks: relax progressively if too strict
-    const pool =
-      filtered.length > 0
-        ? filtered
-        : Object.values(byDest).filter((item) => {
-            // Only duration filter
-            if (isOneWay) return true;
-            const dep = item.departure_at ? new Date(item.departure_at) : null;
-            const ret = item.return_at ? new Date(item.return_at) : null;
-            if (!dep || !ret) return true;
-            const days = Math.round((ret.getTime() - dep.getTime()) / 86400000);
-            return days >= durationMin && days <= durationMax;
-          }).concat(Object.values(byDest)).slice(0, 20); // last resort: all
+    // Graceful fallbacks: relax progressively if too strict, without duplicating items
+    const durationOnly = Object.values(byDest).filter((item) => {
+      if (isOneWay) return true;
+      const dep = item.departure_at ? new Date(item.departure_at) : null;
+      const ret = item.return_at ? new Date(item.return_at) : null;
+      if (!dep || !ret) return true;
+      const days = Math.round((ret.getTime() - dep.getTime()) / 86400000);
+      return days >= durationMin && days <= durationMax;
+    });
+
+    const candidatePool = filtered.length > 0
+      ? filtered
+      : durationOnly.length > 0
+      ? durationOnly
+      : Object.values(byDest);
+
+    // Deduplicate by destination code to guarantee unique cards
+    const uniquePoolMap: Record<string, any> = {};
+    for (const item of candidatePool) {
+      if (!uniquePoolMap[item.destination]) {
+        uniquePoolMap[item.destination] = item;
+      }
+    }
+    const pool = Object.values(uniquePoolMap);
 
     const results = pool
       .map((item) => {
