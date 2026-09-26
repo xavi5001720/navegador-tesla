@@ -4,35 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import VuelosSearchForm, { VuelosQuery } from '@/components/vuelos/VuelosSearchForm';
 import VueloCard, { VueloResult } from '@/components/vuelos/VueloCard';
-
-const ORIGIN_NAMES: Record<string, string> = {
-  MAD: 'Madrid',
-  BCN: 'Barcelona',
-  VLC: 'Valencia',
-  AGP: 'Málaga',
-  SVQ: 'Sevilla',
-  BIO: 'Bilbao',
-  ALC: 'Alicante',
-  SCQ: 'Santiago',
-  PMI: 'Palma de Mallorca',
-  TFS: 'Tenerife Sur',
-  TFN: 'Tenerife Norte',
-  LPA: 'Gran Canaria',
-  ACE: 'Lanzarote',
-  FUE: 'Fuerteventura',
-  IBZ: 'Ibiza',
-  SDR: 'Santander',
-  VGO: 'Vigo',
-  OVD: 'Asturias',
-  ZAZ: 'Zaragoza',
-  GRX: 'Granada',
-  MJV: 'Murcia',
-  XRY: 'Jerez',
-  REU: 'Reus',
-  GRO: 'Girona',
-  MAH: 'Menorca',
-  SPC: 'La Palma',
-};
+import { getAirportCityName } from '@/lib/airports';
 
 function nextWeekendDates(): { dep: string; ret: string } {
   const now = new Date();
@@ -105,7 +77,7 @@ export default function VuelosPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const originName = ORIGIN_NAMES[lastQuery.origin] || lastQuery.origin;
+  const originName = getAirportCityName(lastQuery.origin);
   const isAnyDest = !lastQuery.destination || lastQuery.destination === 'ANY';
   const cheapestPrice = results.length > 0 ? results[0].totalPrice : null;
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAirportInfo } from '@/lib/airports';
 
 const TOKEN = process.env.TRAVELPAYOUTS_TOKEN || '596d62e5f9f6d2f1574865feeb424c75';
 const MARKER = process.env.TRAVELPAYOUTS_MARKER || '778425';
@@ -332,7 +333,7 @@ export async function GET(req: NextRequest) {
     const results = pool
       .map((item) => {
         const destCode = item.destination;
-        const cityInfo = CITY_MAP[destCode] || { city: destCode, country: 'Europa' };
+        const cityInfo = getAirportInfo(destCode);
         const pricePerPerson = Math.round(item.price || 30);
         const totalPrice = calcTotal(pricePerPerson, adults, children, infants);
         const depDateStr = item.departure_at ? item.departure_at.slice(0, 10) : departureAt || '';
@@ -395,7 +396,7 @@ export async function GET(req: NextRequest) {
       ? DESTINATIONS_FALLBACK
       : DESTINATIONS_FALLBACK.filter((d) => d.code === destination).length > 0
       ? DESTINATIONS_FALLBACK.filter((d) => d.code === destination)
-      : [{ code: destination, city: CITY_MAP[destination]?.city || destination, country: CITY_MAP[destination]?.country || 'Europa', priceBase: 45 }];
+      : [{ code: destination, city: getAirportInfo(destination).city, country: getAirportInfo(destination).country, priceBase: 45 }];
 
     const results = destsToShow.map((d, i) => {
       const pricePerPerson = d.priceBase + Math.floor(Math.random() * 10);

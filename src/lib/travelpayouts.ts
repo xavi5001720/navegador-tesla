@@ -2,6 +2,7 @@
  * Librería cliente para integrarse con la API de Travelpayouts.
  * Permite buscar ofertas de vuelos y generar enlaces con el marker de afiliado para Booking.com y Skyscanner.es.
  */
+import { getAirportInfo, getAirportCityName } from './airports';
 
 export interface FlightDeal {
   id: string;
@@ -77,7 +78,8 @@ const ORIGIN_CITIES: Record<string, string> = {
 };
 
 export function getOriginCityName(code: string): string {
-  return ORIGIN_CITIES[code.toUpperCase()] || code;
+  if ((code || '').toUpperCase() === 'BY_CAR') return '🚗 En Coche / Coche Eléctrico (Sin Vuelo)';
+  return getAirportCityName(code);
 }
 
 export function buildSkyscannerUrl(origin: string, dest: string, depDateStr: string, retDateStr: string, adults: number): string {
@@ -142,10 +144,11 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
 
     const deals: FlightDeal[] = items.map((item: any, idx: number) => {
       const destCode = item.destination || 'MIL';
-      const cityInfo = AIRPORTS_MAP[destCode] || {
-        city: destCode,
-        country: 'Europa',
-        image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=800&auto=format&fit=crop'
+      const info = getAirportInfo(destCode);
+      const cityInfo = {
+        city: info.city,
+        country: info.country,
+        image: (AIRPORTS_MAP[destCode] && AIRPORTS_MAP[destCode].image) || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=800&auto=format&fit=crop'
       };
 
       const baseFlightPrice = Math.round(item.price || 45);
@@ -310,7 +313,12 @@ function generateFallbackDeals(query: EscapadaSearchQuery, marker: string): Flig
   }
 
   return fallbackDestinations.map((d, i) => {
-    const info = AIRPORTS_MAP[d.code] || { city: d.code, country: 'Europa', image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=800&auto=format&fit=crop' };
+    const apInfo = getAirportInfo(d.code);
+    const info = {
+      city: apInfo.city,
+      country: apInfo.country,
+      image: (AIRPORTS_MAP[d.code] && AIRPORTS_MAP[d.code].image) || 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=800&auto=format&fit=crop'
+    };
     const flightPriceTotal = Math.round(d.price * adults + d.price * 0.75 * children + d.price * 0.15 * infants);
     const rooms = Math.ceil((adults + children) / 2);
     const hotelPrice = (minStars === 5 ? 120 : minStars === 4 ? 70 : 40) * duration * rooms;
