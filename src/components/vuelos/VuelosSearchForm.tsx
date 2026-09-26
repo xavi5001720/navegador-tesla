@@ -45,6 +45,14 @@ function nextWeekendDates(): { dep: string; ret: string } {
   };
 }
 
+const DURATION_OPTIONS = [
+  { label: '2 días', days: 2 },
+  { label: '3 días', days: 3 },
+  { label: '5 días', days: 5 },
+  { label: '7 días', days: 7 },
+  { label: '10 días', days: 10 },
+];
+
 export interface VuelosQuery {
   origin: string;
   destination: string;
@@ -55,10 +63,8 @@ export interface VuelosQuery {
   infants: number;
   oneWay: boolean;
   dateMode: 'exact' | 'flexible';
-  flexDepFrom: string;
-  flexDepTo: string;
-  flexRetFrom: string;
-  flexRetTo: string;
+  flexDeparture: string;  // fecha aproximada de salida
+  flexDuration: number;   // duración en días
 }
 
 interface Props {
@@ -67,16 +73,6 @@ interface Props {
 }
 
 const { dep: defDep, ret: defRet } = nextWeekendDates();
-
-// Helper to get next Nth weekend
-function nthWeekendDates(n: number): { dep: string; ret: string } {
-  const now = new Date();
-  const day = now.getDay();
-  const daysUntilSat = ((6 - day + 7) % 7 || 7) + (n - 1) * 7;
-  const sat = new Date(now.getTime() + daysUntilSat * 86400000);
-  const sun = new Date(sat.getTime() + 86400000);
-  return { dep: sat.toISOString().slice(0, 10), ret: sun.toISOString().slice(0, 10) };
-}
 
 export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
   const [origin, setOrigin] = useState('MAD');
@@ -88,11 +84,9 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
   const [departureAt, setDepartureAt] = useState(defDep);
   const [returnAt, setReturnAt] = useState(defRet);
 
-  // Flexible dates
-  const [flexDepFrom, setFlexDepFrom] = useState(defDep);
-  const [flexDepTo, setFlexDepTo] = useState(nthWeekendDates(3).dep);
-  const [flexRetFrom, setFlexRetFrom] = useState(defRet);
-  const [flexRetTo, setFlexRetTo] = useState(nthWeekendDates(3).ret);
+  // Flexible dates: solo necesitamos la fecha de salida y cuántos días
+  const [flexDeparture, setFlexDeparture] = useState(defDep);
+  const [flexDuration, setFlexDuration] = useState(3);
 
   // Travellers
   const [adults, setAdults] = useState(2);
@@ -101,20 +95,25 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // En modo flexible, calculamos la vuelta sumando los días elegidos a la salida
+    const flexReturnAt = (() => {
+      if (oneWay) return '';
+      const dep = new Date(flexDeparture);
+      dep.setDate(dep.getDate() + flexDuration);
+      return dep.toISOString().slice(0, 10);
+    })();
     onSearch({
       origin,
       destination,
-      departureAt: dateMode === 'exact' ? departureAt : flexDepFrom,
-      returnAt: oneWay ? '' : dateMode === 'exact' ? returnAt : flexRetFrom,
+      departureAt: dateMode === 'exact' ? departureAt : flexDeparture,
+      returnAt: oneWay ? '' : dateMode === 'exact' ? returnAt : flexReturnAt,
       adults,
       children,
       infants,
       oneWay,
       dateMode,
-      flexDepFrom,
-      flexDepTo,
-      flexRetFrom,
-      flexRetTo,
+      flexDeparture,
+      flexDuration,
     });
   };
 
@@ -267,54 +266,41 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs text-slate-600 mb-1">Ida — desde</label>
-                <input
-                  type="date"
-                  value={flexDepFrom}
-                  onChange={(e) => setFlexDepFrom(e.target.value)}
-                  min={new Date().toISOString().slice(0, 10)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-slate-600 transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-slate-600 mb-1">Ida — hasta</label>
-                <input
-                  type="date"
-                  value={flexDepTo}
-                  onChange={(e) => setFlexDepTo(e.target.value)}
-                  min={flexDepFrom}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-slate-600 transition-colors"
-                />
-              </div>
+            {/* Fecha aproximada de salida */}
+            <div>
+              <label className="block text-xs text-slate-600 mb-1">¿A partir de cuándo puedes salir?</label>
+              <input
+                type="date"
+                value={flexDeparture}
+                onChange={(e) => setFlexDeparture(e.target.value)}
+                min={new Date().toISOString().slice(0, 10)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 transition-colors"
+              />
             </div>
+            {/* Duración */}
             {!oneWay && (
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Vuelta — desde</label>
-                  <input
-                    type="date"
-                    value={flexRetFrom}
-                    onChange={(e) => setFlexRetFrom(e.target.value)}
-                    min={flexDepFrom}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-slate-600 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Vuelta — hasta</label>
-                  <input
-                    type="date"
-                    value={flexRetTo}
-                    onChange={(e) => setFlexRetTo(e.target.value)}
-                    min={flexRetFrom}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-slate-600 transition-colors"
-                  />
+              <div>
+                <label className="block text-xs text-slate-600 mb-2">¿Cuántos días quieres estar?</label>
+                <div className="flex flex-wrap gap-2">
+                  {DURATION_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.days}
+                      type="button"
+                      onClick={() => setFlexDuration(opt.days)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
+                        flexDuration === opt.days
+                          ? 'bg-red-600 border-red-500 text-white'
+                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white hover:border-slate-600'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
             <p className="text-[11px] text-slate-600">
-              Buscaremos los vuelos más baratos disponibles en ese rango de fechas
+              Buscaremos los mejores precios disponibles a partir de esa fecha
             </p>
           </div>
         )}

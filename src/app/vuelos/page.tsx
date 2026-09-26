@@ -37,11 +37,10 @@ const DEFAULT_QUERY: VuelosQuery = {
   infants: 0,
   oneWay: false,
   dateMode: 'flexible',
-  flexDepFrom: defDep,
-  flexDepTo: defDep,
-  flexRetFrom: defRet,
-  flexRetTo: defRet,
+  flexDeparture: defDep,
+  flexDuration: 3,
 };
+
 
 export default function VuelosPage() {
   const [results, setResults] = useState<VueloResult[]>([]);
