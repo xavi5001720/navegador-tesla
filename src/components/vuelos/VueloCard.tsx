@@ -186,13 +186,13 @@ export default function VueloCard({ flight, rank }: Props) {
               <span className="text-[10px] text-slate-400 font-medium">
                 👥 {flight.adults} {flight.adults === 1 ? 'Adulto' : 'Adultos'}
                 {flight.children > 0 ? ` + ${flight.children} ${flight.children === 1 ? 'Niño' : 'Niños'}` : ''}
-                {` · ${flight.hotelNights}n · ${flight.hotelRooms} hab.`}
+                {` · ${flight.hotelNights} ${flight.hotelNights === 1 ? 'noche' : 'noches'} · ${flight.hotelRooms} ${flight.hotelRooms === 1 ? 'habitación' : 'habitaciones'}`}
               </span>
             </div>
 
             <div className="bg-slate-950/70 rounded-xl border border-slate-800 px-3 py-2 text-xs text-slate-300 flex items-center justify-between">
               <span className="text-[11px]">
-                🏨 <strong>Est. Hotel ({flight.hotelStars}★):</strong> {flight.hotelRatePerNight || (flight.hotelStars === 5 ? 135 : flight.hotelStars === 4 ? 75 : 45)}€/noche × {flight.hotelNights} {flight.hotelNights === 1 ? 'noche' : 'noches'} × {flight.hotelRooms} {flight.hotelRooms === 1 ? 'hab.' : 'habs.'}
+                🏨 <strong>Est. Hotel ({flight.hotelStars}★):</strong> {flight.hotelRatePerNight || (flight.hotelStars === 5 ? 135 : flight.hotelStars === 4 ? 75 : 45)}€/noche × {flight.hotelNights} {flight.hotelNights === 1 ? 'noche' : 'noches'} × {flight.hotelRooms} {flight.hotelRooms === 1 ? 'habitación' : 'habitaciones'}
               </span>
               <span className="font-extrabold text-amber-400 text-sm ml-2 font-mono whitespace-nowrap">
                 = {flight.hotelEstimatedPrice} €
