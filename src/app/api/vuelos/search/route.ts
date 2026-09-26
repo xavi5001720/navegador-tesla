@@ -288,11 +288,15 @@ export async function GET(req: NextRequest) {
     }
 
     const depWindowStart = departureAt ? new Date(`${departureAt}T00:00:00`) : null;
-    const depWindowEnd   = departureEndAt
+    let depWindowEnd = departureEndAt
       ? new Date(`${departureEndAt}T23:59:59.999`)
       : departureAt
       ? new Date(`${departureAt}T23:59:59.999`)
       : null;
+
+    if (depWindowStart && depWindowEnd && depWindowEnd < depWindowStart) {
+      depWindowEnd = new Date(`${departureAt}T23:59:59.999`);
+    }
 
     // STEP 1: Filter raw items by flight type (roundtrip vs oneway), travel window and trip duration FIRST
     const validItems = items.filter((item) => {
