@@ -4,6 +4,8 @@ const TOKEN = process.env.TRAVELPAYOUTS_TOKEN || '596d62e5f9f6d2f1574865feeb424c
 const MARKER = process.env.TRAVELPAYOUTS_MARKER || '778425';
 
 export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 const DESTINATIONS_FALLBACK = [
   { code: 'MIL', city: 'Milán', country: 'Italia', priceBase: 29 },
@@ -373,7 +375,10 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => a.totalPrice - b.totalPrice)
       .slice(0, 20);
 
-    return NextResponse.json({ success: true, results, source: 'api' });
+    return NextResponse.json(
+      { success: true, results, source: 'api' },
+      { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
+    );
   } catch {
     // Fallback: generate estimated results
     const destsToShow = anyDest
@@ -417,6 +422,9 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({ success: true, results: results.sort((a, b) => a.totalPrice - b.totalPrice), source: 'fallback' });
+    return NextResponse.json(
+      { success: true, results: results.sort((a, b) => a.totalPrice - b.totalPrice), source: 'fallback' },
+      { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
+    );
   }
 }
