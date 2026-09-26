@@ -40,6 +40,143 @@ const CITY_IMAGES: Record<string, string> = {
 
 const DEFAULT_IMG = 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=700&auto=format&fit=crop';
 
+// Mapa completo de códigos IATA → nombre de ciudad
+const AIRPORT_NAMES: Record<string, string> = {
+  // España
+  MAD: 'Madrid',
+  BCN: 'Barcelona',
+  VLC: 'Valencia',
+  AGP: 'Málaga',
+  SVQ: 'Sevilla',
+  BIO: 'Bilbao',
+  ALC: 'Alicante',
+  SCQ: 'Santiago',
+  PMI: 'Mallorca',
+  IBZ: 'Ibiza',
+  TFN: 'Tenerife Norte',
+  TFS: 'Tenerife Sur',
+  LPA: 'Gran Canaria',
+  ACE: 'Lanzarote',
+  FUE: 'Fuerteventura',
+  SDR: 'Santander',
+  VGO: 'Vigo',
+  OVD: 'Asturias',
+  ZAZ: 'Zaragoza',
+  GRX: 'Granada',
+  MJV: 'Murcia',
+  XRY: 'Jerez',
+  // Italia
+  MIL: 'Milán',
+  ROM: 'Roma',
+  FCO: 'Roma',
+  MXP: 'Milán',
+  LIN: 'Milán',
+  NAP: 'Nápoles',
+  PMO: 'Palermo',
+  VCE: 'Venecia',
+  BLQ: 'Bolonia',
+  FLR: 'Florencia',
+  BGY: 'Milán (Bérgamo)',
+  // Francia
+  PAR: 'París',
+  CDG: 'París',
+  ORY: 'París (Orly)',
+  NCE: 'Niza',
+  LYS: 'Lyon',
+  MRS: 'Marsella',
+  // Reino Unido
+  LON: 'Londres',
+  LHR: 'Londres (Heathrow)',
+  LGW: 'Londres (Gatwick)',
+  STN: 'Londres (Stansted)',
+  LTN: 'Londres (Luton)',
+  EDI: 'Edimburgo',
+  MAN: 'Mánchester',
+  // Alemania
+  BER: 'Berlín',
+  FRA: 'Fráncfort',
+  MUC: 'Múnich',
+  DUS: 'Düsseldorf',
+  HAM: 'Hamburgo',
+  // Países Bajos
+  AMS: 'Ámsterdam',
+  // Rep. Checa
+  PRG: 'Praga',
+  // Austria
+  VIE: 'Viena',
+  // Hungría
+  BUD: 'Budapest',
+  // Portugal
+  LIS: 'Lisboa',
+  OPO: 'Oporto',
+  FAO: 'Faro',
+  // Marruecos
+  RAK: 'Marrakech',
+  CMN: 'Casablanca',
+  // Grecia
+  ATH: 'Atenas',
+  HER: 'Heraclión (Creta)',
+  SKG: 'Salónica',
+  CFU: 'Corfú',
+  RHO: 'Rodas',
+  MYK: 'Mikonos',
+  JTR: 'Santorini',
+  // Turquía
+  IST: 'Estambul',
+  SAW: 'Estambul (Sabiha)',
+  AYT: 'Antalya',
+  // Polonia
+  WAW: 'Varsovia',
+  KRK: 'Cracovia',
+  // Croacia
+  ZAG: 'Zagreb',
+  SPU: 'Split',
+  DBV: 'Dubrovnik',
+  // Irlanda
+  DUB: 'Dublín',
+  // Bélgica
+  BRU: 'Bruselas',
+  // Suiza
+  ZRH: 'Zúrich',
+  GVA: 'Ginebra',
+  // Noruega
+  OSL: 'Oslo',
+  BGO: 'Bergen',
+  // Suecia
+  STO: 'Estocolmo',
+  ARN: 'Estocolmo',
+  GOT: 'Gotemburgo',
+  // Dinamarca
+  CPH: 'Copenhague',
+  // Finlandia
+  HEL: 'Helsinki',
+  // Escocia / Irlanda del Norte
+  BFS: 'Belfast',
+  // Malta
+  MLA: 'Malta',
+  // Chipre
+  LCA: 'Larnaca',
+  // EE.UU. / América
+  JFK: 'Nueva York (JFK)',
+  EWR: 'Nueva York (Newark)',
+  LAX: 'Los Ángeles',
+  MIA: 'Miami',
+  ORD: 'Chicago',
+  CUN: 'Cancún',
+  // Otros
+  DXB: 'Dubái',
+  DOH: 'Doha',
+  BKK: 'Bangkok',
+  SIN: 'Singapur',
+  HKG: 'Hong Kong',
+  TYO: 'Tokio',
+  NRT: 'Tokio (Narita)',
+};
+
+function cityName(code: string): string {
+  return AIRPORT_NAMES[code] || code;
+}
+
 const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 function formatDate(dateStr: string | null): string {
@@ -104,9 +241,9 @@ export default function VueloCard({ flight, rank }: Props) {
         {/* Route header */}
         <div>
           <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400 mb-1">
-            <span>{flight.origin}</span>
+            <span>{cityName(flight.origin)}</span>
             <span className="text-sky-500">→</span>
-            <span className="text-white font-bold">{flight.destination}</span>
+            <span className="text-white font-bold">{cityName(flight.destination)}</span>
             {flight.transfers === 0 && (
               <span className="ml-auto bg-emerald-950/80 text-emerald-400 border border-emerald-800/50 px-2 py-0.5 rounded-full text-[10px] font-bold">
                 Directo
