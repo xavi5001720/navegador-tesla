@@ -70,6 +70,7 @@ export default function VuelosPage() {
 
   const runSearch = useCallback(async (q: VuelosQuery) => {
     setIsLoading(true);
+    setResults([]);
     setLastQuery(q);
     try {
       const params = new URLSearchParams({

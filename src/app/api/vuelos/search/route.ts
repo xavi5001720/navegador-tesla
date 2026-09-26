@@ -266,7 +266,9 @@ export async function GET(req: NextRequest) {
     if (!res.ok) throw new Error(`API error: ${res.status}`);
 
     const data = await res.json();
-    const items: any[] = data.data || [];
+    const rawItems: any[] = data.data || [];
+    // Strictly filter items to ensure origin matches requested origin (prevents Aviasales from injecting deals from other airports like MAD)
+    const items = rawItems.filter((item) => !item.origin || item.origin.toUpperCase() === origin);
 
     if (items.length === 0) throw new Error('No results');
 
