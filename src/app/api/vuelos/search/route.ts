@@ -253,7 +253,7 @@ export async function GET(req: NextRequest) {
   // Build API URL — Aviasales works per-month; use departure month of the start date
   const anyDest = !destination || destination === 'ANY';
 
-  let apiUrl = `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=${origin}&currency=eur&limit=200&direct=false&token=${TOKEN}`;
+  let apiUrl = `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=${origin}&currency=eur&one_way=${isOneWay ? 'true' : 'false'}&limit=200&direct=false&token=${TOKEN}`;
   if (!anyDest) apiUrl += `&destination=${destination}`;
 
   // Only restrict departure_at to a single month if travel window is within the same month (e.g. 2026-10-03 to 2026-10-04)
@@ -295,10 +295,14 @@ export async function GET(req: NextRequest) {
       ? new Date(`${departureAt}T23:59:59.999`)
       : null;
 
-    // STEP 1: Filter raw items by travel window and trip duration FIRST (before destination grouping)
+    // STEP 1: Filter raw items by flight type (roundtrip vs oneway), travel window and trip duration FIRST
     const validItems = items.filter((item) => {
       const dep = item.departure_at ? new Date(item.departure_at) : null;
       const ret = item.return_at   ? new Date(item.return_at)    : null;
+
+      // Strict flight type matching: roundtrips MUST have return_at, one-way MUST NOT
+      if (!isOneWay && !ret) return false;
+      if (isOneWay && ret) return false;
 
       // Check departure window
       const inWindow = !dep || !depWindowStart || !depWindowEnd
@@ -341,25 +345,10 @@ export async function GET(req: NextRequest) {
         // Compute return date safely — never let it fall before the actual departure
         const retDateStr = (() => {
           if (isOneWay) return null;
-
-          // Prefer the API's own return_at (most accurate)
           if (item.return_at) {
             const r = item.return_at.slice(0, 10);
-            // Sanity check: return must be after departure
             if (!depDateStr || r > depDateStr) return r;
           }
-
-          // Use the pre-calculated effectiveReturnAt only if it's after the actual departure
-          if (effectiveReturnAt && depDateStr && effectiveReturnAt > depDateStr) {
-            return effectiveReturnAt;
-          }
-
-          // Fallback: calculate from actual departure date + midDays
-          if (depDateStr) {
-            return new Date(new Date(depDateStr).getTime() + midDays * 86400000)
-              .toISOString().slice(0, 10);
-          }
-
           return null;
         })();
         const skyscannerUrl = buildSkyscannerUrl(origin, destCode, depDateStr, retDateStr, adults, children, infants);
