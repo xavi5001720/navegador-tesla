@@ -252,10 +252,15 @@ export async function GET(req: NextRequest) {
   // Build API URL — Aviasales works per-month; use departure month of the start date
   const anyDest = !destination || destination === 'ANY';
 
-  let apiUrl = `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=${origin}&currency=eur&limit=30&direct=false&token=${TOKEN}`;
+  let apiUrl = `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=${origin}&currency=eur&limit=100&direct=false&token=${TOKEN}`;
   if (!anyDest) apiUrl += `&destination=${destination}`;
-  if (departureAt) apiUrl += `&departure_at=${departureAt.slice(0, 7)}`; // YYYY-MM
-  if (effectiveReturnAt) apiUrl += `&return_at=${effectiveReturnAt.slice(0, 7)}`;
+
+  // Only restrict departure_at to a single month if travel window is within the same month (e.g. 2026-10-03 to 2026-10-04)
+  // If window spans multiple months or up to a full year, omit departure_at to fetch deals across all 12 months
+  const isSingleMonth = departureAt && departureEndAt && departureAt.slice(0, 7) === departureEndAt.slice(0, 7);
+  if (isSingleMonth) {
+    apiUrl += `&departure_at=${departureAt.slice(0, 7)}`;
+  }
 
 
   try {
