@@ -392,7 +392,7 @@ export async function GET(req: NextRequest) {
           const ratePerNight = hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45;
           hotelEstimatedPrice = ratePerNight * hotelNights * hotelRooms;
           totalPackagePrice = totalPrice + hotelEstimatedPrice;
-          hotelBookingUrl = buildBookingUrl(cityInfo.city, depDateStr, retDateStr || depDateStr, adults, MARKER);
+          hotelBookingUrl = buildBookingUrl(cityInfo.city, depDateStr, retDateStr || depDateStr, adults, children, hotelRooms, hotelStars, MARKER);
         }
 
         return {
@@ -416,6 +416,7 @@ export async function GET(req: NextRequest) {
           hotelStars: includeHotel ? hotelStars : undefined,
           hotelNights: includeHotel ? hotelNights : undefined,
           hotelRooms: includeHotel ? hotelRooms : undefined,
+          hotelRatePerNight: includeHotel ? (hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45) : undefined,
           hotelEstimatedPrice: includeHotel ? hotelEstimatedPrice : undefined,
           hotelBookingUrl: includeHotel ? hotelBookingUrl : undefined,
           totalPackagePrice: includeHotel ? totalPackagePrice : totalPrice,
@@ -470,7 +471,7 @@ export async function GET(req: NextRequest) {
         const ratePerNight = hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45;
         hotelEstimatedPrice = ratePerNight * hotelNights * hotelRooms;
         totalPackagePrice = totalPrice + hotelEstimatedPrice;
-        hotelBookingUrl = buildBookingUrl(d.city, depDateStr, retDateStr || depDateStr, adults, MARKER);
+        hotelBookingUrl = buildBookingUrl(d.city, depDateStr, retDateStr || depDateStr, adults, children, hotelRooms, hotelStars, MARKER);
       }
 
       return {
@@ -494,6 +495,7 @@ export async function GET(req: NextRequest) {
         hotelStars: includeHotel ? hotelStars : undefined,
         hotelNights: includeHotel ? hotelNights : undefined,
         hotelRooms: includeHotel ? hotelRooms : undefined,
+        hotelRatePerNight: includeHotel ? (hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45) : undefined,
         hotelEstimatedPrice: includeHotel ? hotelEstimatedPrice : undefined,
         hotelBookingUrl: includeHotel ? hotelBookingUrl : undefined,
         totalPackagePrice: includeHotel ? totalPackagePrice : totalPrice,

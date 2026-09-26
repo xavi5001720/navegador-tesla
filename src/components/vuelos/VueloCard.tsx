@@ -23,6 +23,7 @@ export interface VueloResult {
   hotelStars?: number;
   hotelNights?: number;
   hotelRooms?: number;
+  hotelRatePerNight?: number;
   hotelEstimatedPrice?: number;
   hotelBookingUrl?: string;
   totalPackagePrice?: number;
@@ -180,30 +181,35 @@ export default function VueloCard({ flight, rank }: Props) {
           <div className="pt-3 border-t border-slate-800/80 space-y-2.5">
             <div className="flex items-center justify-between text-xs text-slate-300">
               <span className="font-bold text-amber-400 flex items-center gap-1">
-                <span>🏨 Hotel Booking</span>
-                <span className="text-xs">({'⭐'.repeat(flight.hotelStars || 3)})</span>
+                <span>🏨 Hoteles {flight.hotelStars}★ en {flight.destinationCity}</span>
               </span>
-              <span className="text-[10px] text-slate-400">
-                {flight.hotelNights} noche{flight.hotelNights !== 1 ? 's' : ''} · {flight.hotelRooms} hab.
+              <span className="text-[10px] text-slate-400 font-medium">
+                👥 {flight.adults} {flight.adults === 1 ? 'Adulto' : 'Adultos'}
+                {flight.children > 0 ? ` + ${flight.children} ${flight.children === 1 ? 'Niño' : 'Niños'}` : ''}
+                {` · ${flight.hotelNights}n · ${flight.hotelRooms} hab.`}
               </span>
             </div>
 
             <div className="bg-slate-950/70 rounded-xl border border-slate-800 px-3 py-2 text-xs text-slate-300 flex items-center justify-between">
-              <span>🏨 <strong>Est. Hotel ({flight.hotelStars}★):</strong> {flight.hotelNights}n x {flight.hotelRooms}hab.</span>
-              <span className="font-extrabold text-amber-400 text-sm ml-2">= {flight.hotelEstimatedPrice} €</span>
+              <span className="text-[11px]">
+                🏨 <strong>Est. Hotel ({flight.hotelStars}★):</strong> {flight.hotelRatePerNight || (flight.hotelStars === 5 ? 135 : flight.hotelStars === 4 ? 75 : 45)}€/noche × {flight.hotelNights} {flight.hotelNights === 1 ? 'noche' : 'noches'} × {flight.hotelRooms} {flight.hotelRooms === 1 ? 'hab.' : 'habs.'}
+              </span>
+              <span className="font-extrabold text-amber-400 text-sm ml-2 font-mono whitespace-nowrap">
+                = {flight.hotelEstimatedPrice} €
+              </span>
             </div>
 
             <a
               href={flight.hotelBookingUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs transition-all duration-300 shadow-md hover:shadow-emerald-600/25 flex items-center justify-between group/btn"
+              className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs transition-all duration-300 shadow-md hover:shadow-emerald-600/25 flex items-center justify-between group/btn overflow-hidden"
             >
-              <span className="flex items-center space-x-1.5">
+              <span className="flex items-center space-x-1.5 truncate mr-2">
                 <span>🏨</span>
-                <span>Ver Hotel en Booking.com</span>
+                <span className="truncate">Ver Hotel {flight.hotelStars}★ en {flight.destinationCity} (Booking.com)</span>
               </span>
-              <span className="bg-emerald-700/90 group-hover/btn:bg-emerald-600 px-2 py-0.5 rounded-lg text-xs font-black">
+              <span className="bg-emerald-700/90 group-hover/btn:bg-emerald-600 px-2 py-0.5 rounded-lg text-xs font-black flex-shrink-0">
                 {flight.hotelEstimatedPrice} €
               </span>
             </a>
@@ -211,9 +217,9 @@ export default function VueloCard({ flight, rank }: Props) {
             {/* Total Package Summary */}
             <div className="bg-gradient-to-r from-sky-950/80 to-emerald-950/80 border border-emerald-800/50 rounded-xl p-2.5 flex items-center justify-between text-xs text-white shadow-inner">
               <div className="flex items-center space-x-1 text-[11px] text-slate-300">
-                <span>✈️ {flight.totalPrice}€</span>
+                <span>✈️ Vuelo {flight.totalPrice}€</span>
                 <span>+</span>
-                <span>🏨 {flight.hotelEstimatedPrice}€</span>
+                <span>🏨 Hotel {flight.hotelEstimatedPrice}€</span>
               </div>
               <div className="font-black text-amber-300 text-sm">
                 = Total: {flight.totalPackagePrice} €

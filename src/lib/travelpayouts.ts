@@ -88,8 +88,29 @@ export function buildSkyscannerUrl(origin: string, dest: string, depDateStr: str
   return `https://www.skyscanner.es/transport/vuelos/${origin.toLowerCase()}/${dest.toLowerCase()}/${depYymmdd}/${retYymmdd}/?adultsv2=${adults}`;
 }
 
-export function buildBookingUrl(cityName: string, depDateStr: string, retDateStr: string, adults: number, marker: string): string {
-  const bookingTarget = `https://www.booking.com/searchresults.es.html?ss=${encodeURIComponent(cityName)}&checkin=${depDateStr}&checkout=${retDateStr}&group_adults=${adults}`;
+export function buildBookingUrl(
+  cityName: string,
+  depDateStr: string,
+  retDateStr: string,
+  adults: number,
+  children: number = 0,
+  rooms: number = 1,
+  stars: number = 3,
+  marker: string = '778425'
+): string {
+  let bookingTarget = `https://www.booking.com/searchresults.es.html?ss=${encodeURIComponent(cityName)}&checkin=${depDateStr}&checkout=${retDateStr}&group_adults=${adults}`;
+  if (children > 0) {
+    bookingTarget += `&group_children=${children}`;
+    for (let i = 0; i < children; i++) {
+      bookingTarget += `&age=5`;
+    }
+  }
+  if (rooms > 1) {
+    bookingTarget += `&no_rooms=${rooms}`;
+  }
+  if (stars >= 3 && stars <= 5) {
+    bookingTarget += `&nflt=class%3D${stars}%3B`;
+  }
   return `https://tp.media/r?marker=${marker}&p=4115&u=${encodeURIComponent(bookingTarget)}`;
 }
 
@@ -170,7 +191,7 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
       const retDateStr = retDateObj.toISOString().slice(0, 10);
 
       const flightAffiliateUrl = buildSkyscannerUrl(origin, destCode, depDateStr, retDateStr, adults);
-      const hotelAffiliateUrl = buildBookingUrl(cityInfo.city, depDateStr, retDateStr, adults, marker);
+      const hotelAffiliateUrl = buildBookingUrl(cityInfo.city, depDateStr, retDateStr, adults, children, rooms, minStars, marker);
 
       return {
         id: `deal-${idx}-${destCode}`,
@@ -253,7 +274,7 @@ function generateCarHotelDeals(query: EscapadaSearchQuery, marker: string): Flig
     const depDateStr = new Date(Date.now() + (i + 1) * 86400000 * 7).toISOString().slice(0, 10);
     const retDateStr = new Date(Date.now() + ((i + 1) * 7 + duration) * 86400000).toISOString().slice(0, 10);
 
-    const hotelAffiliateUrl = buildBookingUrl(info.city, depDateStr, retDateStr, adults, marker);
+    const hotelAffiliateUrl = buildBookingUrl(info.city, depDateStr, retDateStr, adults, children, rooms, minStars, marker);
 
     return {
       id: `car-deal-${i}-${d.code}`,
@@ -329,7 +350,7 @@ function generateFallbackDeals(query: EscapadaSearchQuery, marker: string): Flig
     const retDateStr = new Date(Date.now() + ((i + 1) * 7 + duration) * 86400000).toISOString().slice(0, 10);
 
     const flightAffiliateUrl = buildSkyscannerUrl(origin, d.code, depDateStr, retDateStr, adults);
-    const hotelAffiliateUrl = buildBookingUrl(info.city, depDateStr, retDateStr, adults, marker);
+    const hotelAffiliateUrl = buildBookingUrl(info.city, depDateStr, retDateStr, adults, children, rooms, minStars, marker);
 
     return {
       id: `fallback-${i}-${d.code}`,
