@@ -10,7 +10,209 @@ const ORIGINS = [
   { code: 'SVQ', city: 'Sevilla' },
   { code: 'BIO', city: 'Bilbao' },
   { code: 'ALC', city: 'Alicante' },
-  { code: 'SCQ', city: 'Santiago' },
+  { code: 'SCQ', city: 'Santiago de Compostela' },
+  { code: 'PMI', city: 'Palma de Mallorca' },
+  { code: 'TFS', city: 'Tenerife Sur' },
+  { code: 'LPA', city: 'Gran Canaria' },
+  { code: 'ACE', city: 'Lanzarote' },
+  { code: 'FUE', city: 'Fuerteventura' },
+  { code: 'IBZ', city: 'Ibiza' },
+  { code: 'SDR', city: 'Santander' },
+  { code: 'VGO', city: 'Vigo' },
+  { code: 'OVD', city: 'Asturias' },
+  { code: 'ZAZ', city: 'Zaragoza' },
+  { code: 'GRX', city: 'Granada' },
+  { code: 'MJV', city: 'Murcia' },
+  { code: 'XRY', city: 'Jerez de la Frontera' },
+  { code: 'REU', city: 'Reus (Tarragona)' },
+  { code: 'GRO', city: 'Girona' },
+  { code: 'MAH', city: 'Menorca' },
+];
+
+interface Dest { code: string; city: string; }
+interface DestGroup { label: string; items: Dest[]; }
+
+const DESTINATION_GROUPS: DestGroup[] = [
+  { label: '🌍 Cualquier destino', items: [
+    { code: 'ANY', city: 'Cualquier destino — chollos del momento' },
+  ]},
+  { label: '🇵🇹 Portugal', items: [
+    { code: 'LIS', city: 'Lisboa' },
+    { code: 'OPO', city: 'Oporto' },
+    { code: 'FAO', city: 'Faro (Algarve)' },
+    { code: 'FNC', city: 'Funchal (Madeira)' },
+  ]},
+  { label: '🇫🇷 Francia', items: [
+    { code: 'PAR', city: 'París' },
+    { code: 'NCE', city: 'Niza' },
+    { code: 'LYS', city: 'Lyon' },
+    { code: 'MRS', city: 'Marsella' },
+    { code: 'BOD', city: 'Burdeos' },
+    { code: 'TLS', city: 'Toulouse' },
+    { code: 'NTE', city: 'Nantes' },
+    { code: 'MPL', city: 'Montpellier' },
+    { code: 'BIQ', city: 'Biarritz' },
+  ]},
+  { label: '🇮🇹 Italia', items: [
+    { code: 'MIL', city: 'Milán' },
+    { code: 'ROM', city: 'Roma' },
+    { code: 'NAP', city: 'Nápoles' },
+    { code: 'VCE', city: 'Venecia' },
+    { code: 'FLR', city: 'Florencia' },
+    { code: 'BLQ', city: 'Bolonia' },
+    { code: 'TRN', city: 'Turín' },
+    { code: 'BRI', city: 'Bari' },
+    { code: 'PMO', city: 'Palermo (Sicilia)' },
+    { code: 'CTA', city: 'Catania (Sicilia)' },
+    { code: 'OLB', city: 'Olbia (Cerdeña)' },
+    { code: 'CAG', city: 'Cagliari (Cerdeña)' },
+  ]},
+  { label: '🇬🇧 Reino Unido & Irlanda', items: [
+    { code: 'LON', city: 'Londres' },
+    { code: 'EDI', city: 'Edimburgo' },
+    { code: 'MAN', city: 'Mánchester' },
+    { code: 'BRS', city: 'Bristol' },
+    { code: 'BHX', city: 'Birmingham' },
+    { code: 'GLA', city: 'Glasgow' },
+    { code: 'DUB', city: 'Dublín' },
+    { code: 'BFS', city: 'Belfast' },
+  ]},
+  { label: '🇩🇪 Alemania', items: [
+    { code: 'BER', city: 'Berlín' },
+    { code: 'MUC', city: 'Múnich' },
+    { code: 'FRA', city: 'Fráncfort' },
+    { code: 'DUS', city: 'Düsseldorf' },
+    { code: 'HAM', city: 'Hamburgo' },
+    { code: 'CGN', city: 'Colonia' },
+    { code: 'STR', city: 'Stuttgart' },
+    { code: 'NUE', city: 'Núremberg' },
+  ]},
+  { label: '🇳🇱 Países Bajos & Bélgica', items: [
+    { code: 'AMS', city: 'Ámsterdam' },
+    { code: 'EIN', city: 'Eindhoven' },
+    { code: 'BRU', city: 'Bruselas' },
+    { code: 'CRL', city: 'Bruselas Charleroi' },
+  ]},
+  { label: '🇦🇹 Austria & Suiza', items: [
+    { code: 'VIE', city: 'Viena' },
+    { code: 'SZG', city: 'Salzburgo' },
+    { code: 'INN', city: 'Innsbruck' },
+    { code: 'ZRH', city: 'Zúrich' },
+    { code: 'GVA', city: 'Ginebra' },
+    { code: 'BSL', city: 'Basilea' },
+  ]},
+  { label: '🇨🇿 Rep. Checa, Hungría & Polonia', items: [
+    { code: 'PRG', city: 'Praga' },
+    { code: 'BUD', city: 'Budapest' },
+    { code: 'WAW', city: 'Varsovia' },
+    { code: 'KRK', city: 'Cracovia' },
+    { code: 'WRO', city: 'Wroclaw' },
+    { code: 'GDN', city: 'Gdansk' },
+  ]},
+  { label: '🇸🇪 Escandinavia & Bálticos', items: [
+    { code: 'OSL', city: 'Oslo' },
+    { code: 'STO', city: 'Estocolmo' },
+    { code: 'GOT', city: 'Gotemburgo' },
+    { code: 'CPH', city: 'Copenhague' },
+    { code: 'HEL', city: 'Helsinki' },
+    { code: 'REK', city: 'Reikiavik' },
+    { code: 'RIX', city: 'Riga' },
+    { code: 'TLL', city: 'Tallin' },
+    { code: 'VNO', city: 'Vilna' },
+  ]},
+  { label: '🇬🇷 Grecia & Chipre', items: [
+    { code: 'ATH', city: 'Atenas' },
+    { code: 'SKG', city: 'Salónica' },
+    { code: 'HER', city: 'Heraclión (Creta)' },
+    { code: 'CHQ', city: 'Chania (Creta)' },
+    { code: 'RHO', city: 'Rodas' },
+    { code: 'JTR', city: 'Santorini' },
+    { code: 'JMK', city: 'Mikonos' },
+    { code: 'CFU', city: 'Corfú' },
+    { code: 'KGS', city: 'Kos' },
+    { code: 'ZTH', city: 'Zakynthos (Zante)' },
+    { code: 'LCA', city: 'Larnaca (Chipre)' },
+    { code: 'PFO', city: 'Pafos (Chipre)' },
+  ]},
+  { label: '🇹🇷 Turquía', items: [
+    { code: 'IST', city: 'Estambul' },
+    { code: 'AYT', city: 'Antalya' },
+    { code: 'DLM', city: 'Dalaman' },
+    { code: 'BJV', city: 'Bodrum' },
+    { code: 'ADB', city: 'Izmir' },
+  ]},
+  { label: '🇭🇷 Croacia & Balcanes', items: [
+    { code: 'ZAG', city: 'Zagreb' },
+    { code: 'SPU', city: 'Split' },
+    { code: 'DBV', city: 'Dubrovnik' },
+    { code: 'ZAD', city: 'Zadar' },
+    { code: 'BEG', city: 'Belgrado' },
+    { code: 'TIA', city: 'Tirana' },
+    { code: 'SOF', city: 'Sofía (Bulgaria)' },
+    { code: 'OTP', city: 'Bucarest (Rumania)' },
+  ]},
+  { label: '🇲🇦 Marruecos & Norte de África', items: [
+    { code: 'RAK', city: 'Marrakech' },
+    { code: 'CMN', city: 'Casablanca' },
+    { code: 'TNG', city: 'Tánger' },
+    { code: 'FEZ', city: 'Fez' },
+    { code: 'AGA', city: 'Agadir' },
+    { code: 'TUN', city: 'Túnez' },
+    { code: 'CAI', city: 'El Cairo' },
+    { code: 'HRG', city: 'Hurghada' },
+    { code: 'SSH', city: 'Sharm el-Sheikh' },
+  ]},
+  { label: '🇲🇹 Malta & Mediterráneo', items: [
+    { code: 'MLA', city: 'Malta' },
+    { code: 'SJJ', city: 'Sarajevo' },
+  ]},
+  { label: '🌴 Canarias', items: [
+    { code: 'TFN', city: 'Tenerife Norte' },
+    { code: 'TFS', city: 'Tenerife Sur' },
+    { code: 'LPA', city: 'Gran Canaria' },
+    { code: 'ACE', city: 'Lanzarote' },
+    { code: 'FUE', city: 'Fuerteventura' },
+    { code: 'SPC', city: 'La Palma' },
+  ]},
+  { label: '🏝️ Islas Baleares', items: [
+    { code: 'PMI', city: 'Palma de Mallorca' },
+    { code: 'IBZ', city: 'Ibiza' },
+    { code: 'MAH', city: 'Menorca' },
+  ]},
+  { label: '🇺🇸 América', items: [
+    { code: 'JFK', city: 'Nueva York' },
+    { code: 'MIA', city: 'Miami' },
+    { code: 'LAX', city: 'Los Ángeles' },
+    { code: 'ORD', city: 'Chicago' },
+    { code: 'BOS', city: 'Boston' },
+    { code: 'CUN', city: 'Cancún' },
+    { code: 'MEX', city: 'Ciudad de México' },
+    { code: 'BOG', city: 'Bogotá' },
+    { code: 'LIM', city: 'Lima' },
+    { code: 'EZE', city: 'Buenos Aires' },
+    { code: 'GRU', city: 'São Paulo' },
+    { code: 'GIG', city: 'Río de Janeiro' },
+    { code: 'HAV', city: 'La Habana' },
+    { code: 'SDQ', city: 'Santo Domingo' },
+  ]},
+  { label: '🇦🇪 Oriente Medio', items: [
+    { code: 'DXB', city: 'Dubái' },
+    { code: 'DOH', city: 'Doha' },
+    { code: 'AUH', city: 'Abu Dabi' },
+    { code: 'AMM', city: 'Ammán' },
+    { code: 'TLV', city: 'Tel Aviv' },
+  ]},
+  { label: '🌏 Asia', items: [
+    { code: 'BKK', city: 'Bangkok' },
+    { code: 'HKT', city: 'Phuket' },
+    { code: 'SIN', city: 'Singapur' },
+    { code: 'KUL', city: 'Kuala Lumpur' },
+    { code: 'HKG', city: 'Hong Kong' },
+    { code: 'NRT', city: 'Tokio' },
+    { code: 'DEL', city: 'Delhi' },
+    { code: 'BOM', city: 'Mumbai' },
+    { code: 'DPS', city: 'Bali' },
+  ]},
 ];
 
 const DESTINATIONS = [
@@ -197,7 +399,7 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
           >
             {ORIGINS.map((o) => (
               <option key={o.code} value={o.code}>
-                {o.city} ({o.code})
+                {o.city}
               </option>
             ))}
           </select>
@@ -209,10 +411,14 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
             onChange={(e) => setDestination(e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 transition-colors"
           >
-            {DESTINATIONS.map((d) => (
-              <option key={d.code} value={d.code}>
-                {d.city}{d.country ? ` — ${d.country}` : ''}
-              </option>
+            {DESTINATION_GROUPS.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.items.map((d) => (
+                  <option key={d.code} value={d.code}>
+                    {d.city}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
         </div>
