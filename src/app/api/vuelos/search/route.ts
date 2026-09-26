@@ -1,0 +1,200 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+const TOKEN = process.env.TRAVELPAYOUTS_TOKEN || '596d62e5f9f6d2f1574865feeb424c75';
+const MARKER = process.env.TRAVELPAYOUTS_MARKER || '778425';
+
+export const runtime = 'edge';
+
+const DESTINATIONS_FALLBACK = [
+  { code: 'MIL', city: 'Milán', country: 'Italia', priceBase: 29 },
+  { code: 'OPO', city: 'Oporto', country: 'Portugal', priceBase: 22 },
+  { code: 'LIS', city: 'Lisboa', country: 'Portugal', priceBase: 27 },
+  { code: 'PAR', city: 'París', country: 'Francia', priceBase: 35 },
+  { code: 'ROM', city: 'Roma', country: 'Italia', priceBase: 38 },
+  { code: 'BER', city: 'Berlín', country: 'Alemania', priceBase: 45 },
+  { code: 'AMS', city: 'Ámsterdam', country: 'Países Bajos', priceBase: 52 },
+  { code: 'PRG', city: 'Praga', country: 'Rep. Checa', priceBase: 48 },
+  { code: 'VIE', city: 'Viena', country: 'Austria', priceBase: 55 },
+  { code: 'BUD', city: 'Budapest', country: 'Hungría', priceBase: 42 },
+  { code: 'LON', city: 'Londres', country: 'Reino Unido', priceBase: 59 },
+  { code: 'PMI', city: 'Mallorca', country: 'España', priceBase: 32 },
+  { code: 'TFN', city: 'Tenerife', country: 'España', priceBase: 65 },
+  { code: 'RAK', city: 'Marrakech', country: 'Marruecos', priceBase: 45 },
+];
+
+const CITY_MAP: Record<string, { city: string; country: string }> = {
+  MIL: { city: 'Milán', country: 'Italia' },
+  OPO: { city: 'Oporto', country: 'Portugal' },
+  LIS: { city: 'Lisboa', country: 'Portugal' },
+  PAR: { city: 'París', country: 'Francia' },
+  ROM: { city: 'Roma', country: 'Italia' },
+  BER: { city: 'Berlín', country: 'Alemania' },
+  AMS: { city: 'Ámsterdam', country: 'Países Bajos' },
+  PRG: { city: 'Praga', country: 'Rep. Checa' },
+  VIE: { city: 'Viena', country: 'Austria' },
+  BUD: { city: 'Budapest', country: 'Hungría' },
+  LON: { city: 'Londres', country: 'Reino Unido' },
+  PMI: { city: 'Mallorca', country: 'España' },
+  IBZ: { city: 'Ibiza', country: 'España' },
+  TFN: { city: 'Tenerife', country: 'España' },
+  RAK: { city: 'Marrakech', country: 'Marruecos' },
+  BCN: { city: 'Barcelona', country: 'España' },
+  MAD: { city: 'Madrid', country: 'España' },
+  VLC: { city: 'Valencia', country: 'España' },
+  AGP: { city: 'Málaga', country: 'España' },
+  SVQ: { city: 'Sevilla', country: 'España' },
+  BIO: { city: 'Bilbao', country: 'España' },
+  ALC: { city: 'Alicante', country: 'España' },
+  SCQ: { city: 'Santiago', country: 'España' },
+};
+
+function buildSkyscannerUrl(
+  origin: string,
+  dest: string,
+  depDate: string,
+  retDate: string | null,
+  adults: number,
+  children: number = 0,
+  infants: number = 0
+): string {
+  const dep = depDate.replace(/-/g, '').slice(2);
+  const base = `https://www.skyscanner.es/transport/vuelos/${origin.toLowerCase()}/${dest.toLowerCase()}/${dep}`;
+  const params = new URLSearchParams({ adultsv2: String(adults) });
+  if (children > 0) params.append('childrenv2', String(children));
+  if (infants > 0) params.append('infantsv2', String(infants));
+  if (retDate) {
+    const ret = retDate.replace(/-/g, '').slice(2);
+    return `${base}/${ret}/?${params.toString()}`;
+  }
+  return `${base}/?${params.toString()}`;
+}
+
+function calcTotal(pricePerPerson: number, adults: number, children: number, infants: number): number {
+  return Math.round(pricePerPerson * adults + pricePerPerson * 0.75 * children + pricePerPerson * 0.10 * infants);
+}
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = req.nextUrl;
+  const origin = (searchParams.get('origin') || 'MAD').toUpperCase();
+  const destination = (searchParams.get('destination') || 'ANY').toUpperCase();
+  const departureAt = searchParams.get('departureAt') || '';
+  const returnAt = searchParams.get('returnAt') || null;
+  const adults = Math.max(1, parseInt(searchParams.get('adults') || '2', 10));
+  const children = Math.max(0, parseInt(searchParams.get('children') || '0', 10));
+  const infants = Math.max(0, parseInt(searchParams.get('infants') || '0', 10));
+  const isOneWay = searchParams.get('oneWay') === 'true';
+
+  const effectiveReturnAt = isOneWay ? null : returnAt;
+
+  // Build API URL
+  const anyDest = !destination || destination === 'ANY';
+
+  let apiUrl = `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=${origin}&currency=eur&limit=30&direct=false&token=${TOKEN}`;
+  if (!anyDest) apiUrl += `&destination=${destination}`;
+  if (departureAt) apiUrl += `&departure_at=${departureAt.slice(0, 7)}`; // YYYY-MM
+  if (effectiveReturnAt) apiUrl += `&return_at=${effectiveReturnAt.slice(0, 7)}`;
+
+  try {
+    const res = await fetch(apiUrl, {
+      headers: { 'Accept-Encoding': 'gzip' },
+      // @ts-ignore
+      next: { revalidate: 1800 },
+    });
+
+    if (!res.ok) throw new Error(`API error: ${res.status}`);
+
+    const data = await res.json();
+    const items: any[] = data.data || [];
+
+    if (items.length === 0) throw new Error('No results');
+
+    // Aggregate by destination (take cheapest per dest)
+    const byDest: Record<string, any> = {};
+    for (const item of items) {
+      const dc = item.destination;
+      if (!byDest[dc] || item.price < byDest[dc].price) byDest[dc] = item;
+    }
+
+    const results = Object.values(byDest)
+      .map((item) => {
+        const destCode = item.destination;
+        const cityInfo = CITY_MAP[destCode] || { city: destCode, country: 'Europa' };
+        const pricePerPerson = Math.round(item.price || 30);
+        const totalPrice = calcTotal(pricePerPerson, adults, children, infants);
+        const depDateStr = item.departure_at ? item.departure_at.slice(0, 10) : departureAt || '';
+        const retDateStr = effectiveReturnAt
+          ? effectiveReturnAt
+          : item.return_at
+          ? item.return_at.slice(0, 10)
+          : null;
+        const skyscannerUrl = buildSkyscannerUrl(origin, destCode, depDateStr, retDateStr, adults, children, infants);
+
+        return {
+          id: `${origin}-${destCode}-${depDateStr}`,
+          origin,
+          destination: destCode,
+          destinationCity: cityInfo.city,
+          destinationCountry: cityInfo.country,
+          pricePerPerson,
+          totalPrice,
+          adults,
+          children,
+          infants,
+          departureAt: depDateStr,
+          returnAt: retDateStr,
+          airline: item.airline || null,
+          transfers: item.transfers ?? null,
+          skyscannerUrl,
+          marker: MARKER,
+        };
+      })
+      .sort((a, b) => a.totalPrice - b.totalPrice)
+      .slice(0, 20);
+
+    return NextResponse.json({ success: true, results, source: 'api' });
+  } catch {
+    // Fallback: generate estimated results
+    const destsToShow = anyDest
+      ? DESTINATIONS_FALLBACK
+      : DESTINATIONS_FALLBACK.filter((d) => d.code === destination).length > 0
+      ? DESTINATIONS_FALLBACK.filter((d) => d.code === destination)
+      : [{ code: destination, city: CITY_MAP[destination]?.city || destination, country: CITY_MAP[destination]?.country || 'Europa', priceBase: 45 }];
+
+    const results = destsToShow.map((d, i) => {
+      const pricePerPerson = d.priceBase + Math.floor(Math.random() * 10);
+      const totalPrice = calcTotal(pricePerPerson, adults, children, infants);
+
+      // Compute sensible dates if none provided
+      const baseMs = Date.now() + (i + 1) * 7 * 86400000;
+      const depDateStr = departureAt || new Date(baseMs).toISOString().slice(0, 10);
+      const retDateStr = effectiveReturnAt
+        ? effectiveReturnAt
+        : !isOneWay
+        ? new Date(new Date(depDateStr).getTime() + 3 * 86400000).toISOString().slice(0, 10)
+        : null;
+
+      const skyscannerUrl = buildSkyscannerUrl(origin, d.code, depDateStr, retDateStr, adults, children, infants);
+
+      return {
+        id: `fallback-${origin}-${d.code}-${i}`,
+        origin,
+        destination: d.code,
+        destinationCity: d.city,
+        destinationCountry: d.country,
+        pricePerPerson,
+        totalPrice,
+        adults,
+        children,
+        infants,
+        departureAt: depDateStr,
+        returnAt: retDateStr,
+        airline: null,
+        transfers: null,
+        skyscannerUrl,
+        marker: MARKER,
+      };
+    });
+
+    return NextResponse.json({ success: true, results: results.sort((a, b) => a.totalPrice - b.totalPrice), source: 'fallback' });
+  }
+}
