@@ -319,16 +319,31 @@ export async function GET(req: NextRequest) {
         const pricePerPerson = Math.round(item.price || 30);
         const totalPrice = calcTotal(pricePerPerson, adults, children, infants);
         const depDateStr = item.departure_at ? item.departure_at.slice(0, 10) : departureAt || '';
-        // For return date: prefer the API's return_at, else compute from midDays range
-        const retDateStr = isOneWay
-          ? null
-          : effectiveReturnAt
-          ? effectiveReturnAt
-          : item.return_at
-          ? item.return_at.slice(0, 10)
-          : depDateStr
-          ? new Date(new Date(depDateStr).getTime() + midDays * 86400000).toISOString().slice(0, 10)
-          : null;
+
+        // Compute return date safely — never let it fall before the actual departure
+        const retDateStr = (() => {
+          if (isOneWay) return null;
+
+          // Prefer the API's own return_at (most accurate)
+          if (item.return_at) {
+            const r = item.return_at.slice(0, 10);
+            // Sanity check: return must be after departure
+            if (!depDateStr || r > depDateStr) return r;
+          }
+
+          // Use the pre-calculated effectiveReturnAt only if it's after the actual departure
+          if (effectiveReturnAt && depDateStr && effectiveReturnAt > depDateStr) {
+            return effectiveReturnAt;
+          }
+
+          // Fallback: calculate from actual departure date + midDays
+          if (depDateStr) {
+            return new Date(new Date(depDateStr).getTime() + midDays * 86400000)
+              .toISOString().slice(0, 10);
+          }
+
+          return null;
+        })();
         const skyscannerUrl = buildSkyscannerUrl(origin, destCode, depDateStr, retDateStr, adults, children, infants);
 
         return {
@@ -369,11 +384,11 @@ export async function GET(req: NextRequest) {
       // Compute sensible dates if none provided
       const baseMs = Date.now() + (i + 1) * 7 * 86400000;
       const depDateStr = departureAt || new Date(baseMs).toISOString().slice(0, 10);
-      const retDateStr = effectiveReturnAt
+      const retDateStr = isOneWay
+        ? null
+        : effectiveReturnAt && effectiveReturnAt > depDateStr
         ? effectiveReturnAt
-        : !isOneWay
-        ? new Date(new Date(depDateStr).getTime() + 3 * 86400000).toISOString().slice(0, 10)
-        : null;
+        : new Date(new Date(depDateStr).getTime() + midDays * 86400000).toISOString().slice(0, 10);
 
       const skyscannerUrl = buildSkyscannerUrl(origin, d.code, depDateStr, retDateStr, adults, children, infants);
 
