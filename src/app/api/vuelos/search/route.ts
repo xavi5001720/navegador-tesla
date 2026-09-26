@@ -388,7 +388,7 @@ export async function GET(req: NextRequest) {
             hotelNights = 2; // Default 2 nights
           }
 
-          hotelRooms = Math.ceil((adults + children) / 2);
+          hotelRooms = Math.max(1, Math.ceil(adults / 2));
           const ratePerNight = hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45;
           hotelEstimatedPrice = ratePerNight * hotelNights * hotelRooms;
           totalPackagePrice = totalPrice + hotelEstimatedPrice;
@@ -467,7 +467,7 @@ export async function GET(req: NextRequest) {
           hotelNights = 2;
         }
 
-        hotelRooms = Math.ceil((adults + children) / 2);
+        hotelRooms = Math.max(1, Math.ceil(adults / 2));
         const ratePerNight = hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45;
         hotelEstimatedPrice = ratePerNight * hotelNights * hotelRooms;
         totalPackagePrice = totalPrice + hotelEstimatedPrice;
