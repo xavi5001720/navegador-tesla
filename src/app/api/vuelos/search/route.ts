@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAirportInfo } from '@/lib/airports';
-import { buildBookingUrl } from '@/lib/travelpayouts';
+import { buildBookingUrl, getHotelName } from '@/lib/travelpayouts';
 
 const TOKEN = process.env.TRAVELPAYOUTS_TOKEN || '596d62e5f9f6d2f1574865feeb424c75';
 const MARKER = process.env.TRAVELPAYOUTS_MARKER || '778425';
@@ -416,6 +416,7 @@ export async function GET(req: NextRequest) {
           marker: MARKER,
           includeHotel,
           hotelStars: includeHotel ? hotelStars : undefined,
+          hotelName: includeHotel ? getHotelName(destCode, cityInfo.city, hotelStars) : undefined,
           hotelNights: includeHotel ? hotelNights : undefined,
           hotelRooms: includeHotel ? hotelRooms : undefined,
           hotelRatePerNight: includeHotel ? (hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45) : undefined,
@@ -495,6 +496,7 @@ export async function GET(req: NextRequest) {
         marker: MARKER,
         includeHotel,
         hotelStars: includeHotel ? hotelStars : undefined,
+        hotelName: includeHotel ? getHotelName(d.code, d.city, hotelStars) : undefined,
         hotelNights: includeHotel ? hotelNights : undefined,
         hotelRooms: includeHotel ? hotelRooms : undefined,
         hotelRatePerNight: includeHotel ? (hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45) : undefined,

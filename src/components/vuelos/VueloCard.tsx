@@ -21,6 +21,7 @@ export interface VueloResult {
   skyscannerUrl: string;
   includeHotel?: boolean;
   hotelStars?: number;
+  hotelName?: string;
   hotelNights?: number;
   hotelRooms?: number;
   hotelRatePerNight?: number;
@@ -180,23 +181,31 @@ export default function VueloCard({ flight, rank }: Props) {
         {flight.includeHotel && flight.hotelBookingUrl && (
           <div className="pt-3 border-t border-slate-800/80 space-y-2.5">
             <div className="flex items-center justify-between text-xs text-slate-300">
-              <span className="font-bold text-amber-400 flex items-center gap-1">
-                <span>🏨 Hoteles {flight.hotelStars}★ en {flight.destinationCity}</span>
+              <span className="font-bold text-amber-400 flex items-center gap-1.5 truncate mr-2">
+                <span>🏨</span>
+                <span className="truncate">{flight.hotelName || `Hotel ${flight.hotelStars}★ en ${flight.destinationCity}`}</span>
               </span>
-              <span className="text-[10px] text-slate-400 font-medium">
+              <span className="text-[10px] text-slate-400 font-medium flex-shrink-0">
                 👥 {flight.adults} {flight.adults === 1 ? 'Adulto' : 'Adultos'}
                 {flight.children > 0 ? ` + ${flight.children} ${flight.children === 1 ? 'Niño' : 'Niños'}` : ''}
-                {` · ${flight.hotelNights} ${flight.hotelNights === 1 ? 'noche' : 'noches'} · ${flight.hotelRooms} ${flight.hotelRooms === 1 ? 'habitación' : 'habitaciones'}`}
               </span>
             </div>
 
-            <div className="bg-slate-950/70 rounded-xl border border-slate-800 px-3 py-2 text-xs text-slate-300 flex items-center justify-between">
-              <span className="text-[11px]">
-                🏨 <strong>Est. Hotel ({flight.hotelStars}★):</strong> {flight.hotelRatePerNight || (flight.hotelStars === 5 ? 135 : flight.hotelStars === 4 ? 75 : 45)}€/noche × {flight.hotelNights} {flight.hotelNights === 1 ? 'noche' : 'noches'} × {flight.hotelRooms} {flight.hotelRooms === 1 ? 'habitación' : 'habitaciones'}
-              </span>
-              <span className="font-extrabold text-amber-400 text-sm ml-2 font-mono whitespace-nowrap">
-                = {flight.hotelEstimatedPrice} €
-              </span>
+            <div className="bg-slate-950/70 rounded-xl border border-slate-800 p-2.5 text-xs text-slate-300 space-y-1.5">
+              <div className="text-white font-bold flex items-center justify-between">
+                <span className="text-amber-300 truncate">🏨 {flight.hotelName || `Hotel ${flight.hotelStars}★`}</span>
+                <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-bold flex-shrink-0 ml-1">
+                  {'⭐'.repeat(flight.hotelStars || 3)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-slate-800/60">
+                <span>
+                  {flight.hotelRatePerNight || (flight.hotelStars === 5 ? 135 : flight.hotelStars === 4 ? 75 : 45)}€/noche × {flight.hotelNights} {flight.hotelNights === 1 ? 'noche' : 'noches'} × {flight.hotelRooms} {flight.hotelRooms === 1 ? 'habitación' : 'habitaciones'}
+                </span>
+                <span className="font-extrabold text-amber-400 text-sm ml-2 font-mono whitespace-nowrap">
+                  = {flight.hotelEstimatedPrice} €
+                </span>
+              </div>
             </div>
 
             <a
@@ -207,7 +216,7 @@ export default function VueloCard({ flight, rank }: Props) {
             >
               <span className="flex items-center space-x-1.5 truncate mr-2">
                 <span>🏨</span>
-                <span className="truncate">Ver Hotel {flight.hotelStars}★ en {flight.destinationCity} (Booking.com)</span>
+                <span className="truncate">Ver {flight.hotelName || `Hotel ${flight.hotelStars}★`} en Booking.com</span>
               </span>
               <span className="bg-emerald-700/90 group-hover/btn:bg-emerald-600 px-2 py-0.5 rounded-lg text-xs font-black flex-shrink-0">
                 {flight.hotelEstimatedPrice} €

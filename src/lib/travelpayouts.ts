@@ -25,6 +25,7 @@ export interface FlightDeal {
   returnDate: string;
   nights: number;
   hotelStars: number;
+  hotelName?: string;
   imageUrl: string;
   affiliateUrl: string; // Enlace principal
   flightAffiliateUrl?: string; // Enlace directo Skyscanner.es
@@ -80,6 +81,42 @@ const ORIGIN_CITIES: Record<string, string> = {
 export function getOriginCityName(code: string): string {
   if ((code || '').toUpperCase() === 'BY_CAR') return '🚗 En Coche / Coche Eléctrico (Sin Vuelo)';
   return getAirportCityName(code);
+}
+
+export function getHotelName(destCode: string, cityName: string, stars: number): string {
+  const HOTELS_MAP: Record<string, Record<number, string>> = {
+    BIO: { 3: 'Hotel Casual Gurea', 4: 'Hotel Gran Bilbao', 5: 'Hotel Carlton Bilbao' },
+    BCN: { 3: 'Hotel Travelodge Poblenou', 4: 'Hotel Barceló Sants', 5: 'Hotel W Barcelona' },
+    MAD: { 3: 'B&B HOTEL Madrid Centro', 4: 'Hotel RIU Plaza España', 5: 'Hotel Palace Madrid' },
+    MIL: { 3: 'Hotel ibis Milano Centro', 4: 'NYX Hotel Milan by Leonardo', 5: 'Hotel Galleria Vik Milano' },
+    ROM: { 3: 'Hotel Giolli Nazionale', 4: 'Starhotels Michelangelo Rome', 5: 'Hotel Hassler Roma' },
+    PAR: { 3: 'Hotel ibis Paris Tour Eiffel', 4: 'Novotel Paris Les Halles', 5: 'Pullman Paris Tour Eiffel' },
+    LON: { 3: 'Point A Hotel London', 4: 'Park Plaza Westminster Bridge', 5: 'The Ritz London' },
+    PMI: { 3: 'Hotel BQ Augusta Palma', 4: 'Meliá Palma Bay', 5: 'Castillo Hotel Son Vida' },
+    TFN: { 3: 'Hotel Puerto de la Cruz', 4: 'Iberostar Heritage Grand Mencey', 5: 'The Ritz-Carlton Abama' },
+    TFS: { 3: 'Hotel Coral Teide Mar', 4: 'Bahia Principe Tenerife', 5: 'Gran Meliá Palacio de Isora' },
+    AGP: { 3: 'Hotel Don Paco Málaga', 4: 'Barceló Málaga Hotel', 5: 'Gran Hotel Miramar Málaga' },
+    SVQ: { 3: 'Casual de las Letras Sevilla', 4: 'Meliá Sevilla Hotel', 5: 'Hotel Alfonso XIII Sevilla' },
+    VLC: { 3: 'Casual del Cine Valencia', 4: 'Barceló Valencia Hotel', 5: 'Las Arenas Balneario Resort' },
+    OPO: { 3: 'Hotel Moov Porto Centro', 4: 'Eurostars Das Artes Oporto', 5: 'The Yeatman Hotel Porto' },
+    LIS: { 3: 'Hotel Principe Lisboa', 4: 'Hotel Mundial Lisboa', 5: 'Tivoli Avenida Liberdade' },
+    BER: { 3: 'ibis Berlin Hauptbahnhof', 4: 'Park Inn by Radisson Alexanderplatz', 5: 'Hotel Adlon Kempinski Berlin' },
+    AMS: { 3: 'Motel One Amsterdam', 4: 'Inntel Hotels Amsterdam Centre', 5: 'Anantara Grand Hotel Krasnapolsky' },
+    PRG: { 3: 'Hotel ibis Praha Old Town', 4: 'Don Giovanni Hotel Prague', 5: 'The Grand Mark Prague' },
+    VIE: { 3: 'Motel One Wien-Hauptbahnhof', 4: 'NH Collection Wien Zentrum', 5: 'Hotel Sacher Wien' },
+    BUD: { 3: 'ibis Budapest City', 4: 'Continental Hotel Budapest', 5: 'Four Seasons Hotel Gresham Palace' },
+    RAK: { 3: 'Hotel Red Hotel Marrakech', 4: 'Kenzi Rose Garden Marrakech', 5: 'La Mamounia Marrakech' },
+  };
+
+  const code = (destCode || '').toUpperCase();
+  const cityHotels = HOTELS_MAP[code];
+  if (cityHotels && cityHotels[stars]) {
+    return cityHotels[stars];
+  }
+
+  if (stars === 5) return `Hotel Grand & Spa ${cityName}`;
+  if (stars === 4) return `Hotel Plaza ${cityName}`;
+  return `Hotel Central ${cityName}`;
 }
 
 export function buildSkyscannerUrl(origin: string, dest: string, depDateStr: string, retDateStr: string, adults: number): string {
