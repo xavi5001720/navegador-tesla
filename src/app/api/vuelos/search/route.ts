@@ -83,6 +83,8 @@ export async function GET(req: NextRequest) {
   const children = Math.max(0, parseInt(searchParams.get('children') || '0', 10));
   const infants = Math.max(0, parseInt(searchParams.get('infants') || '0', 10));
   const isOneWay = searchParams.get('oneWay') === 'true';
+  const durationMin = Math.max(1, parseInt(searchParams.get('durationMin') || '1', 10));
+  const durationMax = Math.max(durationMin, parseInt(searchParams.get('durationMax') || '30', 10));
 
   const effectiveReturnAt = isOneWay ? null : returnAt;
 
@@ -115,17 +117,37 @@ export async function GET(req: NextRequest) {
       if (!byDest[dc] || item.price < byDest[dc].price) byDest[dc] = item;
     }
 
-    const results = Object.values(byDest)
+    // Filter by trip duration range (when both departure_at and return_at are known)
+    const filtered = Object.values(byDest).filter((item) => {
+      if (isOneWay) return true;
+      const dep = item.departure_at ? new Date(item.departure_at) : null;
+      const ret = item.return_at ? new Date(item.return_at) : null;
+      if (!dep || !ret) return true; // keep if we can't determine duration
+      const days = Math.round((ret.getTime() - dep.getTime()) / 86400000);
+      return days >= durationMin && days <= durationMax;
+    });
+
+    // If the filter is too strict and leaves nothing, fall back to all results
+    const pool = filtered.length > 0 ? filtered : Object.values(byDest);
+
+    const midDays = Math.round((durationMin + durationMax) / 2);
+
+    const results = pool
       .map((item) => {
         const destCode = item.destination;
         const cityInfo = CITY_MAP[destCode] || { city: destCode, country: 'Europa' };
         const pricePerPerson = Math.round(item.price || 30);
         const totalPrice = calcTotal(pricePerPerson, adults, children, infants);
         const depDateStr = item.departure_at ? item.departure_at.slice(0, 10) : departureAt || '';
-        const retDateStr = effectiveReturnAt
+        // For return date: prefer the API's return_at, else compute from midDays range
+        const retDateStr = isOneWay
+          ? null
+          : effectiveReturnAt
           ? effectiveReturnAt
           : item.return_at
           ? item.return_at.slice(0, 10)
+          : depDateStr
+          ? new Date(new Date(depDateStr).getTime() + midDays * 86400000).toISOString().slice(0, 10)
           : null;
         const skyscannerUrl = buildSkyscannerUrl(origin, destCode, depDateStr, retDateStr, adults, children, infants);
 

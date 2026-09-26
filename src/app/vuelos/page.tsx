@@ -38,7 +38,8 @@ const DEFAULT_QUERY: VuelosQuery = {
   oneWay: false,
   dateMode: 'flexible',
   flexDeparture: defDep,
-  flexDuration: 3,
+  flexDurationMin: 3,
+  flexDurationMax: 7,
 };
 
 
@@ -61,6 +62,8 @@ export default function VuelosPage() {
         children: String(q.children),
         infants: String(q.infants),
         oneWay: q.oneWay ? 'true' : 'false',
+        durationMin: String(q.flexDurationMin ?? 1),
+        durationMax: String(q.flexDurationMax ?? 30),
       });
       const res = await fetch(`/api/vuelos/search?${params.toString()}`);
       const data = await res.json();

@@ -45,13 +45,7 @@ function nextWeekendDates(): { dep: string; ret: string } {
   };
 }
 
-const DURATION_OPTIONS = [
-  { label: '2 días', days: 2 },
-  { label: '3 días', days: 3 },
-  { label: '5 días', days: 5 },
-  { label: '7 días', days: 7 },
-  { label: '10 días', days: 10 },
-];
+
 
 export interface VuelosQuery {
   origin: string;
@@ -63,8 +57,9 @@ export interface VuelosQuery {
   infants: number;
   oneWay: boolean;
   dateMode: 'exact' | 'flexible';
-  flexDeparture: string;  // fecha aproximada de salida
-  flexDuration: number;   // duración en días
+  flexDeparture: string;     // fecha aproximada de salida
+  flexDurationMin: number;   // mínimo de días que quieres estar
+  flexDurationMax: number;   // máximo de días que quieres estar
 }
 
 interface Props {
@@ -86,7 +81,8 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
 
   // Flexible dates: solo necesitamos la fecha de salida y cuántos días
   const [flexDeparture, setFlexDeparture] = useState(defDep);
-  const [flexDuration, setFlexDuration] = useState(3);
+  const [flexDurationMin, setFlexDurationMin] = useState(3);
+  const [flexDurationMax, setFlexDurationMax] = useState(7);
 
   // Travellers
   const [adults, setAdults] = useState(2);
@@ -95,11 +91,12 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // En modo flexible, calculamos la vuelta sumando los días elegidos a la salida
+    // En modo flexible usamos el punto medio del rango como fecha de vuelta orientativa
     const flexReturnAt = (() => {
       if (oneWay) return '';
+      const midDays = Math.round((flexDurationMin + flexDurationMax) / 2);
       const dep = new Date(flexDeparture);
-      dep.setDate(dep.getDate() + flexDuration);
+      dep.setDate(dep.getDate() + midDays);
       return dep.toISOString().slice(0, 10);
     })();
     onSearch({
@@ -113,7 +110,8 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
       oneWay,
       dateMode,
       flexDeparture,
-      flexDuration,
+      flexDurationMin,
+      flexDurationMax,
     });
   };
 
@@ -277,30 +275,70 @@ export default function VuelosSearchForm({ onSearch, isLoading }: Props) {
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 transition-colors"
               />
             </div>
-            {/* Duración */}
+            {/* Duración rango min/max */}
             {!oneWay && (
               <div>
                 <label className="block text-xs text-slate-600 mb-2">¿Cuántos días quieres estar?</label>
-                <div className="flex flex-wrap gap-2">
-                  {DURATION_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.days}
-                      type="button"
-                      onClick={() => setFlexDuration(opt.days)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all ${
-                        flexDuration === opt.days
-                          ? 'bg-red-600 border-red-500 text-white'
-                          : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white hover:border-slate-600'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
+                <div className="flex items-center gap-3">
+                  {/* Mínimo */}
+                  <div className="flex-1">
+                    <p className="text-[10px] text-slate-500 mb-1 text-center">Mínimo</p>
+                    <div className="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
+                      <button
+                        type="button"
+                        onClick={() => setFlexDurationMin(Math.max(1, flexDurationMin - 1))}
+                        disabled={flexDurationMin <= 1}
+                        className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-white font-bold flex items-center justify-center transition-colors disabled:opacity-30 text-sm"
+                      >−</button>
+                      <span className="text-lg font-black text-white w-8 text-center">{flexDurationMin}</span>
+                      <button
+                        type="button"
+                        onClick={() => setFlexDurationMin(Math.min(flexDurationMax - 1, flexDurationMin + 1))}
+                        disabled={flexDurationMin >= flexDurationMax - 1}
+                        className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-white font-bold flex items-center justify-center transition-colors disabled:opacity-30 text-sm"
+                      >+</button>
+                    </div>
+                  </div>
+
+                  {/* Separador visual */}
+                  <div className="flex flex-col items-center gap-0.5 pt-4">
+                    <div className="w-6 h-px bg-slate-700" />
+                    <span className="text-[10px] text-slate-600">a</span>
+                    <div className="w-6 h-px bg-slate-700" />
+                  </div>
+
+                  {/* Máximo */}
+                  <div className="flex-1">
+                    <p className="text-[10px] text-slate-500 mb-1 text-center">Máximo</p>
+                    <div className="flex items-center justify-between bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
+                      <button
+                        type="button"
+                        onClick={() => setFlexDurationMax(Math.max(flexDurationMin + 1, flexDurationMax - 1))}
+                        disabled={flexDurationMax <= flexDurationMin + 1}
+                        className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-white font-bold flex items-center justify-center transition-colors disabled:opacity-30 text-sm"
+                      >−</button>
+                      <span className="text-lg font-black text-white w-8 text-center">{flexDurationMax}</span>
+                      <button
+                        type="button"
+                        onClick={() => setFlexDurationMax(Math.min(30, flexDurationMax + 1))}
+                        disabled={flexDurationMax >= 30}
+                        className="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-white font-bold flex items-center justify-center transition-colors disabled:opacity-30 text-sm"
+                      >+</button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Badge resumen */}
+                <div className="mt-2 flex justify-center">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-950/60 border border-red-900/50 text-red-400 text-xs font-bold">
+                    <span>🗓️</span>
+                    <span>Entre {flexDurationMin} y {flexDurationMax} días</span>
+                  </span>
                 </div>
               </div>
             )}
             <p className="text-[11px] text-slate-600">
-              Buscaremos los mejores precios disponibles a partir de esa fecha
+              Buscaremos los mejores precios dentro de tu rango de días preferido
             </p>
           </div>
         )}
