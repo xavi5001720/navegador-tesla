@@ -306,9 +306,9 @@ export const HOTEL_FILTER_CATEGORIES: HotelFilterCategory[] = [
     icon: '🍽️',
     items: [
       { id: 'breakfast', label: 'Desayuno incluido', nfltParam: 'mealplan=1', icon: '🥐' },
-      { id: 'half_board', label: 'Desayuno y cena incluidos', nfltParam: 'mealplan=2', icon: '🍽️' },
-      { id: 'all_inclusive', label: 'Todas las comidas (Todo incluido)', nfltParam: 'mealplan=4', icon: '🍹' },
-      { id: 'kitchen', label: 'Con cocina', nfltParam: 'room_facility=11', icon: '🍳' },
+      { id: 'half_board', label: 'Desayuno y cena incluidos', nfltParam: 'mealplan=9', icon: '🍽️' },
+      { id: 'all_inclusive', label: 'Todas las comidas (Todo incluido)', nfltParam: 'mealplan=3', icon: '🍹' },
+      { id: 'kitchen', label: 'Con cocina', nfltParam: 'mealplan=999', icon: '🍳' },
     ],
   },
   {
