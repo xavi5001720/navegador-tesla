@@ -227,8 +227,8 @@ export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<Flight
       const flightPriceTotal = Math.round(baseFlightPrice * adults + baseFlightPrice * 0.75 * children + baseFlightPrice * 0.15 * infants);
 
       const rooms = Math.max(1, Math.ceil(adults / 2));
-      const baseRatePerNight = minStars === 5 ? 135 : minStars === 4 ? 75 : 45;
-      const familyMultiplier = children > 0 ? (1 + children * 0.35) : 1;
+      const baseRatePerNight = minStars === 5 ? 190 : minStars === 4 ? 120 : 65;
+      const familyMultiplier = children > 0 ? (1 + children * 0.5) : 1;
       const hotelRatePerNight = Math.round(baseRatePerNight * familyMultiplier);
       const hotelPrice = hotelRatePerNight * duration * rooms;
       const totalPrice = flightPriceTotal + hotelPrice;
@@ -319,7 +319,7 @@ function generateCarHotelDeals(query: EscapadaSearchQuery, marker: string): Flig
   return destinations.map((d, i) => {
     const info = AIRPORTS_MAP[d.code] || { city: d.city, country: d.country, image: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=800&auto=format&fit=crop' };
     const rooms = Math.max(1, Math.ceil(adults / 2));
-    const hotelRatePerNight = minStars === 5 ? 120 : minStars === 4 ? 70 : 40;
+    const hotelRatePerNight = minStars === 5 ? 190 : minStars === 4 ? 120 : 65;
     const hotelPrice = hotelRatePerNight * duration * rooms;
     const totalPrice = hotelPrice; // Vuelo 0€
     const pricePerAdult = Math.round(totalPrice / adults);
@@ -395,7 +395,7 @@ function generateFallbackDeals(query: EscapadaSearchQuery, marker: string): Flig
     };
     const flightPriceTotal = Math.round(d.price * adults + d.price * 0.75 * children + d.price * 0.15 * infants);
     const rooms = Math.max(1, Math.ceil(adults / 2));
-    const hotelPrice = (minStars === 5 ? 120 : minStars === 4 ? 70 : 40) * duration * rooms;
+    const hotelPrice = (minStars === 5 ? 190 : minStars === 4 ? 120 : 65) * duration * rooms;
     const totalPrice = flightPriceTotal + hotelPrice;
     const pricePerAdult = Math.round(totalPrice / adults);
 

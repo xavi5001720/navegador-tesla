@@ -200,10 +200,11 @@ export default function VueloCard({ flight, rank }: Props) {
               </div>
               <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-slate-800/60">
                 <span>
-                  {flight.hotelRatePerNight || (flight.hotelStars === 5 ? 135 : flight.hotelStars === 4 ? 75 : 45)}€/noche × {flight.hotelNights} {flight.hotelNights === 1 ? 'noche' : 'noches'} × {flight.hotelRooms} {flight.hotelRooms === 1 ? 'habitación' : 'habitaciones'}
+                  {flight.hotelRatePerNight || (flight.hotelStars === 5 ? 190 : flight.hotelStars === 4 ? 120 : 65)}€/noche × {flight.hotelNights} {flight.hotelNights === 1 ? 'noche' : 'noches'} × {flight.hotelRooms} {flight.hotelRooms === 1 ? 'habitación' : 'habitaciones'}
                 </span>
                 <span className="font-extrabold text-amber-400 text-sm ml-2 font-mono whitespace-nowrap">
-                  = {flight.hotelEstimatedPrice} €
+                  ~{flight.hotelEstimatedPrice} €
+                  <span className="text-[9px] text-amber-500/70 font-normal ml-0.5">(est.)</span>
                 </span>
               </div>
             </div>
@@ -216,10 +217,10 @@ export default function VueloCard({ flight, rank }: Props) {
             >
               <span className="flex items-center space-x-1.5 truncate mr-2">
                 <span>🏨</span>
-                <span className="truncate">Ver alojamiento más barato en Booking.com</span>
+                <span className="truncate">Buscar alojamientos en Booking.com</span>
               </span>
               <span className="bg-emerald-700/90 group-hover/btn:bg-emerald-600 px-2 py-0.5 rounded-lg text-xs font-black flex-shrink-0">
-                {flight.hotelEstimatedPrice} €
+                desde ~{flight.hotelEstimatedPrice} €
               </span>
             </a>
 
@@ -228,10 +229,10 @@ export default function VueloCard({ flight, rank }: Props) {
               <div className="flex items-center space-x-1 text-[11px] text-slate-300">
                 <span>✈️ Vuelo {flight.totalPrice}€</span>
                 <span>+</span>
-                <span>🏨 Hotel {flight.hotelEstimatedPrice}€</span>
+                <span>🏨 Hotel ~{flight.hotelEstimatedPrice}€</span>
               </div>
               <div className="font-black text-amber-300 text-sm">
-                = Total: {flight.totalPackagePrice} €
+                ≈ Total: ~{flight.totalPackagePrice} €
               </div>
             </div>
           </div>

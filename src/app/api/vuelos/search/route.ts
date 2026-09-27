@@ -392,8 +392,10 @@ export async function GET(req: NextRequest) {
           }
 
           hotelRooms = Math.max(1, Math.ceil(adults / 2));
-          const baseRatePerNight = hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45;
-          const familyMultiplier = children > 0 ? (1 + children * 0.35) : 1;
+          // Tarifas base más realistas: hotel 4★ familiar en ciudad europea cuesta ~120-200€/noche
+          const baseRatePerNight = hotelStars === 5 ? 190 : hotelStars === 4 ? 120 : 65;
+          // Multiplicador familiar: habitación familiar o suite cuesta ~50% más por cada niño adicional
+          const familyMultiplier = children > 0 ? (1 + children * 0.5) : 1;
           hotelRatePerNight = Math.round(baseRatePerNight * familyMultiplier);
           hotelEstimatedPrice = hotelRatePerNight * hotelNights * hotelRooms;
           totalPackagePrice = totalPrice + hotelEstimatedPrice;
@@ -476,8 +478,10 @@ export async function GET(req: NextRequest) {
         }
 
         hotelRooms = Math.max(1, Math.ceil(adults / 2));
-        const baseRatePerNight = hotelStars === 5 ? 135 : hotelStars === 4 ? 75 : 45;
-        const familyMultiplier = children > 0 ? (1 + children * 0.35) : 1;
+        // Tarifas base más realistas: hotel 4★ familiar en ciudad europea cuesta ~120-200€/noche
+        const baseRatePerNight = hotelStars === 5 ? 190 : hotelStars === 4 ? 120 : 65;
+        // Multiplicador familiar: habitación familiar o suite cuesta ~50% más por cada niño adicional
+        const familyMultiplier = children > 0 ? (1 + children * 0.5) : 1;
         hotelRatePerNight = Math.round(baseRatePerNight * familyMultiplier);
         hotelEstimatedPrice = hotelRatePerNight * hotelNights * hotelRooms;
         totalPackagePrice = totalPrice + hotelEstimatedPrice;
