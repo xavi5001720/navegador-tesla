@@ -430,7 +430,7 @@ export async function GET(req: NextRequest) {
           totalPackagePrice: includeHotel ? totalPackagePrice : totalPrice,
         };
       })
-      .sort((a, b) => (a.totalPackagePrice ?? a.totalPrice) - (b.totalPackagePrice ?? b.totalPrice))
+      .sort((a, b) => a.totalPrice - b.totalPrice)
       .slice(0, 20);
 
     return NextResponse.json(
@@ -518,7 +518,7 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json(
-      { success: true, results: results.sort((a, b) => (a.totalPackagePrice ?? a.totalPrice) - (b.totalPackagePrice ?? b.totalPrice)), source: 'fallback' },
+      { success: true, results: results.sort((a, b) => a.totalPrice - b.totalPrice), source: 'fallback' },
       { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0' } }
     );
   }

@@ -82,7 +82,7 @@ export default function VuelosPage() {
 
   const originName = getAirportCityName(lastQuery.origin);
   const isAnyDest = !lastQuery.destination || lastQuery.destination === 'ANY';
-  const cheapestPrice = results.length > 0 ? (lastQuery.includeHotel ? (results[0].totalPackagePrice ?? results[0].totalPrice) : results[0].totalPrice) : null;
+  const cheapestPrice = results.length > 0 ? results[0].totalPrice : null;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-sky-500 selection:text-white">
