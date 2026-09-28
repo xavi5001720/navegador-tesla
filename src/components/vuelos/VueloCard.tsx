@@ -66,8 +66,7 @@ function buildPriceFormula(v: VueloResult): string {
   const parts: string[] = [];
   if (v.adults > 0) parts.push(`${v.adults} ${v.adults === 1 ? 'Adulto' : 'Adultos'} x ${v.pricePerPerson}€`);
   if (v.children > 0) {
-    const cp = Math.round(v.pricePerPerson * 0.75);
-    parts.push(`${v.children} ${v.children === 1 ? 'Niño' : 'Niños'} x ${cp}€`);
+    parts.push(`${v.children} ${v.children === 1 ? 'Niño' : 'Niños'} x ${v.pricePerPerson}€`);
   }
   if (v.infants > 0) {
     const ip = Math.round(v.pricePerPerson * 0.10);
@@ -173,8 +172,10 @@ export default function VueloCard({ flight, rank }: Props) {
           </span>
           <span className="bg-sky-700/90 group-hover/btn:bg-sky-600 px-2 py-0.5 rounded-lg text-xs font-black">
             {flight.totalPrice} €
-          </span>
         </a>
+        <p className="text-[10px] text-slate-500 italic text-center leading-tight">
+          Precios de vuelo recopilados recientemente · Skyscanner confirma el precio final en tiempo real
+        </p>
 
         {/* ═══════════════════════════════════════════════
             SECCIÓN HOTEL — Sin precios estimados.

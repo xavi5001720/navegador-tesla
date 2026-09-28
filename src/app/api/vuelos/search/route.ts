@@ -231,7 +231,7 @@ function buildSkyscannerUrl(
 }
 
 function calcTotal(pricePerPerson: number, adults: number, children: number, infants: number): number {
-  return Math.round(pricePerPerson * adults + pricePerPerson * 0.75 * children + pricePerPerson * 0.10 * infants);
+  return Math.round(pricePerPerson * (adults + children) + pricePerPerson * 0.10 * infants);
 }
 
 export async function GET(req: NextRequest) {
