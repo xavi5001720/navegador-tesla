@@ -77,7 +77,7 @@ export default function EscapadasPage() {
               href="/navegador"
               className="text-slate-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-800/60"
             >
-              📡 Navegador & Radares
+              🚗 Navegador & Radares
             </Link>
             <Link
               href="/escapadas"

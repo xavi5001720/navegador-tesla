@@ -92,7 +92,7 @@ export default function VuelosPage() {
           <Link href="/" className="flex items-center space-x-2.5 group">
             <span className="text-2xl">⚡</span>
             <span className="font-extrabold text-lg tracking-tight text-white group-hover:text-sky-400 transition-colors">
-              Viajando en Tesla <span className="text-sky-500 text-sm font-semibold">| Vuelos</span>
+              Viajando en Tesla
             </span>
           </Link>
           <nav className="flex items-center space-x-2 text-sm font-medium">
@@ -100,33 +100,52 @@ export default function VuelosPage() {
               🛒 Accesorios
             </Link>
             <Link href="/navegador" className="text-slate-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-800/60 hidden sm:block">
-              📡 Navegador
-            </Link>
-            <Link href="/vuelos" className="text-white bg-sky-600/90 hover:bg-sky-600 px-3.5 py-1.5 rounded-lg shadow-sm transition-all font-semibold">
-              ✈️ Vuelos
-            </Link>
-            <Link href="/escapadas" className="text-slate-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-800/60">
-              🏨 Escapadas
+              🚗 Navegador
             </Link>
           </nav>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 lg:px-8 py-8 w-full flex-1 space-y-8">
-        {/* Hero */}
-        <div className="text-center space-y-3 max-w-2xl mx-auto">
-          <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-sky-950/80 border border-sky-800/50 text-sky-400 text-xs font-bold tracking-wide">
-            <span>✈️ BUSCADOR DE VUELOS BARATOS</span>
+        {/* Hero Mágico */}
+        <div className="relative text-center space-y-4 max-w-3xl mx-auto bg-gradient-to-b from-sky-950/40 via-slate-900/30 to-slate-950 border border-sky-500/20 rounded-3xl p-6 sm:p-10 shadow-2xl overflow-hidden backdrop-blur-md">
+          {/* Ambient Glow */}
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-sky-500/15 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Badge */}
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-300 text-xs font-bold tracking-wider uppercase backdrop-blur-md shadow-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-400"></span>
+            </span>
+            <span>Cazador de Chollos & Vuelos en Tiempo Real</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
-            Encuentra el vuelo{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-cyan-300">
-              más barato
+
+          {/* Headline */}
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-[1.15] relative z-10">
+            Encuentra tu próximo vuelo <br className="hidden sm:inline" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-indigo-400">
+              al precio más bajo
             </span>
           </h1>
-          <p className="text-slate-400 text-sm sm:text-base">
-            Compara precios reales en tiempo real. Redirigimos directamente a Skyscanner para que reserves con total seguridad.
+
+          {/* Subtitle */}
+          <p className="text-slate-300 text-sm sm:text-base max-w-xl mx-auto leading-relaxed relative z-10">
+            Rastreamos las mejores ofertas mundiales en tiempo real y te conectamos directamente con Skyscanner para reservar al mejor precio.
           </p>
+
+          {/* Highlights */}
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-[11px] font-semibold text-slate-300 relative z-10">
+            <span className="bg-slate-900/80 border border-slate-800 px-3 py-1 rounded-full flex items-center gap-1.5">
+              ⚡ Precios verificados
+            </span>
+            <span className="bg-slate-900/80 border border-slate-800 px-3 py-1 rounded-full flex items-center gap-1.5">
+              🛡️ Reserva directa en Skyscanner
+            </span>
+            <span className="bg-slate-900/80 border border-slate-800 px-3 py-1 rounded-full flex items-center gap-1.5">
+              💸 100% Sin Comisiones
+            </span>
+          </div>
         </div>
 
         {/* Search Form */}
