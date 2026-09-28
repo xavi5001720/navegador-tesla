@@ -281,18 +281,38 @@ export async function GET(req: NextRequest) {
   }
 
 
+  let latestUrl = `https://api.travelpayouts.com/v2/prices/latest?origin=${origin}&currency=eur&period_type=year&page=1&limit=100&sorting=price&token=${TOKEN}`;
+  if (!anyDest) latestUrl += `&destination=${destination}`;
+
   try {
-    const res = await fetch(apiUrl, {
-      headers: { 'Accept-Encoding': 'gzip' },
-      // @ts-ignore
-      next: { revalidate: 1800 },
-    });
+    const [res1, res2] = await Promise.allSettled([
+      fetch(apiUrl, { headers: { 'Accept-Encoding': 'gzip' }, cache: 'no-store' }),
+      fetch(latestUrl, { headers: { 'Accept-Encoding': 'gzip' }, cache: 'no-store' }),
+    ]);
 
-    if (!res.ok) throw new Error(`API error: ${res.status}`);
+    let rawItems: any[] = [];
+    if (res1.status === 'fulfilled' && res1.value.ok) {
+      const data1 = await res1.value.json();
+      rawItems = data1.data || [];
+    }
 
-    const data = await res.json();
-    const rawItems: any[] = data.data || [];
-    const items = rawItems.filter((item) => !item.origin || item.origin.toUpperCase() === origin);
+    let latestItems: any[] = [];
+    if (res2.status === 'fulfilled' && res2.value.ok) {
+      const data2 = await res2.value.json();
+      const rawLatest = data2.data || [];
+      latestItems = rawLatest.map((item: any) => ({
+        destination: item.destination,
+        departure_at: item.depart_date ? `${item.depart_date}T00:00:00` : '',
+        return_at: item.return_date ? `${item.return_date}T00:00:00` : null,
+        price: item.value,
+        airline: null,
+        transfers: item.number_of_changes ?? 0,
+        found_at: item.found_at,
+        origin: item.origin || origin,
+      }));
+    }
+
+    const items = [...latestItems, ...rawItems].filter((item) => !item.origin || item.origin.toUpperCase() === origin);
     const hasDepConstraint = Boolean(departureAt);
 
     if (items.length === 0) {
