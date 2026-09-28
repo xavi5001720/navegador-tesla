@@ -19,6 +19,8 @@ export interface VueloResult {
   airline: string | null;
   transfers: number | null;
   skyscannerUrl: string;
+  foundAt?: string | null;
+  isToday?: boolean;
   includeHotel?: boolean;
   hotelStars?: number;
   hotelName?: string;
@@ -98,10 +100,25 @@ export default function VueloCard({ flight, rank }: Props) {
 
         {/* Rank badge */}
         {rank !== undefined && rank <= 3 && (
-          <div className="absolute top-2.5 left-2.5 bg-amber-500/90 backdrop-blur text-slate-900 text-[11px] font-black px-2.5 py-1 rounded-full">
+          <div className="absolute top-2.5 left-2.5 bg-amber-500/90 backdrop-blur text-slate-900 text-[11px] font-black px-2.5 py-1 rounded-full z-10">
             {rank === 1 ? '🥇 Más barato' : rank === 2 ? '🥈 2º más barato' : '🥉 3º más barato'}
           </div>
         )}
+
+        {/* Freshness Badge */}
+        {flight.isToday ? (
+          <div className="absolute top-2.5 right-2.5 bg-emerald-950/90 border border-emerald-500/50 backdrop-blur text-emerald-300 text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1.5 z-10">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span>Visto hoy</span>
+          </div>
+        ) : flight.foundAt ? (
+          <div className="absolute top-2.5 right-2.5 bg-slate-900/80 border border-slate-800 backdrop-blur text-slate-400 text-[10px] font-medium px-2 py-0.5 rounded-full z-10">
+            <span>🕒 {formatDate(flight.foundAt)}</span>
+          </div>
+        ) : null}
 
         {/* Price badge — solo precio del vuelo */}
         <div className="absolute bottom-2.5 right-2.5 bg-sky-600/95 backdrop-blur-sm text-white px-3 py-1.5 rounded-xl text-right shadow-lg">
@@ -172,9 +189,12 @@ export default function VueloCard({ flight, rank }: Props) {
           </span>
           <span className="bg-sky-700/90 group-hover/btn:bg-sky-600 px-2 py-0.5 rounded-lg text-xs font-black">
             {flight.totalPrice} €
+          </span>
         </a>
         <p className="text-[10px] text-slate-500 italic text-center leading-tight">
-          Precios de vuelo recopilados recientemente · Skyscanner confirma el precio final en tiempo real
+          {flight.isToday
+            ? '⚡ Encontrado HOY · Skyscanner confirma tarifa en tiempo real'
+            : 'Precios recopilados recientemente · Skyscanner confirma el precio final en tiempo real'}
         </p>
 
         {/* ═══════════════════════════════════════════════

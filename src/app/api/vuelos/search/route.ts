@@ -230,6 +230,18 @@ function buildSkyscannerUrl(
   return `${base}/?${params.toString()}`;
 }
 
+function parseFoundAt(item: any): string | null {
+  if (item.found_at) return item.found_at.slice(0, 10);
+  if (item.link) {
+    const match = item.link.match(/search_date=(\d{2})(\d{2})(\d{4})/);
+    if (match) {
+      const [, d, m, y] = match;
+      return `${y}-${m}-${d}`;
+    }
+  }
+  return null;
+}
+
 function calcTotal(pricePerPerson: number, adults: number, children: number, infants: number): number {
   return Math.round(pricePerPerson * (adults + children) + pricePerPerson * 0.10 * infants);
 }
@@ -402,6 +414,10 @@ export async function GET(req: NextRequest) {
           hotelBookingUrl = buildBookingUrl(cityInfo.city, depDateStr, retDateStr || depDateStr, adults, children, hotelRooms, hotelStars, hotelFilters, MARKER);
         }
 
+        const foundAt = parseFoundAt(item);
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const isToday = foundAt === todayStr;
+
         return {
           id: `${origin}-${destCode}-${depDateStr}`,
           origin,
@@ -418,6 +434,8 @@ export async function GET(req: NextRequest) {
           airline: item.airline || null,
           transfers: item.transfers ?? null,
           skyscannerUrl,
+          foundAt,
+          isToday,
           marker: MARKER,
           includeHotel,
           hotelStars: includeHotel ? hotelStars : undefined,
@@ -430,7 +448,11 @@ export async function GET(req: NextRequest) {
           totalPackagePrice: includeHotel ? totalPackagePrice : totalPrice,
         };
       })
-      .sort((a, b) => a.totalPrice - b.totalPrice)
+      .sort((a, b) => {
+        if (a.isToday && !b.isToday) return -1;
+        if (!a.isToday && b.isToday) return 1;
+        return a.totalPrice - b.totalPrice;
+      })
       .slice(0, 20);
 
     return NextResponse.json(
@@ -504,6 +526,8 @@ export async function GET(req: NextRequest) {
         airline: null,
         transfers: null,
         skyscannerUrl,
+        foundAt: new Date().toISOString().slice(0, 10),
+        isToday: true,
         marker: MARKER,
         includeHotel,
         hotelStars: includeHotel ? hotelStars : undefined,
