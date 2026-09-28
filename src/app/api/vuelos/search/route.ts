@@ -344,8 +344,8 @@ export async function GET(req: NextRequest) {
         ? true
         : dep >= depWindowStart && dep <= depWindowEnd;
 
-      // Check duration range (si hay fechas exactas de ida y vuelta, se permite la duracion exacta)
-      const inDuration = isOneWay || !dep || !ret || (departureAt && returnAt)
+      // Check duration range
+      const inDuration = isOneWay || !dep || !ret
         ? true
         : (() => {
             const days = Math.round((ret.getTime() - dep.getTime()) / 86400000);
@@ -355,7 +355,7 @@ export async function GET(req: NextRequest) {
       return inWindow && inDuration;
     });
 
-    const candidatePool = validItems.length > 0 ? validItems : items;
+    const candidatePool = validItems;
 
     if (candidatePool.length === 0) {
       throw new Error('No candidate items in pool');
