@@ -106,19 +106,36 @@ export default function VueloCard({ flight, rank }: Props) {
         )}
 
         {/* Freshness Badge */}
-        {flight.isToday ? (
-          <div className="absolute top-2.5 right-2.5 bg-emerald-950/90 border border-emerald-500/50 backdrop-blur text-emerald-300 text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1.5 z-10">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
-            <span>Visto hoy</span>
-          </div>
-        ) : flight.foundAt ? (
-          <div className="absolute top-2.5 right-2.5 bg-slate-900/80 border border-slate-800 backdrop-blur text-slate-400 text-[10px] font-medium px-2 py-0.5 rounded-full z-10">
-            <span>🕒 {formatDate(flight.foundAt)}</span>
-          </div>
-        ) : null}
+        {(() => {
+          if (flight.isToday) {
+            return (
+              <div className="absolute top-2.5 right-2.5 bg-emerald-950/90 border border-emerald-500/50 backdrop-blur text-emerald-300 text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1.5 z-10">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span>Visto hoy</span>
+              </div>
+            );
+          }
+          if (!flight.foundAt) return null;
+          const now = new Date();
+          const found = new Date(flight.foundAt);
+          const diffDays = Math.max(1, Math.round((now.getTime() - found.getTime()) / 86400000));
+          if (diffDays <= 2) {
+            return (
+              <div className="absolute top-2.5 right-2.5 bg-emerald-950/80 border border-emerald-600/40 backdrop-blur text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full z-10 flex items-center gap-1">
+                <span>🟢</span>
+                <span>Visto hace {diffDays} {diffDays === 1 ? 'día' : 'días'}</span>
+              </div>
+            );
+          }
+          return (
+            <div className="absolute top-2.5 right-2.5 bg-slate-900/80 border border-slate-800 backdrop-blur text-slate-400 text-[10px] font-medium px-2 py-0.5 rounded-full z-10">
+              <span>🕒 Visto el {formatDate(flight.foundAt)}</span>
+            </div>
+          );
+        })()}
 
         {/* Price badge — solo precio del vuelo */}
         <div className="absolute bottom-2.5 right-2.5 bg-sky-600/95 backdrop-blur-sm text-white px-3 py-1.5 rounded-xl text-right shadow-lg">
