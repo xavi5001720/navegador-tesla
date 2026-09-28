@@ -84,7 +84,6 @@ interface Props {
 export default function VueloCard({ flight, rank }: Props) {
   const image = CITY_IMAGES[flight.destination] || DEFAULT_IMG;
   const isRoundTrip = !!flight.returnAt;
-  const displayPrice = flight.includeHotel ? (flight.totalPackagePrice ?? flight.totalPrice) : flight.totalPrice;
 
   return (
     <div className="group relative bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden hover:border-sky-500/40 transition-all duration-300 shadow-xl hover:shadow-sky-900/20 flex flex-col">
@@ -105,11 +104,11 @@ export default function VueloCard({ flight, rank }: Props) {
           </div>
         )}
 
-        {/* Price badge */}
+        {/* Price badge — solo precio del vuelo */}
         <div className="absolute bottom-2.5 right-2.5 bg-sky-600/95 backdrop-blur-sm text-white px-3 py-1.5 rounded-xl text-right shadow-lg">
-          <div className="text-xl font-black leading-tight">{displayPrice} €</div>
+          <div className="text-xl font-black leading-tight">{flight.totalPrice} €</div>
           <div className="text-[10px] font-semibold opacity-90">
-            {flight.includeHotel ? '✈️ Vuelo + 🏨 Hotel' : `desde ${flight.pricePerPerson}€ / persona`}
+            ✈️ desde {flight.pricePerPerson}€/persona
           </div>
         </div>
       </div>
@@ -177,64 +176,69 @@ export default function VueloCard({ flight, rank }: Props) {
           </span>
         </a>
 
-        {/* Hotel section (if requested) */}
+        {/* ═══════════════════════════════════════════════
+            SECCIÓN HOTEL — Sin precios estimados.
+            Solo info útil + enlace inteligente a Booking.
+            ═══════════════════════════════════════════════ */}
         {flight.includeHotel && flight.hotelBookingUrl && (
           <div className="pt-3 border-t border-slate-800/80 space-y-2.5">
-            <div className="flex items-center justify-between text-xs text-slate-300">
-              <span className="font-bold text-amber-400 flex items-center gap-1.5 truncate mr-2">
-                <span>🏨</span>
-                <span className="truncate">Alojamiento {flight.hotelStars}★ más barato</span>
-              </span>
-              <span className="text-[10px] text-slate-400 font-medium flex-shrink-0">
-                👥 {flight.adults} {flight.adults === 1 ? 'Adulto' : 'Adultos'}
-                {flight.children > 0 ? ` + ${flight.children} ${flight.children === 1 ? 'Niño' : 'Niños'}` : ''}
-              </span>
-            </div>
 
-            <div className="bg-slate-950/70 rounded-xl border border-slate-800 p-2.5 text-xs text-slate-300 space-y-1.5">
-              <div className="text-white font-bold flex items-center justify-between">
-                <span className="text-amber-300 truncate">🏨 Opción más económica en {flight.destinationCity}</span>
-                <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.5 rounded font-bold flex-shrink-0 ml-1">
-                  {'⭐'.repeat(flight.hotelStars || 3)}
+            {/* Info card del alojamiento */}
+            <div className="bg-slate-950/60 rounded-xl border border-amber-900/30 p-3 space-y-2.5">
+
+              {/* Título + estrellas mínimas */}
+              <div className="flex items-center justify-between">
+                <span className="text-amber-400 font-bold text-xs flex items-center gap-1.5">
+                  🏨 Alojamiento en {flight.destinationCity}
+                </span>
+                <span className="text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/25 px-2 py-0.5 rounded-full font-bold flex-shrink-0 ml-2">
+                  {'⭐'.repeat(Math.min(flight.hotelStars || 3, 5))} mín.
                 </span>
               </div>
-              <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-slate-800/60">
-                <span>
-                  {flight.hotelRatePerNight || (flight.hotelStars === 5 ? 190 : flight.hotelStars === 4 ? 120 : 65)}€/noche × {flight.hotelNights} {flight.hotelNights === 1 ? 'noche' : 'noches'} × {flight.hotelRooms} {flight.hotelRooms === 1 ? 'habitación' : 'habitaciones'}
-                </span>
-                <span className="font-extrabold text-amber-400 text-sm ml-2 font-mono whitespace-nowrap">
-                  ~{flight.hotelEstimatedPrice} €
-                  <span className="text-[9px] text-amber-500/70 font-normal ml-0.5">(est.)</span>
-                </span>
+
+              {/* Grid de detalles */}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] text-slate-400">
+                <div className="flex items-center gap-1.5">
+                  <span>📅</span>
+                  <span className="font-medium text-slate-300">{formatDate(flight.departureAt)}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span>🏁</span>
+                  <span className="font-medium text-slate-300">{flight.returnAt ? formatDate(flight.returnAt) : '—'}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span>🌙</span>
+                  <span>{flight.hotelNights} {(flight.hotelNights ?? 1) === 1 ? 'noche' : 'noches'}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span>👥</span>
+                  <span>
+                    {flight.adults} {flight.adults === 1 ? 'adulto' : 'adultos'}
+                    {(flight.children ?? 0) > 0 ? ` + ${flight.children} niño${(flight.children ?? 0) !== 1 ? 's' : ''}` : ''}
+                  </span>
+                </div>
               </div>
+
+              {/* Nota */}
+              <p className="text-[10px] text-slate-500 italic border-t border-slate-800/50 pt-2 leading-relaxed">
+                Resultados ordenados de menor a mayor precio · Filtros de tu búsqueda aplicados
+              </p>
             </div>
 
+            {/* CTA Booking — sin precio, flecha clara */}
             <a
               href={flight.hotelBookingUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs transition-all duration-300 shadow-md hover:shadow-emerald-600/25 flex items-center justify-between group/btn overflow-hidden"
+              className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black rounded-xl text-xs transition-all duration-300 shadow-md hover:shadow-emerald-500/30 flex items-center justify-between group/btn"
             >
-              <span className="flex items-center space-x-1.5 truncate mr-2">
+              <span className="flex items-center space-x-2">
                 <span>🏨</span>
-                <span className="truncate">Buscar alojamientos en Booking.com</span>
+                <span>Ver hoteles disponibles en Booking.com</span>
               </span>
-              <span className="bg-emerald-700/90 group-hover/btn:bg-emerald-600 px-2 py-0.5 rounded-lg text-xs font-black flex-shrink-0">
-                desde ~{flight.hotelEstimatedPrice} €
-              </span>
+              <span className="text-emerald-200 group-hover/btn:text-white transition-colors text-lg font-black">→</span>
             </a>
 
-            {/* Total Package Summary */}
-            <div className="bg-gradient-to-r from-sky-950/80 to-emerald-950/80 border border-emerald-800/50 rounded-xl p-2.5 flex items-center justify-between text-xs text-white shadow-inner">
-              <div className="flex items-center space-x-1 text-[11px] text-slate-300">
-                <span>✈️ Vuelo {flight.totalPrice}€</span>
-                <span>+</span>
-                <span>🏨 Hotel ~{flight.hotelEstimatedPrice}€</span>
-              </div>
-              <div className="font-black text-amber-300 text-sm">
-                ≈ Total: ~{flight.totalPackagePrice} €
-              </div>
-            </div>
           </div>
         )}
       </div>
