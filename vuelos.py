@@ -292,17 +292,18 @@ def send_step_1_origin(chat_id, thread_id):
     html = "✈️ <b>BUSCADOR DE ESCAPADAS BARATAS DE TELEGRAM</b>\n\n"
     html += "<b>Paso 1 de 3:</b> Elige tu aeropuerto de salida:"
 
-    keyboard = [
-        [{"text": "✈️ Madrid (MAD)", "callback_data": "step1_MAD"}, {"text": "✈️ Barcelona (BCN)", "callback_data": "step1_BCN"}],
-        [{"text": "✈️ Valencia (VLC)", "callback_data": "step1_VLC"}, {"text": "✈️ Málaga (AGP)", "callback_data": "step1_AGP"}],
-        [{"text": "✈️ Sevilla (SVQ)", "callback_data": "step1_SVQ"}, {"text": "✈️ Bilbao (BIO)", "callback_data": "step1_BIO"}],
-        [{"text": "✈️ Alicante (ALC)", "callback_data": "step1_ALC"}, {"text": "✈️ Mallorca (PMI)", "callback_data": "step1_PMI"}],
-        [{"text": "✈️ Tenerife (TFN/TFS)", "callback_data": "step1_TFS"}, {"text": "✈️ Gran Canaria (LPA)", "callback_data": "step1_LPA"}],
-        [{"text": "✈️ Asturias (OVD)", "callback_data": "step1_OVD"}, {"text": "✈️ Santiago (SCQ)", "callback_data": "step1_SCQ"}],
-        [{"text": "✈️ Ibiza (IBZ)", "callback_data": "step1_IBZ"}, {"text": "✈️ Santander (SDR)", "callback_data": "step1_SDR"}],
-        [{"text": "✈️ Zaragoza (ZAZ)", "callback_data": "step1_ZAZ"}, {"text": "✈️ Granada (GRX)", "callback_data": "step1_GRX"}],
-        [{"text": "🌟 Buscar en TODOS los Aeropuertos", "callback_data": "step1_ALL"}]
-    ]
+    keyboard = []
+    items = list(SPAIN_AIRPORTS.items())
+    for i in range(0, len(items), 2):
+        row = []
+        code1, info1 = items[i]
+        row.append({"text": f"✈️ {info1['city']} ({code1})", "callback_data": f"step1_{code1}"})
+        if i + 1 < len(items):
+            code2, info2 = items[i + 1]
+            row.append({"text": f"✈️ {info2['city']} ({code2})", "callback_data": f"step1_{code2}"})
+        keyboard.append(row)
+
+    keyboard.append([{"text": "🌟 Buscar en TODOS los Aeropuertos", "callback_data": "step1_ALL"}])
     send_telegram_message(html, reply_markup={"inline_keyboard": keyboard}, thread_id=thread_id, chat_id=chat_id)
 
 def send_step_2_duration(chat_id, message_id, origin_code):
