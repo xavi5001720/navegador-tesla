@@ -444,44 +444,19 @@ def send_step_1_origin_private(chat_id):
     return send_telegram_message(html, reply_markup={"inline_keyboard": keyboard}, chat_id=chat_id)
 
 def send_step_2_when(chat_id, message_id, origin_code):
-    orig_name = "Todos los aeropuertos" if origin_code == "ALL" else SPAIN_AIRPORTS.get(origin_code, {}).get("city", origin_code)
+    orig_name = SPAIN_AIRPORTS.get(origin_code, {}).get("city", origin_code)
     html = f"✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
     html += f"📍 Origen: <b>{orig_name}</b>\n\n"
     html += "<b>Paso 2 de 5:</b> ¿Cuándo quieres viajar?"
+
+    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
 
     keyboard = [
         [{"text": "⚡ Esta semana (próximos 7 días)", "callback_data": f"step2_{origin_code}_week"}],
         [{"text": "📆 Este mes (próximos 30 días)", "callback_data": f"step2_{origin_code}_month"}],
         [{"text": "✈️ En 1 año vista (cualquier fecha)", "callback_data": f"step2_{origin_code}_year"}],
-        [{"text": "📌 En un mes concreto", "callback_data": f"step2_{origin_code}_showmonths"}],
-        [{"text": "🔄 Cambiar origen", "callback_data": "reset_flow"}]
+        [{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]
     ]
-    edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
-
-def send_step_2_months(chat_id, message_id, origin_code):
-    orig_name = "Todos los aeropuertos" if origin_code == "ALL" else SPAIN_AIRPORTS.get(origin_code, {}).get("city", origin_code)
-    html = f"✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
-    html += f"📍 Origen: <b>{orig_name}</b>\n\n"
-    html += "📅 <b>Selecciona el mes concreto para viajar:</b>"
-
-    keyboard = []
-    today = date.today()
-    month_buttons = []
-
-    for i in range(12):
-        m_date = today.replace(day=1) + timedelta(days=i*32)
-        m_date = m_date.replace(day=1)
-        m_str = m_date.strftime("%Y-%m")
-        m_label = f"{MONTH_NAMES_ES[m_date.month]} {m_date.year}"
-        month_buttons.append({"text": f"📅 {m_label}", "callback_data": f"step2_{origin_code}_custom_{m_str}"})
-
-    for i in range(0, len(month_buttons), 2):
-        row = [month_buttons[i]]
-        if i + 1 < len(month_buttons):
-            row.append(month_buttons[i+1])
-        keyboard.append(row)
-
-    keyboard.append([{"text": "🔙 Volver a opciones de fecha", "callback_data": f"step1_{origin_code}"}])
     edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
 
 def send_step_3_duration(chat_id, message_id, origin_code, when_str):
@@ -729,11 +704,7 @@ def run_interactive_bot():
                             parts = data.split("_")
                             orig_code = parts[1]
                             when_type = parts[2]
-                            if when_type == "showmonths":
-                                send_step_2_months(chat_id, message_id, orig_code)
-                            else:
-                                when_str = when_type if len(parts) == 3 else f"{parts[2]}_{parts[3]}"
-                                send_step_3_duration(chat_id, message_id, orig_code, when_str)
+                            send_step_3_duration(chat_id, message_id, orig_code, when_type)
 
                         elif data.startswith("step3_"):
                             parts = data.split("_")
