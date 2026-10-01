@@ -1050,6 +1050,25 @@ def bot_answer_callback(callback_query_id, text=None):
     except Exception:
         pass
 
+def parse_step6_callback(data, prefix):
+    payload = data[len(prefix):]
+    parts = payload.split("_")
+    orig_code = parts[0]
+    
+    if len(parts) > 1 and parts[1] == "custom":
+        when_str = f"{parts[1]}_{parts[2]}"
+        rest = parts[3:]
+    else:
+        when_str = parts[1] if len(parts) > 1 else "year"
+        rest = parts[2:] if len(parts) > 2 else []
+    
+    dur_str = rest[0] if len(rest) > 0 else "1-10"
+    adults_str = rest[1] if len(rest) > 1 else "2a"
+    children_str = rest[2] if len(rest) > 2 else "0c"
+    key_or_dest = "_".join(rest[3:]) if len(rest) > 3 else ""
+    
+    return orig_code, when_str, dur_str, adults_str, children_str, key_or_dest
+
 def run_interactive_bot():
     if not TELEGRAM_BOT_TOKEN:
         print("❌ ERROR: TELEGRAM_BOT_TOKEN no configurado.")
@@ -1117,60 +1136,38 @@ def run_interactive_bot():
                         elif data.startswith("step2_"):
                             parts = data.split("_")
                             orig_code = parts[1]
-                            when_type = parts[2]
+                            when_type = "_".join(parts[2:])
                             send_step_3_duration(chat_id, message_id, orig_code, when_type)
 
                         elif data.startswith("step3_"):
                             parts = data.split("_")
                             orig_code = parts[1]
-                            when_str = parts[2] if len(parts) == 4 else f"{parts[2]}_{parts[3]}"
                             dur_str = parts[-1]
+                            when_str = "_".join(parts[2:-1])
                             send_step_4_adults(chat_id, message_id, orig_code, when_str, dur_str)
 
                         elif data.startswith("step4_"):
                             parts = data.split("_")
                             orig_code = parts[1]
-                            when_str = parts[2] if len(parts) == 5 else f"{parts[2]}_{parts[3]}"
-                            dur_str = parts[-2]
                             adults_str = parts[-1]
+                            dur_str = parts[-2]
+                            when_str = "_".join(parts[2:-2])
                             send_step_5_children(chat_id, message_id, orig_code, when_str, dur_str, adults_str)
 
                         elif data.startswith("step5_"):
-                            parts = data.split("_")
-                            orig_code = parts[1]
-                            when_str = parts[2] if len(parts) == 6 else f"{parts[2]}_{parts[3]}"
-                            dur_str = parts[-3]
-                            adults_str = parts[-2]
-                            children_str = parts[-1]
+                            orig_code, when_str, dur_str, adults_str, children_str, _ = parse_step6_callback(data, "step5_")
                             send_step_6_dest_type(chat_id, message_id, orig_code, when_str, dur_str, adults_str, children_str)
 
                         elif data.startswith("st6zone_"):
-                            parts = data.split("_")
-                            orig_code = parts[1]
-                            when_str = parts[2] if len(parts) == 6 else f"{parts[2]}_{parts[3]}"
-                            dur_str = parts[-3]
-                            adults_str = parts[-2]
-                            children_str = parts[-1]
+                            orig_code, when_str, dur_str, adults_str, children_str, _ = parse_step6_callback(data, "st6zone_")
                             send_step_6_zones(chat_id, message_id, orig_code, when_str, dur_str, adults_str, children_str)
 
                         elif data.startswith("st6grp_"):
-                            parts = data.split("_")
-                            orig_code = parts[1]
-                            when_str = parts[2] if len(parts) == 7 else f"{parts[2]}_{parts[3]}"
-                            dur_str = parts[-4]
-                            adults_str = parts[-3]
-                            children_str = parts[-2]
-                            group_key = parts[-1]
+                            orig_code, when_str, dur_str, adults_str, children_str, group_key = parse_step6_callback(data, "st6grp_")
                             send_step_6_items(chat_id, message_id, orig_code, when_str, dur_str, adults_str, children_str, group_key)
 
                         elif data.startswith("search_"):
-                            parts = data.split("_")
-                            orig_code = parts[1]
-                            when_str = parts[2] if len(parts) == 7 else f"{parts[2]}_{parts[3]}"
-                            dur_str = parts[-4]
-                            adults_str = parts[-3]
-                            children_str = parts[-2]
-                            dest_str = parts[-1]
+                            orig_code, when_str, dur_str, adults_str, children_str, dest_str = parse_step6_callback(data, "search_")
                             execute_bot_search(chat_id, message_id, orig_code, when_str, dur_str, adults_str, children_str, dest_str)
 
                     else:
