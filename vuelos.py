@@ -426,9 +426,11 @@ def publish_daily_getaways():
 
 # --- BOT CONVERSACIONAL EN PRIVADO LIMPIO ---
 
-def send_step_1_origin_private(chat_id):
+def send_step_1_origin_private(chat_id, message_id=None):
     html = "✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
     html += "<b>Paso 1 de 5:</b> Elige tu aeropuerto de salida:"
+
+    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
 
     keyboard = []
     items = list(SPAIN_AIRPORTS.items())
@@ -441,7 +443,13 @@ def send_step_1_origin_private(chat_id):
             row.append({"text": f"✈️ {info2['city']}", "callback_data": f"step1_{code2}"})
         keyboard.append(row)
 
-    return send_telegram_message(html, reply_markup={"inline_keyboard": keyboard}, chat_id=chat_id)
+    keyboard.append([{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}])
+
+    if message_id:
+        edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
+        return message_id
+    else:
+        return send_telegram_message(html, reply_markup={"inline_keyboard": keyboard}, chat_id=chat_id)
 
 def send_step_2_when(chat_id, message_id, origin_code):
     orig_name = SPAIN_AIRPORTS.get(origin_code, {}).get("city", origin_code)
@@ -455,6 +463,7 @@ def send_step_2_when(chat_id, message_id, origin_code):
         [{"text": "⚡ Esta semana (próximos 7 días)", "callback_data": f"step2_{origin_code}_week"}],
         [{"text": "📆 Este mes (próximos 30 días)", "callback_data": f"step2_{origin_code}_month"}],
         [{"text": "✈️ En 1 año vista (cualquier fecha)", "callback_data": f"step2_{origin_code}_year"}],
+        [{"text": "◀️ Volver atrás", "callback_data": "back_to_step1"}],
         [{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]
     ]
     edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
@@ -483,6 +492,7 @@ def send_step_3_duration(chat_id, message_id, origin_code, when_str):
         [{"text": "📅 3 a 4 Días (Escapada)", "callback_data": f"step3_{origin_code}_{when_str}_3-4"}],
         [{"text": "🌴 5 a 7 Días (Escapada larga)", "callback_data": f"step3_{origin_code}_{when_str}_5-7"}],
         [{"text": "✈️ Cualquier duración (1 a 10 días)", "callback_data": f"step3_{origin_code}_{when_str}_1-10"}],
+        [{"text": "◀️ Volver atrás", "callback_data": f"step1_{origin_code}"}],
         [{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]
     ]
     edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
@@ -505,10 +515,13 @@ def send_step_4_adults(chat_id, message_id, origin_code, when_str, dur_str):
     html += f"⏱️ Duración: <b>{dur_str} días</b>\n\n"
     html += "<b>Paso 4 de 5:</b> ¿Cuántos ADULTOS van a viajar?"
 
+    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+
     keyboard = [
         [{"text": "👤 1 Adulto", "callback_data": f"step4_{origin_code}_{when_str}_{dur_str}_1a"}, {"text": "👥 2 Adultos", "callback_data": f"step4_{origin_code}_{when_str}_{dur_str}_2a"}],
         [{"text": "👨‍👦‍👦 3 Adultos", "callback_data": f"step4_{origin_code}_{when_str}_{dur_str}_3a"}, {"text": "👨‍👩‍👧‍👦 4 Adultos", "callback_data": f"step4_{origin_code}_{when_str}_{dur_str}_4a"}],
-        [{"text": "🔄 Reiniciar búsqueda", "callback_data": "reset_flow"}]
+        [{"text": "◀️ Volver atrás", "callback_data": f"step2_{origin_code}_{when_str}"}],
+        [{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]
     ]
     edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
 
@@ -531,10 +544,13 @@ def send_step_5_children(chat_id, message_id, origin_code, when_str, dur_str, ad
     html += f"👥 Adultos: <b>{adults}</b>\n\n"
     html += "<b>Paso 5 de 5:</b> ¿Cuántos NIÑOS viajan?"
 
+    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+
     keyboard = [
         [{"text": "🚫 0 Niños", "callback_data": f"step5_{origin_code}_{when_str}_{dur_str}_{adults_str}_0c"}, {"text": "👶 1 Niño", "callback_data": f"step5_{origin_code}_{when_str}_{dur_str}_{adults_str}_1c"}],
         [{"text": "👶👶 2 Niños", "callback_data": f"step5_{origin_code}_{when_str}_{dur_str}_{adults_str}_2c"}, {"text": "👶👶👶 3 Niños", "callback_data": f"step5_{origin_code}_{when_str}_{dur_str}_{adults_str}_3c"}],
-        [{"text": "🔄 Reiniciar búsqueda", "callback_data": "reset_flow"}]
+        [{"text": "◀️ Volver atrás", "callback_data": f"step3_{origin_code}_{when_str}_{dur_str}"}],
+        [{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]
     ]
     edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
 
@@ -578,16 +594,17 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
     else:
         top_deals = fetch_flights_for_origin(origin_code, duration_min=dur_min, duration_max=dur_max, limit=50, adults=adults, children=children, when_filter=when_str)[:5]
 
+    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+
     if not top_deals:
         fail_html = f"⚠️ No se han encontrado vuelos directos para <b>{orig_title}</b> ({when_title}, {dur_str} días) en este momento.\n\nPrueba otra combinación o busca directamente en nuestra web."
-        kb = [[{"text": "🔄 Nueva búsqueda", "callback_data": "reset_flow"}]]
+        kb = [[{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]]
         edit_telegram_message(chat_id, message_id, fail_html, reply_markup={"inline_keyboard": kb})
         return
 
     res_html = f"🔥 <b>TOP CHOLLOS ENCONTRADOS EN TIEMPO REAL</b>\n"
     res_html += f"📍 <b>{orig_title}</b> · 📅 <b>{when_title}</b>\n⏱️ <b>{dur_str} días</b> · 👥 <b>{pax_desc}</b>\n\n"
 
-    inline_kb = []
     medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
 
     for idx, deal in enumerate(top_deals):
@@ -600,11 +617,7 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
         res_html += f"💰 <b>{deal['price_total']} € TOTAL</b> ({pax_desc} · {deal['price_per_person']} € por persona)\n"
         res_html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n\n"
 
-        inline_kb.append([
-            {"text": f"{m} Ver {deal['origin_name']} ➔ {deal['destination_name']} ({deal['price_total']}€ total)", "url": deal["skyscanner_url"]}
-        ])
-
-    inline_kb.append([{"text": "🔄 Nueva Búsqueda", "callback_data": "reset_flow"}])
+    inline_kb = [[{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]]
 
     edit_telegram_message(chat_id, message_id, res_html, reply_markup={"inline_keyboard": inline_kb})
 
@@ -692,11 +705,8 @@ def run_interactive_bot():
                     bot_answer_callback(cb_id)
 
                     if chat_type == "private":
-                        if data == "reset_flow":
-                            delete_telegram_message(chat_id, message_id)
-                            new_msg_id = send_step_1_origin_private(chat_id)
-                            if new_msg_id:
-                                user_menu_messages[chat_id] = new_msg_id
+                        if data == "reset_flow" or data == "back_to_step1":
+                            send_step_1_origin_private(chat_id, message_id)
 
                         elif data.startswith("step1_"):
                             orig_code = data.replace("step1_", "")
