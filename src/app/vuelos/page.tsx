@@ -137,13 +137,7 @@ export default function VuelosPage() {
           {/* Highlights */}
           <div className="pt-2 flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-[11px] font-semibold text-slate-300 relative z-10">
             <span className="bg-slate-900/80 border border-slate-800 px-3 py-1 rounded-full flex items-center gap-1.5">
-              ⚡ Precios verificados
-            </span>
-            <span className="bg-slate-900/80 border border-slate-800 px-3 py-1 rounded-full flex items-center gap-1.5">
               🛡️ Reserva directa en Skyscanner
-            </span>
-            <span className="bg-slate-900/80 border border-slate-800 px-3 py-1 rounded-full flex items-center gap-1.5">
-              💸 100% Sin Comisiones
             </span>
           </div>
         </div>
