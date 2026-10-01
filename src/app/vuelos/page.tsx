@@ -123,9 +123,9 @@ export default function VuelosPage() {
 
           {/* Headline */}
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-[1.15] relative z-10">
-            Encuentra tu próximo vuelo <br className="hidden sm:inline" />
+            Encuentra tu próxima <br className="hidden sm:inline" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-indigo-400">
-              al precio más bajo
+              escapada al precio más bajo
             </span>
           </h1>
 
