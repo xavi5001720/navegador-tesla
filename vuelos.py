@@ -476,12 +476,14 @@ def send_step_3_duration(chat_id, message_id, origin_code, when_str):
     html += f"📅 Fecha: <b>{when_title}</b>\n\n"
     html += "<b>Paso 3 de 5:</b> ¿De qué duración quieres el viaje?"
 
+    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+
     keyboard = [
         [{"text": "⚡ 1 a 2 Días (Escapada Exprés)", "callback_data": f"step3_{origin_code}_{when_str}_1-2"}],
-        [{"text": "📅 3 a 4 Días (Fin de semana largo)", "callback_data": f"step3_{origin_code}_{when_str}_3-4"}],
-        [{"text": "🌴 5 a 7 Días (Semana completa)", "callback_data": f"step3_{origin_code}_{when_str}_5-7"}],
-        [{"text": "✈️ Cualquier duración (1 a 14 días)", "callback_data": f"step3_{origin_code}_{when_str}_1-14"}],
-        [{"text": "🔄 Cambiar fecha", "callback_data": f"step1_{origin_code}"}]
+        [{"text": "📅 3 a 4 Días (Escapada)", "callback_data": f"step3_{origin_code}_{when_str}_3-4"}],
+        [{"text": "🌴 5 a 7 Días (Escapada larga)", "callback_data": f"step3_{origin_code}_{when_str}_5-7"}],
+        [{"text": "✈️ Cualquier duración (1 a 10 días)", "callback_data": f"step3_{origin_code}_{when_str}_1-10"}],
+        [{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]
     ]
     edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
 
