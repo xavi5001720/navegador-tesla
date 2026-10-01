@@ -240,8 +240,19 @@ def build_skyscanner_url(origin: str, destination: str, depart_date: str, return
     dep_code = dep_dt.strftime("%y%m%d")
     ret_code = ret_dt.strftime("%y%m%d") if ret_dt else ""
 
-    url = f"https://www.skyscanner.es/transport/vuelos/{origin.lower()}/{destination.lower()}/{dep_code}/{ret_code}/"
-    url += f"?adults={adults}&children={children}&cabinclass=economy&rtn=1&preferdirects=false&outboundaltsenabled=false&inboundaltsenabled=false&marker={TRAVELPAYOUTS_MARKER}"
+    params = [f"adultsv2={adults}"]
+    if children > 0:
+        childrenv2 = "|".join(["5"] * children)
+        params.append(f"childrenv2={childrenv2}")
+
+    params.append("cabinclass=economy")
+    params.append("rtn=1")
+    params.append("preferdirects=false")
+    params.append("outboundaltsenabled=false")
+    params.append("inboundaltsenabled=false")
+    params.append(f"marker={TRAVELPAYOUTS_MARKER}")
+
+    url = f"https://www.skyscanner.es/transport/vuelos/{origin.lower()}/{destination.lower()}/{dep_code}/{ret_code}/?{'&'.join(params)}"
     return url
 
 def fetch_flights_for_origin(origin: str, duration_min: int = 1, duration_max: int = 2, limit: int = 60, adults: int = 2, children: int = 0, when_filter: str = "year"):

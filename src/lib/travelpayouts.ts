@@ -87,10 +87,15 @@ export function getHotelName(destCode: string, cityName: string, stars: number):
   return `Alojamiento ${stars}★ más barato`;
 }
 
-export function buildSkyscannerUrl(origin: string, dest: string, depDateStr: string, retDateStr: string, adults: number): string {
+export function buildSkyscannerUrl(origin: string, dest: string, depDateStr: string, retDateStr: string, adults: number, children: number = 0): string {
   const depYymmdd = depDateStr.replace(/-/g, '').slice(2);
   const retYymmdd = retDateStr.replace(/-/g, '').slice(2);
-  return `https://www.skyscanner.es/transport/vuelos/${origin.toLowerCase()}/${dest.toLowerCase()}/${depYymmdd}/${retYymmdd}/?adultsv2=${adults}`;
+  let url = `https://www.skyscanner.es/transport/vuelos/${origin.toLowerCase()}/${dest.toLowerCase()}/${depYymmdd}/${retYymmdd}/?adultsv2=${adults}`;
+  if (children > 0) {
+    url += `&childrenv2=${Array(children).fill('5').join('|')}`;
+  }
+  url += `&marker=778425`;
+  return url;
 }
 
 export function buildBookingUrl(
