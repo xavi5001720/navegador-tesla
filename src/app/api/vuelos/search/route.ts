@@ -288,18 +288,37 @@ export async function GET(req: NextRequest) {
   if (isSpecificCity) latestUrl += `&destination=${destination}`;
 
   try {
-    const [res1, res2] = await Promise.allSettled([
+    const fetchPromises: Promise<any>[] = [
       fetch(apiUrl, { headers: { 'Accept-Encoding': 'gzip' }, cache: 'no-store' }),
       fetch(latestUrl, { headers: { 'Accept-Encoding': 'gzip' }, cache: 'no-store' }),
-    ]);
+    ];
+
+    // If searching a region, query the top airport codes of that region concurrently to guarantee valid flights
+    if (isRegion && REGION_DESTINATIONS[destination]) {
+      const topRegionCodes = REGION_DESTINATIONS[destination].codes.slice(0, 10);
+      for (const code of topRegionCodes) {
+        fetchPromises.push(
+          fetch(`https://api.travelpayouts.com/v2/prices/latest?origin=${origin}&destination=${code}&currency=eur&period_type=year&page=1&limit=10&sorting=price&token=${TOKEN}`, {
+            headers: { 'Accept-Encoding': 'gzip' },
+            cache: 'no-store',
+          })
+        );
+      }
+    }
+
+    const responses = await Promise.allSettled(fetchPromises);
 
     let rawItems: any[] = [];
+    let latestItems: any[] = [];
+    let regionFetchedItems: any[] = [];
+
+    const res1 = responses[0];
     if (res1.status === 'fulfilled' && res1.value.ok) {
       const data1 = await res1.value.json();
       rawItems = data1.data || [];
     }
 
-    let latestItems: any[] = [];
+    const res2 = responses[1];
     if (res2.status === 'fulfilled' && res2.value.ok) {
       const data2 = await res2.value.json();
       const rawLatest = data2.data || [];
@@ -315,7 +334,26 @@ export async function GET(req: NextRequest) {
       }));
     }
 
-    const items = [...latestItems, ...rawItems].filter((item) => !item.origin || item.origin.toUpperCase() === origin);
+    for (let i = 2; i < responses.length; i++) {
+      const res = responses[i];
+      if (res.status === 'fulfilled' && res.value.ok) {
+        const d = await res.value.json();
+        if (d.data && Array.isArray(d.data)) {
+          regionFetchedItems.push(...d.data.map((item: any) => ({
+            destination: item.destination,
+            departure_at: item.depart_date ? `${item.depart_date}T00:00:00` : '',
+            return_at: item.return_date ? `${item.return_date}T00:00:00` : null,
+            price: item.value,
+            airline: null,
+            transfers: item.number_of_changes ?? 0,
+            found_at: item.found_at,
+            origin: item.origin || origin,
+          })));
+        }
+      }
+    }
+
+    const items = [...regionFetchedItems, ...latestItems, ...rawItems].filter((item) => !item.origin || item.origin.toUpperCase() === origin);
     const hasDepConstraint = Boolean(departureAt);
 
     if (items.length === 0) {
@@ -493,9 +531,19 @@ export async function GET(req: NextRequest) {
     );
   } catch (err) {
     console.error('Error in search route, using fallback deals:', err);
-    // Fallback: generate estimated results
+    const isRegionFallback = destination.startsWith('REGION_') && !!REGION_DESTINATIONS[destination];
+    const regionFallbackCodes = isRegionFallback ? new Set(REGION_DESTINATIONS[destination].codes) : null;
+
     const destsToShow = anyDest
       ? DESTINATIONS_FALLBACK
+      : isRegionFallback
+      ? (DESTINATIONS_FALLBACK.filter((d) => regionFallbackCodes!.has(d.code)).length > 0
+          ? DESTINATIONS_FALLBACK.filter((d) => regionFallbackCodes!.has(d.code))
+          : REGION_DESTINATIONS[destination].codes.slice(0, 5).map((code) => {
+              const info = getAirportInfo(code);
+              const isLongHaul = destination === 'REGION_AMERICA' || destination === 'REGION_ASIA' || destination === 'REGION_MIDDLE_EAST';
+              return { code, city: info.city, country: info.country, priceBase: isLongHaul ? 280 : 45 };
+            }))
       : DESTINATIONS_FALLBACK.filter((d) => d.code === destination).length > 0
       ? DESTINATIONS_FALLBACK.filter((d) => d.code === destination)
       : [{ code: destination, city: getAirportInfo(destination).city, country: getAirportInfo(destination).country, priceBase: 45 }];
