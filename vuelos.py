@@ -595,10 +595,14 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
         top_deals = fetch_flights_for_origin(origin_code, duration_min=dur_min, duration_max=dur_max, limit=50, adults=adults, children=children, when_filter=when_str)[:5]
 
     group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+    back_data = f"step4_{origin_code}_{when_str}_{dur_str}_{adults_str}"
 
     if not top_deals:
         fail_html = f"⚠️ No se han encontrado vuelos directos para <b>{orig_title}</b> ({when_title}, {dur_str} días) en este momento.\n\nPrueba otra combinación o busca directamente en nuestra web."
-        kb = [[{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]]
+        kb = [
+            [{"text": "◀️ Volver atrás", "callback_data": back_data}],
+            [{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]
+        ]
         edit_telegram_message(chat_id, message_id, fail_html, reply_markup={"inline_keyboard": kb})
         return
 
@@ -617,7 +621,10 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
         res_html += f"💰 <b>{deal['price_total']} € TOTAL</b> ({pax_desc} · {deal['price_per_person']} € por persona)\n"
         res_html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n\n"
 
-    inline_kb = [[{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]]
+    inline_kb = [
+        [{"text": "◀️ Volver atrás", "callback_data": back_data}],
+        [{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]
+    ]
 
     edit_telegram_message(chat_id, message_id, res_html, reply_markup={"inline_keyboard": inline_kb})
 
