@@ -223,6 +223,7 @@ def delete_telegram_message(chat_id, message_id):
 def publish_daily_getaways():
     """
     Publicación diaria automática en el Topic 390 de Telegram.
+    El mensaje del grupo NUNCA se borra ni edita al interactuar.
     Boton único abre directamente el bot en privado: t.me/VuelosEV_Bot?start=buscar
     """
     logging.info("Iniciando escaneo diario en los 26 aeropuertos de España (1-2 días, 2 personas)...")
@@ -265,44 +266,17 @@ def publish_daily_getaways():
     bot_private_url = "https://t.me/VuelosEV_Bot?start=buscar"
 
     keyboard = [
-        [{"text": "🔍 BUSCADOR EN PRIVADO CON EL BOT", "url": bot_private_url}],
+        [{"text": "💬 BUSCADOR EN PRIVADO CON EL BOT", "url": bot_private_url}],
         [{"text": "🌐 Abrir Web de Vuelos", "url": "https://www.viajandoentesla.es/vuelos"}]
     ]
 
     reply_markup = {"inline_keyboard": keyboard}
     send_telegram_message(html, reply_markup=reply_markup, thread_id=TELEGRAM_TOPIC_ID, chat_id=TELEGRAM_CHAT_ID)
 
-# --- BOT CONVERSACIONAL EN PRIVADO LIMPIO (SIN REPETIR MENSAJES) ---
-
-def bot_get_updates(offset=None):
-    if not TELEGRAM_BOT_TOKEN:
-        return []
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
-    params = {"timeout": 20, "allowed_updates": ["message", "callback_query"]}
-    if offset:
-        params["offset"] = offset
-    try:
-        resp = requests.get(url, params=params, timeout=25)
-        if resp.status_code == 200:
-            return resp.json().get("result", [])
-    except Exception as e:
-        logging.error(f"Error en bot getUpdates: {e}")
-    return []
-
-def bot_answer_callback(callback_query_id, text=None):
-    if not TELEGRAM_BOT_TOKEN:
-        return
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery"
-    payload = {"callback_query_id": callback_query_id}
-    if text:
-        payload["text"] = text
-    try:
-        requests.post(url, json=payload, timeout=5)
-    except Exception:
-        pass
+# --- BOT CONVERSACIONAL EN PRIVADO LIMPIO (SEPARADO DEL GRUPO) ---
 
 def send_step_1_origin_private(chat_id):
-    html = "✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
+    html = "✈️ <b>BUSCADOR DE ESCAPADAS BARATAS (PRIVADO)</b>\n\n"
     html += "<b>Paso 1 de 3:</b> Elige tu aeropuerto de salida:"
 
     keyboard = []
@@ -427,10 +401,8 @@ def run_interactive_bot():
         print("❌ ERROR: TELEGRAM_BOT_TOKEN no configurado.")
         sys.exit(1)
 
-    print(f"🤖 Bot Conversacional Privado Limpio (@VuelosEV_Bot) activo y listo...")
+    print(f"🤖 Bot Conversacional Vuelos EV activo (Modo Privado Aislado)...")
     offset = None
-
-    # Guardar ID del último mensaje activo del menú por usuario para borrarlo si el usuario envía un nuevo comando
     user_menu_messages = {}
 
     while True:
@@ -439,60 +411,82 @@ def run_interactive_bot():
             for u in updates:
                 offset = u["update_id"] + 1
 
-                # Manejar mensajes entrantes (privados)
+                # 1. Manejar mensajes de texto
                 if "message" in u:
                     msg = u["message"]
                     chat_id = msg["chat"]["id"]
+                    chat_type = msg["chat"].get("type")
                     msg_id = msg["message_id"]
+                    text = msg.get("text", "").strip()
 
-                    # Responder prioritariamente en chat privado
-                    if msg["chat"].get("type") == "private":
-                        # Borrar el comando introducido por el usuario para mantener el chat 100% limpio
+                    # SI ES UN CHAT PRIVADO CON EL BOT:
+                    if chat_type == "private":
+                        # Borrar la orden introducida (/start, /vuelos, etc.) para mantener limpio el chat privado
                         delete_telegram_message(chat_id, msg_id)
 
                         # Borrar el menú anterior si existía
                         if chat_id in user_menu_messages:
                             delete_telegram_message(chat_id, user_menu_messages[chat_id])
 
-                        # Enviar Paso 1 y guardar la ID del mensaje enviado
+                        # Enviar Paso 1 en privado
                         new_msg_id = send_step_1_origin_private(chat_id)
                         if new_msg_id:
                             user_menu_messages[chat_id] = new_msg_id
 
-                # Manejar interacción con botones inline
+                    # SI ES UN MENSAJE EN EL GRUPO/TOPIC (alguien escribió /vuelos en el grupo):
+                    elif str(chat_id) == TELEGRAM_CHAT_ID or chat_id == TELEGRAM_CHAT_ID:
+                        thread_id = msg.get("message_thread_id", TELEGRAM_TOPIC_ID)
+                        if text.startswith("/vuelos") or text.startswith("/start") or text.lower() in ["vuelos", "escapadas"]:
+                            reply_html = (
+                                "✈️ <b>Buscador de Escapadas Vuelos EV</b>\n\n"
+                                "👉 Para realizar una búsqueda personalizada interactiva sin llenar el grupo de mensajes, "
+                                '<a href="https://t.me/VuelosEV_Bot?start=buscar">haz clic aquí para abrir la conversación privada con el Bot</a>.'
+                            )
+                            kb = [[{"text": "💬 Abrir Buscador en Privado", "url": "https://t.me/VuelosEV_Bot?start=buscar"}]]
+                            send_telegram_message(reply_html, reply_markup={"inline_keyboard": kb}, thread_id=thread_id, chat_id=chat_id)
+
+                # 2. Manejar clics en botones inline
                 elif "callback_query" in u:
                     cb = u["callback_query"]
                     cb_id = cb["id"]
                     data = cb.get("data", "")
                     msg = cb.get("message", {})
                     chat_id = msg.get("chat", {}).get("id")
+                    chat_type = msg.get("chat", {}).get("type")
                     message_id = msg.get("message_id")
 
                     bot_answer_callback(cb_id)
 
-                    if data == "reset_flow":
-                        edit_telegram_message(chat_id, message_id, "⌛ Cargando menú de orígenes...")
-                        delete_telegram_message(chat_id, message_id)
-                        new_msg_id = send_step_1_origin_private(chat_id)
-                        if new_msg_id:
-                            user_menu_messages[chat_id] = new_msg_id
+                    # SOLO PROCESAR BOTONES SI ES CHAT PRIVADO
+                    if chat_type == "private":
+                        if data == "reset_flow":
+                            delete_telegram_message(chat_id, message_id)
+                            new_msg_id = send_step_1_origin_private(chat_id)
+                            if new_msg_id:
+                                user_menu_messages[chat_id] = new_msg_id
 
-                    elif data.startswith("step1_"):
-                        orig_code = data.replace("step1_", "")
-                        send_step_2_duration(chat_id, message_id, orig_code)
+                        elif data.startswith("step1_"):
+                            orig_code = data.replace("step1_", "")
+                            send_step_2_duration(chat_id, message_id, orig_code)
 
-                    elif data.startswith("step2_"):
-                        parts = data.split("_")
-                        orig_code = parts[1]
-                        dur_str = parts[2]
-                        send_step_3_passengers(chat_id, message_id, orig_code, dur_str)
+                        elif data.startswith("step2_"):
+                            parts = data.split("_")
+                            orig_code = parts[1]
+                            dur_str = parts[2]
+                            send_step_3_passengers(chat_id, message_id, orig_code, dur_str)
 
-                    elif data.startswith("step3_"):
-                        parts = data.split("_")
-                        orig_code = parts[1]
-                        dur_str = parts[2]
-                        pax_code = parts[3]
-                        execute_bot_search(chat_id, message_id, orig_code, dur_str, pax_code)
+                        elif data.startswith("step3_"):
+                            parts = data.split("_")
+                            orig_code = parts[1]
+                            dur_str = parts[2]
+                            pax_code = parts[3]
+                            execute_bot_search(chat_id, message_id, orig_code, dur_str, pax_code)
+
+                    # Si el botón viene del grupo/topic por error:
+                    else:
+                        reply_html = '👉 <a href="https://t.me/VuelosEV_Bot?start=buscar">Haz clic aquí para abrir el buscador en privado</a>.'
+                        kb = [[{"text": "💬 Abrir en Privado", "url": "https://t.me/VuelosEV_Bot?start=buscar"}]]
+                        send_telegram_message(reply_html, reply_markup={"inline_keyboard": kb}, thread_id=msg.get("message_thread_id"), chat_id=chat_id)
 
         except Exception as e:
             logging.error(f"Error en bucle bot: {e}")
