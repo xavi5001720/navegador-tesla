@@ -2,6 +2,7 @@
 """
 vuelos.py - Bot y Publicador Diario de Escapadas Baratas para Telegram
 Grupo: @mgchuches | Topic ID: 390
+Bot Privado: @VuelosEV_Bot (t.me/VuelosEV_Bot?start=buscar)
 Web: https://www.viajandoentesla.es/vuelos
 """
 
@@ -159,7 +160,7 @@ def fetch_flights_for_origin(origin: str, duration_min: int = 1, duration_max: i
         logging.error(f"Excepción consultando {origin}: {e}")
         return []
 
-def send_telegram_message(text: str, reply_markup=None, thread_id: int = TELEGRAM_TOPIC_ID, chat_id: str = TELEGRAM_CHAT_ID):
+def send_telegram_message(text: str, reply_markup=None, thread_id: int = None, chat_id: str = TELEGRAM_CHAT_ID):
     if not TELEGRAM_BOT_TOKEN:
         logging.error("ERROR: TELEGRAM_BOT_TOKEN no configurado.")
         return False
@@ -209,10 +210,20 @@ def edit_telegram_message(chat_id, message_id, text, reply_markup=None):
     except Exception:
         return False
 
+def delete_telegram_message(chat_id, message_id):
+    if not TELEGRAM_BOT_TOKEN or not message_id:
+        return False
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/deleteMessage"
+    try:
+        requests.post(url, json={"chat_id": chat_id, "message_id": message_id}, timeout=5)
+        return True
+    except Exception:
+        return False
+
 def publish_daily_getaways():
     """
-    Escanea en paralelo los 26 aeropuertos de España buscando escapadas de 1-2 días para 2 personas
-    y publica el resumen diario con 1 solo botón interactivo.
+    Publicación diaria automática en el Topic 390 de Telegram.
+    Boton único abre directamente el bot en privado: t.me/VuelosEV_Bot?start=buscar
     """
     logging.info("Iniciando escaneo diario en los 26 aeropuertos de España (1-2 días, 2 personas)...")
 
@@ -224,7 +235,7 @@ def publish_daily_getaways():
                 res = future.result()
                 if res:
                     all_deals.extend(res)
-            except Exception as e:
+            except Exception:
                 pass
 
     if not all_deals:
@@ -250,16 +261,18 @@ def publish_daily_getaways():
         html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'}) · ⚡ <i>{trans}</i>\n"
         html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x {deal['price_per_person']} €/persona)\n\n"
 
-    # Un único botón interactivo para iniciar la conversación con el bot
+    # Enlace directo para abrir la conversación privada limpia con el bot
+    bot_private_url = "https://t.me/VuelosEV_Bot?start=buscar"
+
     keyboard = [
-        [{"text": "🔍 BUSCADOR INTERACTIVO DE ESCAPADAS", "callback_data": "reset_flow"}],
-        [{"text": "🌐 Ver más ofertas en la Web", "url": "https://www.viajandoentesla.es/vuelos"}]
+        [{"text": "🔍 BUSCADOR EN PRIVADO CON EL BOT", "url": bot_private_url}],
+        [{"text": "🌐 Abrir Web de Vuelos", "url": "https://www.viajandoentesla.es/vuelos"}]
     ]
 
     reply_markup = {"inline_keyboard": keyboard}
     send_telegram_message(html, reply_markup=reply_markup, thread_id=TELEGRAM_TOPIC_ID, chat_id=TELEGRAM_CHAT_ID)
 
-# --- BOT CONVERSACIONAL PASO A PASO CON BOTONES ---
+# --- BOT CONVERSACIONAL EN PRIVADO LIMPIO (SIN REPETIR MENSAJES) ---
 
 def bot_get_updates(offset=None):
     if not TELEGRAM_BOT_TOKEN:
@@ -288,8 +301,8 @@ def bot_answer_callback(callback_query_id, text=None):
     except Exception:
         pass
 
-def send_step_1_origin(chat_id, thread_id):
-    html = "✈️ <b>BUSCADOR DE ESCAPADAS BARATAS DE TELEGRAM</b>\n\n"
+def send_step_1_origin_private(chat_id):
+    html = "✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
     html += "<b>Paso 1 de 3:</b> Elige tu aeropuerto de salida:"
 
     keyboard = []
@@ -304,7 +317,7 @@ def send_step_1_origin(chat_id, thread_id):
         keyboard.append(row)
 
     keyboard.append([{"text": "🌟 Buscar en TODOS los Aeropuertos", "callback_data": "step1_ALL"}])
-    send_telegram_message(html, reply_markup={"inline_keyboard": keyboard}, thread_id=thread_id, chat_id=chat_id)
+    return send_telegram_message(html, reply_markup={"inline_keyboard": keyboard}, chat_id=chat_id)
 
 def send_step_2_duration(chat_id, message_id, origin_code):
     orig_name = "Todos los aeropuertos" if origin_code == "ALL" else SPAIN_AIRPORTS.get(origin_code, {}).get("city", origin_code)
@@ -395,7 +408,6 @@ def execute_bot_search(chat_id, message_id, origin_code, dur_str, pax_code):
         m = medals[idx] if idx < len(medals) else "✈️"
         dep_fmt = datetime.strptime(deal["depart_date"], "%Y-%m-%d").strftime("%d %b")
         ret_fmt = datetime.strptime(deal["return_date"], "%Y-%m-%d").strftime("%d %b")
-
         pax_desc = f"{deal['adults']} Aud." if deal['children'] == 0 else f"{deal['adults']} Aud. + {deal['children']} Niño(s)"
 
         res_html += f"{m} <b>{deal['origin_name']} ➔ {deal['destination_name']}</b> ({deal['destination']})\n"
@@ -415,8 +427,11 @@ def run_interactive_bot():
         print("❌ ERROR: TELEGRAM_BOT_TOKEN no configurado.")
         sys.exit(1)
 
-    print(f"🤖 Bot Conversacional Vuelos EV activo en {TELEGRAM_CHAT_ID} (Topic ID: {TELEGRAM_TOPIC_ID})...")
+    print(f"🤖 Bot Conversacional Privado Limpio (@VuelosEV_Bot) activo y listo...")
     offset = None
+
+    # Guardar ID del último mensaje activo del menú por usuario para borrarlo si el usuario envía un nuevo comando
+    user_menu_messages = {}
 
     while True:
         try:
@@ -424,16 +439,27 @@ def run_interactive_bot():
             for u in updates:
                 offset = u["update_id"] + 1
 
+                # Manejar mensajes entrantes (privados)
                 if "message" in u:
                     msg = u["message"]
                     chat_id = msg["chat"]["id"]
-                    thread_id = msg.get("message_thread_id")
-                    text = msg.get("text", "").strip()
+                    msg_id = msg["message_id"]
 
-                    if str(chat_id) == TELEGRAM_CHAT_ID or chat_id == TELEGRAM_CHAT_ID or msg["chat"].get("type") == "private":
-                        if text.startswith("/vuelos") or text.startswith("/start") or text.lower() in ["vuelos", "escapadas", "buscar"]:
-                            send_step_1_origin(chat_id, thread_id or TELEGRAM_TOPIC_ID)
+                    # Responder prioritariamente en chat privado
+                    if msg["chat"].get("type") == "private":
+                        # Borrar el comando introducido por el usuario para mantener el chat 100% limpio
+                        delete_telegram_message(chat_id, msg_id)
 
+                        # Borrar el menú anterior si existía
+                        if chat_id in user_menu_messages:
+                            delete_telegram_message(chat_id, user_menu_messages[chat_id])
+
+                        # Enviar Paso 1 y guardar la ID del mensaje enviado
+                        new_msg_id = send_step_1_origin_private(chat_id)
+                        if new_msg_id:
+                            user_menu_messages[chat_id] = new_msg_id
+
+                # Manejar interacción con botones inline
                 elif "callback_query" in u:
                     cb = u["callback_query"]
                     cb_id = cb["id"]
@@ -441,20 +467,26 @@ def run_interactive_bot():
                     msg = cb.get("message", {})
                     chat_id = msg.get("chat", {}).get("id")
                     message_id = msg.get("message_id")
-                    thread_id = msg.get("message_thread_id", TELEGRAM_TOPIC_ID)
 
                     bot_answer_callback(cb_id)
 
                     if data == "reset_flow":
-                        send_step_1_origin(chat_id, thread_id)
+                        edit_telegram_message(chat_id, message_id, "⌛ Cargando menú de orígenes...")
+                        delete_telegram_message(chat_id, message_id)
+                        new_msg_id = send_step_1_origin_private(chat_id)
+                        if new_msg_id:
+                            user_menu_messages[chat_id] = new_msg_id
+
                     elif data.startswith("step1_"):
                         orig_code = data.replace("step1_", "")
                         send_step_2_duration(chat_id, message_id, orig_code)
+
                     elif data.startswith("step2_"):
                         parts = data.split("_")
                         orig_code = parts[1]
                         dur_str = parts[2]
                         send_step_3_passengers(chat_id, message_id, orig_code, dur_str)
+
                     elif data.startswith("step3_"):
                         parts = data.split("_")
                         orig_code = parts[1]
