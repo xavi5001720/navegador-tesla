@@ -426,9 +426,326 @@ def publish_daily_getaways():
 
 # --- BOT CONVERSACIONAL EN PRIVADO LIMPIO ---
 
+# Grupos y Zonas de Destinos idénticos a la página web (https://www.viajandoentesla.es/vuelos)
+DESTINATION_GROUPS = [
+    {
+        "key": "REGION_ES_MAIN",
+        "label": "🇪🇸 España (Península)",
+        "items": [
+            {"code": "REGION_ES_MAIN", "city": "✨ Toda España (Península)"},
+            {"code": "MAD", "city": "Madrid"},
+            {"code": "BCN", "city": "Barcelona"},
+            {"code": "VLC", "city": "Valencia"},
+            {"code": "AGP", "city": "Málaga"},
+            {"code": "SVQ", "city": "Sevilla"},
+            {"code": "BIO", "city": "Bilbao"},
+            {"code": "ALC", "city": "Alicante"},
+            {"code": "SCQ", "city": "Santiago de Compostela"},
+            {"code": "SDR", "city": "Santander"},
+            {"code": "VGO", "city": "Vigo"},
+            {"code": "OVD", "city": "Asturias"},
+            {"code": "ZAZ", "city": "Zaragoza"},
+            {"code": "GRX", "city": "Granada"},
+            {"code": "MJV", "city": "Murcia"},
+            {"code": "XRY", "city": "Jerez"},
+            {"code": "REU", "city": "Reus"},
+            {"code": "GRO", "city": "Girona"},
+        ]
+    },
+    {
+        "key": "REGION_BALEARES",
+        "label": "🏝️ Islas Baleares",
+        "items": [
+            {"code": "REGION_BALEARES", "city": "✨ Todas las Islas Baleares"},
+            {"code": "PMI", "city": "Palma de Mallorca"},
+            {"code": "IBZ", "city": "Ibiza"},
+            {"code": "MAH", "city": "Menorca"},
+        ]
+    },
+    {
+        "key": "REGION_CANARIAS",
+        "label": "🌴 Islas Canarias",
+        "items": [
+            {"code": "REGION_CANARIAS", "city": "✨ Todas las Islas Canarias"},
+            {"code": "TFN", "city": "Tenerife Norte"},
+            {"code": "TFS", "city": "Tenerife Sur"},
+            {"code": "LPA", "city": "Gran Canaria"},
+            {"code": "ACE", "city": "Lanzarote"},
+            {"code": "FUE", "city": "Fuerteventura"},
+            {"code": "SPC", "city": "La Palma"},
+        ]
+    },
+    {
+        "key": "REGION_PT",
+        "label": "🇵🇹 Portugal",
+        "items": [
+            {"code": "REGION_PT", "city": "✨ Todo Portugal"},
+            {"code": "LIS", "city": "Lisboa"},
+            {"code": "OPO", "city": "Oporto"},
+            {"code": "FAO", "city": "Faro (Algarve)"},
+            {"code": "FNC", "city": "Funchal (Madeira)"},
+        ]
+    },
+    {
+        "key": "REGION_FR",
+        "label": "🇫🇷 Francia",
+        "items": [
+            {"code": "REGION_FR", "city": "✨ Toda Francia"},
+            {"code": "PAR", "city": "París"},
+            {"code": "NCE", "city": "Niza"},
+            {"code": "LYS", "city": "Lyon"},
+            {"code": "MRS", "city": "Marsella"},
+            {"code": "BOD", "city": "Burdeos"},
+            {"code": "TLS", "city": "Toulouse"},
+            {"code": "NTE", "city": "Nantes"},
+            {"code": "MPL", "city": "Montpellier"},
+            {"code": "BIQ", "city": "Biarritz"},
+        ]
+    },
+    {
+        "key": "REGION_IT",
+        "label": "🇮🇹 Italia",
+        "items": [
+            {"code": "REGION_IT", "city": "✨ Toda Italia"},
+            {"code": "MIL", "city": "Milán"},
+            {"code": "ROM", "city": "Roma"},
+            {"code": "NAP", "city": "Nápoles"},
+            {"code": "VCE", "city": "Venecia"},
+            {"code": "FLR", "city": "Florencia"},
+            {"code": "BLQ", "city": "Bolonia"},
+            {"code": "TRN", "city": "Turín"},
+            {"code": "BRI", "city": "Bari"},
+            {"code": "PMO", "city": "Palermo (Sicilia)"},
+            {"code": "CTA", "city": "Catania (Sicilia)"},
+            {"code": "OLB", "city": "Olbia (Cerdeña)"},
+            {"code": "CAG", "city": "Cagliari (Cerdeña)"},
+        ]
+    },
+    {
+        "key": "REGION_UK_IE",
+        "label": "🇬🇧 Reino Unido & Irlanda",
+        "items": [
+            {"code": "REGION_UK_IE", "city": "✨ Todo Reino Unido e Irlanda"},
+            {"code": "LON", "city": "Londres"},
+            {"code": "EDI", "city": "Edimburgo"},
+            {"code": "MAN", "city": "Mánchester"},
+            {"code": "BRS", "city": "Bristol"},
+            {"code": "BHX", "city": "Birmingham"},
+            {"code": "GLA", "city": "Glasgow"},
+            {"code": "DUB", "city": "Dublín"},
+        ]
+    },
+    {
+        "key": "REGION_DE",
+        "label": "🇩🇪 Alemania",
+        "items": [
+            {"code": "REGION_DE", "city": "✨ Toda Alemania"},
+            {"code": "BER", "city": "Berlín"},
+            {"code": "MUC", "city": "Múnich"},
+            {"code": "FRA", "city": "Fráncfort"},
+            {"code": "HAM", "city": "Hamburgo"},
+            {"code": "CGN", "city": "Colonia"},
+        ]
+    },
+    {
+        "key": "REGION_NL_BE",
+        "label": "🇳🇱 Países Bajos & Bélgica",
+        "items": [
+            {"code": "REGION_NL_BE", "city": "✨ Países Bajos y Bélgica"},
+            {"code": "AMS", "city": "Ámsterdam"},
+            {"code": "EIN", "city": "Eindhoven"},
+            {"code": "BRU", "city": "Bruselas"},
+            {"code": "CRL", "city": "Bruselas Charleroi"},
+        ]
+    },
+    {
+        "key": "REGION_AT_CH",
+        "label": "🇦🇹 Austria & Suiza",
+        "items": [
+            {"code": "REGION_AT_CH", "city": "✨ Austria y Suiza"},
+            {"code": "VIE", "city": "Viena"},
+            {"code": "ZRH", "city": "Zúrich"},
+            {"code": "GVA", "city": "Ginebra"},
+            {"code": "BSL", "city": "Basilea"},
+        ]
+    },
+    {
+        "key": "REGION_CZ_HU_PL",
+        "label": "🇨🇿 Rep. Checa, Hungría & Polonia",
+        "items": [
+            {"code": "REGION_CZ_HU_PL", "city": "✨ Rep. Checa, Hungría y Polonia"},
+            {"code": "PRG", "city": "Praga"},
+            {"code": "BUD", "city": "Budapest"},
+            {"code": "WAW", "city": "Varsovia"},
+            {"code": "KRK", "city": "Cracovia"},
+        ]
+    },
+    {
+        "key": "REGION_NORDIC",
+        "label": "🇸🇪 Escandinavia & Bálticos",
+        "items": [
+            {"code": "REGION_NORDIC", "city": "✨ Escandinavia y Bálticos"},
+            {"code": "OSL", "city": "Oslo"},
+            {"code": "STO", "city": "Estocolmo"},
+            {"code": "CPH", "city": "Copenhague"},
+            {"code": "HEL", "city": "Helsinki"},
+            {"code": "REK", "city": "Reikiavik"},
+        ]
+    },
+    {
+        "key": "REGION_GR_CY",
+        "label": "🇬🇷 Grecia & Chipre",
+        "items": [
+            {"code": "REGION_GR_CY", "city": "✨ Grecia y Chipre"},
+            {"code": "ATH", "city": "Atenas"},
+            {"code": "HER", "city": "Creta"},
+            {"code": "JTR", "city": "Santorini"},
+            {"code": "JMK", "city": "Mikonos"},
+            {"code": "CFU", "city": "Corfú"},
+            {"code": "LCA", "city": "Chipre"},
+        ]
+    },
+    {
+        "key": "REGION_TR",
+        "label": "🇹🇷 Turquía",
+        "items": [
+            {"code": "REGION_TR", "city": "✨ Toda Turquía"},
+            {"code": "IST", "city": "Estambul"},
+            {"code": "AYT", "city": "Antalya"},
+        ]
+    },
+    {
+        "key": "REGION_BALKANS",
+        "label": "🇭🇷 Croacia & Balcanes",
+        "items": [
+            {"code": "REGION_BALKANS", "city": "✨ Croacia y Balcanes"},
+            {"code": "SPU", "city": "Split"},
+            {"code": "DBV", "city": "Dubrovnik"},
+            {"code": "ZAG", "city": "Zagreb"},
+            {"code": "BEG", "city": "Belgrado"},
+        ]
+    },
+    {
+        "key": "REGION_MA_NA",
+        "label": "🇲🇦 Marruecos & Norte África",
+        "items": [
+            {"code": "REGION_MA_NA", "city": "✨ Marruecos y Norte África"},
+            {"code": "RAK", "city": "Marrakech"},
+            {"code": "CMN", "city": "Casablanca"},
+            {"code": "TNG", "city": "Tánger"},
+            {"code": "FEZ", "city": "Fez"},
+        ]
+    },
+    {
+        "key": "REGION_MALTA",
+        "label": "🇲🇹 Malta & Mediterráneo",
+        "items": [
+            {"code": "REGION_MALTA", "city": "✨ Malta"},
+            {"code": "MLA", "city": "Malta"},
+        ]
+    },
+    {
+        "key": "REGION_AMERICA",
+        "label": "🇺🇸 América",
+        "items": [
+            {"code": "REGION_AMERICA", "city": "✨ Toda América"},
+            {"code": "JFK", "city": "Nueva York"},
+            {"code": "MIA", "city": "Miami"},
+            {"code": "LAX", "city": "Los Ángeles"},
+            {"code": "CUN", "city": "Cancún"},
+            {"code": "MEX", "city": "Ciudad de México"},
+            {"code": "BOG", "city": "Bogotá"},
+            {"code": "LIM", "city": "Lima"},
+            {"code": "EZE", "city": "Buenos Aires"},
+        ]
+    },
+    {
+        "key": "REGION_MIDDLE_EAST",
+        "label": "🇦🇪 Oriente Medio",
+        "items": [
+            {"code": "REGION_MIDDLE_EAST", "city": "✨ Oriente Medio"},
+            {"code": "DXB", "city": "Dubái"},
+            {"code": "DOH", "city": "Doha"},
+        ]
+    },
+    {
+        "key": "REGION_ASIA",
+        "label": "🌏 Asia",
+        "items": [
+            {"code": "REGION_ASIA", "city": "✨ Toda Asia"},
+            {"code": "BKK", "city": "Bangkok"},
+            {"code": "SIN", "city": "Singapur"},
+            {"code": "NRT", "city": "Tokio"},
+        ]
+    },
+]
+
+REGION_DESTINATIONS = {
+    "REGION_ES_MAIN": ["MAD", "BCN", "VLC", "AGP", "SVQ", "BIO", "ALC", "SCQ", "SDR", "VGO", "OVD", "ZAZ", "GRX", "MJV", "XRY", "REU", "GRO"],
+    "REGION_BALEARES": ["PMI", "IBZ", "MAH"],
+    "REGION_CANARIAS": ["TFN", "TFS", "LPA", "ACE", "FUE", "SPC"],
+    "REGION_PT": ["LIS", "OPO", "FAO", "FNC"],
+    "REGION_FR": ["PAR", "CDG", "ORY", "BVA", "NCE", "LYS", "MRS", "BOD", "TLS", "NTE", "MPL", "BIQ"],
+    "REGION_IT": ["MIL", "MXP", "LIN", "BGY", "ROM", "FCO", "CIA", "NAP", "VCE", "TSF", "FLR", "BLQ", "TRN", "BRI", "PMO", "CTA", "OLB", "CAG", "AHO", "PSA", "TRS", "SUF", "VRN", "PEG", "PSR", "BZO"],
+    "REGION_UK_IE": ["LON", "LHR", "LGW", "STN", "LTN", "SEN", "EDI", "MAN", "BRS", "BHX", "GLA", "PIK", "LPL", "NCL", "BOH", "EXT", "DUB", "BFS"],
+    "REGION_DE": ["BER", "MUC", "FRA", "HHN", "DUS", "HAM", "CGN", "STR", "NUE"],
+    "REGION_NL_BE": ["AMS", "EIN", "BRU", "CRL"],
+    "REGION_AT_CH": ["VIE", "SZG", "INN", "ZRH", "GVA", "BSL"],
+    "REGION_CZ_HU_PL": ["PRG", "BUD", "WAW", "WMI", "KRK", "WRO", "GDN"],
+    "REGION_NORDIC": ["OSL", "STO", "GOT", "CPH", "HEL", "REK", "RIX", "TLL", "VNO"],
+    "REGION_GR_CY": ["ATH", "SKG", "HER", "CHQ", "RHO", "JTR", "JMK", "CFU", "KGS", "ZTH", "LCA", "PFO"],
+    "REGION_TR": ["IST", "SAW", "AYT", "DLM", "BJV", "ADB"],
+    "REGION_BALKANS": ["ZAG", "SPU", "DBV", "ZAD", "BEG", "TIA", "SOF", "OTP"],
+    "REGION_MA_NA": ["RAK", "CMN", "TNG", "FEZ", "AGA", "TUN", "CAI", "HRG", "SSH"],
+    "REGION_MALTA": ["MLA", "SJJ"],
+    "REGION_AMERICA": ["JFK", "MIA", "LAX", "ORD", "BOS", "CUN", "MEX", "BOG", "LIM", "EZE", "GRU", "GIG", "HAV", "SDQ"],
+    "REGION_MIDDLE_EAST": ["DXB", "DOH", "AUH", "AMM", "TLV"],
+    "REGION_ASIA": ["BKK", "HKT", "SIN", "KUL", "HKG", "NRT", "TYO"],
+}
+
+CITY_AIRPORT_GROUPS = {
+    "ROM": ["ROM", "FCO", "CIA"],
+    "MIL": ["MIL", "MXP", "LIN", "BGY"],
+    "PAR": ["PAR", "CDG", "ORY", "BVA"],
+    "LON": ["LON", "LHR", "LGW", "STN", "LTN", "SEN"],
+    "BRU": ["BRU", "CRL"],
+    "AMS": ["AMS", "EIN"],
+    "TFS": ["TFS", "TFN", "LPA", "ACE", "FUE", "SPC"],
+    "CAG": ["CAG", "OLB", "AHO"],
+    "PMO": ["PMO", "CTA"],
+    "FLR": ["FLR", "PSA"],
+    "FRA": ["FRA", "HHN"],
+    "VCE": ["VCE", "TSF"],
+    "WAW": ["WAW", "KRK", "WMI"],
+    "CPH": ["CPH", "OSL", "STO", "HEL"],
+    "JFK": ["JFK", "EWR", "NYC"],
+}
+
+def is_destination_match(dest_code: str, target_dest: str) -> bool:
+    if not target_dest or target_dest == "ANY":
+        return True
+    if target_dest in REGION_DESTINATIONS:
+        return dest_code in REGION_DESTINATIONS[target_dest]
+    if target_dest in CITY_AIRPORT_GROUPS:
+        return dest_code in CITY_AIRPORT_GROUPS[target_dest]
+    return dest_code == target_dest
+
+def get_destination_title(target_dest: str) -> str:
+    if not target_dest or target_dest == "ANY":
+        return "Cualquier destino"
+    for g in DESTINATION_GROUPS:
+        if g["key"] == target_dest:
+            return g["label"]
+        for item in g["items"]:
+            if item["code"] == target_dest:
+                return item["city"]
+    return WORLD_AIRPORTS.get(target_dest, {}).get("city", target_dest)
+
+# --- BOT CONVERSACIONAL EN PRIVADO LIMPIO ---
+
 def send_step_1_origin_private(chat_id, message_id=None):
     html = "✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
-    html += "<b>Paso 1 de 5:</b> Elige tu aeropuerto de salida:"
+    html += "<b>Paso 1 de 6:</b> Elige tu aeropuerto de salida:"
 
     group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
 
@@ -455,7 +772,7 @@ def send_step_2_when(chat_id, message_id, origin_code):
     orig_name = SPAIN_AIRPORTS.get(origin_code, {}).get("city", origin_code)
     html = f"✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
     html += f"📍 Origen: <b>{orig_name}</b>\n\n"
-    html += "<b>Paso 2 de 5:</b> ¿Cuándo quieres viajar?"
+    html += "<b>Paso 2 de 6:</b> ¿Cuándo quieres viajar?"
 
     group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
 
@@ -483,7 +800,7 @@ def send_step_3_duration(chat_id, message_id, origin_code, when_str):
     html = f"✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
     html += f"📍 Origen: <b>{orig_name}</b>\n"
     html += f"📅 Fecha: <b>{when_title}</b>\n\n"
-    html += "<b>Paso 3 de 5:</b> ¿De qué duración quieres el viaje?"
+    html += "<b>Paso 3 de 6:</b> ¿De qué duración quieres el viaje?"
 
     group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
 
@@ -513,7 +830,7 @@ def send_step_4_adults(chat_id, message_id, origin_code, when_str, dur_str):
     html += f"📍 Origen: <b>{orig_name}</b>\n"
     html += f"📅 Fecha: <b>{when_title}</b>\n"
     html += f"⏱️ Duración: <b>{dur_str} días</b>\n\n"
-    html += "<b>Paso 4 de 5:</b> ¿Cuántos ADULTOS van a viajar?"
+    html += "<b>Paso 4 de 6:</b> ¿Cuántos ADULTOS van a viajar?"
 
     group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
 
@@ -542,7 +859,7 @@ def send_step_5_children(chat_id, message_id, origin_code, when_str, dur_str, ad
     html += f"📍 Origen: <b>{orig_name}</b>\n"
     html += f"📅 Fecha: <b>{when_title}</b> | ⏱️ Duración: <b>{dur_str} días</b>\n"
     html += f"👥 Adultos: <b>{adults}</b>\n\n"
-    html += "<b>Paso 5 de 5:</b> ¿Cuántos NIÑOS viajan?"
+    html += "<b>Paso 5 de 6:</b> ¿Cuántos NIÑOS viajan?"
 
     group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
 
@@ -554,7 +871,78 @@ def send_step_5_children(chat_id, message_id, origin_code, when_str, dur_str, ad
     ]
     edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
 
-def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adults_str, children_str):
+# --- PASO 6: SELECCIÓN DE DESTINO ---
+
+def send_step_6_dest_type(chat_id, message_id, origin_code, when_str, dur_str, adults_str, children_str):
+    orig_name = "Todos los aeropuertos" if origin_code == "ALL" else SPAIN_AIRPORTS.get(origin_code, {}).get("city", origin_code)
+    adults = int(adults_str.replace("a", ""))
+    children = int(children_str.replace("c", ""))
+    pax_desc = f"{adults} Adulto(s)" if children == 0 else f"{adults} Adultos + {children} Niños"
+
+    when_title = "Cualquier fecha"
+    if when_str == "week": when_title = "Esta semana"
+    elif when_str == "month": when_title = "Este mes"
+    elif when_str == "year": when_title = "1 año vista"
+
+    html = f"✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
+    html += f"📍 Origen: <b>{orig_name}</b> | 📅 Fecha: <b>{when_title}</b>\n"
+    html += f"⏱️ Duración: <b>{dur_str} días</b> | 👥 <b>{pax_desc}</b>\n\n"
+    html += "<b>Paso 6 de 6:</b> ¿A dónde quieres viajar?"
+
+    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+
+    keyboard = [
+        [{"text": "🌍 Cualquier destino (A cualquier parte)", "callback_data": f"search_{origin_code}_{when_str}_{dur_str}_{adults_str}_{children_str}_ANY"}],
+        [{"text": "🗺️ Escoger por zona / grupo de destinos", "callback_data": f"st6zone_{origin_code}_{when_str}_{dur_str}_{adults_str}_{children_str}"}],
+        [{"text": "◀️ Volver atrás", "callback_data": f"step4_{origin_code}_{when_str}_{dur_str}_{adults_str}"}],
+        [{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]
+    ]
+    edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
+
+def send_step_6_zones(chat_id, message_id, origin_code, when_str, dur_str, adults_str, children_str):
+    html = f"✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
+    html += "<b>Paso 6 de 6:</b> Selecciona una zona o grupo de destinos:"
+
+    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+
+    keyboard = []
+    for i in range(0, len(DESTINATION_GROUPS), 2):
+        row = []
+        g1 = DESTINATION_GROUPS[i]
+        row.append({"text": g1["label"], "callback_data": f"st6grp_{origin_code}_{when_str}_{dur_str}_{adults_str}_{children_str}_{g1['key']}"})
+        if i + 1 < len(DESTINATION_GROUPS):
+            g2 = DESTINATION_GROUPS[i + 1]
+            row.append({"text": g2["label"], "callback_data": f"st6grp_{origin_code}_{when_str}_{dur_str}_{adults_str}_{children_str}_{g2['key']}"})
+        keyboard.append(row)
+
+    keyboard.append([{"text": "◀️ Volver atrás", "callback_data": f"step5_{origin_code}_{when_str}_{dur_str}_{adults_str}_{children_str}"}])
+    keyboard.append([{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}])
+
+    edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
+
+def send_step_6_items(chat_id, message_id, origin_code, when_str, dur_str, adults_str, children_str, group_key):
+    group_info = next((g for g in DESTINATION_GROUPS if g["key"] == group_key), None)
+    group_label = group_info["label"] if group_info else group_key
+
+    html = f"✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
+    html += f"📍 Zona seleccionada: <b>{group_label}</b>\n\n"
+    html += f"<b>Paso 6 de 6:</b> Elige tu destino dentro de {group_label}:"
+
+    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+
+    keyboard = []
+    items = group_info["items"] if group_info else []
+
+    for item in items:
+        btn_text = item["city"]
+        keyboard.append([{"text": btn_text, "callback_data": f"search_{origin_code}_{when_str}_{dur_str}_{adults_str}_{children_str}_{item['code']}"}])
+
+    keyboard.append([{"text": "◀️ Volver a Zonas", "callback_data": f"st6zone_{origin_code}_{when_str}_{dur_str}_{adults_str}_{children_str}"}])
+    keyboard.append([{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}])
+
+    edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
+
+def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adults_str, children_str, dest_str="ANY"):
     dur_parts = dur_str.split("-")
     dur_min = int(dur_parts[0])
     dur_max = int(dur_parts[1])
@@ -562,6 +950,7 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
     children = int(children_str.replace("c", ""))
 
     orig_title = "Todos los aeropuertos" if origin_code == "ALL" else SPAIN_AIRPORTS.get(origin_code, {}).get("city", origin_code)
+    dest_title = get_destination_title(dest_str)
 
     when_title = "Cualquier fecha"
     if when_str == "week": when_title = "Esta semana"
@@ -575,7 +964,7 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
     pax_desc = f"{adults} Adulto(s)" if children == 0 else f"{adults} Adulto(s) + {children} Niño(s)"
 
     loading_html = f"🔍 <b>Buscando los mejores chollos en tiempo real...</b>\n\n"
-    loading_html += f"📍 Origen: <b>{orig_title}</b>\n📅 Fecha: <b>{when_title}</b>\n⏱️ Duración: <b>{dur_str} días</b> | 👥 <b>{pax_desc}</b>"
+    loading_html += f"📍 Origen: <b>{orig_title}</b>\n🗺️ Destino: <b>{dest_title}</b>\n📅 Fecha: <b>{when_title}</b>\n⏱️ Duración: <b>{dur_str} días</b> | 👥 <b>{pax_desc}</b>"
     edit_telegram_message(chat_id, message_id, loading_html)
 
     if origin_code == "ALL":
@@ -589,16 +978,22 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
                         all_deals.extend(res)
                 except Exception:
                     pass
+        if dest_str != "ANY":
+            all_deals = [d for d in all_deals if is_destination_match(d["destination"], dest_str)]
         all_deals.sort(key=lambda x: x["price_per_person"])
         top_deals = all_deals[:5]
     else:
-        top_deals = fetch_flights_for_origin(origin_code, duration_min=dur_min, duration_max=dur_max, limit=50, adults=adults, children=children, when_filter=when_str)[:5]
+        deals = fetch_flights_for_origin(origin_code, duration_min=dur_min, duration_max=dur_max, limit=60, adults=adults, children=children, when_filter=when_str)
+        if dest_str != "ANY":
+            deals = [d for d in deals if is_destination_match(d["destination"], dest_str)]
+        deals.sort(key=lambda x: x["price_per_person"])
+        top_deals = deals[:5]
 
     group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
-    back_data = f"step4_{origin_code}_{when_str}_{dur_str}_{adults_str}"
+    back_data = f"step5_{origin_code}_{when_str}_{dur_str}_{adults_str}_{children_str}"
 
     if not top_deals:
-        fail_html = f"⚠️ No se han encontrado vuelos directos para <b>{orig_title}</b> ({when_title}, {dur_str} días) en este momento.\n\nPrueba otra combinación o busca directamente en nuestra web."
+        fail_html = f"⚠️ No se han encontrado vuelos directos para <b>{orig_title} ➔ {dest_title}</b> ({when_title}, {dur_str} días) en este momento.\n\nPrueba otra combinación o busca directamente en nuestra web."
         kb = [
             [{"text": "◀️ Volver atrás", "callback_data": back_data}],
             [{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]
@@ -607,7 +1002,7 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
         return
 
     res_html = f"🔥 <b>TOP CHOLLOS ENCONTRADOS EN TIEMPO REAL</b>\n"
-    res_html += f"📍 <b>{orig_title}</b> · 📅 <b>{when_title}</b>\n⏱️ <b>{dur_str} días</b> · 👥 <b>{pax_desc}</b>\n\n"
+    res_html += f"📍 <b>{orig_title} ➔ {dest_title}</b>\n📅 <b>{when_title}</b> · ⏱️ <b>{dur_str} días</b> · 👥 <b>{pax_desc}</b>\n\n"
 
     medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
 
@@ -747,7 +1142,36 @@ def run_interactive_bot():
                             dur_str = parts[-3]
                             adults_str = parts[-2]
                             children_str = parts[-1]
-                            execute_bot_search(chat_id, message_id, orig_code, when_str, dur_str, adults_str, children_str)
+                            send_step_6_dest_type(chat_id, message_id, orig_code, when_str, dur_str, adults_str, children_str)
+
+                        elif data.startswith("st6zone_"):
+                            parts = data.split("_")
+                            orig_code = parts[1]
+                            when_str = parts[2] if len(parts) == 6 else f"{parts[2]}_{parts[3]}"
+                            dur_str = parts[-3]
+                            adults_str = parts[-2]
+                            children_str = parts[-1]
+                            send_step_6_zones(chat_id, message_id, orig_code, when_str, dur_str, adults_str, children_str)
+
+                        elif data.startswith("st6grp_"):
+                            parts = data.split("_")
+                            orig_code = parts[1]
+                            when_str = parts[2] if len(parts) == 7 else f"{parts[2]}_{parts[3]}"
+                            dur_str = parts[-4]
+                            adults_str = parts[-3]
+                            children_str = parts[-2]
+                            group_key = parts[-1]
+                            send_step_6_items(chat_id, message_id, orig_code, when_str, dur_str, adults_str, children_str, group_key)
+
+                        elif data.startswith("search_"):
+                            parts = data.split("_")
+                            orig_code = parts[1]
+                            when_str = parts[2] if len(parts) == 7 else f"{parts[2]}_{parts[3]}"
+                            dur_str = parts[-4]
+                            adults_str = parts[-3]
+                            children_str = parts[-2]
+                            dest_str = parts[-1]
+                            execute_bot_search(chat_id, message_id, orig_code, when_str, dur_str, adults_str, children_str, dest_str)
 
                     else:
                         reply_html = '👉 <a href="https://t.me/VuelosEV_Bot?start=buscar">Haz clic aquí para abrir el buscador en privado</a>.'
