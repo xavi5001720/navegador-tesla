@@ -11,7 +11,7 @@ import sys
 import time
 import json
 import logging
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
 
@@ -88,6 +88,11 @@ CITY_NAMES = {
     "PRG": "Praga", "BUD": "Budapest", "ATH": "Atenas", "DUB": "Dublín", "CPH": "Copenhague"
 }
 
+MONTH_NAMES_ES = {
+    1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril", 5: "Mayo", 6: "Junio",
+    7: "Julio", 8: "Agosto", 9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
+}
+
 def get_city_name(code):
     return CITY_NAMES.get(code.upper(), SPAIN_AIRPORTS.get(code.upper(), {}).get("city", code.upper()))
 
@@ -106,7 +111,7 @@ def build_skyscanner_url(origin: str, destination: str, depart_date: str, return
     url += f"?adults={adults}&children={children}&cabinclass=economy&rtn=1&preferdirects=false&outboundaltsenabled=false&inboundaltsenabled=false&marker={TRAVELPAYOUTS_MARKER}"
     return url
 
-def fetch_flights_for_origin(origin: str, duration_min: int = 1, duration_max: int = 2, limit: int = 60, adults: int = 2, children: int = 0):
+def fetch_flights_for_origin(origin: str, duration_min: int = 1, duration_max: int = 2, limit: int = 60, adults: int = 2, children: int = 0, when_filter: str = "year"):
     url = f"https://api.travelpayouts.com/v2/prices/latest?origin={origin}&currency=eur&period_type=year&page=1&limit={limit}&sorting=price&token={TRAVELPAYOUTS_TOKEN}"
     try:
         resp = requests.get(url, timeout=10)
@@ -115,6 +120,7 @@ def fetch_flights_for_origin(origin: str, duration_min: int = 1, duration_max: i
 
         data = resp.json().get("data", [])
         valid_deals = []
+        today = date.today()
 
         for item in data:
             dep_str = item.get("depart_date")
@@ -129,7 +135,22 @@ def fetch_flights_for_origin(origin: str, duration_min: int = 1, duration_max: i
                 ret_d = datetime.strptime(ret_str, "%Y-%m-%d").date()
                 duration = (ret_d - dep_d).days
 
-                if duration_min <= duration <= duration_max and dep_d >= date.today():
+                # Filtro de fecha
+                match_when = False
+                if dep_d >= today:
+                    if when_filter == "week":
+                        match_when = (dep_d <= today + timedelta(days=7))
+                    elif when_filter == "month":
+                        match_when = (dep_d <= today + timedelta(days=30))
+                    elif when_filter == "year":
+                        match_when = True
+                    elif when_filter.startswith("custom_"):
+                        target_m = when_filter.replace("custom_", "")
+                        match_when = dep_d.strftime("%Y-%m") == target_m
+                    else:
+                        match_when = True
+
+                if match_when and (duration_min <= duration <= duration_max):
                     dest_code = item.get("destination", "").upper()
                     total_passengers = adults + children
                     price_total = price * total_passengers
@@ -230,7 +251,7 @@ def publish_daily_getaways():
 
     all_deals = []
     with ThreadPoolExecutor(max_workers=8) as executor:
-        futures = {executor.submit(fetch_flights_for_origin, code, 1, 2, 60, 2, 0): code for code in SPAIN_AIRPORTS.keys()}
+        futures = {executor.submit(fetch_flights_for_origin, code, 1, 2, 60, 2, 0, "year"): code for code in SPAIN_AIRPORTS.keys()}
         for future in as_completed(futures):
             try:
                 res = future.result()
@@ -262,7 +283,6 @@ def publish_daily_getaways():
         html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'}) · ⚡ <i>{trans}</i>\n"
         html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x {deal['price_per_person']} €/persona)\n\n"
 
-    # Enlace directo para abrir la conversación privada limpia con el bot
     bot_private_url = "https://t.me/VuelosEV_Bot?start=buscar"
 
     keyboard = [
@@ -273,11 +293,11 @@ def publish_daily_getaways():
     reply_markup = {"inline_keyboard": keyboard}
     send_telegram_message(html, reply_markup=reply_markup, thread_id=TELEGRAM_TOPIC_ID, chat_id=TELEGRAM_CHAT_ID)
 
-# --- BOT CONVERSACIONAL EN PRIVADO LIMPIO (SEPARADO DEL GRUPO) ---
+# --- BOT CONVERSACIONAL PASO A PASO EN PRIVADO ---
 
 def send_step_1_origin_private(chat_id):
-    html = "✈️ <b>BUSCADOR DE ESCAPADAS BARATAS (PRIVADO)</b>\n\n"
-    html += "<b>Paso 1 de 3:</b> Elige tu aeropuerto de salida:"
+    html = "✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
+    html += "<b>Paso 1 de 5:</b> Elige tu aeropuerto de salida:"
 
     keyboard = []
     items = list(SPAIN_AIRPORTS.items())
@@ -293,67 +313,153 @@ def send_step_1_origin_private(chat_id):
     keyboard.append([{"text": "🌟 Buscar en TODOS los Aeropuertos", "callback_data": "step1_ALL"}])
     return send_telegram_message(html, reply_markup={"inline_keyboard": keyboard}, chat_id=chat_id)
 
-def send_step_2_duration(chat_id, message_id, origin_code):
+def send_step_2_when(chat_id, message_id, origin_code):
     orig_name = "Todos los aeropuertos" if origin_code == "ALL" else SPAIN_AIRPORTS.get(origin_code, {}).get("city", origin_code)
     html = f"✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
-    html += f"📍 Origen seleccionado: <b>{orig_name}</b>\n\n"
-    html += "<b>Paso 2 de 3:</b> ¿De qué duración quieres la escapada?"
+    html += f"📍 Origen: <b>{orig_name}</b>\n\n"
+    html += "<b>Paso 2 de 5:</b> ¿Cuándo quieres viajar?"
 
     keyboard = [
-        [{"text": "⚡ 1 a 2 Días (Escapada Exprés)", "callback_data": f"step2_{origin_code}_1-2"}],
-        [{"text": "📅 3 a 4 Días (Fin de semana largo)", "callback_data": f"step2_{origin_code}_3-4"}],
-        [{"text": "🌴 5 a 7 Días (Semana completa)", "callback_data": f"step2_{origin_code}_5-7"}],
-        [{"text": "🔄 Volver a elegir origen", "callback_data": "reset_flow"}]
+        [{"text": "⚡ Esta semana (próximos 7 días)", "callback_data": f"step2_{origin_code}_week"}],
+        [{"text": "📆 Este mes (próximos 30 días)", "callback_data": f"step2_{origin_code}_month"}],
+        [{"text": "✈️ En 1 año vista (cualquier fecha)", "callback_data": f"step2_{origin_code}_year"}],
+        [{"text": "📌 En un mes o fecha concreta", "callback_data": f"step2_{origin_code}_showmonths"}],
+        [{"text": "🔄 Cambiar origen", "callback_data": "reset_flow"}]
     ]
     edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
 
-def send_step_3_passengers(chat_id, message_id, origin_code, dur_str):
+def send_step_2_months(chat_id, message_id, origin_code):
     orig_name = "Todos los aeropuertos" if origin_code == "ALL" else SPAIN_AIRPORTS.get(origin_code, {}).get("city", origin_code)
     html = f"✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
+    html += f"📍 Origen: <b>{orig_name}</b>\n\n"
+    html += "📅 <b>Selecciona el mes concreto para viajar:</b>"
+
+    keyboard = []
+    today = date.today()
+    month_buttons = []
+
+    for i in range(12):
+        # Calcular los próximos 12 meses
+        m_date = today.replace(day=1) + timedelta(days=i*32)
+        m_date = m_date.replace(day=1)
+        m_str = m_date.strftime("%Y-%m")
+        m_label = f"{MONTH_NAMES_ES[m_date.month]} {m_date.year}"
+        month_buttons.append({"text": f"📅 {m_label}", "callback_data": f"step2_{origin_code}_custom_{m_str}"})
+
+    for i in range(0, len(month_buttons), 2):
+        row = [month_buttons[i]]
+        if i + 1 < len(month_buttons):
+            row.append(month_buttons[i+1])
+        keyboard.append(row)
+
+    keyboard.append([{"text": "🔙 Volver a opciones de fecha", "callback_data": f"step1_{origin_code}"}])
+    edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
+
+def send_step_3_duration(chat_id, message_id, origin_code, when_str):
+    orig_name = "Todos los aeropuertos" if origin_code == "ALL" else SPAIN_AIRPORTS.get(origin_code, {}).get("city", origin_code)
+    
+    when_title = "Cualquier fecha"
+    if when_str == "week": when_title = "Esta semana"
+    elif when_str == "month": when_title = "Este mes"
+    elif when_str == "year": when_title = "1 año vista"
+    elif when_str.startswith("custom_"):
+        parts = when_str.replace("custom_", "").split("-")
+        y, m = int(parts[0]), int(parts[1])
+        when_title = f"{MONTH_NAMES_ES[m]} {y}"
+
+    html = f"✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
     html += f"📍 Origen: <b>{orig_name}</b>\n"
-    html += f"⏱️ Duración: <b>{dur_str} días</b>\n\n"
-    html += "<b>Paso 3 de 3:</b> ¿Cuántos viajeros vais?"
+    html += f"📅 Fecha: <b>{when_title}</b>\n\n"
+    html += "<b>Paso 3 de 5:</b> ¿De qué duración quieres el viaje?"
 
     keyboard = [
-        [{"text": "👥 2 Adultos", "callback_data": f"step3_{origin_code}_{dur_str}_2a0c"}],
-        [{"text": "👤 1 Adulto", "callback_data": f"step3_{origin_code}_{dur_str}_1a0c"}],
-        [{"text": "👨‍👩‍👧 2 Adultos + 1 Niño", "callback_data": f"step3_{origin_code}_{dur_str}_2a1c"}],
-        [{"text": "👨‍👩‍👧‍👦 2 Adultos + 2 Niños", "callback_data": f"step3_{origin_code}_{dur_str}_2a2c"}],
+        [{"text": "⚡ 1 a 2 Días (Escapada Exprés)", "callback_data": f"step3_{origin_code}_{when_str}_1-2"}],
+        [{"text": "📅 3 a 4 Días (Fin de semana largo)", "callback_data": f"step3_{origin_code}_{when_str}_3-4"}],
+        [{"text": "🌴 5 a 7 Días (Semana completa)", "callback_data": f"step3_{origin_code}_{when_str}_5-7"}],
+        [{"text": "✈️ Cualquier duración (1 a 14 días)", "callback_data": f"step3_{origin_code}_{when_str}_1-14"}],
+        [{"text": "🔄 Cambiar fecha", "callback_data": f"step1_{origin_code}"}]
+    ]
+    edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
+
+def send_step_4_adults(chat_id, message_id, origin_code, when_str, dur_str):
+    orig_name = "Todos los aeropuertos" if origin_code == "ALL" else SPAIN_AIRPORTS.get(origin_code, {}).get("city", origin_code)
+    
+    when_title = "Cualquier fecha"
+    if when_str == "week": when_title = "Esta semana"
+    elif when_str == "month": when_title = "Este mes"
+    elif when_str == "year": when_title = "1 año vista"
+    elif when_str.startswith("custom_"):
+        parts = when_str.replace("custom_", "").split("-")
+        y, m = int(parts[0]), int(parts[1])
+        when_title = f"{MONTH_NAMES_ES[m]} {y}"
+
+    html = f"✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
+    html += f"📍 Origen: <b>{orig_name}</b>\n"
+    html += f"📅 Fecha: <b>{when_title}</b>\n"
+    html += f"⏱️ Duración: <b>{dur_str} días</b>\n\n"
+    html += "<b>Paso 4 de 5:</b> ¿Cuántos ADULTOS van a viajar?"
+
+    keyboard = [
+        [{"text": "👤 1 Adulto", "callback_data": f"step4_{origin_code}_{when_str}_{dur_str}_1a"}, {"text": "👥 2 Adultos", "callback_data": f"step4_{origin_code}_{when_str}_{dur_str}_2a"}],
+        [{"text": "👨‍👦‍👦 3 Adultos", "callback_data": f"step4_{origin_code}_{when_str}_{dur_str}_3a"}, {"text": "👨‍👩‍👧‍👦 4 Adultos", "callback_data": f"step4_{origin_code}_{when_str}_{dur_str}_4a"}],
         [{"text": "🔄 Reiniciar búsqueda", "callback_data": "reset_flow"}]
     ]
     edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
 
-def execute_bot_search(chat_id, message_id, origin_code, dur_str, pax_code):
+def send_step_5_children(chat_id, message_id, origin_code, when_str, dur_str, adults_str):
+    orig_name = "Todos los aeropuertos" if origin_code == "ALL" else SPAIN_AIRPORTS.get(origin_code, {}).get("city", origin_code)
+    adults = int(adults_str.replace("a", ""))
+
+    when_title = "Cualquier fecha"
+    if when_str == "week": when_title = "Esta semana"
+    elif when_str == "month": when_title = "Este mes"
+    elif when_str == "year": when_title = "1 año vista"
+    elif when_str.startswith("custom_"):
+        parts = when_str.replace("custom_", "").split("-")
+        y, m = int(parts[0]), int(parts[1])
+        when_title = f"{MONTH_NAMES_ES[m]} {y}"
+
+    html = f"✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
+    html += f"📍 Origen: <b>{orig_name}</b>\n"
+    html += f"📅 Fecha: <b>{when_title}</b> | ⏱️ Duración: <b>{dur_str} días</b>\n"
+    html += f"👥 Adultos: <b>{adults}</b>\n\n"
+    html += "<b>Paso 5 de 5:</b> ¿Cuántos NIÑOS viajan?"
+
+    keyboard = [
+        [{"text": "🚫 0 Niños", "callback_data": f"step5_{origin_code}_{when_str}_{dur_str}_{adults_str}_0c"}, {"text": "👶 1 Niño", "callback_data": f"step5_{origin_code}_{when_str}_{dur_str}_{adults_str}_1c"}],
+        [{"text": "👶👶 2 Niños", "callback_data": f"step5_{origin_code}_{when_str}_{dur_str}_{adults_str}_2c"}, {"text": "👶👶👶 3 Niños", "callback_data": f"step5_{origin_code}_{when_str}_{dur_str}_{adults_str}_3c"}],
+        [{"text": "🔄 Reiniciar búsqueda", "callback_data": "reset_flow"}]
+    ]
+    edit_telegram_message(chat_id, message_id, html, reply_markup={"inline_keyboard": keyboard})
+
+def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adults_str, children_str):
     dur_parts = dur_str.split("-")
     dur_min = int(dur_parts[0])
     dur_max = int(dur_parts[1])
-
-    if pax_code == "2a0c":
-        adults, children = 2, 0
-        pax_title = "2 Adultos"
-    elif pax_code == "1a0c":
-        adults, children = 1, 0
-        pax_title = "1 Adulto"
-    elif pax_code == "2a1c":
-        adults, children = 2, 1
-        pax_title = "2 Adultos + 1 Niño"
-    elif pax_code == "2a2c":
-        adults, children = 2, 2
-        pax_title = "2 Adultos + 2 Niños"
-    else:
-        adults, children = 2, 0
-        pax_title = "2 Adultos"
+    adults = int(adults_str.replace("a", ""))
+    children = int(children_str.replace("c", ""))
 
     orig_title = "Todos los aeropuertos" if origin_code == "ALL" else SPAIN_AIRPORTS.get(origin_code, {}).get("city", origin_code)
 
+    when_title = "Cualquier fecha"
+    if when_str == "week": when_title = "Esta semana"
+    elif when_str == "month": when_title = "Este mes"
+    elif when_str == "year": when_title = "1 año vista"
+    elif when_str.startswith("custom_"):
+        parts = when_str.replace("custom_", "").split("-")
+        y, m = int(parts[0]), int(parts[1])
+        when_title = f"{MONTH_NAMES_ES[m]} {y}"
+
+    pax_desc = f"{adults} Adulto(s)" if children == 0 else f"{adults} Adulto(s) + {children} Niño(s)"
+
     loading_html = f"🔍 <b>Buscando los mejores chollos en tiempo real...</b>\n\n"
-    loading_html += f"📍 Origen: <b>{orig_title}</b> | ⏱️ Duración: <b>{dur_str} días</b> | 👥 <b>{pax_title}</b>"
+    loading_html += f"📍 Origen: <b>{orig_title}</b>\n📅 Fecha: <b>{when_title}</b>\n⏱️ Duración: <b>{dur_str} días</b> | 👥 <b>{pax_desc}</b>"
     edit_telegram_message(chat_id, message_id, loading_html)
 
     if origin_code == "ALL":
         all_deals = []
         with ThreadPoolExecutor(max_workers=8) as executor:
-            futures = {executor.submit(fetch_flights_for_origin, o, dur_min, dur_max, 30, adults, children): o for o in SPAIN_AIRPORTS.keys()}
+            futures = {executor.submit(fetch_flights_for_origin, o, dur_min, dur_max, 30, adults, children, when_str): o for o in SPAIN_AIRPORTS.keys()}
             for future in as_completed(futures):
                 try:
                     res = future.result()
@@ -364,16 +470,16 @@ def execute_bot_search(chat_id, message_id, origin_code, dur_str, pax_code):
         all_deals.sort(key=lambda x: x["price_per_person"])
         top_deals = all_deals[:5]
     else:
-        top_deals = fetch_flights_for_origin(origin_code, duration_min=dur_min, duration_max=dur_max, limit=50, adults=adults, children=children)[:5]
+        top_deals = fetch_flights_for_origin(origin_code, duration_min=dur_min, duration_max=dur_max, limit=50, adults=adults, children=children, when_filter=when_str)[:5]
 
     if not top_deals:
-        fail_html = f"⚠️ No se han encontrado vuelos directos para <b>{orig_title}</b> ({dur_str} días) en este momento.\n\nPrueba otra combinación o busca directamente en nuestra web."
+        fail_html = f"⚠️ No se han encontrado vuelos directos para <b>{orig_title}</b> ({when_title}, {dur_str} días) en este momento.\n\nPrueba otra combinación o busca directamente en nuestra web."
         kb = [[{"text": "🔄 Nueva búsqueda", "callback_data": "reset_flow"}, {"text": "🌐 Ir a la Web", "url": "https://www.viajandoentesla.es/vuelos"}]]
         edit_telegram_message(chat_id, message_id, fail_html, reply_markup={"inline_keyboard": kb})
         return
 
     res_html = f"🔥 <b>TOP CHOLLOS ENCONTRADOS EN TIEMPO REAL</b>\n"
-    res_html += f"📍 <b>{orig_title}</b> · ⏱️ <b>{dur_str} días</b> · 👥 <b>{pax_title}</b>\n\n"
+    res_html += f"📍 <b>{orig_title}</b> · 📅 <b>{when_title}</b>\n⏱️ <b>{dur_str} días</b> · 👥 <b>{pax_desc}</b>\n\n"
 
     inline_kb = []
     medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
@@ -382,7 +488,6 @@ def execute_bot_search(chat_id, message_id, origin_code, dur_str, pax_code):
         m = medals[idx] if idx < len(medals) else "✈️"
         dep_fmt = datetime.strptime(deal["depart_date"], "%Y-%m-%d").strftime("%d %b")
         ret_fmt = datetime.strptime(deal["return_date"], "%Y-%m-%d").strftime("%d %b")
-        pax_desc = f"{deal['adults']} Aud." if deal['children'] == 0 else f"{deal['adults']} Aud. + {deal['children']} Niño(s)"
 
         res_html += f"{m} <b>{deal['origin_name']} ➔ {deal['destination_name']}</b> ({deal['destination']})\n"
         res_html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'})\n"
@@ -428,7 +533,7 @@ def run_interactive_bot():
         print("❌ ERROR: TELEGRAM_BOT_TOKEN no configurado.")
         sys.exit(1)
 
-    print(f"🤖 Bot Conversacional Vuelos EV activo (Modo Privado Aislado)...")
+    print(f"🤖 Bot Conversacional Vuelos EV activo (Modo Privado Aislado Completo)...")
     offset = None
     user_menu_messages = {}
 
@@ -448,19 +553,16 @@ def run_interactive_bot():
 
                     # SI ES UN CHAT PRIVADO CON EL BOT:
                     if chat_type == "private":
-                        # Borrar la orden introducida (/start, /vuelos, etc.) para mantener limpio el chat privado
                         delete_telegram_message(chat_id, msg_id)
 
-                        # Borrar el menú anterior si existía
                         if chat_id in user_menu_messages:
                             delete_telegram_message(chat_id, user_menu_messages[chat_id])
 
-                        # Enviar Paso 1 en privado
                         new_msg_id = send_step_1_origin_private(chat_id)
                         if new_msg_id:
                             user_menu_messages[chat_id] = new_msg_id
 
-                    # SI ES UN MENSAJE EN EL GRUPO/TOPIC (alguien escribió /vuelos en el grupo):
+                    # SI ES UN MENSAJE EN EL GRUPO/TOPIC:
                     elif str(chat_id) == TELEGRAM_CHAT_ID or chat_id == TELEGRAM_CHAT_ID:
                         thread_id = msg.get("message_thread_id", TELEGRAM_TOPIC_ID)
                         if text.startswith("/vuelos") or text.startswith("/start") or text.lower() in ["vuelos", "escapadas"]:
@@ -494,22 +596,43 @@ def run_interactive_bot():
 
                         elif data.startswith("step1_"):
                             orig_code = data.replace("step1_", "")
-                            send_step_2_duration(chat_id, message_id, orig_code)
+                            send_step_2_when(chat_id, message_id, orig_code)
 
                         elif data.startswith("step2_"):
                             parts = data.split("_")
                             orig_code = parts[1]
-                            dur_str = parts[2]
-                            send_step_3_passengers(chat_id, message_id, orig_code, dur_str)
+                            when_type = parts[2]
+                            if when_type == "showmonths":
+                                send_step_2_months(chat_id, message_id, orig_code)
+                            else:
+                                when_str = when_type if when_type not in ["custom"] else f"{parts[2]}_{parts[3]}"
+                                send_step_3_duration(chat_id, message_id, orig_code, when_str)
 
                         elif data.startswith("step3_"):
                             parts = data.split("_")
                             orig_code = parts[1]
-                            dur_str = parts[2]
-                            pax_code = parts[3]
-                            execute_bot_search(chat_id, message_id, orig_code, dur_str, pax_code)
+                            when_str = parts[2]
+                            dur_str = parts[3]
+                            send_step_4_adults(chat_id, message_id, orig_code, when_str, dur_str)
 
-                    # Si el botón viene del grupo/topic por error:
+                        elif data.startswith("step4_"):
+                            parts = data.split("_")
+                            orig_code = parts[1]
+                            when_str = parts[2]
+                            dur_str = parts[3]
+                            adults_str = parts[4]
+                            send_step_5_children(chat_id, message_id, orig_code, when_str, dur_str, adults_str)
+
+                        elif data.startswith("step5_"):
+                            parts = data.split("_")
+                            orig_code = parts[1]
+                            when_str = parts[2]
+                            dur_str = parts[3]
+                            adults_str = parts[4]
+                            children_str = parts[5]
+                            execute_bot_search(chat_id, message_id, orig_code, when_str, dur_str, adults_str, children_str)
+
+                    # Si el botón viene del grupo por error:
                     else:
                         reply_html = '👉 <a href="https://t.me/VuelosEV_Bot?start=buscar">Haz clic aquí para abrir el buscador en privado</a>.'
                         kb = [[{"text": "💬 Abrir en Privado", "url": "https://t.me/VuelosEV_Bot?start=buscar"}]]
