@@ -396,6 +396,33 @@ def execute_bot_search(chat_id, message_id, origin_code, dur_str, pax_code):
 
     edit_telegram_message(chat_id, message_id, res_html, reply_markup={"inline_keyboard": inline_kb})
 
+def bot_get_updates(offset=None):
+    if not TELEGRAM_BOT_TOKEN:
+        return []
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
+    params = {"timeout": 20, "allowed_updates": ["message", "callback_query"]}
+    if offset:
+        params["offset"] = offset
+    try:
+        resp = requests.get(url, params=params, timeout=25)
+        if resp.status_code == 200:
+            return resp.json().get("result", [])
+    except Exception as e:
+        logging.error(f"Error en bot getUpdates: {e}")
+    return []
+
+def bot_answer_callback(callback_query_id, text=None):
+    if not TELEGRAM_BOT_TOKEN:
+        return
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/answerCallbackQuery"
+    payload = {"callback_query_id": callback_query_id}
+    if text:
+        payload["text"] = text
+    try:
+        requests.post(url, json=payload, timeout=5)
+    except Exception:
+        pass
+
 def run_interactive_bot():
     if not TELEGRAM_BOT_TOKEN:
         print("❌ ERROR: TELEGRAM_BOT_TOKEN no configurado.")
