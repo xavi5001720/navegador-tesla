@@ -441,7 +441,6 @@ def send_step_1_origin_private(chat_id):
             row.append({"text": f"✈️ {info2['city']}", "callback_data": f"step1_{code2}"})
         keyboard.append(row)
 
-    keyboard.append([{"text": "🌟 Buscar en TODOS los Aeropuertos", "callback_data": "step1_ALL"}])
     return send_telegram_message(html, reply_markup={"inline_keyboard": keyboard}, chat_id=chat_id)
 
 def send_step_2_when(chat_id, message_id, origin_code):
