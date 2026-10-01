@@ -37,6 +37,7 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'ANY', city: 'Cualquier destino — chollos del momento' },
   ]},
   { label: '🇪🇸 España (Península)', items: [
+    { code: 'REGION_ES_MAIN', city: '✨ Toda España (Península) — buscar chollos' },
     { code: 'MAD', city: 'Madrid' },
     { code: 'BCN', city: 'Barcelona' },
     { code: 'VLC', city: 'Valencia' },
@@ -56,12 +57,14 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'GRO', city: 'Girona' },
   ]},
   { label: '🇵🇹 Portugal', items: [
+    { code: 'REGION_PT', city: '✨ Todo Portugal — buscar chollos' },
     { code: 'LIS', city: 'Lisboa' },
     { code: 'OPO', city: 'Oporto' },
     { code: 'FAO', city: 'Faro (Algarve)' },
     { code: 'FNC', city: 'Funchal (Madeira)' },
   ]},
   { label: '🇫🇷 Francia', items: [
+    { code: 'REGION_FR', city: '✨ Toda Francia — buscar chollos' },
     { code: 'PAR', city: 'París' },
     { code: 'NCE', city: 'Niza' },
     { code: 'LYS', city: 'Lyon' },
@@ -73,6 +76,7 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'BIQ', city: 'Biarritz' },
   ]},
   { label: '🇮🇹 Italia', items: [
+    { code: 'REGION_IT', city: '✨ Toda Italia — buscar chollos' },
     { code: 'MIL', city: 'Milán' },
     { code: 'ROM', city: 'Roma' },
     { code: 'NAP', city: 'Nápoles' },
@@ -87,6 +91,7 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'CAG', city: 'Cagliari (Cerdeña)' },
   ]},
   { label: '🇬🇧 Reino Unido & Irlanda', items: [
+    { code: 'REGION_UK_IE', city: '✨ Todo Reino Unido e Irlanda — buscar chollos' },
     { code: 'LON', city: 'Londres' },
     { code: 'EDI', city: 'Edimburgo' },
     { code: 'MAN', city: 'Mánchester' },
@@ -97,6 +102,7 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'BFS', city: 'Belfast' },
   ]},
   { label: '🇩🇪 Alemania', items: [
+    { code: 'REGION_DE', city: '✨ Toda Alemania — buscar chollos' },
     { code: 'BER', city: 'Berlín' },
     { code: 'MUC', city: 'Múnich' },
     { code: 'FRA', city: 'Fráncfort' },
@@ -107,12 +113,14 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'NUE', city: 'Núremberg' },
   ]},
   { label: '🇳🇱 Países Bajos & Bélgica', items: [
+    { code: 'REGION_NL_BE', city: '✨ Todos los Países Bajos y Bélgica' },
     { code: 'AMS', city: 'Ámsterdam' },
     { code: 'EIN', city: 'Eindhoven' },
     { code: 'BRU', city: 'Bruselas' },
     { code: 'CRL', city: 'Bruselas Charleroi' },
   ]},
   { label: '🇦🇹 Austria & Suiza', items: [
+    { code: 'REGION_AT_CH', city: '✨ Toda Austria y Suiza' },
     { code: 'VIE', city: 'Viena' },
     { code: 'SZG', city: 'Salzburgo' },
     { code: 'INN', city: 'Innsbruck' },
@@ -121,6 +129,7 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'BSL', city: 'Basilea' },
   ]},
   { label: '🇨🇿 Rep. Checa, Hungría & Polonia', items: [
+    { code: 'REGION_CZ_HU_PL', city: '✨ Rep. Checa, Hungría y Polonia' },
     { code: 'PRG', city: 'Praga' },
     { code: 'BUD', city: 'Budapest' },
     { code: 'WAW', city: 'Varsovia' },
@@ -129,6 +138,7 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'GDN', city: 'Gdansk' },
   ]},
   { label: '🇸🇪 Escandinavia & Bálticos', items: [
+    { code: 'REGION_NORDIC', city: '✨ Escandinavia y Bálticos' },
     { code: 'OSL', city: 'Oslo' },
     { code: 'STO', city: 'Estocolmo' },
     { code: 'GOT', city: 'Gotemburgo' },
@@ -140,6 +150,7 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'VNO', city: 'Vilna' },
   ]},
   { label: '🇬🇷 Grecia & Chipre', items: [
+    { code: 'REGION_GR_CY', city: '✨ Toda Grecia y Chipre' },
     { code: 'ATH', city: 'Atenas' },
     { code: 'SKG', city: 'Salónica' },
     { code: 'HER', city: 'Heraclión (Creta)' },
@@ -154,6 +165,7 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'PFO', city: 'Pafos (Chipre)' },
   ]},
   { label: '🇹🇷 Turquía', items: [
+    { code: 'REGION_TR', city: '✨ Toda Turquía' },
     { code: 'IST', city: 'Estambul' },
     { code: 'AYT', city: 'Antalya' },
     { code: 'DLM', city: 'Dalaman' },
@@ -161,6 +173,7 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'ADB', city: 'Izmir' },
   ]},
   { label: '🇭🇷 Croacia & Balcanes', items: [
+    { code: 'REGION_BALKANS', city: '✨ Croacia y Balcanes' },
     { code: 'ZAG', city: 'Zagreb' },
     { code: 'SPU', city: 'Split' },
     { code: 'DBV', city: 'Dubrovnik' },
@@ -171,6 +184,7 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'OTP', city: 'Bucarest (Rumania)' },
   ]},
   { label: '🇲🇦 Marruecos & Norte de África', items: [
+    { code: 'REGION_MA_NA', city: '✨ Marruecos y Norte de África' },
     { code: 'RAK', city: 'Marrakech' },
     { code: 'CMN', city: 'Casablanca' },
     { code: 'TNG', city: 'Tánger' },
@@ -182,10 +196,12 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'SSH', city: 'Sharm el-Sheikh' },
   ]},
   { label: '🇲🇹 Malta & Mediterráneo', items: [
+    { code: 'REGION_MALTA', city: '✨ Malta y Mediterráneo' },
     { code: 'MLA', city: 'Malta' },
     { code: 'SJJ', city: 'Sarajevo' },
   ]},
   { label: '🌴 Canarias', items: [
+    { code: 'REGION_CANARIAS', city: '✨ Todas las Islas Canarias' },
     { code: 'TFN', city: 'Tenerife Norte' },
     { code: 'TFS', city: 'Tenerife Sur' },
     { code: 'LPA', city: 'Gran Canaria' },
@@ -194,11 +210,13 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'SPC', city: 'La Palma' },
   ]},
   { label: '🏝️ Islas Baleares', items: [
+    { code: 'REGION_BALEARES', city: '✨ Todas las Islas Baleares' },
     { code: 'PMI', city: 'Palma de Mallorca' },
     { code: 'IBZ', city: 'Ibiza' },
     { code: 'MAH', city: 'Menorca' },
   ]},
   { label: '🇺🇸 América', items: [
+    { code: 'REGION_AMERICA', city: '✨ Toda América' },
     { code: 'JFK', city: 'Nueva York' },
     { code: 'MIA', city: 'Miami' },
     { code: 'LAX', city: 'Los Ángeles' },
@@ -215,6 +233,7 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'SDQ', city: 'Santo Domingo' },
   ]},
   { label: '🇦🇪 Oriente Medio', items: [
+    { code: 'REGION_MIDDLE_EAST', city: '✨ Todo Oriente Medio' },
     { code: 'DXB', city: 'Dubái' },
     { code: 'DOH', city: 'Doha' },
     { code: 'AUH', city: 'Abu Dabi' },
@@ -222,6 +241,7 @@ const DESTINATION_GROUPS: DestGroup[] = [
     { code: 'TLV', city: 'Tel Aviv' },
   ]},
   { label: '🌏 Asia', items: [
+    { code: 'REGION_ASIA', city: '✨ Toda Asia' },
     { code: 'BKK', city: 'Bangkok' },
     { code: 'HKT', city: 'Phuket' },
     { code: 'SIN', city: 'Singapur' },

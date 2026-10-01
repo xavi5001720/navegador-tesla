@@ -158,7 +158,9 @@ export default function VuelosPage() {
               <span>
                 {isAnyDest
                   ? `🔥 Mejores chollos desde ${originName}`
-                  : `✈️ Vuelos desde ${originName}`}
+                  : (lastQuery.destination || '').startsWith('REGION_')
+                  ? `🔥 Mejores chollos en ${getAirportCityName(lastQuery.destination)} desde ${originName}`
+                  : `✈️ Vuelos a ${getAirportCityName(lastQuery.destination)} desde ${originName}`}
               </span>
               {!isLoading && (
                 <span className="text-xs bg-slate-800 text-slate-300 font-semibold px-2.5 py-0.5 rounded-full">

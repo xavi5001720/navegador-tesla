@@ -323,8 +323,97 @@ export const AIRPORTS_MAP: Record<string, AirportInfo> = {
   AER: { city: 'Sochi', country: 'Rusia' },
 };
 
+export const REGION_DESTINATIONS: Record<string, { label: string; codes: string[] }> = {
+  REGION_ES_MAIN: {
+    label: 'España (Península)',
+    codes: ['MAD', 'BCN', 'VLC', 'AGP', 'SVQ', 'BIO', 'ALC', 'SCQ', 'SDR', 'VGO', 'OVD', 'ZAZ', 'GRX', 'MJV', 'XRY', 'REU', 'GRO'],
+  },
+  REGION_PT: {
+    label: 'Portugal',
+    codes: ['LIS', 'OPO', 'FAO', 'FNC', 'PDL'],
+  },
+  REGION_FR: {
+    label: 'Francia',
+    codes: ['PAR', 'CDG', 'ORY', 'BVA', 'NCE', 'LYS', 'MRS', 'BOD', 'TLS', 'NTE', 'MPL', 'BIQ', 'BZR', 'LIG', 'CCF', 'PGF', 'RNS', 'SXB'],
+  },
+  REGION_IT: {
+    label: 'Italia',
+    codes: ['MIL', 'MXP', 'LIN', 'BGY', 'ROM', 'FCO', 'CIA', 'NAP', 'VCE', 'TSF', 'FLR', 'BLQ', 'TRN', 'BRI', 'PMO', 'CTA', 'OLB', 'CAG', 'AHO', 'PSA', 'TRS', 'SUF', 'VRN', 'PEG', 'PSR', 'BZO'],
+  },
+  REGION_UK_IE: {
+    label: 'Reino Unido e Irlanda',
+    codes: ['LON', 'LHR', 'LGW', 'STN', 'LTN', 'SEN', 'EDI', 'MAN', 'BRS', 'BHX', 'GLA', 'PIK', 'LPL', 'NCL', 'BOH', 'EXT', 'DUB', 'ORK', 'SNN', 'NOC', 'BFS'],
+  },
+  REGION_DE: {
+    label: 'Alemania',
+    codes: ['BER', 'MUC', 'FRA', 'HHN', 'DUS', 'NRN', 'HAM', 'CGN', 'STR', 'NUE', 'FMM', 'BRE', 'HAJ', 'DTM', 'FKB', 'PAD'],
+  },
+  REGION_NL_BE: {
+    label: 'Países Bajos y Bélgica',
+    codes: ['AMS', 'EIN', 'RTM', 'GRQ', 'BRU', 'CRL', 'ANR', 'LGG'],
+  },
+  REGION_AT_CH: {
+    label: 'Austria y Suiza',
+    codes: ['VIE', 'SZG', 'INN', 'GRZ', 'LNZ', 'ZRH', 'GVA', 'BSL'],
+  },
+  REGION_CZ_HU_PL: {
+    label: 'Rep. Checa, Hungría y Polonia',
+    codes: ['PRG', 'BRQ', 'BUD', 'WAW', 'WMI', 'KRK', 'WRO', 'GDN', 'POZ', 'KTW'],
+  },
+  REGION_NORDIC: {
+    label: 'Escandinavia y Bálticos',
+    codes: ['OSL', 'STO', 'GOT', 'CPH', 'HEL', 'REK', 'RIX', 'TLL', 'VNO'],
+  },
+  REGION_GR_CY: {
+    label: 'Grecia y Chipre',
+    codes: ['ATH', 'SKG', 'HER', 'CHQ', 'RHO', 'JTR', 'JMK', 'CFU', 'KGS', 'ZTH', 'LCA', 'PFO'],
+  },
+  REGION_TR: {
+    label: 'Turquía',
+    codes: ['IST', 'SAW', 'AYT', 'DLM', 'BJV', 'ADB'],
+  },
+  REGION_BALKANS: {
+    label: 'Croacia y Balcanes',
+    codes: ['ZAG', 'SPU', 'DBV', 'ZAD', 'BEG', 'TIA', 'SOF', 'OTP'],
+  },
+  REGION_MA_NA: {
+    label: 'Marruecos y Norte de África',
+    codes: ['RAK', 'CMN', 'TNG', 'FEZ', 'AGA', 'TUN', 'CAI', 'HRG', 'SSH'],
+  },
+  REGION_MALTA: {
+    label: 'Malta y Mediterráneo',
+    codes: ['MLA', 'SJJ'],
+  },
+  REGION_CANARIAS: {
+    label: 'Islas Canarias',
+    codes: ['TFN', 'TFS', 'LPA', 'ACE', 'FUE', 'SPC'],
+  },
+  REGION_BALEARES: {
+    label: 'Islas Baleares',
+    codes: ['PMI', 'IBZ', 'MAH'],
+  },
+  REGION_AMERICA: {
+    label: 'América',
+    codes: ['JFK', 'MIA', 'LAX', 'ORD', 'BOS', 'CUN', 'MEX', 'BOG', 'LIM', 'EZE', 'GRU', 'GIG', 'HAV', 'SDQ'],
+  },
+  REGION_MIDDLE_EAST: {
+    label: 'Oriente Medio',
+    codes: ['DXB', 'DOH', 'AUH', 'AMM', 'TLV', 'BEY'],
+  },
+  REGION_ASIA: {
+    label: 'Asia',
+    codes: ['BKK', 'HKT', 'SIN', 'KUL', 'HKG', 'NRT', 'TYO', 'DEL', 'BOM', 'DPS'],
+  },
+};
+
 export function getAirportInfo(code: string): AirportInfo {
   const cleanCode = (code || '').toUpperCase();
+  if (cleanCode.startsWith('REGION_') && REGION_DESTINATIONS[cleanCode]) {
+    return {
+      city: `Toda ${REGION_DESTINATIONS[cleanCode].label}`,
+      country: REGION_DESTINATIONS[cleanCode].label,
+    };
+  }
   return AIRPORTS_MAP[cleanCode] || {
     city: cleanCode,
     country: 'Europa'

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAirportInfo } from '@/lib/airports';
+import { getAirportInfo, REGION_DESTINATIONS } from '@/lib/airports';
 import { buildBookingUrl, getHotelName } from '@/lib/travelpayouts';
 
 const TOKEN = process.env.TRAVELPAYOUTS_TOKEN || '596d62e5f9f6d2f1574865feeb424c75';
@@ -269,9 +269,12 @@ export async function GET(req: NextRequest) {
 
   // Build API URL — Aviasales works per-month; use departure month of the start date
   const anyDest = !destination || destination === 'ANY';
+  const isRegion = destination.startsWith('REGION_') && !!REGION_DESTINATIONS[destination];
+  const regionCodes = isRegion ? new Set(REGION_DESTINATIONS[destination].codes) : null;
+  const isSpecificCity = !anyDest && !isRegion;
 
   let apiUrl = `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=${origin}&currency=eur&one_way=${isOneWay ? 'true' : 'false'}&limit=200&direct=false&token=${TOKEN}`;
-  if (!anyDest) apiUrl += `&destination=${destination}`;
+  if (isSpecificCity) apiUrl += `&destination=${destination}`;
 
   // Only restrict departure_at to a single month if travel window is within the same month (e.g. 2026-10-03 to 2026-10-04)
   // If window spans multiple months or up to a full year, omit departure_at to fetch deals across all 12 months
@@ -282,7 +285,7 @@ export async function GET(req: NextRequest) {
 
 
   let latestUrl = `https://api.travelpayouts.com/v2/prices/latest?origin=${origin}&currency=eur&period_type=year&page=1&limit=100&sorting=price&token=${TOKEN}`;
-  if (!anyDest) latestUrl += `&destination=${destination}`;
+  if (isSpecificCity) latestUrl += `&destination=${destination}`;
 
   try {
     const [res1, res2] = await Promise.allSettled([
@@ -339,6 +342,15 @@ export async function GET(req: NextRequest) {
       if (!isOneWay && !ret) return false;
       if (isOneWay && ret) return false;
 
+      // Check destination matching (if region or specific city selected)
+      if (!anyDest) {
+        if (isRegion) {
+          if (!regionCodes!.has(item.destination)) return false;
+        } else if (item.destination !== destination) {
+          return false;
+        }
+      }
+
       // Check departure window
       const inWindow = !dep || !depWindowStart || !depWindowEnd
         ? true
@@ -362,10 +374,10 @@ export async function GET(req: NextRequest) {
     }
 
     // STEP 2: Pool candidate deals.
-    // If searching ANY destination, aggregate by destination (1 best deal per city).
+    // If searching ANY destination or a REGION, aggregate by destination (1 best deal per city).
     // If searching a specific destination (e.g. MIL), return top deals for that destination across different dates/airports.
     let pool: any[] = [];
-    if (anyDest) {
+    if (anyDest || isRegion) {
       const byDest: Record<string, any> = {};
       for (const item of candidatePool) {
         const dc = item.destination;
