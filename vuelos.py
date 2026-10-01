@@ -410,9 +410,10 @@ def publish_daily_getaways():
         ret_fmt = datetime.strptime(deal["return_date"], "%Y-%m-%d").strftime("%d %b")
         trans = "Directo" if deal["changes"] == 0 else f"{deal['changes']} escala(s)"
 
-        html += f"{m} <b><a href='{deal['skyscanner_url']}'>{deal['origin_name']} ➔ {deal['destination_name']}</a></b>\n"
+        html += f"{m} <b>{deal['origin_name']} ➔ {deal['destination_name']}</b>\n"
         html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'}) · ⚡ <i>{trans}</i>\n"
-        html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x {deal['price_per_person']} €/persona)\n\n"
+        html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x {deal['price_per_person']} € por persona)\n"
+        html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n\n"
 
     bot_private_url = "https://t.me/VuelosEV_Bot?start=buscar"
 
@@ -619,9 +620,10 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
         dep_fmt = datetime.strptime(deal["depart_date"], "%Y-%m-%d").strftime("%d %b")
         ret_fmt = datetime.strptime(deal["return_date"], "%Y-%m-%d").strftime("%d %b")
 
-        res_html += f"{m} <b><a href='{deal['skyscanner_url']}'>{deal['origin_name']} ➔ {deal['destination_name']}</a></b>\n"
+        res_html += f"{m} <b>{deal['origin_name']} ➔ {deal['destination_name']}</b>\n"
         res_html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'})\n"
-        res_html += f"💰 <b>{deal['price_total']} € TOTAL</b> ({pax_desc} · {deal['price_per_person']} €/persona)\n\n"
+        res_html += f"💰 <b>{deal['price_total']} € TOTAL</b> ({pax_desc} · {deal['price_per_person']} € por persona)\n"
+        res_html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n\n"
 
         inline_kb.append([
             {"text": f"{m} Ver {deal['origin_name']} ➔ {deal['destination_name']} ({deal['price_total']}€ total)", "url": deal["skyscanner_url"]}
