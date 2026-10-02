@@ -37,7 +37,7 @@ def load_env_local():
 load_env_local()
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "@escapadas_express").strip()
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "-1004392048161").strip()
 TELEGRAM_TOPIC_ID = int(os.environ.get("TELEGRAM_TOPIC_ID", "1"))
 
 TRAVELPAYOUTS_TOKEN = os.environ.get("TRAVELPAYOUTS_TOKEN", "596d62e5f9f6d2f1574865feeb424c75").strip()
@@ -272,7 +272,7 @@ def build_skyscanner_url(origin: str, destination: str, depart_date: str, return
     url = f"https://www.skyscanner.es/transport/vuelos/{origin.lower()}/{destination.lower()}/{dep_code}/{ret_code}/?{'&'.join(params)}"
     return url
 
-def fetch_flights_for_origin(origin: str, duration_min: int = 1, duration_max: int = 2, limit: int = 60, adults: int = 2, children: int = 0, when_filter: str = "year"):
+def fetch_flights_for_origin(origin: str, duration_min: int = 1, duration_max: int = 2, limit: int = 1000, adults: int = 2, children: int = 0, when_filter: str = "year"):
     url = f"https://api.travelpayouts.com/v2/prices/latest?origin={origin}&currency=eur&period_type=year&page=1&limit={limit}&sorting=price&token={TRAVELPAYOUTS_TOKEN}"
     try:
         resp = requests.get(url, timeout=10)
@@ -404,59 +404,74 @@ def delete_telegram_message(chat_id, message_id):
 def publish_daily_getaways():
     """
     Publicación diaria automática en los Topics de cada ciudad en Telegram (@escapadas_express).
-    Escanea ofertas para los 26 aeropuertos de España y publica las mejores ofertas
-    directamente en el topic correspondiente de cada ciudad.
+    Escanea ofertas para los 26 aeropuertos de España con fallback inteligente de duración (1-2 días, 1-4 días, etc.)
+    y publica las mejores ofertas directamente en el topic correspondiente de cada ciudad.
     """
-    logging.info("Iniciando escaneo diario en los 26 aeropuertos de España para @escapadas_express...")
+    logging.info("Iniciando escaneo diario inteligente en los 26 aeropuertos de España para @escapadas_express...")
     city_topics = load_city_topics()
 
-    deals_by_origin = {}
+    deals_by_origin_1_2 = {}
+    deals_by_origin_1_4 = {}
+    deals_by_origin_any = {}
+
     with ThreadPoolExecutor(max_workers=8) as executor:
-        futures = {executor.submit(fetch_flights_for_origin, code, 1, 2, 60, 2, 0, "year"): code for code in SPAIN_AIRPORTS.keys()}
-        for future in as_completed(futures):
-            code = futures[future]
+        f_1_2 = {executor.submit(fetch_flights_for_origin, code, 1, 2, 1000, 2, 0, "year"): code for code in SPAIN_AIRPORTS.keys()}
+        for future in as_completed(f_1_2):
+            code = f_1_2[future]
             try:
                 res = future.result()
                 if res:
-                    deals_by_origin[code] = res
+                    deals_by_origin_1_2[code] = res
             except Exception as e:
-                logging.error(f"Error buscando vuelos para {code}: {e}")
+                logging.error(f"Error buscando vuelos 1-2 días para {code}: {e}")
 
-    if not deals_by_origin:
-        logging.warning("No se encontraron chollos en este momento.")
-        return
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        f_1_4 = {executor.submit(fetch_flights_for_origin, code, 1, 4, 1000, 2, 0, "year"): code for code in SPAIN_AIRPORTS.keys()}
+        for future in as_completed(f_1_4):
+            code = f_1_4[future]
+            try:
+                res = future.result()
+                if res:
+                    deals_by_origin_1_4[code] = res
+            except Exception as e:
+                logging.error(f"Error buscando vuelos 1-4 días para {code}: {e}")
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        f_any = {executor.submit(fetch_flights_for_origin, code, 1, 10, 1000, 2, 0, "year"): code for code in SPAIN_AIRPORTS.keys()}
+        for future in as_completed(f_any):
+            code = f_any[future]
+            try:
+                res = future.result()
+                if res:
+                    deals_by_origin_any[code] = res
+            except Exception as e:
+                logging.error(f"Error buscando vuelos cualquier duración para {code}: {e}")
 
     today_str = datetime.now().strftime("%d/%m/%Y")
     medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
     published_count = 0
 
     for code, info in SPAIN_AIRPORTS.items():
-        deals = deals_by_origin.get(code, [])
-        if not deals:
-            continue
-
-        deals.sort(key=lambda x: (x["price_per_person"], x["duration"]))
-        top_deals = deals[:5]
-
         city_name = info["city"]
         topic_id = city_topics.get(code)
         if not topic_id:
             logging.warning(f"No se encontró topic_id para {code} ({city_name}). Se omite.")
             continue
 
-        html = f"✈️ <b>TOP ESCAPADAS EXPRÉS — SALIDAS DESDE {city_name.upper()} ({today_str})</b>\n"
-        html += f"<i>Las mejores ofertas de escapada (1-2 días) para <b>2 Adultos</b> saliendo desde {city_name}:</i>\n\n"
+        deals = deals_by_origin_1_2.get(code, [])
+        dur_desc = "1-2 DÍAS"
 
-        for idx, deal in enumerate(top_deals):
-            m = medals[idx] if idx < len(medals) else "✈️"
-            dep_fmt = datetime.strptime(deal["depart_date"], "%Y-%m-%d").strftime("%d %b")
-            ret_fmt = datetime.strptime(deal["return_date"], "%Y-%m-%d").strftime("%d %b")
-            trans = "Directo" if deal["changes"] == 0 else f"{deal['changes']} escala(s)"
+        if len(deals) < 3:
+            deals_4 = deals_by_origin_1_4.get(code, [])
+            if len(deals_4) > len(deals):
+                deals = deals_4
+                dur_desc = "1-4 DÍAS"
 
-            html += f"{m} <b>{city_name} ➔ {deal['destination_name']}</b>\n"
-            html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'}) · ⚡ <i>{trans}</i>\n"
-            html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x {deal['price_per_person']} € por persona)\n"
-            html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n\n"
+        if len(deals) < 3:
+            deals_any = deals_by_origin_any.get(code, [])
+            if len(deals_any) > len(deals):
+                deals = deals_any
+                dur_desc = "TODAS LAS DURACIONES"
 
         bot_private_url = "https://t.me/VuelosEV_Bot?start=buscar"
         keyboard = [
@@ -464,11 +479,33 @@ def publish_daily_getaways():
         ]
         reply_markup = {"inline_keyboard": keyboard}
 
+        if not deals:
+            html = f"✈️ <b>TOP ESCAPADAS — SALIDAS DESDE {city_name.upper()} ({today_str})</b>\n\n"
+            html += f"⚠️ <i>Actualmente no se registran vuelos directos económicos en la caché para <b>{city_name}</b> en las próximas fechas.</i>\n\n"
+            html += f"👉 <i>¡Usa nuestro buscador en privado para personalizar tu origen o buscar desde aeropuertos cercanos!</i>"
+        else:
+            deals.sort(key=lambda x: (x["price_per_person"], x["duration"]))
+            top_deals = deals[:5]
+
+            html = f"✈️ <b>TOP ESCAPADAS ({dur_desc}) — SALIDAS DESDE {city_name.upper()} ({today_str})</b>\n"
+            html += f"<i>Las mejores ofertas encontradas HOY para <b>2 Adultos</b> saliendo desde {city_name}:</i>\n\n"
+
+            for idx, deal in enumerate(top_deals):
+                m = medals[idx] if idx < len(medals) else "✈️"
+                dep_fmt = datetime.strptime(deal["depart_date"], "%Y-%m-%d").strftime("%d %b")
+                ret_fmt = datetime.strptime(deal["return_date"], "%Y-%m-%d").strftime("%d %b")
+                trans = "Directo" if deal["changes"] == 0 else f"{deal['changes']} escala(s)"
+
+                html += f"{m} <b>{city_name} ➔ {deal['destination_name']}</b>\n"
+                html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'}) · ⚡ <i>{trans}</i>\n"
+                html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x {deal['price_per_person']} € por persona)\n"
+                html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n\n"
+
         send_telegram_message(html, reply_markup=reply_markup, thread_id=topic_id, chat_id=TELEGRAM_CHAT_ID)
         published_count += 1
-        time.sleep(0.8)
+        time.sleep(2.5)
 
-    logging.info(f"Publicación diaria completada en {published_count} topics de @escapadas_express.")
+    logging.info(f"Publicación diaria inteligente completada en {published_count} topics de @escapadas_express.")
 
 # --- BOT CONVERSACIONAL EN PRIVADO LIMPIO ---
 
