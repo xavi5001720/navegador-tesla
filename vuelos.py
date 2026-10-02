@@ -272,6 +272,22 @@ def build_skyscanner_url(origin: str, destination: str, depart_date: str, return
     url = f"https://www.skyscanner.es/transport/vuelos/{origin.lower()}/{destination.lower()}/{dep_code}/{ret_code}/?{'&'.join(params)}"
     return url
 
+def build_skyscanner_general_url(origin: str, destination: str = "everywhere", adults: int = 2, children: int = 0) -> str:
+    orig_code = origin.lower() if origin and origin != "ALL" else "mad"
+    dest_code = "everywhere"
+    if destination and destination not in ["ANY", "ALL"] and not destination.startswith("REGION_"):
+        dest_code = destination.lower()
+
+    params = [f"adultsv2={adults}"]
+    if children > 0:
+        childrenv2 = "|".join(["5"] * children)
+        params.append(f"childrenv2={childrenv2}")
+
+    params.append("cabinclass=economy")
+    params.append(f"marker={TRAVELPAYOUTS_MARKER}")
+
+    return f"https://www.skyscanner.es/transport/vuelos/{orig_code}/{dest_code}/?{'&'.join(params)}"
+
 def fetch_flights_for_origin(origin: str, duration_min: int = 1, duration_max: int = 2, limit: int = 1000, adults: int = 2, children: int = 0, when_filter: str = "year"):
     url = f"https://api.travelpayouts.com/v2/prices/latest?origin={origin}&currency=eur&period_type=year&page=1&limit={limit}&sorting=price&token={TRAVELPAYOUTS_TOKEN}"
     try:
@@ -1076,8 +1092,11 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
     back_data = f"step5_{origin_code}_{when_str}_{dur_str}_{adults_str}_{children_str}"
 
     if not top_deals:
-        fail_html = f"⚠️ No se han encontrado vuelos directos para <b>{orig_title} ➔ {dest_title}</b> ({when_title}, {dur_str} días) en este momento.\n\nPrueba otra combinación o busca directamente en nuestra web."
+        skyscanner_url = build_skyscanner_general_url(origin_code, dest_str, adults, children)
+        fail_html = f"⚠️ No se han encontrado vuelos directos para <b>{orig_title} ➔ {dest_title}</b> ({when_title}, {dur_str} días) en este momento.\n\n"
+        fail_html += f"👉 <i>Prueba otra combinación o <a href='{skyscanner_url}'><b>busca tus fechas directamente en Skyscanner aquí</b></a>.</i>"
         kb = [
+            [{"text": "🔍 BUSCAR DIRECTAMENTE EN SKYSCANNER", "url": skyscanner_url}],
             [{"text": "◀️ Volver atrás", "callback_data": back_data}],
             [{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]
         ]
