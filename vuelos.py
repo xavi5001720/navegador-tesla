@@ -1069,7 +1069,7 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
     if origin_code == "ALL":
         all_deals = []
         with ThreadPoolExecutor(max_workers=8) as executor:
-            futures = {executor.submit(fetch_flights_for_origin, o, dur_min, dur_max, 30, adults, children, when_str): o for o in SPAIN_AIRPORTS.keys()}
+            futures = {executor.submit(fetch_flights_for_origin, o, dur_min, dur_max, 1000, adults, children, when_str): o for o in SPAIN_AIRPORTS.keys()}
             for future in as_completed(futures):
                 try:
                     res = future.result()
@@ -1082,7 +1082,7 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
         all_deals.sort(key=lambda x: x["price_per_person"])
         top_deals = all_deals[:5]
     else:
-        deals = fetch_flights_for_origin(origin_code, duration_min=dur_min, duration_max=dur_max, limit=60, adults=adults, children=children, when_filter=when_str)
+        deals = fetch_flights_for_origin(origin_code, duration_min=dur_min, duration_max=dur_max, limit=1000, adults=adults, children=children, when_filter=when_str)
         if dest_str != "ANY":
             deals = [d for d in deals if is_destination_match(d["destination"], dest_str)]
         deals.sort(key=lambda x: x["price_per_person"])
