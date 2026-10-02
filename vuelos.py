@@ -37,11 +37,28 @@ def load_env_local():
 load_env_local()
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
-TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "@mgchuches").strip()
-TELEGRAM_TOPIC_ID = int(os.environ.get("TELEGRAM_TOPIC_ID", "390"))
+TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "@escapadas_express").strip()
+TELEGRAM_TOPIC_ID = int(os.environ.get("TELEGRAM_TOPIC_ID", "1"))
 
 TRAVELPAYOUTS_TOKEN = os.environ.get("TRAVELPAYOUTS_TOKEN", "596d62e5f9f6d2f1574865feeb424c75").strip()
 TRAVELPAYOUTS_MARKER = os.environ.get("TRAVELPAYOUTS_MARKER", "778425").strip()
+
+def load_city_topics():
+    json_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "city_topics.json")
+    if os.path.exists(json_path):
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logging.error(f"Error cargando city_topics.json: {e}")
+    return {}
+
+def get_group_topic_url(origin_code=None):
+    city_topics = load_city_topics()
+    if origin_code and origin_code in city_topics:
+        topic_id = city_topics[origin_code]
+        return f"https://t.me/escapadas_express/{topic_id}"
+    return "https://t.me/escapadas_express"
 
 # Todos los 26 Aeropuertos de España según la web oficial
 SPAIN_AIRPORTS = {
@@ -386,54 +403,72 @@ def delete_telegram_message(chat_id, message_id):
 
 def publish_daily_getaways():
     """
-    Publicación diaria automática en el Topic 390 de Telegram.
-    Formato limpio sin abreviaturas raras ni (IATA) duplicados.
+    Publicación diaria automática en los Topics de cada ciudad en Telegram (@escapadas_express).
+    Escanea ofertas para los 26 aeropuertos de España y publica las mejores ofertas
+    directamente en el topic correspondiente de cada ciudad.
     """
-    logging.info("Iniciando escaneo diario en los 26 aeropuertos de España (1-2 días, 2 personas)...")
+    logging.info("Iniciando escaneo diario en los 26 aeropuertos de España para @escapadas_express...")
+    city_topics = load_city_topics()
 
-    all_deals = []
+    deals_by_origin = {}
     with ThreadPoolExecutor(max_workers=8) as executor:
         futures = {executor.submit(fetch_flights_for_origin, code, 1, 2, 60, 2, 0, "year"): code for code in SPAIN_AIRPORTS.keys()}
         for future in as_completed(futures):
+            code = futures[future]
             try:
                 res = future.result()
                 if res:
-                    all_deals.extend(res)
-            except Exception:
-                pass
+                    deals_by_origin[code] = res
+            except Exception as e:
+                logging.error(f"Error buscando vuelos para {code}: {e}")
 
-    if not all_deals:
+    if not deals_by_origin:
         logging.warning("No se encontraron chollos en este momento.")
         return
 
-    all_deals.sort(key=lambda x: (x["price_per_person"], x["duration"]))
-    top_deals = all_deals[:5]
     today_str = datetime.now().strftime("%d/%m/%Y")
-
-    html = f"✈️ <b>TOP ESCAPADAS EXPRÉS (1-2 DÍAS) — {today_str}</b>\n"
-    html += f"<i>Las 5 mejores ofertas encontradas HOY para <b>2 Adultos</b> saliendo desde España:</i>\n\n"
-
     medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣"]
+    published_count = 0
 
-    for idx, deal in enumerate(top_deals):
-        m = medals[idx] if idx < len(medals) else "✈️"
-        dep_fmt = datetime.strptime(deal["depart_date"], "%Y-%m-%d").strftime("%d %b")
-        ret_fmt = datetime.strptime(deal["return_date"], "%Y-%m-%d").strftime("%d %b")
-        trans = "Directo" if deal["changes"] == 0 else f"{deal['changes']} escala(s)"
+    for code, info in SPAIN_AIRPORTS.items():
+        deals = deals_by_origin.get(code, [])
+        if not deals:
+            continue
 
-        html += f"{m} <b>{deal['origin_name']} ➔ {deal['destination_name']}</b>\n"
-        html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'}) · ⚡ <i>{trans}</i>\n"
-        html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x {deal['price_per_person']} € por persona)\n"
-        html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n\n"
+        deals.sort(key=lambda x: (x["price_per_person"], x["duration"]))
+        top_deals = deals[:5]
 
-    bot_private_url = "https://t.me/VuelosEV_Bot?start=buscar"
+        city_name = info["city"]
+        topic_id = city_topics.get(code)
+        if not topic_id:
+            logging.warning(f"No se encontró topic_id para {code} ({city_name}). Se omite.")
+            continue
 
-    keyboard = [
-        [{"text": "💬 BUSCADOR EN PRIVADO CON EL BOT", "url": bot_private_url}]
-    ]
+        html = f"✈️ <b>TOP ESCAPADAS EXPRÉS — SALIDAS DESDE {city_name.upper()} ({today_str})</b>\n"
+        html += f"<i>Las mejores ofertas de escapada (1-2 días) para <b>2 Adultos</b> saliendo desde {city_name}:</i>\n\n"
 
-    reply_markup = {"inline_keyboard": keyboard}
-    send_telegram_message(html, reply_markup=reply_markup, thread_id=TELEGRAM_TOPIC_ID, chat_id=TELEGRAM_CHAT_ID)
+        for idx, deal in enumerate(top_deals):
+            m = medals[idx] if idx < len(medals) else "✈️"
+            dep_fmt = datetime.strptime(deal["depart_date"], "%Y-%m-%d").strftime("%d %b")
+            ret_fmt = datetime.strptime(deal["return_date"], "%Y-%m-%d").strftime("%d %b")
+            trans = "Directo" if deal["changes"] == 0 else f"{deal['changes']} escala(s)"
+
+            html += f"{m} <b>{city_name} ➔ {deal['destination_name']}</b>\n"
+            html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'}) · ⚡ <i>{trans}</i>\n"
+            html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x {deal['price_per_person']} € por persona)\n"
+            html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n\n"
+
+        bot_private_url = "https://t.me/VuelosEV_Bot?start=buscar"
+        keyboard = [
+            [{"text": "💬 BUSCADOR EN PRIVADO CON EL BOT", "url": bot_private_url}]
+        ]
+        reply_markup = {"inline_keyboard": keyboard}
+
+        send_telegram_message(html, reply_markup=reply_markup, thread_id=topic_id, chat_id=TELEGRAM_CHAT_ID)
+        published_count += 1
+        time.sleep(0.8)
+
+    logging.info(f"Publicación diaria completada en {published_count} topics de @escapadas_express.")
 
 # --- BOT CONVERSACIONAL EN PRIVADO LIMPIO ---
 
@@ -758,7 +793,7 @@ def send_step_1_origin_private(chat_id, message_id=None):
     html = "✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
     html += "<b>Paso 1 de 6:</b> Elige tu aeropuerto de salida:"
 
-    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+    group_topic_url = get_group_topic_url()
 
     keyboard = []
     items = list(SPAIN_AIRPORTS.items())
@@ -785,7 +820,7 @@ def send_step_2_when(chat_id, message_id, origin_code):
     html += f"📍 Origen: <b>{orig_name}</b>\n\n"
     html += "<b>Paso 2 de 6:</b> ¿Cuándo quieres viajar?"
 
-    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+    group_topic_url = get_group_topic_url(origin_code)
 
     keyboard = [
         [{"text": "⚡ Esta semana (próximos 7 días)", "callback_data": f"step2_{origin_code}_week"}],
@@ -813,7 +848,7 @@ def send_step_3_duration(chat_id, message_id, origin_code, when_str):
     html += f"📅 Fecha: <b>{when_title}</b>\n\n"
     html += "<b>Paso 3 de 6:</b> ¿De qué duración quieres el viaje?"
 
-    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+    group_topic_url = get_group_topic_url(origin_code)
 
     keyboard = [
         [{"text": "⚡ 1 a 2 Días (Escapada Exprés)", "callback_data": f"step3_{origin_code}_{when_str}_1-2"}],
@@ -843,7 +878,7 @@ def send_step_4_adults(chat_id, message_id, origin_code, when_str, dur_str):
     html += f"⏱️ Duración: <b>{dur_str} días</b>\n\n"
     html += "<b>Paso 4 de 6:</b> ¿Cuántos ADULTOS van a viajar?"
 
-    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+    group_topic_url = get_group_topic_url(origin_code)
 
     keyboard = [
         [{"text": "👤 1 Adulto", "callback_data": f"step4_{origin_code}_{when_str}_{dur_str}_1a"}, {"text": "👥 2 Adultos", "callback_data": f"step4_{origin_code}_{when_str}_{dur_str}_2a"}],
@@ -872,7 +907,7 @@ def send_step_5_children(chat_id, message_id, origin_code, when_str, dur_str, ad
     html += f"👥 Adultos: <b>{adults}</b>\n\n"
     html += "<b>Paso 5 de 6:</b> ¿Cuántos NIÑOS viajan?"
 
-    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+    group_topic_url = get_group_topic_url(origin_code)
 
     keyboard = [
         [{"text": "🚫 0 Niños", "callback_data": f"step5_{origin_code}_{when_str}_{dur_str}_{adults_str}_0c"}, {"text": "👶 1 Niño", "callback_data": f"step5_{origin_code}_{when_str}_{dur_str}_{adults_str}_1c"}],
@@ -900,7 +935,7 @@ def send_step_6_dest_type(chat_id, message_id, origin_code, when_str, dur_str, a
     html += f"⏱️ Duración: <b>{dur_str} días</b> | 👥 <b>{pax_desc}</b>\n\n"
     html += "<b>Paso 6 de 6:</b> ¿A dónde quieres viajar?"
 
-    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+    group_topic_url = get_group_topic_url(origin_code)
 
     keyboard = [
         [{"text": "🌍 Cualquier destino (A cualquier parte)", "callback_data": f"search_{origin_code}_{when_str}_{dur_str}_{adults_str}_{children_str}_ANY"}],
@@ -914,7 +949,7 @@ def send_step_6_zones(chat_id, message_id, origin_code, when_str, dur_str, adult
     html = f"✈️ <b>BUSCADOR DE ESCAPADAS BARATAS</b>\n\n"
     html += "<b>Paso 6 de 6:</b> Selecciona una zona o grupo de destinos:"
 
-    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+    group_topic_url = get_group_topic_url(origin_code)
 
     keyboard = []
     for i in range(0, len(DESTINATION_GROUPS), 2):
@@ -939,7 +974,7 @@ def send_step_6_items(chat_id, message_id, origin_code, when_str, dur_str, adult
     html += f"📍 Zona seleccionada: <b>{group_label}</b>\n\n"
     html += f"<b>Paso 6 de 6:</b> Elige tu destino dentro de {group_label}:"
 
-    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+    group_topic_url = get_group_topic_url(origin_code)
 
     keyboard = []
     items = group_info["items"] if group_info else []
@@ -1000,7 +1035,7 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
         deals.sort(key=lambda x: x["price_per_person"])
         top_deals = deals[:5]
 
-    group_topic_url = f"https://t.me/mgchuches/{TELEGRAM_TOPIC_ID}"
+    group_topic_url = get_group_topic_url(origin_code)
     back_data = f"step5_{origin_code}_{when_str}_{dur_str}_{adults_str}_{children_str}"
 
     if not top_deals:
