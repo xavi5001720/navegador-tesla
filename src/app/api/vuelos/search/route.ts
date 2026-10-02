@@ -273,7 +273,7 @@ export async function GET(req: NextRequest) {
   const regionCodes = isRegion ? new Set(REGION_DESTINATIONS[destination].codes) : null;
   const isSpecificCity = !anyDest && !isRegion;
 
-  let apiUrl = `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=${origin}&currency=eur&one_way=${isOneWay ? 'true' : 'false'}&limit=200&direct=false&token=${TOKEN}`;
+  let apiUrl = `https://api.travelpayouts.com/aviasales/v3/prices_for_dates?origin=${origin}&currency=eur&one_way=${isOneWay ? 'true' : 'false'}&limit=1000&direct=false&token=${TOKEN}`;
   if (isSpecificCity) apiUrl += `&destination=${destination}`;
 
   // Only restrict departure_at to a single month if travel window is within the same month (e.g. 2026-10-03 to 2026-10-04)
@@ -284,7 +284,7 @@ export async function GET(req: NextRequest) {
   }
 
 
-  let latestUrl = `https://api.travelpayouts.com/v2/prices/latest?origin=${origin}&currency=eur&period_type=year&page=1&limit=100&sorting=price&token=${TOKEN}`;
+  let latestUrl = `https://api.travelpayouts.com/v2/prices/latest?origin=${origin}&currency=eur&period_type=year&page=1&limit=1000&sorting=price&token=${TOKEN}`;
   if (isSpecificCity) latestUrl += `&destination=${destination}`;
 
   try {
@@ -298,7 +298,7 @@ export async function GET(req: NextRequest) {
       const topRegionCodes = REGION_DESTINATIONS[destination].codes.slice(0, 10);
       for (const code of topRegionCodes) {
         fetchPromises.push(
-          fetch(`https://api.travelpayouts.com/v2/prices/latest?origin=${origin}&destination=${code}&currency=eur&period_type=year&page=1&limit=10&sorting=price&token=${TOKEN}`, {
+          fetch(`https://api.travelpayouts.com/v2/prices/latest?origin=${origin}&destination=${code}&currency=eur&period_type=year&page=1&limit=100&sorting=price&token=${TOKEN}`, {
             headers: { 'Accept-Encoding': 'gzip' },
             cache: 'no-store',
           })
