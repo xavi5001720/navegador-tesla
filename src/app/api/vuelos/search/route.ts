@@ -293,6 +293,16 @@ export async function GET(req: NextRequest) {
       fetch(latestUrl, { headers: { 'Accept-Encoding': 'gzip' }, cache: 'no-store' }),
     ];
 
+    // If searching ANY destination, fetch pages 2 & 3 as well (4,000 total deals) for maximum destination coverage
+    if (anyDest) {
+      let page2Url = `https://api.travelpayouts.com/v2/prices/latest?origin=${origin}&currency=eur&period_type=year&page=2&limit=1000&sorting=price&token=${TOKEN}`;
+      let page3Url = `https://api.travelpayouts.com/v2/prices/latest?origin=${origin}&currency=eur&period_type=year&page=3&limit=1000&sorting=price&token=${TOKEN}`;
+      fetchPromises.push(
+        fetch(page2Url, { headers: { 'Accept-Encoding': 'gzip' }, cache: 'no-store' }),
+        fetch(page3Url, { headers: { 'Accept-Encoding': 'gzip' }, cache: 'no-store' })
+      );
+    }
+
     // If searching a region, query all airport codes of that region concurrently with limit=1000
     if (isRegion && REGION_DESTINATIONS[destination]) {
       const regionCodes = REGION_DESTINATIONS[destination].codes;
