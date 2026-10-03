@@ -28,8 +28,22 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const peerRef = useRef<Peer | null>(null);
     const callRef = useRef<MediaConnection | null>(null);
-    const localStreamRef = useRef<MediaStream | null>(null);
-    const [isPeerReady, setIsPeerReady] = useState(false);
+    const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+    const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+
+    useEffect(() => {
+      if (localVideoRef.current && localStream) {
+        localVideoRef.current.srcObject = localStream;
+        localVideoRef.current.play().catch(() => {});
+      }
+    }, [localStream]);
+
+    useEffect(() => {
+      if (remoteVideoRef.current && remoteStream) {
+        remoteVideoRef.current.srcObject = remoteStream;
+        remoteVideoRef.current.play().catch(() => {});
+      }
+    }, [remoteStream]);
 
     const getLocalStream = useCallback(async () => {
       if (localStreamRef.current) return localStreamRef.current;
@@ -55,9 +69,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
       }
 
       localStreamRef.current = stream;
-      if (localVideoRef.current) {
-        localVideoRef.current.srcObject = stream;
-      }
+      setLocalStream(stream);
       return stream;
     }, []);
 
@@ -101,10 +113,8 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
             incomingCall.answer(stream);
             callRef.current = incomingCall;
 
-            incomingCall.on("stream", (remoteStream) => {
-              if (remoteVideoRef.current) {
-                remoteVideoRef.current.srcObject = remoteStream;
-              }
+            incomingCall.on("stream", (rs) => {
+              setRemoteStream(rs);
               onCallStateChange("in-call", incomingCall.peer);
             });
 
@@ -156,10 +166,8 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
           onCallStateChange("calling", cleanTargetId);
 
-          mediaCall.on("stream", (remoteStream) => {
-            if (remoteVideoRef.current) {
-              remoteVideoRef.current.srcObject = remoteStream;
-            }
+          mediaCall.on("stream", (rs) => {
+            setRemoteStream(rs);
             onCallStateChange("in-call", cleanTargetId);
           });
 
