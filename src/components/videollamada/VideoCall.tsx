@@ -35,9 +35,13 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
     const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
     const [isPeerReady, setIsPeerReady] = useState(false);
 
+    const [needsTapToPlay, setNeedsTapToPlay] = useState(false);
+
     useEffect(() => {
       if (localVideoRef.current && localStream) {
         localVideoRef.current.muted = true;
+        localVideoRef.current.setAttribute("playsinline", "true");
+        localVideoRef.current.setAttribute("webkit-playsinline", "true");
         localVideoRef.current.srcObject = localStream;
         localVideoRef.current.play().catch((e) => console.log("Local play error:", e));
       }
@@ -45,8 +49,18 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
     useEffect(() => {
       if (remoteVideoRef.current && remoteStream) {
+        remoteVideoRef.current.setAttribute("playsinline", "true");
+        remoteVideoRef.current.setAttribute("webkit-playsinline", "true");
         remoteVideoRef.current.srcObject = remoteStream;
-        remoteVideoRef.current.play().catch((e) => console.log("Remote play error:", e));
+        const playPromise = remoteVideoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            setNeedsTapToPlay(false);
+          }).catch((e) => {
+            console.log("Remote play error (mobile gesture needed):", e);
+            setNeedsTapToPlay(true);
+          });
+        }
       }
     }, [remoteStream]);
 
@@ -87,6 +101,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
       }
       if (localVideoRef.current) localVideoRef.current.srcObject = null;
       if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+      setNeedsTapToPlay(false);
       onCallStateChange("idle");
     }, [onCallStateChange]);
 
@@ -103,6 +118,15 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         
         peerInstance = new PeerJS(cleanId, {
           debug: 1,
+          config: {
+            iceServers: [
+              { urls: "stun:stun.l.google.com:19302" },
+              { urls: "stun:stun1.l.google.com:19302" },
+              { urls: "stun:stun2.l.google.com:19302" },
+              { urls: "stun:stun3.l.google.com:19302" },
+              { urls: "stun:stun4.l.google.com:19302" },
+            ],
+          },
         });
 
         peerRef.current = peerInstance;
@@ -206,6 +230,32 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
     return (
       <div style={{ position: "relative", width: "100%", maxWidth: 800, margin: "0 auto" }}>
+        {needsTapToPlay && (
+          <button
+            onClick={() => {
+              remoteVideoRef.current?.play().then(() => setNeedsTapToPlay(false)).catch(() => {});
+              localVideoRef.current?.play().catch(() => {});
+            }}
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 10,
+              padding: "1rem 2rem",
+              borderRadius: "99px",
+              background: "#10b981",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "1rem",
+              border: "none",
+              cursor: "pointer",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+            }}
+          >
+            🔊 Toca aquí para ver/escuchar la llamada
+          </button>
+        )}
         {/* Vídeo remoto — grande */}
         <video
           ref={remoteVideoRef}
