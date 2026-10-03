@@ -86,6 +86,8 @@ export default function VueloCard({ flight, rank }: Props) {
   const image = CITY_IMAGES[flight.destination] || DEFAULT_IMG;
   const isRoundTrip = !!flight.returnAt;
 
+  const travelerLabel = flight.adults > 0 ? `${flight.adults} ${flight.adults === 1 ? 'adulto' : 'adultos'}` : '1 adulto';
+
   return (
     <div className="group relative bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden hover:border-sky-500/40 transition-all duration-300 shadow-xl hover:shadow-sky-900/20 flex flex-col">
       {/* Image */}
@@ -137,11 +139,17 @@ export default function VueloCard({ flight, rank }: Props) {
           );
         })()}
 
-        {/* Price badge — solo precio del vuelo */}
-        <div className="absolute bottom-2.5 right-2.5 bg-sky-600/95 backdrop-blur-sm text-white px-3 py-1.5 rounded-xl text-right shadow-lg">
-          <div className="text-xl font-black leading-tight">{flight.totalPrice} €</div>
-          <div className="text-[10px] font-semibold opacity-90">
-            ✈️ desde {flight.pricePerPerson}€/persona
+        {/* Price badge — destacado por persona y total */}
+        <div className="absolute bottom-2.5 right-2.5 bg-slate-950/90 border border-slate-700/80 backdrop-blur-md px-3 py-1.5 rounded-xl text-right shadow-xl">
+          <div className="text-[10px] font-black text-emerald-400 uppercase tracking-wider flex items-center justify-end gap-1">
+            <span>🟢</span>
+            <span>{flight.pricePerPerson} € / persona</span>
+          </div>
+          <div className="text-xl font-black text-white leading-tight">
+            {flight.totalPrice} € <span className="text-[10px] font-extrabold text-sky-400">TOTAL</span>
+          </div>
+          <div className="text-[9px] text-slate-400 font-semibold">
+            ({travelerLabel})
           </div>
         </div>
       </div>
@@ -185,11 +193,19 @@ export default function VueloCard({ flight, rank }: Props) {
           </div>
         </div>
 
-        {/* Flight Price formula */}
-        <div className="bg-slate-950/70 rounded-xl border border-slate-800 px-3 py-2.5">
+        {/* Flight Price formula & per-person breakdown */}
+        <div className="bg-slate-950/80 rounded-xl border border-slate-800 p-2.5 space-y-1.5">
           <div className="flex items-center justify-between text-xs text-slate-300">
             <span>✈️ <strong>{isRoundTrip ? 'Ida y Vuelta' : 'Solo Ida'}:</strong> {buildPriceFormula(flight)}</span>
-            <span className="font-extrabold text-white text-sm ml-2">= {flight.totalPrice} €</span>
+          </div>
+          <div className="flex items-center justify-between border-t border-slate-800/80 pt-1.5 text-xs">
+            <span className="text-emerald-400 font-bold flex items-center gap-1">
+              <span>🟢</span>
+              <span>{flight.pricePerPerson} € / pers</span>
+            </span>
+            <span className="font-black text-white text-xs">
+              💰 <span className="text-sky-300 text-sm">{flight.totalPrice} €</span> <span className="text-[10px] text-slate-400 font-medium">total ({travelerLabel})</span>
+            </span>
           </div>
         </div>
 
@@ -198,14 +214,15 @@ export default function VueloCard({ flight, rank }: Props) {
           href={flight.skyscannerUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full py-2.5 px-4 bg-sky-600 hover:bg-sky-500 text-white font-black rounded-xl text-xs transition-all duration-300 shadow-md hover:shadow-sky-600/25 flex items-center justify-between group/btn"
+          className="w-full py-2.5 px-3 bg-sky-600 hover:bg-sky-500 text-white font-black rounded-xl text-xs transition-all duration-300 shadow-md hover:shadow-sky-600/25 flex items-center justify-between group/btn"
         >
           <span className="flex items-center space-x-1.5">
             <span>✈️</span>
-            <span>Ver vuelo en Skyscanner.es</span>
+            <span>Ver vuelo en Skyscanner</span>
           </span>
-          <span className="bg-sky-700/90 group-hover/btn:bg-sky-600 px-2 py-0.5 rounded-lg text-xs font-black">
-            {flight.totalPrice} €
+          <span className="bg-sky-900/80 border border-sky-400/30 group-hover/btn:bg-sky-700 px-2 py-1 rounded-lg text-right">
+            <div className="text-xs font-black leading-none">{flight.totalPrice} € total</div>
+            <div className="text-[9px] text-emerald-300 font-bold mt-0.5">({flight.pricePerPerson}€/persona)</div>
           </span>
         </a>
         <p className="text-[10px] text-slate-500 italic text-center leading-tight">

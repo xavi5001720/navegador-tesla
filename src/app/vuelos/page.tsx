@@ -194,10 +194,15 @@ export default function VuelosPage() {
           </div>
 
           {cheapestPrice !== null && !isLoading && (
-            <div className="text-right">
-              <div className="text-xs text-slate-500">Desde</div>
-              <div className="text-2xl font-black text-sky-400">{cheapestPrice} €</div>
-              <div className="text-[10px] text-slate-500">{lastQuery.includeHotel ? 'Vuelo + Hotel' : 'precio total (2 adultos)'}</div>
+            <div className="bg-slate-900/90 border border-slate-800/80 rounded-2xl px-4 py-2 text-right shadow-md">
+              <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Desde</div>
+              <div className="flex items-baseline justify-end gap-1 font-black">
+                <span className="text-emerald-400 text-lg">🟢 {Math.round(cheapestPrice / (lastQuery.adults || 1))} €</span>
+                <span className="text-slate-400 text-xs font-medium">/ persona</span>
+              </div>
+              <div className="text-xs font-extrabold text-sky-300 mt-0.5">
+                💰 {cheapestPrice} € <span className="text-[10px] font-normal text-slate-400">total ({lastQuery.adults} {lastQuery.adults === 1 ? 'adulto' : 'adultos'})</span>
+              </div>
             </div>
           )}
         </div>
