@@ -47,6 +47,7 @@ const SECTIONS = [
   { id: 'codigos', label: 'Códigos Ali', emoji: '🏷️' },
   { id: 'referidos', label: 'Referidos Tesla', emoji: '🎰' },
   { id: 'navegador', label: 'Navegador (en construcción)', emoji: '🛰️', isLink: true, href: '/navegador' },
+  { id: 'vuelos', label: 'Escapadas', emoji: '✈️', isLink: true, href: '/vuelos' },
 ];
 
 const PLATFORM_BADGE: Record<string, { label: string; color: string }> = {
@@ -471,6 +472,10 @@ export default function ChuchesPage() {
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <div className={styles.headerBtns}>
+            <a href="/vuelos" className={styles.headerVuelosBtn}>
+              <span>✈️</span>
+              <span>Escapadas</span>
+            </a>
             <a
               href="https://play.google.com/store/apps/details?id=es.viajandoentesla.teslachuches&pcampaignid=web_share"
               target="_blank"

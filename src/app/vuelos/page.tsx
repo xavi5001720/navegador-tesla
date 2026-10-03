@@ -90,19 +90,11 @@ export default function VuelosPage() {
       <header className="sticky top-0 z-50 bg-slate-950/85 backdrop-blur-lg border-b border-slate-800/80 px-4 lg:px-8 py-3.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2.5 group">
-            <span className="text-2xl">⚡</span>
+            <span className="text-xl">⬅️</span>
             <span className="font-extrabold text-lg tracking-tight text-white group-hover:text-sky-400 transition-colors">
-              Viajando en Tesla
+              Volver a Viajando en Tesla
             </span>
           </Link>
-          <nav className="flex items-center space-x-2 text-sm font-medium">
-            <Link href="/" className="text-slate-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-800/60 hidden sm:block">
-              🛒 Accesorios
-            </Link>
-            <Link href="/navegador" className="text-slate-400 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-slate-800/60 hidden sm:block">
-              🚗 Navegador
-            </Link>
-          </nav>
         </div>
       </header>
 
