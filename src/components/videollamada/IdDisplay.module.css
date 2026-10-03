@@ -1,0 +1,100 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.5rem;
+  backdrop-filter: blur(12px);
+}
+
+.label {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.idBox {
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(227, 25, 55, 0.5);
+  border-radius: 1rem;
+  padding: 0.75rem 2rem;
+  box-shadow: 0 0 24px rgba(227, 25, 55, 0.2);
+}
+
+.idText {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #fff;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btnSecondary {
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: rgba(227, 25, 55, 0.85);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btnSecondary:hover {
+  background: rgba(227, 25, 55, 1);
+  transform: translateY(-1px);
+}
+
+.btnSecondary:active {
+  transform: translateY(0);
+}
+
+.btnGhost {
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.btnGhost:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #fff;
+}
+
+.qrWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.qrLabel {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  margin: 0;
+  max-width: 220px;
+}
+
+.qrContainer {
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

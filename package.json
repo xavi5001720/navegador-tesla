@@ -25,10 +25,12 @@
     "lucide-react": "1.8.0",
     "next": "16.2.3",
     "nodemailer": "8.0.5",
+    "peerjs": "^1.5.5",
     "qrcode.react": "^4.2.0",
     "react": "19.2.5",
     "react-dom": "19.2.5",
     "react-leaflet": "^5.0.0",
+    "socket.io-client": "^4.8.4",
     "ws": "^8.20.0"
   },
   "devDependencies": {
