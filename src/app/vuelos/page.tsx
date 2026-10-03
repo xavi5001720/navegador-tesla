@@ -15,6 +15,22 @@ function nextWeekendDates(): { dep: string; ret: string } {
   return { dep: sat.toISOString().slice(0, 10), ret: sun.toISOString().slice(0, 10) };
 }
 
+function formatTravelersSummary(adults: number = 1, children: number = 0, infants: number = 0): string {
+  const parts: string[] = [];
+  if (adults > 0) parts.push(`${adults} ${adults === 1 ? 'Adulto' : 'Adultos'}`);
+  if (children > 0) parts.push(`${children} ${children === 1 ? 'Niño' : 'Niños'}`);
+  if (infants > 0) parts.push(`${infants} ${infants === 1 ? 'Bebé' : 'Bebés'}`);
+  return parts.join(' + ') || '1 Adulto';
+}
+
+function formatTravelersLabel(adults: number = 1, children: number = 0, infants: number = 0): string {
+  const parts: string[] = [];
+  if (adults > 0) parts.push(`${adults} ${adults === 1 ? 'adulto' : 'adultos'}`);
+  if (children > 0) parts.push(`${children} ${children === 1 ? 'niño' : 'niños'}`);
+  if (infants > 0) parts.push(`${infants} ${infants === 1 ? 'bebé' : 'bebés'}`);
+  return parts.join(' + ') || '1 adulto';
+}
+
 const { dep: defDep, ret: defRet } = nextWeekendDates();
 
 const DEFAULT_QUERY: VuelosQuery = {
@@ -112,7 +128,9 @@ export default function VuelosPage() {
     : [];
 
   const visibleResults = isAnyDest ? [...spainResults, ...intlResults] : results;
-  const cheapestPrice = visibleResults.length > 0 ? Math.min(...visibleResults.map(r => r.totalPrice)) : null;
+  const cheapestFlight = visibleResults.length > 0
+    ? visibleResults.reduce((min, f) => (f.totalPrice < min.totalPrice ? f : min), visibleResults[0])
+    : null;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-sky-500 selection:text-white">
@@ -173,7 +191,7 @@ export default function VuelosPage() {
             <h2 className="text-xl font-bold text-white flex items-center space-x-2 flex-wrap gap-y-1">
               <span>
                 {isAnyDest
-                  ? `🔥 Ofertas destacadas para 2 Adultos desde ${originName} (1 año vista)`
+                  ? `🔥 Ofertas destacadas para ${formatTravelersSummary(lastQuery.adults, lastQuery.children, lastQuery.infants)} desde ${originName} (1 año vista)`
                   : (lastQuery.destination || '').startsWith('REGION_')
                   ? `🔥 Mejores ofertas en ${getAirportCityName(lastQuery.destination)} desde ${originName}`
                   : `✈️ Vuelos a ${getAirportCityName(lastQuery.destination)} desde ${originName}`}
@@ -194,15 +212,15 @@ export default function VuelosPage() {
             </p>
           </div>
 
-          {cheapestPrice !== null && !isLoading && (
+          {cheapestFlight !== null && !isLoading && (
             <div className="bg-slate-900/90 border border-slate-800/80 rounded-2xl px-4 py-2 text-right shadow-md">
               <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Desde</div>
               <div className="flex items-baseline justify-end gap-1 font-black">
-                <span className="text-emerald-400 text-lg">🟢 {Math.round(cheapestPrice / (lastQuery.adults || 1))} €</span>
+                <span className="text-emerald-400 text-lg">🟢 {cheapestFlight.pricePerPerson} €</span>
                 <span className="text-slate-400 text-xs font-medium">/ persona</span>
               </div>
               <div className="text-xs font-extrabold text-sky-300 mt-0.5">
-                💰 {cheapestPrice} € <span className="text-[10px] font-normal text-slate-400">total ({lastQuery.adults} {lastQuery.adults === 1 ? 'adulto' : 'adultos'})</span>
+                💰 {cheapestFlight.totalPrice} € <span className="text-[10px] font-normal text-slate-400">total ({formatTravelersLabel(lastQuery.adults, lastQuery.children, lastQuery.infants)})</span>
               </div>
             </div>
           )}

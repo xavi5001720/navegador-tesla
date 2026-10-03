@@ -77,6 +77,14 @@ function buildPriceFormula(v: VueloResult): string {
   return parts.join(' + ');
 }
 
+function formatTravelersLabel(adults: number = 1, children: number = 0, infants: number = 0): string {
+  const parts: string[] = [];
+  if (adults > 0) parts.push(`${adults} ${adults === 1 ? 'adulto' : 'adultos'}`);
+  if (children > 0) parts.push(`${children} ${children === 1 ? 'niño' : 'niños'}`);
+  if (infants > 0) parts.push(`${infants} ${infants === 1 ? 'bebé' : 'bebés'}`);
+  return parts.join(' + ') || '1 adulto';
+}
+
 interface Props {
   flight: VueloResult;
   rank?: number;
@@ -86,7 +94,7 @@ export default function VueloCard({ flight, rank }: Props) {
   const image = CITY_IMAGES[flight.destination] || DEFAULT_IMG;
   const isRoundTrip = !!flight.returnAt;
 
-  const travelerLabel = flight.adults > 0 ? `${flight.adults} ${flight.adults === 1 ? 'adulto' : 'adultos'}` : '1 adulto';
+  const travelerLabel = formatTravelersLabel(flight.adults, flight.children, flight.infants);
 
   return (
     <div className="group relative bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden hover:border-sky-500/40 transition-all duration-300 shadow-xl hover:shadow-sky-900/20 flex flex-col">
