@@ -486,7 +486,7 @@ export default function ChuchesPage() {
               <span>App Android</span>
             </a>
             <a href="https://t.me/tesla_chuches" target="_blank" rel="noopener noreferrer" className={styles.headerTgBtn}>
-              ✈️ Comunidad Telegram
+              💬 Comunidad Telegram
             </a>
           </div>
         </div>
