@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useMyId } from "@/hooks/useMyId";
 import { IdDisplay } from "@/components/videollamada/IdDisplay";
 import { PeerVideoCall, PeerVideoCallHandle } from "@/components/videollamada/VideoCall";
+import { VirtualKeypad } from "@/components/videollamada/VirtualKeypad";
 import styles from "./videollamada.module.css";
 
 type CallState = "idle" | "calling" | "ringing" | "in-call";
@@ -51,6 +52,37 @@ export default function VideollamadaPage() {
     setError("");
     await videoCallRef.current?.startCall(tid);
   }, [targetInput]);
+
+  const handleKeypadPress = useCallback((char: string) => {
+    setTargetInput((prev) => {
+      const clean = prev.replace("-", "");
+      if (clean.length >= 8) return prev;
+      const nextClean = clean + char;
+      if (nextClean.length > 4) {
+        return `${nextClean.slice(0, 4)}-${nextClean.slice(4)}`;
+      }
+      return nextClean;
+    });
+    setError("");
+  }, []);
+
+  const handleKeypadBackspace = useCallback(() => {
+    setTargetInput((prev) => {
+      const clean = prev.replace("-", "");
+      if (clean.length <= 1) return "";
+      const nextClean = clean.slice(0, -1);
+      if (nextClean.length > 4) {
+        return `${nextClean.slice(0, 4)}-${nextClean.slice(4)}`;
+      }
+      return nextClean;
+    });
+    setError("");
+  }, []);
+
+  const handleKeypadClear = useCallback(() => {
+    setTargetInput("");
+    setError("");
+  }, []);
 
   const handleAnswerCall = useCallback(async () => {
     await videoCallRef.current?.answerCall();
@@ -171,6 +203,12 @@ export default function VideollamadaPage() {
                 >
                   📞 Iniciar videollamada
                 </button>
+
+                <VirtualKeypad
+                  onKeyPress={handleKeypadPress}
+                  onBackspace={handleKeypadBackspace}
+                  onClear={handleKeypadClear}
+                />
               </div>
 
               <div className={styles.tips}>
