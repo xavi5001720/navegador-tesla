@@ -426,14 +426,19 @@ export async function GET(req: NextRequest) {
     // If searching a specific destination (e.g. MIL), return top deals for that destination across different dates/airports.
     let pool: any[] = [];
     if (anyDest || isRegion) {
-      const byDest: Record<string, any> = {};
+      const byDestKey: Record<string, any> = {};
       for (const item of candidatePool) {
         const dc = item.destination;
-        if (!byDest[dc] || item.price < byDest[dc].price) {
-          byDest[dc] = item;
+        const dep = item.departure_at ? new Date(item.departure_at) : null;
+        const ret = item.return_at ? new Date(item.return_at) : null;
+        const days = dep && ret ? Math.max(1, Math.round((ret.getTime() - dep.getTime()) / 86400000)) : 1;
+        const durCat = days <= 7 ? 'short' : 'long';
+        const key = `${dc}_${durCat}`;
+        if (!byDestKey[key] || item.price < byDestKey[key].price) {
+          byDestKey[key] = item;
         }
       }
-      pool = Object.values(byDest);
+      pool = Object.values(byDestKey);
     } else {
       const byDateKey: Record<string, any> = {};
       for (const item of candidatePool) {
