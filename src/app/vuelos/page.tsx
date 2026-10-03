@@ -20,19 +20,18 @@ const { dep: defDep, ret: defRet } = nextWeekendDates();
 const DEFAULT_QUERY: VuelosQuery = {
   origin: 'MAD',
   destination: 'ANY',
-  departureAt: defDep,
-  returnAt: defRet,
+  departureAt: '',
+  returnAt: '',
   adults: 2,
   children: 0,
   infants: 0,
   oneWay: false,
   dateMode: 'flexible',
-  flexDeparture: defDep,
-  flexDepartureEnd: defRet,
-  flexDurationMin: 3,
-  flexDurationMax: 7,
+  flexDeparture: '',
+  flexDepartureEnd: '',
+  flexDurationMin: 1,
+  flexDurationMax: 30,
 };
-
 
 export default function VuelosPage() {
   const [results, setResults] = useState<VueloResult[]>([]);
@@ -48,9 +47,9 @@ export default function VuelosPage() {
       const params = new URLSearchParams({
         origin: q.origin,
         destination: q.destination || 'ANY',
-        departureAt: q.departureAt,
-        departureEndAt: q.dateMode === 'exact' ? q.departureAt : (q.flexDepartureEnd || q.departureAt),
-        returnAt: q.oneWay ? '' : q.returnAt,
+        departureAt: q.departureAt || '',
+        departureEndAt: q.dateMode === 'exact' ? (q.departureAt || '') : (q.flexDepartureEnd || q.departureAt || ''),
+        returnAt: q.oneWay ? '' : (q.returnAt || ''),
         adults: String(q.adults),
         children: String(q.children),
         infants: String(q.infants),
@@ -82,7 +81,16 @@ export default function VuelosPage() {
 
   const originName = getAirportCityName(lastQuery.origin);
   const isAnyDest = !lastQuery.destination || lastQuery.destination === 'ANY';
-  const cheapestPrice = results.length > 0 ? results[0].totalPrice : null;
+
+  const spainResults = isAnyDest
+    ? results.filter(f => f.destinationCountry === 'España').sort((a, b) => a.totalPrice - b.totalPrice).slice(0, 20)
+    : [];
+
+  const intlResults = isAnyDest
+    ? results.filter(f => f.destinationCountry !== 'España').sort((a, b) => a.totalPrice - b.totalPrice).slice(0, 20)
+    : [];
+
+  const cheapestPrice = results.length > 0 ? Math.min(...results.map(r => r.totalPrice)) : null;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-sky-500 selection:text-white">
@@ -143,19 +151,19 @@ export default function VuelosPage() {
             <h2 className="text-xl font-bold text-white flex items-center space-x-2 flex-wrap gap-y-1">
               <span>
                 {isAnyDest
-                  ? `🔥 Mejores chollos desde ${originName}`
+                  ? `🔥 Ofertas destacadas para 2 Adultos desde ${originName} (1 año vista)`
                   : (lastQuery.destination || '').startsWith('REGION_')
-                  ? `🔥 Mejores chollos en ${getAirportCityName(lastQuery.destination)} desde ${originName}`
+                  ? `🔥 Mejores ofertas en ${getAirportCityName(lastQuery.destination)} desde ${originName}`
                   : `✈️ Vuelos a ${getAirportCityName(lastQuery.destination)} desde ${originName}`}
               </span>
               {!isLoading && (
                 <span className="text-xs bg-slate-800 text-slate-300 font-semibold px-2.5 py-0.5 rounded-full">
-                  {results.length} {results.length === 1 ? 'resultado' : 'resultados'}
+                  {isAnyDest ? `${spainResults.length + intlResults.length} destinos únicos` : `${results.length} resultados`}
                 </span>
               )}
             </h2>
             <p className="text-xs text-slate-500 mt-1">
-              {lastQuery.includeHotel ? 'Ordenado por precio total de paquete (Vuelo + Hotel)' : 'Ordenado por precio total de vuelos'} · {lastQuery.oneWay ? 'Solo Ida' : 'Ida y Vuelta'} ·{' '}
+              {lastQuery.includeHotel ? 'Ordenado por precio total de paquete (Vuelo + Hotel)' : 'Ordenado de menor a mayor precio'} · {lastQuery.oneWay ? 'Solo Ida' : 'Ida y Vuelta'} ·{' '}
               {lastQuery.adults + lastQuery.children + lastQuery.infants} viajero{lastQuery.adults + lastQuery.children + lastQuery.infants !== 1 ? 's' : ''}
               {lastQuery.includeHotel && ` · Hotel ${lastQuery.hotelStars}★ (Booking.com)`}
               {source === 'fallback' && (
@@ -168,7 +176,7 @@ export default function VuelosPage() {
             <div className="text-right">
               <div className="text-xs text-slate-500">Desde</div>
               <div className="text-2xl font-black text-sky-400">{cheapestPrice} €</div>
-              <div className="text-[10px] text-slate-500">{lastQuery.includeHotel ? 'Vuelo + Hotel' : 'precio total'}</div>
+              <div className="text-[10px] text-slate-500">{lastQuery.includeHotel ? 'Vuelo + Hotel' : 'precio total (2 adultos)'}</div>
             </div>
           )}
         </div>
@@ -185,6 +193,52 @@ export default function VuelosPage() {
             <span className="text-5xl">🔍</span>
             <h3 className="text-lg font-bold text-white">No encontramos vuelos con estos filtros</h3>
             <p className="text-sm text-slate-400">Prueba a cambiar el origen o ampliar el rango de fechas.</p>
+          </div>
+        ) : isAnyDest ? (
+          <div className="space-y-12">
+            {/* Sección 1: España */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                <h3 className="text-lg font-bold text-white flex items-center space-x-2">
+                  <span>⚡ TOP 20 DESTINOS EN ESPAÑA (1 - 30 DÍAS)</span>
+                  <span className="text-xs bg-sky-500/20 text-sky-400 font-semibold px-2.5 py-0.5 rounded-full border border-sky-500/30">
+                    {spainResults.length} destinos
+                  </span>
+                </h3>
+                <span className="text-xs text-slate-400">Ordenado por precio más bajo</span>
+              </div>
+              {spainResults.length === 0 ? (
+                <p className="text-sm text-slate-500 py-4">No se encontraron destinos en España en este momento.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                  {spainResults.map((flight, idx) => (
+                    <VueloCard key={flight.id} flight={flight} rank={idx + 1} />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Sección 2: Internacional */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+                <h3 className="text-lg font-bold text-white flex items-center space-x-2">
+                  <span>🌍 TOP 20 DESTINOS INTERNACIONALES (FUERA DE ESPAÑA)</span>
+                  <span className="text-xs bg-indigo-500/20 text-indigo-400 font-semibold px-2.5 py-0.5 rounded-full border border-indigo-500/30">
+                    {intlResults.length} destinos
+                  </span>
+                </h3>
+                <span className="text-xs text-slate-400">Ordenado por precio más bajo</span>
+              </div>
+              {intlResults.length === 0 ? (
+                <p className="text-sm text-slate-500 py-4">No se encontraron destinos internacionales en este momento.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                  {intlResults.map((flight, idx) => (
+                    <VueloCard key={flight.id} flight={flight} rank={idx + 1} />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
