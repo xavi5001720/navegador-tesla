@@ -33,6 +33,13 @@ const DEFAULT_QUERY: VuelosQuery = {
   flexDurationMax: 30,
 };
 
+function getTripDuration(dep: string, ret: string | null): number {
+  if (!dep || !ret) return 1;
+  const depTime = new Date(dep).getTime();
+  const retTime = new Date(ret).getTime();
+  return Math.max(1, Math.round((retTime - depTime) / 86400000));
+}
+
 export default function VuelosPage() {
   const [results, setResults] = useState<VueloResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,11 +90,25 @@ export default function VuelosPage() {
   const isAnyDest = !lastQuery.destination || lastQuery.destination === 'ANY';
 
   const spainResults = isAnyDest
-    ? results.filter(f => f.destinationCountry === 'España').sort((a, b) => a.totalPrice - b.totalPrice).slice(0, 20)
+    ? results
+        .filter(f => {
+          if (f.destinationCountry !== 'España') return false;
+          const dur = getTripDuration(f.departureAt, f.returnAt);
+          return dur >= 1 && dur <= 7;
+        })
+        .sort((a, b) => a.totalPrice - b.totalPrice)
+        .slice(0, 20)
     : [];
 
   const intlResults = isAnyDest
-    ? results.filter(f => f.destinationCountry !== 'España').sort((a, b) => a.totalPrice - b.totalPrice).slice(0, 20)
+    ? results
+        .filter(f => {
+          if (f.destinationCountry === 'España') return false;
+          const dur = getTripDuration(f.departureAt, f.returnAt);
+          return dur >= 7 && dur <= 10;
+        })
+        .sort((a, b) => a.totalPrice - b.totalPrice)
+        .slice(0, 20)
     : [];
 
   const cheapestPrice = results.length > 0 ? Math.min(...results.map(r => r.totalPrice)) : null;
@@ -200,7 +221,7 @@ export default function VuelosPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
                 <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-                  <span>⚡ TOP 20 DESTINOS EN ESPAÑA (1 - 30 DÍAS)</span>
+                  <span>⚡ TOP 20 DESTINOS EN ESPAÑA (1 - 7 DÍAS)</span>
                   <span className="text-xs bg-sky-500/20 text-sky-400 font-semibold px-2.5 py-0.5 rounded-full border border-sky-500/30">
                     {spainResults.length} destinos
                   </span>
@@ -222,7 +243,7 @@ export default function VuelosPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
                 <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-                  <span>🌍 TOP 20 DESTINOS INTERNACIONALES (FUERA DE ESPAÑA)</span>
+                  <span>🌍 TOP 20 VIAJE LARGO INTERNACIONAL (7 - 10 DÍAS)</span>
                   <span className="text-xs bg-indigo-500/20 text-indigo-400 font-semibold px-2.5 py-0.5 rounded-full border border-indigo-500/30">
                     {intlResults.length} destinos
                   </span>
