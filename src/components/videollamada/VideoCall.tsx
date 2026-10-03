@@ -13,6 +13,7 @@ import type { MediaConnection } from "peerjs";
 
 export interface PeerVideoCallHandle {
   startCall: (targetId: string) => Promise<void>;
+  answerCall: () => Promise<void>;
   hangUp: () => void;
 }
 
@@ -28,20 +29,24 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const peerRef = useRef<Peer | null>(null);
     const callRef = useRef<MediaConnection | null>(null);
+    const incomingCallRef = useRef<MediaConnection | null>(null);
+    const localStreamRef = useRef<MediaStream | null>(null);
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
     const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+    const [isPeerReady, setIsPeerReady] = useState(false);
 
     useEffect(() => {
       if (localVideoRef.current && localStream) {
+        localVideoRef.current.muted = true;
         localVideoRef.current.srcObject = localStream;
-        localVideoRef.current.play().catch(() => {});
+        localVideoRef.current.play().catch((e) => console.log("Local play error:", e));
       }
     }, [localStream]);
 
     useEffect(() => {
       if (remoteVideoRef.current && remoteStream) {
         remoteVideoRef.current.srcObject = remoteStream;
-        remoteVideoRef.current.play().catch(() => {});
+        remoteVideoRef.current.play().catch((e) => console.log("Remote play error:", e));
       }
     }, [remoteStream]);
 
@@ -106,32 +111,10 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
           setIsPeerReady(true);
         });
 
-        peerInstance.on("call", async (incomingCall) => {
-          try {
-            onCallStateChange("ringing", incomingCall.peer);
-            const stream = await getLocalStream();
-            incomingCall.answer(stream);
-            callRef.current = incomingCall;
-
-            incomingCall.on("stream", (rs) => {
-              setRemoteStream(rs);
-              onCallStateChange("in-call", incomingCall.peer);
-            });
-
-            incomingCall.on("close", () => {
-              hangUp();
-            });
-
-            incomingCall.on("error", (err) => {
-              console.error("Call error:", err);
-              onError("Error en la videollamada");
-              hangUp();
-            });
-          } catch (err) {
-            console.error("Error al contestar llamada:", err);
-            onError("No se pudo acceder a la cámara/micrófono para contestar.");
-            hangUp();
-          }
+        peerInstance.on("call", (incomingCall) => {
+          incomingCallRef.current = incomingCall;
+          const callerId = incomingCall.peer.replace("vtes-", "").toUpperCase();
+          onCallStateChange("ringing", callerId);
         });
 
         peerInstance.on("error", (err) => {
@@ -152,6 +135,37 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
     }, [myId, getLocalStream, hangUp, onCallStateChange, onError]);
 
     useImperativeHandle(ref, () => ({
+      answerCall: async () => {
+        const incomingCall = incomingCallRef.current;
+        if (!incomingCall) return;
+
+        try {
+          const stream = await getLocalStream();
+          incomingCall.answer(stream);
+          callRef.current = incomingCall;
+
+          incomingCall.on("stream", (rs) => {
+            setRemoteStream(rs);
+            const callerId = incomingCall.peer.replace("vtes-", "").toUpperCase();
+            onCallStateChange("in-call", callerId);
+          });
+
+          incomingCall.on("close", () => {
+            hangUp();
+          });
+
+          incomingCall.on("error", (err) => {
+            console.error("Call error:", err);
+            onError("Error en la videollamada");
+            hangUp();
+          });
+        } catch (err) {
+          console.error("Error al contestar llamada:", err);
+          onError("No se pudo acceder a la cámara/micrófono para contestar.");
+          hangUp();
+        }
+      },
+
       startCall: async (targetId: string) => {
         if (!peerRef.current || !isPeerReady) {
           onError("Conectando servicio de red, inténtalo de nuevo en unos segundos...");

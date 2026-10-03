@@ -52,6 +52,10 @@ export default function VideollamadaPage() {
     await videoCallRef.current?.startCall(tid);
   }, [targetInput]);
 
+  const handleAnswerCall = useCallback(async () => {
+    await videoCallRef.current?.answerCall();
+  }, []);
+
   const handleHangUp = useCallback(() => {
     videoCallRef.current?.hangUp();
   }, []);
@@ -93,13 +97,34 @@ export default function VideollamadaPage() {
             onError={handleError}
           />
 
-          <button
-            id="btn-hang-up"
-            className={styles.btnHangUp}
-            onClick={handleHangUp}
-          >
-            📵 Colgar
-          </button>
+          <div className={styles.callActionContainer}>
+            {callState === "ringing" ? (
+              <div className={styles.ringActions}>
+                <button
+                  id="btn-answer-call"
+                  className={styles.btnAnswer}
+                  onClick={handleAnswerCall}
+                >
+                  🟢 Contestar
+                </button>
+                <button
+                  id="btn-reject-call"
+                  className={styles.btnHangUp}
+                  onClick={handleHangUp}
+                >
+                  📵 Rechazar
+                </button>
+              </div>
+            ) : (
+              <button
+                id="btn-hang-up"
+                className={styles.btnHangUp}
+                onClick={handleHangUp}
+              >
+                {callState === "calling" ? "Cancelar" : "📵 Colgar"}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Pantalla idle */}

@@ -233,6 +233,39 @@
   50% { opacity: 0.4; transform: scale(0.8); }
 }
 
+.callActionContainer {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.ringActions {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.btnAnswer {
+  padding: 0.85rem 2.5rem;
+  border-radius: 99px;
+  border: none;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 24px rgba(16, 185, 129, 0.5);
+  letter-spacing: 0.02em;
+}
+
+.btnAnswer:hover {
+  transform: scale(1.04);
+  box-shadow: 0 6px 30px rgba(16, 185, 129, 0.6);
+}
+
+.btnAnswer:active { transform: scale(0.98); }
+
 .btnHangUp {
   padding: 0.85rem 2.5rem;
   border-radius: 99px;
