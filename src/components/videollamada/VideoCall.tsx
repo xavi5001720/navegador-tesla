@@ -33,10 +33,27 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
     const getLocalStream = useCallback(async () => {
       if (localStreamRef.current) return localStreamRef.current;
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: true,
-      });
+      
+      let stream: MediaStream;
+      try {
+        // Intentar vídeo + audio con restricciones flexibles
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+      } catch (err: unknown) {
+        const error = err as Error;
+        // Si no hay cámara o falla el vídeo, intentar solo audio
+        if (error.name === "NotFoundError" || error.name === "DevicesNotFoundError" || error.name === "OverconstrainedError") {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: true,
+          });
+        } else {
+          throw err;
+        }
+      }
+
       localStreamRef.current = stream;
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
