@@ -60,8 +60,8 @@ function parseCodigos(txt: string) {
   const codigos: { codigo: string; descuento: string }[] = [];
 
   for (const line of lines) {
-    if (line.includes('Inicio:')) inicio = line.replace(/.*Inicio:\s*/, '').trim();
-    else if (line.includes('Fin:')) fin = line.replace(/.*Fin:\s*/, '').trim();
+    if (line.includes('Inicio:')) inicio = line.replace(/.*Inicio:\s*\**\s*/, '').replace(/\*/g, '').trim();
+    else if (line.includes('Fin:')) fin = line.replace(/.*Fin:\s*\**\s*/, '').replace(/\*/g, '').trim();
     else if (line.includes('Enlace a la promo')) {
       const match = line.match(/\((.+?)\)/);
       if (match) enlace = match[1];
