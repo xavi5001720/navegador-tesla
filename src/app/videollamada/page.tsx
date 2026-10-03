@@ -2,15 +2,18 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useMyId } from "@/hooks/useMyId";
+import { useAgenda } from "@/hooks/useAgenda";
 import { IdDisplay } from "@/components/videollamada/IdDisplay";
 import { PeerVideoCall, PeerVideoCallHandle } from "@/components/videollamada/VideoCall";
 import { VirtualKeypad } from "@/components/videollamada/VirtualKeypad";
+import { ContactAgenda } from "@/components/videollamada/ContactAgenda";
 import styles from "./videollamada.module.css";
 
 type CallState = "idle" | "calling" | "ringing" | "in-call";
 
 export default function VideollamadaPage() {
   const { myId, regenerateId } = useMyId();
+  const { contacts, addContact, removeContact } = useAgenda();
   const [callState, setCallState] = useState<CallState>("idle");
   const [targetInput, setTargetInput] = useState("");
   const [activePeerId, setActivePeerId] = useState("");
@@ -210,6 +213,17 @@ export default function VideollamadaPage() {
                   onClear={handleKeypadClear}
                 />
               </div>
+
+              <ContactAgenda
+                contacts={contacts}
+                currentCodeInput={targetInput}
+                onSelectContact={(code) => {
+                  setTargetInput(code);
+                  setError("");
+                }}
+                onAddContact={addContact}
+                onRemoveContact={removeContact}
+              />
 
               <div className={styles.tips}>
                 <p className={styles.tipTitle}>¿Cómo funciona?</p>
