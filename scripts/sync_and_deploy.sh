@@ -23,6 +23,7 @@ echo "📂 Copiando inventario JSON..." >> "$LOG_FILE"
 cp "$SRC/inventario_global.json" "$DST/inventario_global.json"
 cp "$SRC/comentarios.json"       "$DST/comentarios.json"
 cp "$SRC/votos_globales.json"    "$DST/votos_globales.json"
+cp "$SRC/referidos_tesla.json"   "$DST/referidos_tesla.json"
 echo "✅ Inventario JSON copiado" >> "$LOG_FILE"
 
 # 2. Sincronizar imágenes nuevas (solo copia las que faltan, no borra nada)
