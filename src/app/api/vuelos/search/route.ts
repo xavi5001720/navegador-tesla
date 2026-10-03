@@ -538,7 +538,7 @@ export async function GET(req: NextRequest) {
         if (!a.isToday && b.isToday) return 1;
         return a.totalPrice - b.totalPrice;
       })
-      .slice(0, 20);
+      .slice(0, 100);
 
     return NextResponse.json(
       { success: true, results, source: 'api' },
