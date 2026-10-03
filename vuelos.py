@@ -1133,9 +1133,12 @@ def bot_get_updates(offset=None):
     if offset:
         params["offset"] = offset
     try:
-        resp = requests.get(url, params=params, timeout=25)
+        resp = requests.get(url, params=params, timeout=35)
         if resp.status_code == 200:
             return resp.json().get("result", [])
+    except (requests.exceptions.Timeout, requests.exceptions.ReadTimeout):
+        # Timeout normal de Long Polling cuando nadie escribe en 20 segundos
+        return []
     except Exception as e:
         logging.error(f"Error en bot getUpdates: {e}")
     return []
