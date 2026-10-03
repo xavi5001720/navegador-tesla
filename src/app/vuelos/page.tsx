@@ -111,7 +111,8 @@ export default function VuelosPage() {
         .slice(0, 20)
     : [];
 
-  const cheapestPrice = results.length > 0 ? Math.min(...results.map(r => r.totalPrice)) : null;
+  const visibleResults = isAnyDest ? [...spainResults, ...intlResults] : results;
+  const cheapestPrice = visibleResults.length > 0 ? Math.min(...visibleResults.map(r => r.totalPrice)) : null;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-sky-500 selection:text-white">
