@@ -19,12 +19,13 @@ export interface PeerVideoCallHandle {
 
 interface PeerVideoCallProps {
   myId: string;
+  callState: "idle" | "calling" | "ringing" | "in-call";
   onCallStateChange: (state: "idle" | "calling" | "ringing" | "in-call", peerId?: string) => void;
   onError: (errorMsg: string) => void;
 }
 
 export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>(
-  function PeerVideoCall({ myId, onCallStateChange, onError }, ref) {
+  function PeerVideoCall({ myId, callState, onCallStateChange, onError }, ref) {
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const peerRef = useRef<Peer | null>(null);
@@ -34,82 +35,99 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
     const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
     const [isPeerReady, setIsPeerReady] = useState(false);
-
     const [needsTapToPlay, setNeedsTapToPlay] = useState(false);
 
-    useEffect(() => {
-      if (localVideoRef.current && localStream) {
-        const videoEl = localVideoRef.current;
-        videoEl.muted = true;
-        videoEl.setAttribute("playsinline", "true");
-        videoEl.setAttribute("webkit-playsinline", "true");
-        videoEl.srcObject = localStream;
-        videoEl.play().catch((e) => console.log("Local play error:", e));
-      }
-    }, [localStream]);
+    const hasLocalVideo = localStream ? localStream.getVideoTracks().length > 0 : true;
 
+    // Asegurar que los elementos de vídeo se reproduzcan cuando el contenedor sea visible
     useEffect(() => {
-      if (remoteVideoRef.current && remoteStream) {
-        const videoEl = remoteVideoRef.current;
-        videoEl.setAttribute("playsinline", "true");
-        videoEl.setAttribute("webkit-playsinline", "true");
-        videoEl.srcObject = remoteStream;
-
-        const attemptPlay = () => {
-          const playPromise = videoEl.play();
-          if (playPromise !== undefined) {
-            playPromise
-              .then(() => setNeedsTapToPlay(false))
-              .catch((e) => {
-                console.log("Remote play error (mobile gesture needed):", e);
-                setNeedsTapToPlay(true);
-              });
+      if (callState !== "idle") {
+        if (localVideoRef.current && localStream) {
+          const videoEl = localVideoRef.current;
+          videoEl.muted = true;
+          videoEl.setAttribute("playsinline", "true");
+          videoEl.setAttribute("webkit-playsinline", "true");
+          if (videoEl.srcObject !== localStream) {
+            videoEl.srcObject = localStream;
           }
-        };
+          videoEl.play().catch((e) => console.log("[WebRTC] Local play catch:", e));
+        }
 
-        attemptPlay();
+        if (remoteVideoRef.current && remoteStream) {
+          const videoEl = remoteVideoRef.current;
+          videoEl.setAttribute("playsinline", "true");
+          videoEl.setAttribute("webkit-playsinline", "true");
+          if (videoEl.srcObject !== remoteStream) {
+            videoEl.srcObject = remoteStream;
+          }
+          videoEl
+            .play()
+            .then(() => setNeedsTapToPlay(false))
+            .catch((e) => {
+              console.log("[WebRTC] Remote play catch (mobile/PC gesture):", e);
+              setNeedsTapToPlay(true);
+            });
+        }
+      }
+    }, [callState, localStream, remoteStream]);
 
-        // Escuchar si se añaden tracks de vídeo/audio posteriormente
+    // Escuchar tracks remotos cuando se añaden
+    useEffect(() => {
+      if (remoteStream) {
         remoteStream.onaddtrack = () => {
           console.log("[WebRTC] Nuevo track añadido al stream remoto");
-          videoEl.srcObject = remoteStream;
-          attemptPlay();
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = remoteStream;
+            remoteVideoRef.current.play().catch(() => setNeedsTapToPlay(true));
+          }
         };
       }
     }, [remoteStream]);
 
     const getLocalStream = useCallback(async () => {
-      if (localStreamRef.current) return localStreamRef.current;
-      
+      if (localStreamRef.current) {
+        const tracks = localStreamRef.current.getTracks();
+        if (tracks.length > 0 && tracks.every((t) => t.readyState === "live")) {
+          return localStreamRef.current;
+        }
+      }
+
       let stream: MediaStream;
       try {
-        // Intentar vídeo + audio con restricciones flexibles
         stream = await navigator.mediaDevices.getUserMedia({
           video: { width: { ideal: 1280 }, height: { ideal: 720 } },
           audio: true,
         });
       } catch (err: unknown) {
-        const error = err as Error;
-        console.warn("Fallo al capturar vídeo+audio, intentando fallback:", error);
+        console.warn("[WebRTC] Fallo al capturar vídeo con ideales, intentando básico video:true:", err);
         try {
           stream = await navigator.mediaDevices.getUserMedia({
             video: true,
             audio: true,
           });
-        } catch {
-          // Si falla vídeo, intentar solo audio
+        } catch (err2: unknown) {
+          console.warn("[WebRTC] Fallo vídeo+audio, intentando solo audio:", err2);
           stream = await navigator.mediaDevices.getUserMedia({
             video: false,
             audio: true,
           });
+          onError("⚠️ No se detectó cámara en este dispositivo. La videollamada continuará sólo con audio.");
         }
       }
 
-      console.log("[WebRTC] Stream local obtenido:", stream.getTracks().map(t => t.kind));
+      // Asegurar que todos los tracks estén activos
+      stream.getTracks().forEach((t) => {
+        t.enabled = true;
+      });
+
+      console.log(
+        "[WebRTC] Stream local obtenido:",
+        stream.getTracks().map((t) => `${t.kind}:${t.readyState}`)
+      );
       localStreamRef.current = stream;
       setLocalStream(stream);
       return stream;
-    }, []);
+    }, [onError]);
 
     const hangUp = useCallback(() => {
       callRef.current?.close();
@@ -132,11 +150,9 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
       let peerInstance: Peer | null = null;
 
-      // Importar dinámicamente peerjs para evitar SSR issues en Next.js
       import("peerjs").then(({ default: PeerJS }) => {
-        // Formatear ID a minusculas/limpio para PeerJS (ej: vtes-a3k9bz72)
         const cleanId = `vtes-${myId.replace("-", "").toLowerCase()}`;
-        
+
         peerInstance = new PeerJS(cleanId, {
           debug: 2,
           config: {
@@ -161,7 +177,6 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
           incomingCallRef.current = incomingCall;
           const callerId = incomingCall.peer.replace("vtes-", "").toUpperCase();
 
-          // Escuchar el stream de la llamada entrante INMEDIATAMENTE para que PeerJS no pierda el evento 'stream'
           incomingCall.on("stream", (rs) => {
             console.log("[WebRTC] Stream remoto recibido en incomingCall:", rs.getTracks());
             setRemoteStream(rs);
@@ -295,12 +310,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
           }}
         />
         {/* Vídeo local — pequeño, esquina */}
-        <video
-          ref={localVideoRef}
-          id="video-local"
-          autoPlay
-          playsInline
-          muted
+        <div
           style={{
             position: "absolute",
             bottom: "1rem",
@@ -310,9 +320,41 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
             borderRadius: "1rem",
             border: "2px solid rgba(227,25,55,0.7)",
             background: "#000",
-            objectFit: "cover",
+            overflow: "hidden",
+            aspectRatio: "4/3",
           }}
-        />
+        >
+          <video
+            ref={localVideoRef}
+            id="video-local"
+            autoPlay
+            playsInline
+            muted
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+            }}
+          />
+          {!hasLocalVideo && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "#1f2937",
+                color: "#9ca3af",
+                fontSize: "0.75rem",
+                textAlign: "center",
+                padding: "0.5rem",
+              }}
+            >
+              📷 Sin cámara
+            </div>
+          )}
+        </div>
       </div>
     );
   }

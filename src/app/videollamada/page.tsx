@@ -96,6 +96,7 @@ export default function VideollamadaPage() {
           <PeerVideoCall
             ref={videoCallRef}
             myId={myId}
+            callState={callState}
             onCallStateChange={handleCallStateChange}
             onError={handleError}
           />
