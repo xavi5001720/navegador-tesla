@@ -25,6 +25,30 @@ interface PeerVideoCallProps {
   onLog?: (msg: string) => void;
 }
 
+function preferVp8Codec(sdp: string): string {
+  if (!sdp) return sdp;
+  const lines = sdp.split("\r\n");
+  const mLineIndex = lines.findIndex((line) => line.startsWith("m=video"));
+  if (mLineIndex === -1) return sdp;
+
+  let vp8Payload: string | null = null;
+  for (const line of lines) {
+    if (line.startsWith("a=rtpmap:") && line.includes("VP8/90000")) {
+      vp8Payload = line.split(" ")[0].split(":")[1];
+      break;
+    }
+  }
+
+  if (!vp8Payload) return sdp;
+
+  const elements = lines[mLineIndex].split(" ");
+  const header = elements.slice(0, 3);
+  const payloads = elements.slice(3).filter((p) => p !== vp8Payload);
+  lines[mLineIndex] = [...header, vp8Payload, ...payloads].join(" ");
+
+  return lines.join("\r\n");
+}
+
 export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>(
   function PeerVideoCall({ myId, callState, onCallStateChange, onError, onLog }, ref) {
     const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -78,70 +102,58 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
       let stream: MediaStream | null = null;
 
-      // 1. Intentar primero con la lista de cámaras detectadas (si hay IDs disponibles)
-      if (videoInputs.length > 0 && videoInputs.some((d) => Boolean(d.deviceId))) {
-        for (const dev of videoInputs) {
-          if (!dev.deviceId) continue;
-          try {
-            addLog(`🎥 Intentando capturar cámara: ${dev.label || dev.deviceId}...`);
-            stream = await navigator.mediaDevices.getUserMedia({
-              video: { deviceId: { exact: dev.deviceId } },
-              audio: true,
-            });
-            addLog(`✅ Cámara capturada: ${dev.label || "OK"}`);
-            break;
-          } catch (e: unknown) {
-            const err = e as Error;
-            addLog(`⚠️ Fallo al abrir ${dev.label || dev.deviceId}: ${err.name} - ${err.message}`);
+      // 1. Intentar primero con vídeo básico genérico (Más estable en Tesla OS / Linux sin restricción de resolución)
+      try {
+        addLog("🎥 Solicitando cámara y micrófono nativos (Modo Tesla / WebRTC)...");
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+        addLog("✅ Cámara capturada correctamente");
+      } catch (err: unknown) {
+        const error = err as Error;
+        addLog(`⚠️ Fallo cámara nativa (${error.name}: ${error.message}), intentando con selector de dispositivo...`);
+        if (videoInputs.length > 0 && videoInputs.some((d) => Boolean(d.deviceId))) {
+          for (const dev of videoInputs) {
+            if (!dev.deviceId) continue;
+            try {
+              addLog(`🎥 Intentando capturar cámara: ${dev.label || dev.deviceId}...`);
+              stream = await navigator.mediaDevices.getUserMedia({
+                video: { deviceId: { exact: dev.deviceId } },
+                audio: true,
+              });
+              addLog(`✅ Cámara capturada: ${dev.label || "OK"}`);
+              break;
+            } catch (e: unknown) {
+              const errDev = e as Error;
+              addLog(`⚠️ Fallo al abrir ${dev.label || dev.deviceId}: ${errDev.name}`);
+            }
           }
+        }
+
+        if (!stream) {
+          addLog("⚠️ Conectando sólo micrófono...");
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: true,
+          });
+          onError(`⚠️ Cámara no accesible. Se continuará sólo con audio.`);
         }
       }
 
-      // 2. Si no hay lista o fallaron los IDs específicos, intentar vídeo básico genérico (Ideal para Firefox / Linux)
-      if (!stream) {
-        try {
-          addLog("🎥 Solicitando cámara y micrófono optimizados para red móvil LTE...");
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              width: { ideal: 640, max: 1280 },
-              height: { ideal: 480, max: 720 },
-              frameRate: { ideal: 30, max: 30 },
-            },
-            audio: true,
-          });
-          addLog("✅ Cámara capturada correctamente (640x480 LTE)");
-        } catch (err: unknown) {
-          const error = err as Error;
-          addLog(`⚠️ Fallo vídeo optimizado (${error.name}: ${error.message}), intentando vídeo genérico...`);
-          try {
-            stream = await navigator.mediaDevices.getUserMedia({
-              video: true,
-              audio: true,
-            });
-            addLog("✅ Cámara básica capturada correctamente");
-          } catch (err2: unknown) {
-            const error2 = err2 as Error;
-            addLog(`⚠️ No se pudo obtener vídeo (${error2.name}: ${error2.message}). Conectando sólo micrófono...`);
-            if (
-              error2.name === "NotReadableError" ||
-              error2.name === "TrackStartError" ||
-              error2.name === "NotFoundError" ||
-              error2.name === "DevicesNotFoundError" ||
-              error2.name === "NotAllowedError"
-            ) {
-              addLog(`💡 DIAGNÓSTICO EN FIREFOX / LINUX (${error2.name}):`);
-              addLog("   1. En Firefox: Haz clic en el icono del candado 🔒 o cámara 🎥 junto a la URL y comprueba que la Cámara esté en 'Permitido'.");
-              addLog("   2. Si usas Firefox Snap en Linux: ejecuta en terminal -> snap connect firefox:camera");
-              addLog("   3. Si la cámara es USB: comprueba en terminal -> ls -l /dev/video*");
-            }
-            stream = await navigator.mediaDevices.getUserMedia({
-              video: false,
-              audio: true,
-            });
-            onError(`⚠️ Cámara no accesible (${error2.name}). Se continuará sólo con audio.`);
-          }
+      stream.getTracks().forEach((t) => {
+        t.enabled = true;
+        if (t.kind === "video") {
+          t.onended = () => addLog("⚠️ Track de vídeo finalizado por el sistema/Tesla OS");
+          t.onmute = () => addLog("⚠️ Track de vídeo silenciado por el sistema/Tesla OS");
         }
-      }
+      });
+
+      addLog(`🎥 Stream local activo: ${stream.getTracks().map((t) => `${t.kind}:${t.readyState}`).join(", ")}`);
+      localStreamRef.current = stream;
+      setLocalStream(stream);
+      return stream;
+    }, [onError, addLog]);
 
       stream.getTracks().forEach((t) => {
         t.enabled = true;
@@ -435,7 +447,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
         try {
           const stream = await getLocalStream();
-          incomingCall.answer(stream);
+          incomingCall.answer(stream, { sdpTransform: preferVp8Codec });
           callRef.current = incomingCall;
           setupPeerConnectionListeners(incomingCall);
 
@@ -476,7 +488,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
         try {
           const stream = await getLocalStream();
-          const mediaCall = peerRef.current.call(cleanTargetId, stream);
+          const mediaCall = peerRef.current.call(cleanTargetId, stream, { sdpTransform: preferVp8Codec });
           callRef.current = mediaCall;
 
           onCallStateChange("calling", cleanTargetId);
