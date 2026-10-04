@@ -17,7 +17,12 @@ export default function VideollamadaPage() {
   const [targetInput, setTargetInput] = useState("");
   const [activePeerId, setActivePeerId] = useState("");
   const [error, setError] = useState("");
+  const [logs, setLogs] = useState<string[]>([]);
   const videoCallRef = useRef<PeerVideoCallHandle>(null);
+
+  const handleLog = useCallback((msg: string) => {
+    setLogs((prev) => [msg, ...prev.slice(0, 49)]);
+  }, []);
 
   // Detectar ?call=XXXX-XXXX en la URL (para QR escaneado)
   useEffect(() => {
@@ -99,6 +104,7 @@ export default function VideollamadaPage() {
             callState={callState}
             onCallStateChange={handleCallStateChange}
             onError={handleError}
+            onLog={handleLog}
           />
 
           <div className={styles.callActionContainer}>
@@ -199,6 +205,22 @@ export default function VideollamadaPage() {
             </section>
           </div>
         )}
+
+        {/* Consola de diagnóstico en vivo */}
+        <details className={styles.debugDetails} open>
+          <summary className={styles.debugSummary}>📊 Consola de diagnóstico de red en vivo</summary>
+          <div className={styles.debugBox}>
+            {logs.length === 0 ? (
+              <p className={styles.debugEmpty}>Conectando a la red PeerJS...</p>
+            ) : (
+              logs.map((logLine, idx) => (
+                <div key={idx} className={styles.debugLogLine}>
+                  {logLine}
+                </div>
+              ))
+            )}
+          </div>
+        </details>
       </div>
 
       {/* Nota sobre Tesla */}

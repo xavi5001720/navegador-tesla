@@ -311,3 +311,49 @@
   .title { font-size: 1.4rem; }
   .backLink { font-size: 0.8rem; }
 }
+
+/* ── Live Debug Console ── */
+.debugDetails {
+  width: 100%;
+  max-width: 800px;
+  margin: 1.5rem auto 0;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+.debugSummary {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #10b981;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.03);
+  user-select: none;
+}
+
+.debugBox {
+  padding: 1rem;
+  max-height: 220px;
+  overflow-y: auto;
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.debugLogLine {
+  color: #a7f3d0;
+  word-break: break-all;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+  padding-bottom: 0.2rem;
+}
+
+.debugEmpty {
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0;
+  font-style: italic;
+}
+

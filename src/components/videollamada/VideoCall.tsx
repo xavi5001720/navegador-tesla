@@ -22,10 +22,11 @@ interface PeerVideoCallProps {
   callState: "idle" | "calling" | "ringing" | "in-call";
   onCallStateChange: (state: "idle" | "calling" | "ringing" | "in-call", peerId?: string) => void;
   onError: (errorMsg: string) => void;
+  onLog?: (msg: string) => void;
 }
 
 export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>(
-  function PeerVideoCall({ myId, callState, onCallStateChange, onError }, ref) {
+  function PeerVideoCall({ myId, callState, onCallStateChange, onError, onLog }, ref) {
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const localCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -44,6 +45,14 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
     const hasLocalVideo = localStream ? localStream.getVideoTracks().length > 0 : true;
 
+    const addLog = useCallback(
+      (msg: string) => {
+        const time = new Date().toLocaleTimeString();
+        onLog?.(`[${time}] ${msg}`);
+      },
+      [onLog]
+    );
+
     // Obtener la cámara/micrófono local
     const getLocalStream = useCallback(async () => {
       if (localStreamRef.current) {
@@ -53,21 +62,24 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         }
       }
 
+      addLog("🎥 Solicitando permiso de cámara y micrófono...");
       let stream: MediaStream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
           audio: true,
         });
+        addLog("✅ Cámara HD capturada correctamente");
       } catch (err: unknown) {
-        console.warn("[WebRTC] Fallo al capturar vídeo con ideales, intentando básico:", err);
+        addLog("⚠️ Fallo captura HD, intentando formato estándar...");
         try {
           stream = await navigator.mediaDevices.getUserMedia({
             video: true,
             audio: true,
           });
+          addLog("✅ Cámara estándar capturada");
         } catch (err2: unknown) {
-          console.warn("[WebRTC] Fallo vídeo+audio, intentando solo audio:", err2);
+          addLog("⚠️ Fallo vídeo, intentando solo micrófono...");
           stream = await navigator.mediaDevices.getUserMedia({
             video: false,
             audio: true,
@@ -80,21 +92,19 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         t.enabled = true;
       });
 
-      console.log(
-        "[WebRTC] Stream local obtenido:",
-        stream.getTracks().map((t) => `${t.kind}:${t.readyState}`)
-      );
+      addLog(`🎥 Stream local activo: ${stream.getTracks().map((t) => `${t.kind}:${t.readyState}`).join(", ")}`);
       localStreamRef.current = stream;
       setLocalStream(stream);
       return stream;
-    }, [onError]);
+    }, [onError, addLog]);
 
     // Pre-cargar el stream local al sonar (ringing)
     useEffect(() => {
       if (callState === "ringing") {
+        addLog("🔔 Llamada sonando: Pre-cargando cámara en segundo plano...");
         getLocalStream().catch((e) => console.warn("[WebRTC] Error pre-cargando stream:", e));
       }
-    }, [callState, getLocalStream]);
+    }, [callState, getLocalStream, addLog]);
 
     // Asignación de streams a elementos hidden video
     useEffect(() => {
@@ -104,9 +114,9 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         videoEl.setAttribute("playsinline", "true");
         videoEl.setAttribute("webkit-playsinline", "true");
         videoEl.srcObject = localStream;
-        videoEl.play().catch((e) => console.log("[WebRTC] Local video play catch:", e));
+        videoEl.play().catch((e) => addLog(`⚠️ Error al reproducir vídeo local: ${e}`));
       }
-    }, [callState, localStream]);
+    }, [callState, localStream, addLog]);
 
     useEffect(() => {
       if (callState !== "idle" && remoteVideoRef.current && remoteStream) {
@@ -119,11 +129,10 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
           .play()
           .then(() => setNeedsTapToPlay(false))
           .catch((e) => {
-            console.log("[WebRTC] Remote video play catch:", e);
+            addLog(`⚠️ Play remoto bloqueado por el navegador: ${e}`);
             setNeedsTapToPlay(true);
           });
 
-        // Enlazar audio usando WebAudio API para evitar restricciones de reproductor de vídeo en Tesla
         try {
           const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
           if (AudioContextClass && !audioCtxRef.current) {
@@ -132,23 +141,24 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
             if (remoteStream.getAudioTracks().length > 0) {
               const source = audioCtx.createMediaStreamSource(remoteStream);
               source.connect(audioCtx.destination);
+              addLog("🔊 AudioContext conectado con éxito al altavoz");
             }
           }
           if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
             audioCtxRef.current.resume().catch(() => setNeedsTapToPlay(true));
           }
         } catch (e) {
-          console.warn("[WebAudio] Error al inicializar AudioContext:", e);
+          addLog(`⚠️ Error WebAudio: ${e}`);
         }
       }
-    }, [callState, remoteStream]);
+    }, [callState, remoteStream, addLog]);
 
-    // RENDERIZADO CANVAS EN BUCLE (Bypasses Tesla OS video player block)
+    // RENDERIZADO CANVAS EN BUCLE
     useEffect(() => {
       let animId: number;
+      let hasLoggedRemoteFrame = false;
 
       const renderLoop = () => {
-        // 1. Renderizar Vídeo Remoto en Canvas
         if (remoteVideoRef.current && remoteCanvasRef.current) {
           const video = remoteVideoRef.current;
           const canvas = remoteCanvasRef.current;
@@ -160,11 +170,14 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
             const ctx = canvas.getContext("2d");
             if (ctx) {
               ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              if (!hasLoggedRemoteFrame) {
+                addLog(`🖼️ Primer frame renderizado en Canvas (${video.videoWidth}x${video.videoHeight})`);
+                hasLoggedRemoteFrame = true;
+              }
             }
           }
         }
 
-        // 2. Renderizar Vídeo Local en Canvas (Esquina)
         if (localVideoRef.current && localCanvasRef.current) {
           const video = localVideoRef.current;
           const canvas = localCanvasRef.current;
@@ -190,9 +203,10 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
       return () => {
         if (animId) cancelAnimationFrame(animId);
       };
-    }, [callState]);
+    }, [callState, addLog]);
 
     const hangUp = useCallback(() => {
+      addLog("📵 Colgando llamada...");
       callRef.current?.close();
       callRef.current = null;
       if (localStreamRef.current) {
@@ -211,17 +225,42 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
       setRemoteStream(null);
       setNeedsTapToPlay(false);
       onCallStateChange("idle");
-    }, [onCallStateChange]);
+    }, [onCallStateChange, addLog]);
+
+    // Función auxiliar para configurar listeners de RTCPeerConnection
+    const setupPeerConnectionListeners = useCallback(
+      (connection: MediaConnection) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pc: RTCPeerConnection = (connection as any).peerConnection;
+        if (!pc) return;
+
+        pc.oniceconnectionstatechange = () => {
+          addLog(`🧊 Estado conexión ICE: ${pc.iceConnectionState}`);
+          if (pc.iceConnectionState === "failed") {
+            onError("❌ Error de red P2P (ICE failed). Los firewalls/CGNAT bloquearon el paso.");
+          }
+        };
+
+        pc.onicegatheringstatechange = () => {
+          addLog(`🔍 Búsqueda de candidatos ICE: ${pc.iceGatheringState}`);
+        };
+
+        pc.ontrack = (event) => {
+          addLog(`📺 Track WebRTC recibido: ${event.track.kind} (${event.track.readyState})`);
+        };
+      },
+      [addLog, onError]
+    );
 
     // Inicializar PeerJS con servidores STUN y TURN globales redundantes
     useEffect(() => {
       if (!myId) return;
 
       let peerInstance: Peer | null = null;
+      const cleanId = `vtes-${myId.replace("-", "").toLowerCase()}`;
+      addLog(`🚀 Inicializando PeerJS con ID: ${myId} (${cleanId})`);
 
       import("peerjs").then(({ default: PeerJS }) => {
-        const cleanId = `vtes-${myId.replace("-", "").toLowerCase()}`;
-
         peerInstance = new PeerJS(cleanId, {
           debug: 2,
           config: {
@@ -243,26 +282,31 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
         peerRef.current = peerInstance;
 
-        peerInstance.on("open", () => {
+        peerInstance.on("open", (id) => {
+          addLog(`✅ Servidor PeerJS listo. Registrado como: ${id}`);
           setIsPeerReady(true);
         });
 
         peerInstance.on("call", (incomingCall) => {
           incomingCallRef.current = incomingCall;
           const callerId = incomingCall.peer.replace("vtes-", "").toUpperCase();
+          addLog(`📥 Llamada entrante de: ${callerId}`);
+
+          setupPeerConnectionListeners(incomingCall);
 
           incomingCall.on("stream", (rs) => {
-            console.log("[WebRTC] Stream remoto recibido en incomingCall:", rs.getTracks());
+            addLog(`📺 Stream remoto asignado desde llamadas entrantes (${rs.getTracks().length} tracks)`);
             setRemoteStream(rs);
             onCallStateChange("in-call", callerId);
           });
 
           incomingCall.on("close", () => {
+            addLog("📵 El otro dispositivo ha colgado.");
             hangUp();
           });
 
           incomingCall.on("error", (err) => {
-            console.error("Incoming call error:", err);
+            addLog(`❌ Error en llamada entrante: ${err}`);
             onError("Error en la conexión con el otro dispositivo.");
             hangUp();
           });
@@ -271,7 +315,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         });
 
         peerInstance.on("error", (err) => {
-          console.error("PeerJS error:", err);
+          addLog(`❌ Error PeerJS (${err.type}): ${err.message || err}`);
           if (err.type === "peer-unavailable") {
             onError("El dispositivo destino no está conectado o el ID es incorrecto.");
           } else {
@@ -285,25 +329,27 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         peerInstance?.destroy();
         peerRef.current = null;
       };
-    }, [myId, getLocalStream, hangUp, onCallStateChange, onError]);
+    }, [myId, getLocalStream, hangUp, onCallStateChange, onError, addLog, setupPeerConnectionListeners]);
 
     useImperativeHandle(ref, () => ({
       answerCall: async () => {
         const incomingCall = incomingCallRef.current;
         if (!incomingCall) return;
 
+        addLog("🟢 Contestando llamada...");
         try {
           const stream = await getLocalStream();
           incomingCall.answer(stream);
           callRef.current = incomingCall;
+          setupPeerConnectionListeners(incomingCall);
 
           incomingCall.on("stream", (rs) => {
-            console.log("[WebRTC] Stream remoto en answerCall:", rs.getTracks());
+            addLog(`📺 Stream remoto recibido al contestar (${rs.getTracks().length} tracks)`);
             setRemoteStream(rs);
             onCallStateChange("in-call", incomingCall.peer.replace("vtes-", "").toUpperCase());
           });
         } catch (err) {
-          console.error("Error al contestar llamada:", err);
+          addLog(`❌ Error al contestar: ${err}`);
           onError("No se pudo acceder a la cámara/micrófono para contestar.");
           hangUp();
         }
@@ -315,31 +361,35 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
           return;
         }
 
+        const cleanTargetId = `vtes-${targetId.replace("-", "").toLowerCase()}`;
+        addLog(`📞 Llamando a ID: ${targetId} (${cleanTargetId})...`);
+
         try {
           const stream = await getLocalStream();
-          const cleanTargetId = `vtes-${targetId.replace("-", "").toLowerCase()}`;
           const mediaCall = peerRef.current.call(cleanTargetId, stream);
           callRef.current = mediaCall;
 
           onCallStateChange("calling", cleanTargetId);
+          setupPeerConnectionListeners(mediaCall);
 
           mediaCall.on("stream", (rs) => {
-            console.log("[WebRTC] Stream remoto en startCall:", rs.getTracks());
+            addLog(`📺 Stream remoto recibido desde startCall (${rs.getTracks().length} tracks)`);
             setRemoteStream(rs);
             onCallStateChange("in-call", cleanTargetId);
           });
 
           mediaCall.on("close", () => {
+            addLog("📵 Llamada finalizada.");
             hangUp();
           });
 
           mediaCall.on("error", (err) => {
-            console.error("Media call error:", err);
+            addLog(`❌ Error en llamada saliente: ${err}`);
             onError("Error al realizar la llamada.");
             hangUp();
           });
         } catch (err) {
-          console.error("Error al iniciar llamada:", err);
+          addLog(`❌ Error iniciando llamada: ${err}`);
           onError("No se pudo acceder a la cámara/micrófono.");
           onCallStateChange("idle");
         }
