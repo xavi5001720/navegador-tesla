@@ -6,6 +6,7 @@ import { useAgenda } from "@/hooks/useAgenda";
 import { IdDisplay } from "@/components/videollamada/IdDisplay";
 import { PeerVideoCall, PeerVideoCallHandle } from "@/components/videollamada/VideoCall";
 import { ContactAgenda } from "@/components/videollamada/ContactAgenda";
+import { PromotionalBanners } from "@/components/videollamada/PromotionalBanners";
 import styles from "./videollamada.module.css";
 
 type CallState = "idle" | "calling" | "ringing" | "in-call";
@@ -205,6 +206,9 @@ export default function VideollamadaPage() {
             </section>
           </div>
         )}
+
+        {/* Banners Promocionales (Telegram Tesla Chuches & Viajando en Tesla Portal) */}
+        <PromotionalBanners />
 
         {/* Consola de diagnóstico en vivo */}
         <details className={styles.debugDetails} open>
