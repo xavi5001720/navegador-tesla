@@ -76,35 +76,60 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         console.warn("[WebRTC] Error enumerando dispositivos:", e);
       }
 
-      let stream: MediaStream;
-      try {
-        const targetDeviceId = videoInputs.length > 0 && videoInputs[0].deviceId ? videoInputs[0].deviceId : undefined;
-        const videoConstraints: boolean | MediaTrackConstraints = targetDeviceId
-          ? { deviceId: { exact: targetDeviceId } }
-          : { width: { ideal: 1280 }, height: { ideal: 720 } };
+      let stream: MediaStream | null = null;
+      
+      // Intentar primero con la lista de cámaras detectadas
+      if (videoInputs.length > 0) {
+        for (const dev of videoInputs) {
+          if (!dev.deviceId) continue;
+          try {
+            addLog(`🎥 Intentando capturar cámara: ${dev.label || dev.deviceId}...`);
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: { deviceId: { exact: dev.deviceId } },
+              audio: true,
+            });
+            addLog(`✅ Cámara capturada: ${dev.label || "OK"}`);
+            break;
+          } catch (e: unknown) {
+            const err = e as Error;
+            addLog(`⚠️ Fallo al abrir ${dev.label || dev.deviceId}: ${err.name} - ${err.message}`);
+          }
+        }
+      }
 
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: videoConstraints,
-          audio: true,
-        });
-        addLog("✅ Cámara capturada correctamente");
-      } catch (err: unknown) {
-        const error = err as Error;
-        addLog(`⚠️ Fallo captura directa (${error.name || "Error"}: ${error.message || error}), intentando vídeo genérico...`);
+      // Si no se capturó mediante lista o no había dispositivos con ID exacto
+      if (!stream) {
         try {
+          addLog("🎥 Intentando solicitud HD genérica...");
           stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
+            video: { width: { ideal: 1280 }, height: { ideal: 720 } },
             audio: true,
           });
-          addLog("✅ Cámara básica capturada correctamente");
-        } catch (err2: unknown) {
-          const error2 = err2 as Error;
-          addLog(`⚠️ Fallo vídeo (${error2.name || "Error"}: ${error2.message || error2}), intentando solo micrófono...`);
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: false,
-            audio: true,
-          });
-          onError(`⚠️ No se pudo activar la cámara (${error2.name || "Error"}). Se continuará sólo con audio.`);
+          addLog("✅ Cámara HD capturada correctamente");
+        } catch (err: unknown) {
+          const error = err as Error;
+          addLog(`⚠️ Fallo captura HD (${error.name}: ${error.message}), intentando cámara básica...`);
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: true,
+              audio: true,
+            });
+            addLog("✅ Cámara básica capturada correctamente");
+          } catch (err2: unknown) {
+            const error2 = err2 as Error;
+            addLog(`⚠️ Fallo cámara vídeo (${error2.name}: ${error2.message}). Conectando sólo micrófono...`);
+            if (error2.name === "NotFoundError" || error2.name === "DevicesNotFoundError") {
+              addLog("💡 DIAGNÓSTICO: El navegador reporta que la webcam no está disponible. Posibles causas:");
+              addLog("   1. OBS Studio, Zoom, Teams o Discord están usando la cámara en segundo plano.");
+              addLog("   2. Permisos de Cámara desactivados en Windows/Mac (Configuración -> Privacidad -> Cámara).");
+              addLog("   3. La cámara está en otra pestaña del navegador.");
+            }
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: false,
+              audio: true,
+            });
+            onError(`⚠️ Cámara no accesible (${error2.name}). Se continuará sólo con audio.`);
+          }
         }
       }
 

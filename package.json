@@ -24,6 +24,7 @@
     "leaflet": "^1.9.4",
     "lucide-react": "1.8.0",
     "next": "16.2.3",
+    "node-turn": "^0.0.6",
     "nodemailer": "8.0.5",
     "peerjs": "^1.5.5",
     "qrcode.react": "^4.2.0",
