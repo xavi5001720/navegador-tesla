@@ -152,17 +152,6 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
       addLog(`🎥 Stream local activo: ${stream.getTracks().map((t) => `${t.kind}:${t.readyState}`).join(", ")}`);
       localStreamRef.current = stream;
       setLocalStream(stream);
-      return stream;
-    }, [onError, addLog]);
-
-      stream.getTracks().forEach((t) => {
-        t.enabled = true;
-      });
-
-      addLog(`🎥 Stream local activo: ${stream.getTracks().map((t) => `${t.kind}:${t.readyState}`).join(", ")}`);
-      localStreamRef.current = stream;
-      setLocalStream(stream);
-      return stream;
     }, [onError, addLog]);
 
     // Pre-cargar el stream local al sonar (ringing)
@@ -457,7 +446,8 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
           const cachedStream = (incomingCall as any)._cachedRemoteStream;
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const peerJsStream = (incomingCall as any).remoteStream;
-          const pcStream = pc?.getRemoteStreams()?.[0];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const pcStream = (pc as any)?.getRemoteStreams?.()?.[0];
 
           const targetStream = cachedStream || peerJsStream || pcStream;
           if (targetStream && targetStream.getTracks().length > 0) {
@@ -488,6 +478,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
         try {
           const stream = await getLocalStream();
+          if (!stream) return;
           const mediaCall = peerRef.current.call(cleanTargetId, stream, { sdpTransform: preferVp8Codec });
           callRef.current = mediaCall;
 
