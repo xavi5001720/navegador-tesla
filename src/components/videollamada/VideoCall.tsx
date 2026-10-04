@@ -28,10 +28,15 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
   function PeerVideoCall({ myId, callState, onCallStateChange, onError }, ref) {
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
+    const localCanvasRef = useRef<HTMLCanvasElement>(null);
+    const remoteCanvasRef = useRef<HTMLCanvasElement>(null);
+    const audioCtxRef = useRef<AudioContext | null>(null);
+
     const peerRef = useRef<Peer | null>(null);
     const callRef = useRef<MediaConnection | null>(null);
     const incomingCallRef = useRef<MediaConnection | null>(null);
     const localStreamRef = useRef<MediaStream | null>(null);
+
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
     const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
     const [isPeerReady, setIsPeerReady] = useState(false);
@@ -71,7 +76,6 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         }
       }
 
-      // Habilitar todos los tracks
       stream.getTracks().forEach((t) => {
         t.enabled = true;
       });
@@ -85,14 +89,14 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
       return stream;
     }, [onError]);
 
-    // Pre-cargar el stream local en cuanto la llamada esté sonando (ringing)
+    // Pre-cargar el stream local al sonar (ringing)
     useEffect(() => {
       if (callState === "ringing") {
         getLocalStream().catch((e) => console.warn("[WebRTC] Error pre-cargando stream:", e));
       }
     }, [callState, getLocalStream]);
 
-    // Asegurar asignación del vídeo local
+    // Asignación de streams a elementos hidden video
     useEffect(() => {
       if (callState !== "idle" && localVideoRef.current && localStream) {
         const videoEl = localVideoRef.current;
@@ -100,11 +104,10 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         videoEl.setAttribute("playsinline", "true");
         videoEl.setAttribute("webkit-playsinline", "true");
         videoEl.srcObject = localStream;
-        videoEl.play().catch((e) => console.log("[WebRTC] Local play catch:", e));
+        videoEl.play().catch((e) => console.log("[WebRTC] Local video play catch:", e));
       }
     }, [callState, localStream]);
 
-    // Asignación y reproducción del stream remoto
     useEffect(() => {
       if (callState !== "idle" && remoteVideoRef.current && remoteStream) {
         const videoEl = remoteVideoRef.current;
@@ -112,43 +115,82 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         videoEl.setAttribute("webkit-playsinline", "true");
         videoEl.srcObject = remoteStream;
 
-        const attemptPlay = () => {
-          videoEl
-            .play()
-            .then(() => setNeedsTapToPlay(false))
-            .catch((e) => {
-              console.log("[WebRTC] Remote play catch (mobile/Tesla autoplay policy):", e);
-              setNeedsTapToPlay(true);
-            });
-        };
+        videoEl
+          .play()
+          .then(() => setNeedsTapToPlay(false))
+          .catch((e) => {
+            console.log("[WebRTC] Remote video play catch:", e);
+            setNeedsTapToPlay(true);
+          });
 
-        attemptPlay();
-
-        const handleTrackChange = () => {
-          console.log("[WebRTC] Track cambiado en stream remoto");
-          videoEl.srcObject = remoteStream;
-          attemptPlay();
-        };
-
-        remoteStream.onaddtrack = handleTrackChange;
-        remoteStream.onremovetrack = handleTrackChange;
-      }
-    }, [callState, remoteStream]);
-
-    // Verificación periódica durante la llamada para recuperar la reproducción si el navegador la pausa
-    useEffect(() => {
-      if (callState === "in-call" && remoteStream) {
-        const timer = setInterval(() => {
-          if (remoteVideoRef.current && remoteVideoRef.current.paused) {
-            remoteVideoRef.current
-              .play()
-              .then(() => setNeedsTapToPlay(false))
-              .catch(() => setNeedsTapToPlay(true));
+        // Enlazar audio usando WebAudio API para evitar restricciones de reproductor de vídeo en Tesla
+        try {
+          const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+          if (AudioContextClass && !audioCtxRef.current) {
+            const audioCtx = new AudioContextClass();
+            audioCtxRef.current = audioCtx;
+            if (remoteStream.getAudioTracks().length > 0) {
+              const source = audioCtx.createMediaStreamSource(remoteStream);
+              source.connect(audioCtx.destination);
+            }
           }
-        }, 1500);
-        return () => clearInterval(timer);
+          if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
+            audioCtxRef.current.resume().catch(() => setNeedsTapToPlay(true));
+          }
+        } catch (e) {
+          console.warn("[WebAudio] Error al inicializar AudioContext:", e);
+        }
       }
     }, [callState, remoteStream]);
+
+    // RENDERIZADO CANVAS EN BUCLE (Bypasses Tesla OS video player block)
+    useEffect(() => {
+      let animId: number;
+
+      const renderLoop = () => {
+        // 1. Renderizar Vídeo Remoto en Canvas
+        if (remoteVideoRef.current && remoteCanvasRef.current) {
+          const video = remoteVideoRef.current;
+          const canvas = remoteCanvasRef.current;
+          if (video.readyState >= 2 && video.videoWidth > 0) {
+            if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+            }
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            }
+          }
+        }
+
+        // 2. Renderizar Vídeo Local en Canvas (Esquina)
+        if (localVideoRef.current && localCanvasRef.current) {
+          const video = localVideoRef.current;
+          const canvas = localCanvasRef.current;
+          if (video.readyState >= 2 && video.videoWidth > 0) {
+            if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+            }
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            }
+          }
+        }
+
+        animId = requestAnimationFrame(renderLoop);
+      };
+
+      if (callState !== "idle") {
+        animId = requestAnimationFrame(renderLoop);
+      }
+
+      return () => {
+        if (animId) cancelAnimationFrame(animId);
+      };
+    }, [callState]);
 
     const hangUp = useCallback(() => {
       callRef.current?.close();
@@ -159,6 +201,12 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
       }
       if (localVideoRef.current) localVideoRef.current.srcObject = null;
       if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
+
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close().catch(() => {});
+        audioCtxRef.current = null;
+      }
+
       setLocalStream(null);
       setRemoteStream(null);
       setNeedsTapToPlay(false);
@@ -302,9 +350,29 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
     return (
       <div style={{ position: "relative", width: "100%", maxWidth: 800, margin: "0 auto" }}>
+        {/* Elementos de vídeo Ocultos (Receptores en memoria del Stream WebRTC) */}
+        <video
+          ref={remoteVideoRef}
+          id="video-remote-hidden"
+          autoPlay
+          playsInline
+          style={{ position: "absolute", width: 1, height: 1, opacity: 0.001, pointerEvents: "none" }}
+        />
+        <video
+          ref={localVideoRef}
+          id="video-local-hidden"
+          autoPlay
+          playsInline
+          muted
+          style={{ position: "absolute", width: 1, height: 1, opacity: 0.001, pointerEvents: "none" }}
+        />
+
         {needsTapToPlay && (
           <button
             onClick={() => {
+              if (audioCtxRef.current && audioCtxRef.current.state === "suspended") {
+                audioCtxRef.current.resume().catch(() => {});
+              }
               if (remoteVideoRef.current) {
                 remoteVideoRef.current
                   .play()
@@ -320,7 +388,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
-              zIndex: 20,
+              zIndex: 30,
               padding: "1.2rem 2.5rem",
               borderRadius: "99px",
               background: "#10b981",
@@ -336,22 +404,22 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
           </button>
         )}
 
-        {/* Vídeo remoto — pantalla grande */}
-        <video
-          ref={remoteVideoRef}
-          id="video-remote"
-          autoPlay
-          playsInline
+        {/* Canvas Remoto (Renderizado 2D/WebGL directo en pantalla, omitiendo bloqueo de <video> en Tesla OS) */}
+        <canvas
+          ref={remoteCanvasRef}
+          id="canvas-remote"
           style={{
             width: "100%",
             borderRadius: "1.5rem",
             background: "#111",
             minHeight: 360,
+            aspectRatio: "16/9",
             objectFit: "cover",
+            display: "block",
           }}
         />
 
-        {/* Vídeo local — miniatura en la esquina */}
+        {/* Canvas Local (Miniatura en esquina) */}
         <div
           style={{
             position: "absolute",
@@ -367,16 +435,14 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
             zIndex: 10,
           }}
         >
-          <video
-            ref={localVideoRef}
-            id="video-local"
-            autoPlay
-            playsInline
-            muted
+          <canvas
+            ref={localCanvasRef}
+            id="canvas-local"
             style={{
               width: "100%",
               height: "100%",
               objectFit: "cover",
+              display: "block",
             }}
           />
           {!hasLocalVideo && (
@@ -402,3 +468,4 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
     );
   }
 );
+
