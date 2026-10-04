@@ -48,6 +48,7 @@ const SECTIONS = [
   { id: 'referidos', label: 'Referidos Tesla', emoji: '🎰' },
   { id: 'navegador', label: 'Navegador (en construcción)', emoji: '🛰️', isLink: true, href: '/navegador' },
   { id: 'vuelos', label: 'Escapadas', emoji: '✈️', isLink: true, href: '/vuelos' },
+  { id: 'videollamada', label: 'Videollamada', emoji: '📹', isLink: true, href: '/videollamada' },
 ];
 
 const PLATFORM_BADGE: Record<string, { label: string; color: string }> = {
