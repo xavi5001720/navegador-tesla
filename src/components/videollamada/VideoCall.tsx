@@ -360,10 +360,10 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
           setupPeerConnectionListeners(incomingCall);
 
+          let cachedRemoteStream: MediaStream | null = null;
           incomingCall.on("stream", (rs) => {
-            addLog(`📺 Stream remoto asignado desde llamadas entrantes (${rs.getTracks().length} tracks)`);
-            setRemoteStream(rs);
-            onCallStateChange("in-call", callerId);
+            addLog(`📺 Stream remoto preparado (${rs.getTracks().length} tracks). Esperando respuesta del usuario...`);
+            cachedRemoteStream = rs;
           });
 
           incomingCall.on("close", () => {
@@ -376,6 +376,10 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
             onError("Error en la conexión con el otro dispositivo.");
             hangUp();
           });
+
+          // Almacenar el stream en ref si llega mientras suena
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (incomingCall as any)._cachedRemoteStreamGetter = () => cachedRemoteStream;
 
           onCallStateChange("ringing", callerId);
         });
@@ -402,6 +406,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         const incomingCall = incomingCallRef.current;
         if (!incomingCall) return;
 
+        const callerId = incomingCall.peer.replace("vtes-", "").toUpperCase();
         addLog("🟢 Contestando llamada...");
         try {
           const stream = await getLocalStream();
@@ -409,10 +414,18 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
           callRef.current = incomingCall;
           setupPeerConnectionListeners(incomingCall);
 
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const existingStream = (incomingCall as any)._cachedRemoteStreamGetter?.();
+          if (existingStream) {
+            addLog(`📺 Asignando stream remoto previo (${existingStream.getTracks().length} tracks)`);
+            setRemoteStream(existingStream);
+            onCallStateChange("in-call", callerId);
+          }
+
           incomingCall.on("stream", (rs) => {
             addLog(`📺 Stream remoto recibido al contestar (${rs.getTracks().length} tracks)`);
             setRemoteStream(rs);
-            onCallStateChange("in-call", incomingCall.peer.replace("vtes-", "").toUpperCase());
+            onCallStateChange("in-call", callerId);
           });
         } catch (err) {
           addLog(`❌ Error al contestar: ${err}`);
