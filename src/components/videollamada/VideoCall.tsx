@@ -71,20 +71,22 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         });
         addLog("✅ Cámara HD capturada correctamente");
       } catch (err: unknown) {
-        addLog("⚠️ Fallo captura HD, intentando formato estándar...");
+        const error = err as Error;
+        addLog(`⚠️ Fallo captura HD (${error.name || "Error"}: ${error.message || error}), intentando básico...`);
         try {
           stream = await navigator.mediaDevices.getUserMedia({
             video: true,
             audio: true,
           });
-          addLog("✅ Cámara estándar capturada");
+          addLog("✅ Cámara básica capturada correctamente");
         } catch (err2: unknown) {
-          addLog("⚠️ Fallo vídeo, intentando solo micrófono...");
+          const error2 = err2 as Error;
+          addLog(`⚠️ Fallo vídeo (${error2.name || "Error"}: ${error2.message || error2}), intentando solo micrófono...`);
           stream = await navigator.mediaDevices.getUserMedia({
             video: false,
             audio: true,
           });
-          onError("⚠️ No se detectó cámara en este dispositivo. Se continuará sólo con audio.");
+          onError(`⚠️ No se pudo activar la cámara (${error2.name || "Error"}). Se continuará sólo con audio.`);
         }
       }
 
