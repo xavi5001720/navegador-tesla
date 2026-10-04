@@ -1573,8 +1573,10 @@ def publish_daily_group_posts():
         clean_cid = str(chat_id).replace("-100", "")
 
         # Construir mensaje HTML
-        html = f"✈️ <b>TOP OFERTAS DE VUELOS — {today_str}</b>\n"
-        html += f"<i>Las mejores ofertas encontradas hoy para <b>2 Adultos</b> 👫:</i>\n\n"
+        html = f"🎯✈️ <b>RADAR DE ESCAPADAS</b>\n"
+        html += f"⚡ <i>Actualizado hoy a las <b>{today_str}</b> · Precios para <b>2 Adultos</b> 👫</i>\n\n"
+        html += f"🎯 <i>Escaneamos continuamente cientos de combinaciones y <b>actualizamos este único post</b> para que tengas siempre los mejores chollos a mano. ¡Guarda el topic y consúltalo cuando quieras viajar!</i> 📌\n\n"
+        html += "─────────────────\n\n"
 
         # Sección escapadas cortas
         if top_short:
