@@ -160,6 +160,24 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         peerInstance.on("call", (incomingCall) => {
           incomingCallRef.current = incomingCall;
           const callerId = incomingCall.peer.replace("vtes-", "").toUpperCase();
+
+          // Escuchar el stream de la llamada entrante INMEDIATAMENTE para que PeerJS no pierda el evento 'stream'
+          incomingCall.on("stream", (rs) => {
+            console.log("[WebRTC] Stream remoto recibido en incomingCall:", rs.getTracks());
+            setRemoteStream(rs);
+            onCallStateChange("in-call", callerId);
+          });
+
+          incomingCall.on("close", () => {
+            hangUp();
+          });
+
+          incomingCall.on("error", (err) => {
+            console.error("Incoming call error:", err);
+            onError("Error en la llamada entrante");
+            hangUp();
+          });
+
           onCallStateChange("ringing", callerId);
         });
 
@@ -189,22 +207,6 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
           const stream = await getLocalStream();
           incomingCall.answer(stream);
           callRef.current = incomingCall;
-
-          incomingCall.on("stream", (rs) => {
-            setRemoteStream(rs);
-            const callerId = incomingCall.peer.replace("vtes-", "").toUpperCase();
-            onCallStateChange("in-call", callerId);
-          });
-
-          incomingCall.on("close", () => {
-            hangUp();
-          });
-
-          incomingCall.on("error", (err) => {
-            console.error("Call error:", err);
-            onError("Error en la videollamada");
-            hangUp();
-          });
         } catch (err) {
           console.error("Error al contestar llamada:", err);
           onError("No se pudo acceder a la cámara/micrófono para contestar.");
