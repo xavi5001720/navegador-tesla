@@ -77,9 +77,9 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
       }
 
       let stream: MediaStream | null = null;
-      
-      // Intentar primero con la lista de cámaras detectadas
-      if (videoInputs.length > 0) {
+
+      // 1. Intentar primero con la lista de cámaras detectadas (si hay IDs disponibles)
+      if (videoInputs.length > 0 && videoInputs.some((d) => Boolean(d.deviceId))) {
         for (const dev of videoInputs) {
           if (!dev.deviceId) continue;
           try {
@@ -97,37 +97,38 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         }
       }
 
-      // Si no se capturó mediante lista o no había dispositivos con ID exacto
+      // 2. Si no hay lista o fallaron los IDs específicos, intentar vídeo básico genérico (Ideal para Firefox / Linux)
       if (!stream) {
         try {
-          addLog("🎥 Intentando solicitud HD genérica...");
+          addLog("🎥 Solicitando cámara y micrófono al navegador (Firefox/Linux)...");
           stream = await navigator.mediaDevices.getUserMedia({
-            video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+            video: true,
             audio: true,
           });
-          addLog("✅ Cámara HD capturada correctamente");
+          addLog("✅ Cámara capturada correctamente");
         } catch (err: unknown) {
           const error = err as Error;
-          addLog(`⚠️ Fallo captura HD (${error.name}: ${error.message}), intentando cámara básica...`);
+          addLog(`⚠️ Fallo vídeo básico (${error.name}: ${error.message}), intentando HD...`);
           try {
             stream = await navigator.mediaDevices.getUserMedia({
-              video: true,
+              video: { width: { ideal: 1280 }, height: { ideal: 720 } },
               audio: true,
             });
-            addLog("✅ Cámara básica capturada correctamente");
+            addLog("✅ Cámara HD capturada correctamente");
           } catch (err2: unknown) {
             const error2 = err2 as Error;
-            addLog(`⚠️ Fallo cámara vídeo (${error2.name}: ${error2.message}). Conectando sólo micrófono...`);
+            addLog(`⚠️ No se pudo obtener vídeo (${error2.name}: ${error2.message}). Conectando sólo micrófono...`);
             if (
               error2.name === "NotReadableError" ||
               error2.name === "TrackStartError" ||
               error2.name === "NotFoundError" ||
-              error2.name === "DevicesNotFoundError"
+              error2.name === "DevicesNotFoundError" ||
+              error2.name === "NotAllowedError"
             ) {
-              addLog(`💡 DIAGNÓSTICO (${error2.name}): La webcam está bloqueada por otro programa. Posibles causas:`);
-              addLog("   1. OBS Studio, Zoom, Teams, Discord, NVIDIA Broadcast o DroidCam tienen abierta la cámara.");
-              addLog("   2. Otra pestaña de Chrome/Firefox/Edge está usando la webcam.");
-              addLog("   3. Si es una cámara USB antigua, desconéctala y vuélvela a enchufar.");
+              addLog(`💡 DIAGNÓSTICO EN FIREFOX / LINUX (${error2.name}):`);
+              addLog("   1. En Firefox: Haz clic en el icono del candado 🔒 o cámara 🎥 junto a la URL y comprueba que la Cámara esté en 'Permitido'.");
+              addLog("   2. Si usas Firefox Snap en Linux: ejecuta en terminal -> snap connect firefox:camera");
+              addLog("   3. Si la cámara es USB: comprueba en terminal -> ls -l /dev/video*");
             }
             stream = await navigator.mediaDevices.getUserMedia({
               video: false,
