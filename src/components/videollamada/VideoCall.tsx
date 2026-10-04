@@ -227,27 +227,40 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
       onCallStateChange("idle");
     }, [onCallStateChange, addLog]);
 
-    // Función auxiliar para configurar listeners de RTCPeerConnection
+    // Función auxiliar para configurar listeners de RTCPeerConnection de forma segura
     const setupPeerConnectionListeners = useCallback(
       (connection: MediaConnection) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const pc: RTCPeerConnection = (connection as any).peerConnection;
-        if (!pc) return;
+        try {
+          const attach = () => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const pc: RTCPeerConnection | undefined = (connection as any)?.peerConnection;
+            if (!pc) return false;
 
-        pc.oniceconnectionstatechange = () => {
-          addLog(`🧊 Estado conexión ICE: ${pc.iceConnectionState}`);
-          if (pc.iceConnectionState === "failed") {
-            onError("❌ Error de red P2P (ICE failed). Los firewalls/CGNAT bloquearon el paso.");
+            pc.oniceconnectionstatechange = () => {
+              addLog(`🧊 Estado conexión ICE: ${pc.iceConnectionState}`);
+              if (pc.iceConnectionState === "failed") {
+                onError("❌ Error de red P2P (ICE failed). Reintentando...");
+              }
+            };
+
+            pc.onicegatheringstatechange = () => {
+              addLog(`🔍 Búsqueda de candidatos ICE: ${pc.iceGatheringState}`);
+            };
+
+            pc.ontrack = (event) => {
+              addLog(`📺 Track WebRTC recibido: ${event.track.kind} (${event.track.readyState})`);
+            };
+
+            return true;
+          };
+
+          if (!attach()) {
+            setTimeout(attach, 100);
+            setTimeout(attach, 500);
           }
-        };
-
-        pc.onicegatheringstatechange = () => {
-          addLog(`🔍 Búsqueda de candidatos ICE: ${pc.iceGatheringState}`);
-        };
-
-        pc.ontrack = (event) => {
-          addLog(`📺 Track WebRTC recibido: ${event.track.kind} (${event.track.readyState})`);
-        };
+        } catch (e) {
+          console.warn("[WebRTC] Error attaching PC listeners:", e);
+        }
       },
       [addLog, onError]
     );
