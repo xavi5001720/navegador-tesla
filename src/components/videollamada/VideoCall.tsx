@@ -300,6 +300,10 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
             pc.ontrack = (event) => {
               addLog(`📺 Track WebRTC recibido: ${event.track.kind} (${event.track.readyState})`);
+              if (event.streams && event.streams[0]) {
+                addLog(`📺 Stream remoto asignado desde pc.ontrack (${event.streams[0].getTracks().length} tracks)`);
+                setRemoteStream(event.streams[0]);
+              }
             };
 
             return true;
@@ -360,10 +364,11 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
           setupPeerConnectionListeners(incomingCall);
 
-          let cachedRemoteStream: MediaStream | null = null;
           incomingCall.on("stream", (rs) => {
-            addLog(`📺 Stream remoto preparado (${rs.getTracks().length} tracks). Esperando respuesta del usuario...`);
-            cachedRemoteStream = rs;
+            addLog(`📺 Stream remoto recibido de la llamada entrante (${rs.getTracks().length} tracks)`);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (incomingCall as any)._cachedRemoteStream = rs;
+            setRemoteStream(rs);
           });
 
           incomingCall.on("close", () => {
@@ -376,10 +381,6 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
             onError("Error en la conexión con el otro dispositivo.");
             hangUp();
           });
-
-          // Almacenar el stream en ref si llega mientras suena
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (incomingCall as any)._cachedRemoteStreamGetter = () => cachedRemoteStream;
 
           onCallStateChange("ringing", callerId);
         });
@@ -408,6 +409,10 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
         const callerId = incomingCall.peer.replace("vtes-", "").toUpperCase();
         addLog("🟢 Contestando llamada...");
+
+        // Transición de estado INMEDIATA para ocultar el botón 'Contestar' y mostrar el lienzo de llamada
+        onCallStateChange("in-call", callerId);
+
         try {
           const stream = await getLocalStream();
           incomingCall.answer(stream);
@@ -415,11 +420,17 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
           setupPeerConnectionListeners(incomingCall);
 
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const existingStream = (incomingCall as any)._cachedRemoteStreamGetter?.();
-          if (existingStream) {
-            addLog(`📺 Asignando stream remoto previo (${existingStream.getTracks().length} tracks)`);
-            setRemoteStream(existingStream);
-            onCallStateChange("in-call", callerId);
+          const pc = (incomingCall as any).peerConnection as RTCPeerConnection | undefined;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const cachedStream = (incomingCall as any)._cachedRemoteStream;
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const peerJsStream = (incomingCall as any).remoteStream;
+          const pcStream = pc?.getRemoteStreams()?.[0];
+
+          const targetStream = cachedStream || peerJsStream || pcStream;
+          if (targetStream && targetStream.getTracks().length > 0) {
+            addLog(`📺 Stream remoto asignado al contestar (${targetStream.getTracks().length} tracks)`);
+            setRemoteStream(targetStream);
           }
 
           incomingCall.on("stream", (rs) => {
