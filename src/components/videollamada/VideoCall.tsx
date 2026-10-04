@@ -172,13 +172,17 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
     useEffect(() => {
       if (callState !== "idle" && remoteVideoRef.current && remoteStream) {
         const videoEl = remoteVideoRef.current;
+        videoEl.muted = true;
         videoEl.setAttribute("playsinline", "true");
         videoEl.setAttribute("webkit-playsinline", "true");
         videoEl.srcObject = remoteStream;
 
         videoEl
           .play()
-          .then(() => setNeedsTapToPlay(false))
+          .then(() => {
+            addLog("▶️ Vídeo remoto reproduciendo/decodificando correctamente");
+            setNeedsTapToPlay(false);
+          })
           .catch((e) => {
             addLog(`⚠️ Play remoto bloqueado por el navegador: ${e}`);
             setNeedsTapToPlay(true);
@@ -404,8 +408,12 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
     useImperativeHandle(ref, () => ({
       answerCall: async () => {
+        addLog("🟢 Acción: Botón Contestar ejecutado por el usuario");
         const incomingCall = incomingCallRef.current;
-        if (!incomingCall) return;
+        if (!incomingCall) {
+          addLog("⚠️ Botón contestar pulsado, pero no hay llamada entrante activa en la referencia local");
+          return;
+        }
 
         const callerId = incomingCall.peer.replace("vtes-", "").toUpperCase();
         addLog("🟢 Contestando llamada...");
@@ -496,6 +504,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
           id="video-remote-hidden"
           autoPlay
           playsInline
+          muted
           style={{ position: "absolute", width: 1, height: 1, opacity: 0.001, pointerEvents: "none" }}
         />
         <video
