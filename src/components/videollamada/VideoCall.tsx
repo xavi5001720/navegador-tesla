@@ -152,6 +152,31 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
       addLog(`🎥 Stream local activo: ${stream.getTracks().map((t) => `${t.kind}:${t.readyState}`).join(", ")}`);
       localStreamRef.current = stream;
       setLocalStream(stream);
+
+      // Crear Stream de Canvas 2D (Bypass de restricción Tesla OS WebRTC)
+      let streamToShare = stream;
+      if (localCanvasRef.current) {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const canvasEl = localCanvasRef.current as any;
+          const canvasStream = canvasEl.captureStream
+            ? canvasEl.captureStream(30)
+            : canvasEl.mozCaptureStream
+            ? canvasEl.mozCaptureStream(30)
+            : null;
+          if (canvasStream && canvasStream.getVideoTracks().length > 0) {
+            const canvasTrack = canvasStream.getVideoTracks()[0];
+            const audioTrack = stream.getAudioTracks()[0];
+            const tracks = audioTrack ? [canvasTrack, audioTrack] : [canvasTrack];
+            streamToShare = new MediaStream(tracks);
+            addLog("🎨 Stream Canvas 2D creado con éxito para transmisión WebRTC (Tesla OS Mode)");
+          }
+        } catch (e) {
+          console.warn("[WebRTC] Error capturando canvasStream:", e);
+        }
+      }
+
+      return streamToShare;
     }, [onError, addLog]);
 
     // Pre-cargar el stream local al sonar (ringing)
@@ -238,17 +263,34 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
           }
         }
 
-        if (localVideoRef.current && localCanvasRef.current) {
-          const video = localVideoRef.current;
+        if (localCanvasRef.current) {
           const canvas = localCanvasRef.current;
-          if (video.readyState >= 2 && video.videoWidth > 0) {
-            if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-              canvas.width = video.videoWidth;
-              canvas.height = video.videoHeight;
+          if (canvas.width !== 320 || canvas.height !== 240) {
+            canvas.width = 320;
+            canvas.height = 240;
+          }
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            let drewCamera = false;
+            if (localVideoRef.current && localVideoRef.current.readyState >= 2 && localVideoRef.current.videoWidth > 0) {
+              try {
+                ctx.drawImage(localVideoRef.current, 0, 0, canvas.width, canvas.height);
+                drewCamera = true;
+              } catch (e) {
+                console.warn(e);
+              }
             }
-            const ctx = canvas.getContext("2d");
-            if (ctx) {
-              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            if (!drewCamera) {
+              // Dibujar Tesla Cyber Visualizer cuando la cámara esté silenciada por el sistema
+              ctx.fillStyle = "#0d0e12";
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.fillStyle = "#e31937";
+              ctx.font = "bold 20px sans-serif";
+              ctx.textAlign = "center";
+              ctx.fillText("TESLA VISION", canvas.width / 2, canvas.height / 2 - 10);
+              ctx.fillStyle = "#9ca3af";
+              ctx.font = "12px sans-serif";
+              ctx.fillText("⚡ Voz & Audio Conectados", canvas.width / 2, canvas.height / 2 + 15);
             }
           }
         }
