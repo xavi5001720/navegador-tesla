@@ -66,7 +66,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
       let stream: MediaStream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
           audio: true,
         });
         addLog("✅ Cámara HD capturada correctamente");
