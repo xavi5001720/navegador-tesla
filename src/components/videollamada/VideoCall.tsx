@@ -100,21 +100,25 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
       // 2. Si no hay lista o fallaron los IDs específicos, intentar vídeo básico genérico (Ideal para Firefox / Linux)
       if (!stream) {
         try {
-          addLog("🎥 Solicitando cámara y micrófono al navegador (Firefox/Linux)...");
+          addLog("🎥 Solicitando cámara y micrófono optimizados para red móvil LTE...");
           stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
+            video: {
+              width: { ideal: 640, max: 1280 },
+              height: { ideal: 480, max: 720 },
+              frameRate: { ideal: 30, max: 30 },
+            },
             audio: true,
           });
-          addLog("✅ Cámara capturada correctamente");
+          addLog("✅ Cámara capturada correctamente (640x480 LTE)");
         } catch (err: unknown) {
           const error = err as Error;
-          addLog(`⚠️ Fallo vídeo básico (${error.name}: ${error.message}), intentando HD...`);
+          addLog(`⚠️ Fallo vídeo optimizado (${error.name}: ${error.message}), intentando vídeo genérico...`);
           try {
             stream = await navigator.mediaDevices.getUserMedia({
-              video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+              video: true,
               audio: true,
             });
-            addLog("✅ Cámara HD capturada correctamente");
+            addLog("✅ Cámara básica capturada correctamente");
           } catch (err2: unknown) {
             const error2 = err2 as Error;
             addLog(`⚠️ No se pudo obtener vídeo (${error2.name}: ${error2.message}). Conectando sólo micrófono...`);
