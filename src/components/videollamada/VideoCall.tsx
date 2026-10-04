@@ -62,17 +62,35 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         }
       }
 
-      addLog("🎥 Solicitando permiso de cámara y micrófono...");
+      addLog("🎥 Escaneando dispositivos de cámara...");
+      let videoInputs: MediaDeviceInfo[] = [];
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        videoInputs = devices.filter((d) => d.kind === "videoinput");
+        addLog(
+          `🎥 Cámaras detectadas por el navegador: ${videoInputs.length} (${
+            videoInputs.map((d, i) => d.label || `Cámara ${i + 1}`).join(", ") || "Ninguna detectada"
+          })`
+        );
+      } catch (e) {
+        console.warn("[WebRTC] Error enumerando dispositivos:", e);
+      }
+
       let stream: MediaStream;
       try {
+        const targetDeviceId = videoInputs.length > 0 && videoInputs[0].deviceId ? videoInputs[0].deviceId : undefined;
+        const videoConstraints: boolean | MediaTrackConstraints = targetDeviceId
+          ? { deviceId: { exact: targetDeviceId } }
+          : { width: { ideal: 1280 }, height: { ideal: 720 } };
+
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          video: videoConstraints,
           audio: true,
         });
-        addLog("✅ Cámara HD capturada correctamente");
+        addLog("✅ Cámara capturada correctamente");
       } catch (err: unknown) {
         const error = err as Error;
-        addLog(`⚠️ Fallo captura HD (${error.name || "Error"}: ${error.message || error}), intentando básico...`);
+        addLog(`⚠️ Fallo captura directa (${error.name || "Error"}: ${error.message || error}), intentando vídeo genérico...`);
         try {
           stream = await navigator.mediaDevices.getUserMedia({
             video: true,
