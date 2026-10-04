@@ -349,13 +349,17 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
               { urls: "stun:stun.cloudflare.com:3478" },
               { urls: "stun:global.stun.twilio.com:3478" },
               { urls: "stun:stun.nextcloud.com:443" },
-              // Servidores TURN OpenRelay (UDP, TCP y TLS 443 para atravesar NAT Móvil / Tesla LTE)
+              // Servidores TURN Privados Dedicados Metered (viajandoentesla.metered.live)
+              { urls: "turn:viajandoentesla.metered.live:80", username: "07a286e58bebdf0cca1eaef6", credential: "tsmcnMyzFPu/cskZ" },
+              { urls: "turn:viajandoentesla.metered.live:443", username: "07a286e58bebdf0cca1eaef6", credential: "tsmcnMyzFPu/cskZ" },
+              { urls: "turn:viajandoentesla.metered.live:443?transport=tcp", username: "07a286e58bebdf0cca1eaef6", credential: "tsmcnMyzFPu/cskZ" },
+              { urls: "turns:viajandoentesla.metered.live:443?transport=tcp", username: "07a286e58bebdf0cca1eaef6", credential: "tsmcnMyzFPu/cskZ" },
+              { urls: "turns:viajandoentesla.metered.live:8443?transport=tcp", username: "07a286e58bebdf0cca1eaef6", credential: "tsmcnMyzFPu/cskZ" },
+              // Servidores TURN de respaldo (OpenRelay & Viagenie)
               { urls: "turn:openrelay.metered.ca:80", username: "openrelay", credential: "openrelay" },
               { urls: "turn:openrelay.metered.ca:443", username: "openrelay", credential: "openrelay" },
               { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelay", credential: "openrelay" },
               { urls: "turns:openrelay.metered.ca:443?transport=tcp", username: "openrelay", credential: "openrelay" },
-              { urls: "turns:openrelay.metered.ca:8443?transport=tcp", username: "openrelay", credential: "openrelay" },
-              // Servidor TURN público secundario Viagenie
               { urls: "turn:numb.viagenie.ca:3478", username: "webrtc@live.com", credential: "muazkh" },
             ],
             iceCandidatePoolSize: 10,
