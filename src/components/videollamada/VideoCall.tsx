@@ -39,51 +39,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
     const hasLocalVideo = localStream ? localStream.getVideoTracks().length > 0 : true;
 
-    // Asegurar que los elementos de vídeo se reproduzcan cuando el contenedor sea visible
-    useEffect(() => {
-      if (callState !== "idle") {
-        if (localVideoRef.current && localStream) {
-          const videoEl = localVideoRef.current;
-          videoEl.muted = true;
-          videoEl.setAttribute("playsinline", "true");
-          videoEl.setAttribute("webkit-playsinline", "true");
-          if (videoEl.srcObject !== localStream) {
-            videoEl.srcObject = localStream;
-          }
-          videoEl.play().catch((e) => console.log("[WebRTC] Local play catch:", e));
-        }
-
-        if (remoteVideoRef.current && remoteStream) {
-          const videoEl = remoteVideoRef.current;
-          videoEl.setAttribute("playsinline", "true");
-          videoEl.setAttribute("webkit-playsinline", "true");
-          if (videoEl.srcObject !== remoteStream) {
-            videoEl.srcObject = remoteStream;
-          }
-          videoEl
-            .play()
-            .then(() => setNeedsTapToPlay(false))
-            .catch((e) => {
-              console.log("[WebRTC] Remote play catch (mobile/PC gesture):", e);
-              setNeedsTapToPlay(true);
-            });
-        }
-      }
-    }, [callState, localStream, remoteStream]);
-
-    // Escuchar tracks remotos cuando se añaden
-    useEffect(() => {
-      if (remoteStream) {
-        remoteStream.onaddtrack = () => {
-          console.log("[WebRTC] Nuevo track añadido al stream remoto");
-          if (remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = remoteStream;
-            remoteVideoRef.current.play().catch(() => setNeedsTapToPlay(true));
-          }
-        };
-      }
-    }, [remoteStream]);
-
+    // Obtener la cámara/micrófono local
     const getLocalStream = useCallback(async () => {
       if (localStreamRef.current) {
         const tracks = localStreamRef.current.getTracks();
@@ -95,11 +51,11 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
       let stream: MediaStream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" },
           audio: true,
         });
       } catch (err: unknown) {
-        console.warn("[WebRTC] Fallo al capturar vídeo con ideales, intentando básico video:true:", err);
+        console.warn("[WebRTC] Fallo al capturar vídeo con ideales, intentando básico:", err);
         try {
           stream = await navigator.mediaDevices.getUserMedia({
             video: true,
@@ -111,11 +67,11 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
             video: false,
             audio: true,
           });
-          onError("⚠️ No se detectó cámara en este dispositivo. La videollamada continuará sólo con audio.");
+          onError("⚠️ No se detectó cámara en este dispositivo. Se continuará sólo con audio.");
         }
       }
 
-      // Asegurar que todos los tracks estén activos
+      // Habilitar todos los tracks
       stream.getTracks().forEach((t) => {
         t.enabled = true;
       });
@@ -128,6 +84,71 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
       setLocalStream(stream);
       return stream;
     }, [onError]);
+
+    // Pre-cargar el stream local en cuanto la llamada esté sonando (ringing)
+    useEffect(() => {
+      if (callState === "ringing") {
+        getLocalStream().catch((e) => console.warn("[WebRTC] Error pre-cargando stream:", e));
+      }
+    }, [callState, getLocalStream]);
+
+    // Asegurar asignación del vídeo local
+    useEffect(() => {
+      if (callState !== "idle" && localVideoRef.current && localStream) {
+        const videoEl = localVideoRef.current;
+        videoEl.muted = true;
+        videoEl.setAttribute("playsinline", "true");
+        videoEl.setAttribute("webkit-playsinline", "true");
+        videoEl.srcObject = localStream;
+        videoEl.play().catch((e) => console.log("[WebRTC] Local play catch:", e));
+      }
+    }, [callState, localStream]);
+
+    // Asignación y reproducción del stream remoto
+    useEffect(() => {
+      if (callState !== "idle" && remoteVideoRef.current && remoteStream) {
+        const videoEl = remoteVideoRef.current;
+        videoEl.setAttribute("playsinline", "true");
+        videoEl.setAttribute("webkit-playsinline", "true");
+        videoEl.srcObject = remoteStream;
+
+        const attemptPlay = () => {
+          videoEl
+            .play()
+            .then(() => setNeedsTapToPlay(false))
+            .catch((e) => {
+              console.log("[WebRTC] Remote play catch (mobile/Tesla autoplay policy):", e);
+              setNeedsTapToPlay(true);
+            });
+        };
+
+        attemptPlay();
+
+        const handleTrackChange = () => {
+          console.log("[WebRTC] Track cambiado en stream remoto");
+          videoEl.srcObject = remoteStream;
+          attemptPlay();
+        };
+
+        remoteStream.onaddtrack = handleTrackChange;
+        remoteStream.onremovetrack = handleTrackChange;
+      }
+    }, [callState, remoteStream]);
+
+    // Verificación periódica durante la llamada para recuperar la reproducción si el navegador la pausa
+    useEffect(() => {
+      if (callState === "in-call" && remoteStream) {
+        const timer = setInterval(() => {
+          if (remoteVideoRef.current && remoteVideoRef.current.paused) {
+            remoteVideoRef.current
+              .play()
+              .then(() => setNeedsTapToPlay(false))
+              .catch(() => setNeedsTapToPlay(true));
+          }
+        }, 1500);
+        return () => clearInterval(timer);
+      }
+    }, [callState, remoteStream]);
 
     const hangUp = useCallback(() => {
       callRef.current?.close();
@@ -144,7 +165,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
       onCallStateChange("idle");
     }, [onCallStateChange]);
 
-    // Inicializar PeerJS con el ID asignado
+    // Inicializar PeerJS con servidores STUN y TURN globales redundantes
     useEffect(() => {
       if (!myId) return;
 
@@ -159,11 +180,16 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
             iceServers: [
               { urls: "stun:stun.l.google.com:19302" },
               { urls: "stun:stun1.l.google.com:19302" },
-              { urls: "stun:openrelay.metered.ca:80" },
+              { urls: "stun:stun2.l.google.com:19302" },
+              { urls: "stun:stun3.l.google.com:19302" },
+              { urls: "stun:stun4.l.google.com:19302" },
+              { urls: "stun:global.stun.twilio.com:3478" },
               { urls: "turn:openrelay.metered.ca:80", username: "openrelay", credential: "openrelay" },
               { urls: "turn:openrelay.metered.ca:443", username: "openrelay", credential: "openrelay" },
               { urls: "turn:openrelay.metered.ca:443?transport=tcp", username: "openrelay", credential: "openrelay" },
+              { urls: "turns:openrelay.metered.ca:443?transport=tcp", username: "openrelay", credential: "openrelay" },
             ],
+            iceCandidatePoolSize: 10,
           },
         });
 
@@ -189,7 +215,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
           incomingCall.on("error", (err) => {
             console.error("Incoming call error:", err);
-            onError("Error en la llamada entrante");
+            onError("Error en la conexión con el otro dispositivo.");
             hangUp();
           });
 
@@ -198,7 +224,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
 
         peerInstance.on("error", (err) => {
           console.error("PeerJS error:", err);
-          if (err.type === "peer-not-found") {
+          if (err.type === "peer-unavailable") {
             onError("El dispositivo destino no está conectado o el ID es incorrecto.");
           } else {
             onError("Error de conexión de red.");
@@ -222,6 +248,12 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
           const stream = await getLocalStream();
           incomingCall.answer(stream);
           callRef.current = incomingCall;
+
+          incomingCall.on("stream", (rs) => {
+            console.log("[WebRTC] Stream remoto en answerCall:", rs.getTracks());
+            setRemoteStream(rs);
+            onCallStateChange("in-call", incomingCall.peer.replace("vtes-", "").toUpperCase());
+          });
         } catch (err) {
           console.error("Error al contestar llamada:", err);
           onError("No se pudo acceder a la cámara/micrófono para contestar.");
@@ -244,6 +276,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
           onCallStateChange("calling", cleanTargetId);
 
           mediaCall.on("stream", (rs) => {
+            console.log("[WebRTC] Stream remoto en startCall:", rs.getTracks());
             setRemoteStream(rs);
             onCallStateChange("in-call", cleanTargetId);
           });
@@ -272,30 +305,38 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
         {needsTapToPlay && (
           <button
             onClick={() => {
-              remoteVideoRef.current?.play().then(() => setNeedsTapToPlay(false)).catch(() => {});
-              localVideoRef.current?.play().catch(() => {});
+              if (remoteVideoRef.current) {
+                remoteVideoRef.current
+                  .play()
+                  .then(() => setNeedsTapToPlay(false))
+                  .catch(() => {});
+              }
+              if (localVideoRef.current) {
+                localVideoRef.current.play().catch(() => {});
+              }
             }}
             style={{
               position: "absolute",
               top: "50%",
               left: "50%",
               transform: "translate(-50%, -50%)",
-              zIndex: 10,
-              padding: "1rem 2rem",
+              zIndex: 20,
+              padding: "1.2rem 2.5rem",
               borderRadius: "99px",
               background: "#10b981",
               color: "#fff",
               fontWeight: 700,
-              fontSize: "1rem",
+              fontSize: "1.1rem",
               border: "none",
               cursor: "pointer",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+              boxShadow: "0 8px 30px rgba(0,0,0,0.7)",
             }}
           >
-            🔊 Toca aquí para ver/escuchar la llamada
+            🔊 Toca aquí para ver y escuchar la llamada
           </button>
         )}
-        {/* Vídeo remoto — grande */}
+
+        {/* Vídeo remoto — pantalla grande */}
         <video
           ref={remoteVideoRef}
           id="video-remote"
@@ -309,7 +350,8 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
             objectFit: "cover",
           }}
         />
-        {/* Vídeo local — pequeño, esquina */}
+
+        {/* Vídeo local — miniatura en la esquina */}
         <div
           style={{
             position: "absolute",
@@ -322,6 +364,7 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
             background: "#000",
             overflow: "hidden",
             aspectRatio: "4/3",
+            zIndex: 10,
           }}
         >
           <video
