@@ -118,11 +118,16 @@ export const PeerVideoCall = forwardRef<PeerVideoCallHandle, PeerVideoCallProps>
           } catch (err2: unknown) {
             const error2 = err2 as Error;
             addLog(`⚠️ Fallo cámara vídeo (${error2.name}: ${error2.message}). Conectando sólo micrófono...`);
-            if (error2.name === "NotFoundError" || error2.name === "DevicesNotFoundError") {
-              addLog("💡 DIAGNÓSTICO: El navegador reporta que la webcam no está disponible. Posibles causas:");
-              addLog("   1. OBS Studio, Zoom, Teams o Discord están usando la cámara en segundo plano.");
-              addLog("   2. Permisos de Cámara desactivados en Windows/Mac (Configuración -> Privacidad -> Cámara).");
-              addLog("   3. La cámara está en otra pestaña del navegador.");
+            if (
+              error2.name === "NotReadableError" ||
+              error2.name === "TrackStartError" ||
+              error2.name === "NotFoundError" ||
+              error2.name === "DevicesNotFoundError"
+            ) {
+              addLog(`💡 DIAGNÓSTICO (${error2.name}): La webcam está bloqueada por otro programa. Posibles causas:`);
+              addLog("   1. OBS Studio, Zoom, Teams, Discord, NVIDIA Broadcast o DroidCam tienen abierta la cámara.");
+              addLog("   2. Otra pestaña de Chrome/Firefox/Edge está usando la webcam.");
+              addLog("   3. Si es una cámara USB antigua, desconéctala y vuélvela a enchufar.");
             }
             stream = await navigator.mediaDevices.getUserMedia({
               video: false,
