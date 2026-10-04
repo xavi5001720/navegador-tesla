@@ -14,6 +14,7 @@ import logging
 from datetime import datetime, date, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
+from urllib.parse import quote
 
 # Configuración de Logging
 logging.basicConfig(
@@ -52,6 +53,37 @@ def load_city_topics():
         except Exception as e:
             logging.error(f"Error cargando city_topics.json: {e}")
     return {}
+
+def load_groups_config():
+    """Carga la lista de grupos donde el bot está activo desde groups_config.json."""
+    json_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "groups_config.json")
+    if os.path.exists(json_path):
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logging.error(f"Error cargando groups_config.json: {e}")
+    return []
+
+DAILY_POST_IDS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "daily_post_ids.json")
+
+def load_daily_post_ids():
+    """Carga el fichero que guarda el message_id del último post diario publicado en cada grupo."""
+    if os.path.exists(DAILY_POST_IDS_PATH):
+        try:
+            with open(DAILY_POST_IDS_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def save_daily_post_ids(data: dict):
+    """Guarda el fichero con los message_id de los últimos posts diarios."""
+    try:
+        with open(DAILY_POST_IDS_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        logging.error(f"Error guardando daily_post_ids.json: {e}")
 
 def get_group_topic_url(origin_code=None):
     city_topics = load_city_topics()
@@ -226,6 +258,27 @@ WORLD_AIRPORTS = {
     "GRU": {"city": "São Paulo", "country": "Brasil"},
     "PUJ": {"city": "Punta Cana", "country": "Rep. Dominicana"},
     "HAV": {"city": "La Habana", "country": "Cuba"},
+
+    # Norte de África & Oriente Medio
+    "ALG": {"city": "Argel", "country": "Argelia"},
+    "ORN": {"city": "Orán", "country": "Argelia"},
+    "CZL": {"city": "Constantina", "country": "Argelia"},
+    "TUN": {"city": "Túnez", "country": "Túnez"},
+    "CAI": {"city": "El Cairo", "country": "Egipto"},
+    "LXR": {"city": "Lúxor", "country": "Egipto"},
+    "HRG": {"city": "Hurghada", "country": "Egipto"},
+    "SSH": {"city": "Sharm el-Sheij", "country": "Egipto"},
+    "AMM": {"city": "Amán", "country": "Jordania"},
+    "DXB": {"city": "Dubái", "country": "Emiratos Árabes Unidos"},
+    "AUH": {"city": "Abu Dabi", "country": "Emiratos Árabes Unidos"},
+    "DOH": {"city": "Doha", "country": "Catar"},
+    "RBA": {"city": "Rabat", "country": "Marruecos"},
+    "AGA": {"city": "Agadir", "country": "Marruecos"},
+    "NDR": {"city": "Nador", "country": "Marruecos"},
+    "OJZ": {"city": "Ujda", "country": "Marruecos"},
+    "MLA": {"city": "La Valeta", "country": "Malta"},
+    "LCA": {"city": "Lárnaca", "country": "Chipre"},
+    "TIA": {"city": "Tirana", "country": "Albania"},
 }
 
 MONTH_NAMES_ES = {
@@ -237,13 +290,31 @@ def get_destination_label(code: str) -> str:
     """
     Devuelve el nombre completo de la ciudad y el país sin abreviaturas raras.
     Ejemplo: 'PMO' -> 'Palermo (Sicilia), Italia'
+    Si no está en el diccionario local, consulta dinámicamente el nombre y país en Travelpayouts.
     """
-    c = code.upper()
+    c = code.upper().strip()
     info = WORLD_AIRPORTS.get(c)
     if info:
         city = info["city"]
         country = info.get("country", "")
         return f"{city}, {country}" if country else city
+
+    # Fallback dinámico para cualquier código IATA del mundo
+    try:
+        url = f"https://autocomplete.travelpayouts.com/places2?term={c}&locale=es"
+        r = requests.get(url, timeout=3)
+        if r.status_code == 200:
+            arr = r.json()
+            for item in arr:
+                if item.get("code") == c:
+                    city_name = item.get("name") or item.get("city_name")
+                    country_name = item.get("country_name")
+                    if city_name:
+                        WORLD_AIRPORTS[c] = {"city": city_name, "country": country_name or ""}
+                        return f"{city_name}, {country_name}" if country_name else city_name
+    except Exception:
+        pass
+
     return c
 
 def build_skyscanner_url(origin: str, destination: str, depart_date: str, return_date: str, adults: int = 2, children: int = 0) -> str:
@@ -271,6 +342,35 @@ def build_skyscanner_url(origin: str, destination: str, depart_date: str, return
 
     url = f"https://www.skyscanner.es/transport/vuelos/{origin.lower()}/{destination.lower()}/{dep_code}/{ret_code}/?{'&'.join(params)}"
     return url
+
+def build_booking_url(destination_name: str, depart_date: str, return_date: str, adults: int = 2, children: int = 0) -> str:
+    """
+    Genera un enlace de afiliado de Booking.com vía Travelpayouts para la ciudad de destino,
+    las fechas de ida/vuelta y el número de adultos (por defecto 2).
+    """
+    try:
+        now = datetime.now()
+        max_booking_date = now + timedelta(days=330)
+        dep_dt = datetime.strptime(depart_date, "%Y-%m-%d") if depart_date else None
+        is_valid_date_range = dep_dt and dep_dt <= max_booking_date
+    except Exception:
+        is_valid_date_range = False
+
+    clean_city = destination_name.split(",")[0].strip()
+    booking_target = f"https://www.booking.com/searchresults.es.html?ss={clean_city}"
+
+    if is_valid_date_range and depart_date and return_date:
+        booking_target += f"&checkin={depart_date}&checkout={return_date}"
+
+    booking_target += f"&group_adults={adults}"
+    if children > 0:
+        booking_target += f"&group_children={children}"
+        for _ in range(children):
+            booking_target += "&age=5"
+
+    booking_target += "&order=price"
+
+    return f"https://tp.media/r?marker={TRAVELPAYOUTS_MARKER}&p=4115&u={quote(booking_target, safe='')}"
 
 def build_skyscanner_general_url(origin: str, destination: str = "everywhere", adults: int = 2, children: int = 0) -> str:
     orig_code = origin.lower() if origin and origin != "ALL" else "mad"
@@ -515,7 +615,9 @@ def publish_daily_getaways():
                 html += f"{m} <b>{city_name} ➔ {deal['destination_name']}</b>\n"
                 html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'}) · ⚡ <i>{trans}</i>\n"
                 html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x {deal['price_per_person']} € por persona)\n"
-                html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n\n"
+                html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n"
+                booking_url = build_booking_url(deal['destination_name'], deal['depart_date'], deal['return_date'], deal.get('adults', 2), deal.get('children', 0))
+                html += f"🏨 <a href='{booking_url}'>Ver alojamientos en Booking.com</a>\n\n"
 
         send_telegram_message(html, reply_markup=reply_markup, thread_id=topic_id, chat_id=TELEGRAM_CHAT_ID)
         published_count += 1
@@ -1116,7 +1218,9 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
         res_html += f"{m} <b>{deal['origin_name']} ➔ {deal['destination_name']}</b>\n"
         res_html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'})\n"
         res_html += f"💰 <b>{deal['price_total']} € TOTAL</b> ({pax_desc} · {deal['price_per_person']} € por persona)\n"
-        res_html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n\n"
+        res_html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n"
+        booking_url = build_booking_url(deal['destination_name'], deal['depart_date'], deal['return_date'], deal.get('adults', 2), deal.get('children', 0))
+        res_html += f"🏨 <a href='{booking_url}'>Ver alojamientos en Booking.com</a>\n\n"
 
     inline_kb = [
         [{"text": "◀️ Volver atrás", "callback_data": back_data}],
@@ -1174,6 +1278,86 @@ def parse_step6_callback(data, prefix):
     
     return orig_code, when_str, dur_str, adults_str, children_str, key_or_dest
 
+def send_more_flights_private(chat_id, orig_code: str, return_url: str = None):
+    """
+    Envía por privado 10 vuelos express (1-4 días) y 6 vuelos de largo viaje (7-10 días, internacional)
+    para el origen solicitado (ej. MAD, PMI, BCN, VLC).
+    """
+    orig = orig_code.upper().strip()
+    origin_info = SPAIN_AIRPORTS.get(orig) or WORLD_AIRPORTS.get(orig) or {}
+    origin_name = origin_info.get("city", orig)
+
+    today_str = datetime.now().strftime("%d/%m/%Y (%H:%Mh)")
+    medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
+
+    # 1. 10 Escapadas Express (1-4 días) desde este origen
+    deals_short = fetch_flights_for_origin(orig, 1, 4, 1000, 2, 0, "year")
+    deals_short.sort(key=lambda x: (x["price_per_person"], x["duration"]))
+    top_short = deals_short[:10]
+
+    # 2. 6 Largo Viaje (7-10 días) desde este origen a destinos fuera de España
+    deals_long = fetch_flights_for_origin(orig, 7, 10, 1000, 2, 0, "year")
+    int_long_deals = []
+    for d in deals_long:
+        dest_code = d["destination"].upper()
+        dest_country = WORLD_AIRPORTS.get(dest_code, {}).get("country", "")
+        if dest_country != "España" and dest_code not in SPAIN_AIRPORTS:
+            int_long_deals.append(d)
+
+    int_long_deals.sort(key=lambda x: (x["price_per_person"], x["duration"]))
+    top_long = int_long_deals[:6]
+
+    html = f"✈️ <b>OFERTAS DESTACADAS DESDE {origin_name.upper()} — {today_str}</b>\n"
+    html += f"<i>Las mejores ofertas encontradas hoy para <b>2 Adultos</b> 👫:</i>\n\n"
+
+    # Sección Escapadas Express
+    if top_short:
+        html += f"⚡ <b>TOP 10 ESCAPADAS EXPRESS (1-4 DÍAS)</b>\n"
+        for idx, deal in enumerate(top_short):
+            m = medals[idx] if idx < len(medals) else "✈️"
+            dep_fmt = datetime.strptime(deal["depart_date"], "%Y-%m-%d").strftime("%d %b")
+            ret_fmt = datetime.strptime(deal["return_date"], "%Y-%m-%d").strftime("%d %b")
+            trans = "Directo" if deal["changes"] == 0 else f"{deal['changes']} escala(s)"
+            html += f"<b>{m} {origin_name} ➔ {deal['destination_name']}</b>\n"
+            html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'}) · ⚡ <i>{trans}</i>\n"
+            html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x 🟢 <b>{deal['price_per_person']} € por persona</b>)\n"
+            html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n"
+            booking_url = build_booking_url(deal['destination_name'], deal['depart_date'], deal['return_date'], deal.get('adults', 2), deal.get('children', 0))
+            html += f"🏨 <a href='{booking_url}'>Ver alojamientos en Booking.com</a>\n\n"
+    else:
+        html += "⚡ <b>TOP 10 ESCAPADAS EXPRESS (1-4 DÍAS)</b>\n"
+        html += f"<i>No se encontraron escapadas cortas disponibles hoy desde {origin_name}.</i>\n\n"
+
+    html += "─────────────────\n\n"
+
+    # Sección Largo Viaje
+    if top_long:
+        html += f"🌍 <b>TOP 6 LARGO VIAJE (7-10 DÍAS - INTERNACIONAL)</b>\n"
+        for idx, deal in enumerate(top_long):
+            m = medals[idx] if idx < len(medals) else "✈️"
+            dep_fmt = datetime.strptime(deal["depart_date"], "%Y-%m-%d").strftime("%d %b")
+            ret_fmt = datetime.strptime(deal["return_date"], "%Y-%m-%d").strftime("%d %b")
+            trans = "Directo" if deal["changes"] == 0 else f"{deal['changes']} escala(s)"
+            html += f"<b>{m} {origin_name} ➔ {deal['destination_name']}</b>\n"
+            html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} días) · ⚡ <i>{trans}</i>\n"
+            html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x 🟢 <b>{deal['price_per_person']} € por persona</b>)\n"
+            html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n"
+            booking_url = build_booking_url(deal['destination_name'], deal['depart_date'], deal['return_date'], deal.get('adults', 2), deal.get('children', 0))
+            html += f"🏨 <a href='{booking_url}'>Ver alojamientos en Booking.com</a>\n\n"
+    else:
+        html += "🌍 <b>TOP 6 LARGO VIAJE (7-10 DÍAS - INTERNACIONAL)</b>\n"
+        html += f"<i>No se encontraron vuelos internacionales de 7-10 días desde {origin_name}.</i>\n\n"
+
+    html += "✨ 🧭 <i>¿Buscas algo diferente? ¡Usa nuestro buscador personalizado!</i> 🧳✈️"
+
+    keyboard = []
+    if return_url:
+        keyboard.append([{"text": "↩️ Volver al Topic del Grupo", "url": return_url}])
+    keyboard.append([{"text": "✨ Buscador de Viajes Personalizado", "callback_data": "reset_flow"}])
+    reply_markup = {"inline_keyboard": keyboard}
+
+    return send_telegram_message(html, reply_markup=reply_markup, chat_id=chat_id)
+
 def run_interactive_bot():
     if not TELEGRAM_BOT_TOKEN:
         print("❌ ERROR: TELEGRAM_BOT_TOKEN no configurado.")
@@ -1203,9 +1387,35 @@ def run_interactive_bot():
                         if chat_id in user_menu_messages:
                             delete_telegram_message(chat_id, user_menu_messages[chat_id])
 
-                        new_msg_id = send_step_1_origin_private(chat_id)
+                        if "ver_" in text:
+                            try:
+                                payload = text.split("ver_")[1].split()[0].split("@")[0].strip()
+                                parts = payload.split("_")
+                                orig_code = parts[0]
+                                return_url = None
+                                if len(parts) >= 3:
+                                    clean_cid = parts[1]
+                                    th_id = parts[2]
+                                    return_url = f"https://t.me/c/{clean_cid}/{th_id}"
+                            except Exception:
+                                orig_code = "MAD"
+                                return_url = None
+                            new_msg_id = send_more_flights_private(chat_id, orig_code, return_url=return_url)
+                        else:
+                            new_msg_id = send_step_1_origin_private(chat_id)
+
                         if new_msg_id:
                             user_menu_messages[chat_id] = new_msg_id
+
+                    elif text.startswith("/chatid"):
+                        # Comando especial: responde con chat_id y thread_id en cualquier grupo
+                        thread_id_val = msg.get("message_thread_id", "N/A")
+                        info_html = (
+                            f"ℹ️ <b>Info de este chat:</b>\n"
+                            f"<code>chat_id = {chat_id}</code>\n"
+                            f"<code>thread_id = {thread_id_val}</code>"
+                        )
+                        send_telegram_message(info_html, thread_id=msg.get("message_thread_id"), chat_id=chat_id)
 
                     elif str(chat_id) == TELEGRAM_CHAT_ID or chat_id == TELEGRAM_CHAT_ID:
                         thread_id = msg.get("message_thread_id", TELEGRAM_TOPIC_ID)
@@ -1276,16 +1486,174 @@ def run_interactive_bot():
                             execute_bot_search(chat_id, message_id, orig_code, when_str, dur_str, adults_str, children_str, dest_str)
 
                     else:
-                        reply_html = '👉 <a href="https://t.me/VuelosEV_Bot?start=buscar">Haz clic aquí para abrir el buscador en privado</a>.'
-                        kb = [[{"text": "💬 Abrir en Privado", "url": "https://t.me/VuelosEV_Bot?start=buscar"}]]
-                        send_telegram_message(reply_html, reply_markup={"inline_keyboard": kb}, thread_id=msg.get("message_thread_id"), chat_id=chat_id)
+                        msg_text = msg.get("text", "") or ""
+                        if msg_text.startswith("/chatid"):
+                            thread_id_val = msg.get("message_thread_id", "N/A")
+                            info_html = (
+                                f"ℹ️ <b>Info de este chat:</b>\n"
+                                f"<code>chat_id = {chat_id}</code>\n"
+                                f"<code>thread_id = {thread_id_val}</code>"
+                            )
+                            send_telegram_message(info_html, thread_id=msg.get("message_thread_id"), chat_id=chat_id)
+                        else:
+                            reply_html = '👉 <a href="https://t.me/VuelosEV_Bot?start=buscar">Haz clic aquí para abrir el buscador en privado</a>.'
+                            kb = [[{"text": "💬 Abrir en Privado", "url": "https://t.me/VuelosEV_Bot?start=buscar"}]]
+                            send_telegram_message(reply_html, reply_markup={"inline_keyboard": kb}, thread_id=msg.get("message_thread_id"), chat_id=chat_id)
 
         except Exception as e:
             logging.error(f"Error en bucle bot: {e}")
             time.sleep(3)
 
+def publish_daily_group_posts():
+    """
+    Publicación diaria en el topic 'Escapadas' de cada grupo donde esté activo el bot.
+    Lee la configuración de grupos desde groups_config.json.
+    Borra el post anterior antes de publicar el nuevo para mantener el topic limpio.
+    - Escapadas express (1-4 días): Top 10 de los principales aeropuertos de España.
+    - Largo viaje (7-10 días): Top 6 desde Madrid a destinos internacionales (fuera de España).
+    """
+    groups = load_groups_config()
+    if not groups:
+        logging.warning("No hay grupos configurados en groups_config.json. Saliendo.")
+        return
+
+    post_ids = load_daily_post_ids()
+    today_str = datetime.now().strftime("%d/%m/%Y (%H:%Mh)")
+    medals = ["🥇", "🥈", "🥉", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
+    bot_private_url = "https://t.me/VuelosEV_Bot?start=buscar"
+
+    # 1. Buscar Escapadas Express (1-4 días) desde todos los aeropuertos de España en paralelo
+    logging.info("Buscando escapadas express (1-4 días) desde aeropuertos de España...")
+    main_origins = list(SPAIN_AIRPORTS.keys())
+    all_short_deals = []
+    with ThreadPoolExecutor(max_workers=10) as executor:
+        future_to_orig = {executor.submit(fetch_flights_for_origin, orig, 1, 4, 1000, 2, 0, "year"): orig for orig in main_origins}
+        for future in as_completed(future_to_orig):
+            try:
+                deals = future.result()
+                if deals:
+                    all_short_deals.extend(deals)
+            except Exception as e:
+                logging.error(f"Error buscando escapadas cortas: {e}")
+
+    all_short_deals.sort(key=lambda x: (x["price_per_person"], x["duration"]))
+    seen_origins = set()
+    top_short = []
+    for deal in all_short_deals:
+        orig = deal["origin"]
+        if orig not in seen_origins:
+            seen_origins.add(orig)
+            top_short.append(deal)
+            if len(top_short) == 10:
+                break
+
+    # 2. Buscar Largo Viaje (7-10 días) desde Madrid (MAD) a destinos fuera de España
+    logging.info("Buscando largo viaje (7-10 días) desde Madrid a destinos internacionales...")
+    deals_long_mad = fetch_flights_for_origin("MAD", 7, 10, 1000, 2, 0, "year")
+    int_long_deals = []
+    for deal in deals_long_mad:
+        dest_code = deal["destination"].upper()
+        dest_country = WORLD_AIRPORTS.get(dest_code, {}).get("country", "")
+        # Filtrar solo destinos fuera de España
+        if dest_country != "España" and dest_code not in SPAIN_AIRPORTS:
+            int_long_deals.append(deal)
+
+    int_long_deals.sort(key=lambda x: (x["price_per_person"], x["duration"]))
+    top_long = int_long_deals[:6]
+
+    for group in groups:
+        group_name = group.get("group_name", "Grupo")
+        chat_id = group.get("chat_id")
+        thread_id = group.get("escapadas_thread_id")
+
+        if not chat_id or not thread_id:
+            logging.warning(f"Grupo '{group_name}' sin chat_id o thread_id. Se omite.")
+            continue
+
+        clean_cid = str(chat_id).replace("-100", "")
+
+        # Construir mensaje HTML
+        html = f"✈️ <b>TOP OFERTAS DE VUELOS — {today_str}</b>\n"
+        html += f"<i>Las mejores ofertas encontradas hoy para <b>2 Adultos</b> 👫:</i>\n\n"
+
+        # Sección escapadas cortas
+        if top_short:
+            html += "⚡ <b>TOP 10 ESCAPADAS EXPRESS (1-4 DÍAS)</b>\n"
+            for idx, deal in enumerate(top_short):
+                m = medals[idx] if idx < len(medals) else "✈️"
+                dep_fmt = datetime.strptime(deal["depart_date"], "%Y-%m-%d").strftime("%d %b")
+                ret_fmt = datetime.strptime(deal["return_date"], "%Y-%m-%d").strftime("%d %b")
+                trans = "Directo" if deal["changes"] == 0 else f"{deal['changes']} escala(s)"
+                html += f"<b>{m} {deal['origin_name']} ➔ {deal['destination_name']}</b>\n"
+                html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'}) · ⚡ <i>{trans}</i>\n"
+                html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x 🟢 <b>{deal['price_per_person']} € por persona</b>)\n"
+                html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n"
+                booking_url = build_booking_url(deal['destination_name'], deal['depart_date'], deal['return_date'], deal.get('adults', 2), deal.get('children', 0))
+                html += f"🏨 <a href='{booking_url}'>Ver alojamientos en Booking.com</a>\n"
+                orig_code = deal['origin']
+                html += f"✈️ <a href='https://t.me/VuelosEV_Bot?start=ver_{orig_code}_{clean_cid}_{thread_id}'>Ver más vuelos desde {deal['origin_name']}</a>\n\n"
+        else:
+            html += "⚡ <b>TOP 10 ESCAPADAS EXPRESS (1-4 DÍAS)</b>\n"
+            html += "<i>Sin ofertas disponibles hoy. ¡Prueba el buscador!</i>\n\n"
+
+        html += "─────────────────\n\n"
+
+        # Sección largo viaje
+        if top_long:
+            html += "🌍 <b>TOP 6 LARGO VIAJE DESDE MADRID (7-10 DÍAS)</b>\n"
+            for idx, deal in enumerate(top_long):
+                m = medals[idx] if idx < len(medals) else "✈️"
+                dep_fmt = datetime.strptime(deal["depart_date"], "%Y-%m-%d").strftime("%d %b")
+                ret_fmt = datetime.strptime(deal["return_date"], "%Y-%m-%d").strftime("%d %b")
+                trans = "Directo" if deal["changes"] == 0 else f"{deal['changes']} escala(s)"
+                html += f"<b>{m} Madrid ➔ {deal['destination_name']}</b>\n"
+                html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} días) · ⚡ <i>{trans}</i>\n"
+                html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x 🟢 <b>{deal['price_per_person']} € por persona</b>)\n"
+                html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n"
+                booking_url = build_booking_url(deal['destination_name'], deal['depart_date'], deal['return_date'], deal.get('adults', 2), deal.get('children', 0))
+                html += f"🏨 <a href='{booking_url}'>Ver alojamientos en Booking.com</a>\n"
+                html += f"✈️ <a href='https://t.me/VuelosEV_Bot?start=ver_MAD_{clean_cid}_{thread_id}'>Ver más vuelos desde Madrid</a>\n\n"
+        else:
+            html += "🌍 <b>TOP 6 LARGO VIAJE DESDE MADRID (7-10 DÍAS)</b>\n"
+            html += "<i>Sin vuelos de largo viaje disponibles hoy.</i>\n\n"
+
+        html += "✨ 🧭 <i>¿Buscas algo diferente? ¡Usa nuestro buscador personalizado!</i> 🧳✈️"
+
+        keyboard = [
+            [{"text": "✨ Buscador de Viajes Personalizado", "url": bot_private_url}]
+        ]
+        reply_markup = {"inline_keyboard": keyboard}
+
+        # Intentar EDITAR el post anterior en lugar de borrar y publicar uno nuevo
+        # Esto evita notificaciones a los miembros del grupo y mantiene el topic impecable.
+        key = str(chat_id)
+        prev_msg_id = post_ids.get(key)
+        edited = False
+
+        if prev_msg_id:
+            edited = edit_telegram_message(chat_id, prev_msg_id, html, reply_markup=reply_markup)
+            if edited:
+                logging.info(f"[{group_name}] Post anterior (msg_id={prev_msg_id}) EDITADO con éxito sin notificar al grupo.")
+
+        # Si no se pudo editar (o no existía post anterior), publicar uno nuevo
+        if not edited:
+            new_msg_id = send_telegram_message(html, reply_markup=reply_markup, thread_id=thread_id, chat_id=chat_id)
+            if new_msg_id:
+                post_ids[key] = new_msg_id
+                save_daily_post_ids(post_ids)
+                logging.info(f"[{group_name}] Nuevo post publicado (msg_id={new_msg_id}) en thread {thread_id}.")
+            else:
+                logging.error(f"[{group_name}] Error publicando el post diario.")
+
+        time.sleep(2)
+
+    logging.info("Publicación diaria en grupos completada.")
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] in ["--bot", "bot"]:
         run_interactive_bot()
+    elif len(sys.argv) > 1 and sys.argv[1] in ["--daily-groups", "daily-groups"]:
+        publish_daily_group_posts()
     else:
         publish_daily_getaways()
