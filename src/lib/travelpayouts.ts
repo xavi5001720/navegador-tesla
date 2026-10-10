@@ -88,15 +88,23 @@ export function getHotelName(destCode: string, cityName: string, stars: number):
 }
 
 export function buildSkyscannerUrl(origin: string, dest: string, depDateStr: string, retDateStr: string, adults: number, children: number = 0): string {
-  const depYymmdd = depDateStr.replace(/-/g, '').slice(2);
-  const retYymmdd = retDateStr.replace(/-/g, '').slice(2);
-  let url = `https://www.skyscanner.es/transport/vuelos/${origin.toLowerCase()}/${dest.toLowerCase()}/${depYymmdd}/${retYymmdd}/?adultsv2=${adults}`;
-  if (children > 0) {
-    url += `&childrenv2=${Array(children).fill('5').join('|')}`;
+  const depParts = (depDateStr || '').split('-');
+  const depDdmm = depParts.length === 3 ? `${depParts[2]}${depParts[1]}` : '0111';
+  let retDdmm = '';
+  if (retDateStr) {
+    const retParts = retDateStr.split('-');
+    if (retParts.length === 3) retDdmm = `${retParts[2]}${retParts[1]}`;
   }
-  url += `&marker=778425`;
-  return url;
+  const totalPax = Math.max(1, adults + children);
+  const origIata = (origin || 'MAD').toUpperCase();
+  const destIata = (dest || 'BCN').toUpperCase();
+  const targetPath = retDdmm ? `${origIata}${depDdmm}${destIata}${retDdmm}${totalPax}` : `${origIata}${depDdmm}${destIata}${totalPax}`;
+  const targetUrl = `https://www.aviasales.es/search/${targetPath}`;
+  const marker = process.env.TRAVELPAYOUTS_MARKER || '778425';
+  return `https://tp.media/r?marker=${marker}&p=4114&u=${encodeURIComponent(targetUrl)}`;
 }
+
+export const buildFlightUrl = buildSkyscannerUrl;
 
 export function buildBookingUrl(
   cityName: string,
@@ -106,9 +114,17 @@ export function buildBookingUrl(
   children: number = 0,
   rooms: number = 1,
   stars: number = 3,
-  extraFilters: string[] = [],
+  extraFilters: string[] | string = [],
   marker: string = '778425'
 ): string {
+  let effectiveMarker = marker;
+  let filtersList: string[] = [];
+  if (typeof extraFilters === 'string') {
+    effectiveMarker = extraFilters;
+  } else if (Array.isArray(extraFilters)) {
+    filtersList = extraFilters;
+  }
+
   // Booking.com no permite buscar disponibilidad a mas de 330 dias en el futuro
   const now = new Date();
   const maxBookingDate = new Date(now.getTime() + 330 * 86400000);
@@ -146,8 +162,8 @@ export function buildBookingUrl(
     nfltParts.push('class=5');
   }
 
-  if (extraFilters && extraFilters.length > 0) {
-    extraFilters.forEach((f) => {
+  if (filtersList && filtersList.length > 0) {
+    filtersList.forEach((f) => {
       if (f && !nfltParts.includes(f)) {
         nfltParts.push(f);
       }
@@ -167,7 +183,7 @@ export function buildBookingUrl(
     bookingTarget += `&nflt=${formattedFilters}`;
   }
 
-  return `https://tp.media/r?marker=${marker}&p=4115&u=${encodeURIComponent(bookingTarget)}`;
+  return `https://tp.media/r?marker=${effectiveMarker}&p=4115&u=${encodeURIComponent(bookingTarget)}`;
 }
 
 export async function fetchEscapadas(query: EscapadaSearchQuery): Promise<FlightDeal[]> {

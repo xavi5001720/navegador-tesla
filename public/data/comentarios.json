@@ -311,26 +311,7 @@
             "date": "2026-07-07 21:25"
         }
     ],
-    "amazon_B00KWZT5OU": [
-        {
-            "user_id": 8799914035,
-            "username": "Andres",
-            "text": "🔄 Ha actualizado las versiones compatibles:\n• Anterior: Sin definir\n• Nueva: Nueva",
-            "date": "2026-07-07 21:21"
-        },
-        {
-            "user_id": 8799914035,
-            "username": "Andres",
-            "text": "Hello world",
-            "date": "2026-07-07 21:30"
-        },
-        {
-            "user_id": 8799914035,
-            "username": "Andres",
-            "text": "🔄 Ha actualizado las versiones compatibles:\n• Anterior: Nueva\n• Nueva: Sin definir",
-            "date": "2026-07-07 21:30"
-        }
-    ],
+    "amazon_B00KWZT5OU": [],
     "aliexpress_1005008556233934": [
         {
             "user_id": 8799914035,
@@ -565,6 +546,42 @@
             "username": "El Tio Sam",
             "text": "🔄 Ha actualizado las versiones compatibles:\n• Anterior: Sin definir\n• Nueva: Highland (2024+) - Standard",
             "date": "2026-10-03 05:38",
+            "group_id": -1003731237376,
+            "topic_id": "7"
+        }
+    ],
+    "aliexpress_1005009873871870": [
+        {
+            "user_id": 23523521,
+            "username": "Juan",
+            "text": "Imprescindible, me ha salvado de la rotura de la cámara. En una zona de obras me ha saltado una china que ha roto el protector, de no haberlo tenido podría haber roto la cámara. Me he comprado dos más",
+            "date": "2026-10-04 18:47"
+        }
+    ],
+    "aliexpress_1005011869963674": [
+        {
+            "user_id": 5736126687,
+            "username": "S",
+            "text": "(Alberto): Menos mal que le puse protector a la cámara delantera, porque se ha partido de un chinazo. \nLos mejores 5€ gastados de mi vida.",
+            "date": "2026-10-04 19:15"
+        }
+    ],
+    "amazon_B0G7X65K5X": [
+        {
+            "user_id": 5736126687,
+            "username": "S",
+            "text": "🔄 Ha actualizado las versiones compatibles:\n• Anterior: Sin definir\n• Nueva: Highland (2024+) - Standard, Highland (2024+) - Premium",
+            "date": "2026-10-05 17:02",
+            "group_id": -1003731237376,
+            "topic_id": "7"
+        }
+    ],
+    "amazon_B0CW7DYS9W": [
+        {
+            "user_id": 5736126687,
+            "username": "S",
+            "text": "🔄 Ha actualizado las versiones compatibles:\n• Anterior: Sin definir\n• Nueva: Highland (2024+) - Premium, Highland (2024+) - Standard",
+            "date": "2026-10-05 17:16",
             "group_id": -1003731237376,
             "topic_id": "7"
         }

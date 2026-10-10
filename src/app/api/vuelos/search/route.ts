@@ -213,21 +213,20 @@ function buildSkyscannerUrl(
   children: number = 0,
   infants: number = 0
 ): string {
-  const dep = depDate.replace(/-/g, '').slice(2);
-  const base = `https://www.skyscanner.es/transport/vuelos/${origin.toLowerCase()}/${dest.toLowerCase()}/${dep}`;
-  const params = new URLSearchParams({ adultsv2: String(adults) });
-  if (children > 0) {
-    // Skyscanner expects childrenv2 with child ages separated by | (e.g. 5|5 for 2 children)
-    params.append('childrenv2', Array(children).fill('5').join('|'));
-  }
-  if (infants > 0) {
-    params.append('infantsv2', String(infants));
-  }
+  const depParts = (depDate || '').split('-');
+  const depDdmm = depParts.length === 3 ? `${depParts[2]}${depParts[1]}` : '0111';
+  let retDdmm = '';
   if (retDate) {
-    const ret = retDate.replace(/-/g, '').slice(2);
-    return `${base}/${ret}/?${params.toString()}`;
+    const retParts = retDate.split('-');
+    if (retParts.length === 3) retDdmm = `${retParts[2]}${retParts[1]}`;
   }
-  return `${base}/?${params.toString()}`;
+  const totalPax = Math.max(1, adults + children);
+  const origIata = (origin || 'MAD').toUpperCase();
+  const destIata = (dest || 'BCN').toUpperCase();
+  const targetPath = retDdmm ? `${origIata}${depDdmm}${destIata}${retDdmm}${totalPax}` : `${origIata}${depDdmm}${destIata}${totalPax}`;
+  const targetUrl = `https://www.aviasales.es/search/${targetPath}`;
+  const marker = process.env.TRAVELPAYOUTS_MARKER || '778425';
+  return `https://tp.media/r?marker=${marker}&p=4114&u=${encodeURIComponent(targetUrl)}`;
 }
 
 function parseFoundAt(item: any): string | null {

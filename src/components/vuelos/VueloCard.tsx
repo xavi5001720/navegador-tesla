@@ -226,7 +226,7 @@ export default function VueloCard({ flight, rank }: Props) {
         >
           <span className="flex items-center space-x-1.5">
             <span>✈️</span>
-            <span>Ver vuelo en Skyscanner</span>
+            <span>Ver vuelos baratos</span>
           </span>
           <span className="bg-sky-900/80 border border-sky-400/30 group-hover/btn:bg-sky-700 px-2 py-1 rounded-lg text-right">
             <div className="text-xs font-black leading-none">{flight.totalPrice} € total</div>
@@ -235,8 +235,8 @@ export default function VueloCard({ flight, rank }: Props) {
         </a>
         <p className="text-[10px] text-slate-500 italic text-center leading-tight">
           {flight.isToday
-            ? '⚡ Encontrado HOY · Skyscanner confirma tarifa en tiempo real'
-            : 'Precios recopilados recientemente · Skyscanner confirma el precio final en tiempo real'}
+            ? '⚡ Encontrado HOY · Consulta la tarifa en tiempo real'
+            : 'Precios recopilados recientemente · Consulta la tarifa en tiempo real'}
         </p>
 
         {/* ═══════════════════════════════════════════════

@@ -171,13 +171,13 @@ export default function VuelosPage() {
 
           {/* Subtitle */}
           <p className="text-slate-300 text-sm sm:text-base max-w-xl mx-auto leading-relaxed relative z-10">
-            Rastreamos las mejores ofertas mundiales en tiempo real y te conectamos directamente con Skyscanner para reservar al mejor precio.
+            Rastreamos las mejores ofertas mundiales en tiempo real para que reserves siempre al precio más bajo.
           </p>
 
           {/* Highlights */}
           <div className="pt-2 flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-[11px] font-semibold text-slate-300 relative z-10">
             <span className="bg-slate-900/80 border border-slate-800 px-3 py-1 rounded-full flex items-center gap-1.5">
-              🛡️ Reserva directa en Skyscanner
+              🛡️ Reserva directa con aerolíneas y agencias oficiales
             </span>
           </div>
         </div>
@@ -298,7 +298,7 @@ export default function VuelosPage() {
           <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-4 flex items-start space-x-3 text-xs text-slate-500">
             <span className="text-lg">ℹ️</span>
             <div>
-              <strong className="text-slate-300">¿Cómo funciona?</strong> Buscamos los precios más bajos disponibles en tiempo real a través de la API de Aviasales. Al hacer clic en "Ver vuelo en Skyscanner.es" se abre Skyscanner con tu búsqueda pre-rellenada para que puedas reservar directamente con total seguridad.
+              <strong className="text-slate-300">¿Cómo funciona?</strong> Buscamos los precios más bajos disponibles en tiempo real a través de la API oficial de viajes. Al hacer clic en "Ver vuelos baratos" se abre la comparativa con tu búsqueda pre-rellenada para que puedas reservar directamente con total seguridad.
             </div>
           </div>
         )}
@@ -308,7 +308,7 @@ export default function VuelosPage() {
       <footer className="border-t border-slate-800/80 py-6 bg-slate-950 text-center text-xs text-slate-600">
         <div className="max-w-7xl mx-auto px-4 space-y-1">
           <p>© 2026 Viajando en Tesla · Plataforma independiente para la comunidad de viajes y vehículos eléctricos.</p>
-          <p>Los precios mostrados son estimaciones en tiempo real. Visita Skyscanner para ver el precio final confirmado.</p>
+          <p>Los precios mostrados son estimaciones en tiempo real para reservar al mejor precio confirmado.</p>
         </div>
       </footer>
     </div>

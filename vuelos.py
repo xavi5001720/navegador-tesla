@@ -317,7 +317,11 @@ def get_destination_label(code: str) -> str:
 
     return c
 
-def build_skyscanner_url(origin: str, destination: str, depart_date: str, return_date: str, adults: int = 2, children: int = 0) -> str:
+def build_flight_url(origin: str, destination: str, depart_date: str, return_date: str, adults: int = 2, children: int = 0) -> str:
+    """
+    Genera un enlace de afiliado oficial de Travelpayouts para Aviasales (campaña p=4114)
+    con origen, destino, fechas y número de pasajeros pre-rellenados.
+    """
     try:
         dep_dt = datetime.strptime(depart_date, "%Y-%m-%d")
         ret_dt = datetime.strptime(return_date, "%Y-%m-%d") if return_date else None
@@ -325,23 +329,23 @@ def build_skyscanner_url(origin: str, destination: str, depart_date: str, return
         dep_dt = datetime.now()
         ret_dt = None
 
-    dep_code = dep_dt.strftime("%y%m%d")
-    ret_code = ret_dt.strftime("%y%m%d") if ret_dt else ""
+    dep_code = dep_dt.strftime("%d%m")
+    ret_code = ret_dt.strftime("%d%m") if ret_dt else ""
+    total_pax = max(1, adults + children)
 
-    params = [f"adultsv2={adults}"]
-    if children > 0:
-        childrenv2 = "|".join(["5"] * children)
-        params.append(f"childrenv2={childrenv2}")
+    orig_iata = (origin or "MAD").upper()
+    dest_iata = (destination or "BCN").upper()
 
-    params.append("cabinclass=economy")
-    params.append("rtn=1")
-    params.append("preferdirects=false")
-    params.append("outboundaltsenabled=false")
-    params.append("inboundaltsenabled=false")
-    params.append(f"marker={TRAVELPAYOUTS_MARKER}")
+    if ret_code:
+        target_path = f"{orig_iata}{dep_code}{dest_iata}{ret_code}{total_pax}"
+    else:
+        target_path = f"{orig_iata}{dep_code}{dest_iata}{total_pax}"
 
-    url = f"https://www.skyscanner.es/transport/vuelos/{origin.lower()}/{destination.lower()}/{dep_code}/{ret_code}/?{'&'.join(params)}"
-    return url
+    target_url = f"https://www.aviasales.es/search/{target_path}"
+    return f"https://tp.media/r?marker={TRAVELPAYOUTS_MARKER}&p=4114&u={quote(target_url, safe='')}"
+
+# Alias para compatibilidad total con el código existente
+build_skyscanner_url = build_flight_url
 
 def build_booking_url(destination_name: str, depart_date: str, return_date: str, adults: int = 2, children: int = 0) -> str:
     """
@@ -372,21 +376,18 @@ def build_booking_url(destination_name: str, depart_date: str, return_date: str,
 
     return f"https://tp.media/r?marker={TRAVELPAYOUTS_MARKER}&p=4115&u={quote(booking_target, safe='')}"
 
-def build_skyscanner_general_url(origin: str, destination: str = "everywhere", adults: int = 2, children: int = 0) -> str:
-    orig_code = origin.lower() if origin and origin != "ALL" else "mad"
-    dest_code = "everywhere"
-    if destination and destination not in ["ANY", "ALL"] and not destination.startswith("REGION_"):
-        dest_code = destination.lower()
+def build_flight_general_url(origin: str, destination: str = "everywhere", adults: int = 2, children: int = 0) -> str:
+    orig_code = (origin or "MAD").upper()
+    dest_code = destination.upper() if destination and destination not in ["ANY", "ALL", "everywhere"] and not destination.startswith("REGION_") else ""
 
-    params = [f"adultsv2={adults}"]
-    if children > 0:
-        childrenv2 = "|".join(["5"] * children)
-        params.append(f"childrenv2={childrenv2}")
+    if dest_code:
+        target_url = f"https://www.aviasales.es/search/{orig_code}{dest_code}"
+    else:
+        target_url = f"https://www.aviasales.es/?origin_iata={orig_code}"
 
-    params.append("cabinclass=economy")
-    params.append(f"marker={TRAVELPAYOUTS_MARKER}")
+    return f"https://tp.media/r?marker={TRAVELPAYOUTS_MARKER}&p=4114&u={quote(target_url, safe='')}"
 
-    return f"https://www.skyscanner.es/transport/vuelos/{orig_code}/{dest_code}/?{'&'.join(params)}"
+build_skyscanner_general_url = build_flight_general_url
 
 def fetch_flights_for_origin(origin: str, duration_min: int = 1, duration_max: int = 2, limit: int = 1000, adults: int = 2, children: int = 0, when_filter: str = "year"):
     url = f"https://api.travelpayouts.com/v2/prices/latest?origin={origin}&currency=eur&period_type=year&page=1&limit={limit}&sorting=price&token={TRAVELPAYOUTS_TOKEN}"
@@ -503,8 +504,17 @@ def edit_telegram_message(chat_id, message_id, text, reply_markup=None):
         payload["reply_markup"] = json.dumps(reply_markup)
     try:
         resp = requests.post(url, json=payload, timeout=10)
-        return resp.json().get("ok", False)
-    except Exception:
+        res_data = resp.json()
+        if res_data.get("ok"):
+            return True
+        desc = res_data.get("description", "")
+        if "message is not modified" in desc:
+            logging.info(f"El mensaje {message_id} en {chat_id} ya contenía exactamente los datos actuales.")
+            return True
+        logging.error(f"Error Telegram editMessageText ({chat_id}, {message_id}): {desc}")
+        return False
+    except Exception as e:
+        logging.error(f"Excepción editando mensaje en Telegram: {e}")
         return False
 
 def delete_telegram_message(chat_id, message_id):
@@ -615,7 +625,7 @@ def publish_daily_getaways():
                 html += f"{m} <b>{city_name} ➔ {deal['destination_name']}</b>\n"
                 html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'}) · ⚡ <i>{trans}</i>\n"
                 html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x {deal['price_per_person']} € por persona)\n"
-                html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n"
+                html += f"✈️ <a href='{deal['skyscanner_url']}'>Ver vuelos baratos</a>\n"
                 booking_url = build_booking_url(deal['destination_name'], deal['depart_date'], deal['return_date'], deal.get('adults', 2), deal.get('children', 0))
                 html += f"🏨 <a href='{booking_url}'>Ver alojamientos en Booking.com</a>\n\n"
 
@@ -1196,9 +1206,9 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
     if not top_deals:
         skyscanner_url = build_skyscanner_general_url(origin_code, dest_str, adults, children)
         fail_html = f"⚠️ No se han encontrado vuelos directos para <b>{orig_title} ➔ {dest_title}</b> ({when_title}, {dur_str} días) en este momento.\n\n"
-        fail_html += f"👉 <i>Prueba otra combinación o <a href='{skyscanner_url}'><b>busca tus fechas directamente en Skyscanner aquí</b></a>.</i>"
+        fail_html += f"👉 <i>Prueba otra combinación o <a href='{skyscanner_url}'><b>busca tus fechas aquí</b></a>.</i>"
         kb = [
-            [{"text": "🔍 BUSCAR DIRECTAMENTE EN SKYSCANNER", "url": skyscanner_url}],
+            [{"text": "🔍 BUSCAR FECHAS DE VUELOS", "url": skyscanner_url}],
             [{"text": "◀️ Volver atrás", "callback_data": back_data}],
             [{"text": "💬 Volver al Topic de Telegram", "url": group_topic_url}]
         ]
@@ -1218,7 +1228,7 @@ def execute_bot_search(chat_id, message_id, origin_code, when_str, dur_str, adul
         res_html += f"{m} <b>{deal['origin_name']} ➔ {deal['destination_name']}</b>\n"
         res_html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'})\n"
         res_html += f"💰 <b>{deal['price_total']} € TOTAL</b> ({pax_desc} · {deal['price_per_person']} € por persona)\n"
-        res_html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n"
+        res_html += f"✈️ <a href='{deal['skyscanner_url']}'>Ver vuelos baratos</a>\n"
         booking_url = build_booking_url(deal['destination_name'], deal['depart_date'], deal['return_date'], deal.get('adults', 2), deal.get('children', 0))
         res_html += f"🏨 <a href='{booking_url}'>Ver alojamientos en Booking.com</a>\n\n"
 
@@ -1321,7 +1331,7 @@ def send_more_flights_private(chat_id, orig_code: str, return_url: str = None):
             html += f"<b>{m} {origin_name} ➔ {deal['destination_name']}</b>\n"
             html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'}) · ⚡ <i>{trans}</i>\n"
             html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x 🟢 <b>{deal['price_per_person']} € por persona</b>)\n"
-            html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n"
+            html += f"✈️ <a href='{deal['skyscanner_url']}'>Ver vuelos baratos</a>\n"
             booking_url = build_booking_url(deal['destination_name'], deal['depart_date'], deal['return_date'], deal.get('adults', 2), deal.get('children', 0))
             html += f"🏨 <a href='{booking_url}'>Ver alojamientos en Booking.com</a>\n\n"
     else:
@@ -1341,7 +1351,7 @@ def send_more_flights_private(chat_id, orig_code: str, return_url: str = None):
             html += f"<b>{m} {origin_name} ➔ {deal['destination_name']}</b>\n"
             html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} días) · ⚡ <i>{trans}</i>\n"
             html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x 🟢 <b>{deal['price_per_person']} € por persona</b>)\n"
-            html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n"
+            html += f"✈️ <a href='{deal['skyscanner_url']}'>Ver vuelos baratos</a>\n"
             booking_url = build_booking_url(deal['destination_name'], deal['depart_date'], deal['return_date'], deal.get('adults', 2), deal.get('children', 0))
             html += f"🏨 <a href='{booking_url}'>Ver alojamientos en Booking.com</a>\n\n"
     else:
@@ -1350,7 +1360,10 @@ def send_more_flights_private(chat_id, orig_code: str, return_url: str = None):
 
     html += "✨ 🧭 <i>¿Buscas algo diferente? ¡Usa nuestro buscador personalizado!</i> 🧳✈️"
 
-    keyboard = []
+    vuelos_city_url = build_flight_general_url(orig)
+    keyboard = [
+        [{"text": f"✈️ Ver todos los vuelos desde {origin_name}", "url": vuelos_city_url}]
+    ]
     if return_url:
         keyboard.append([{"text": "↩️ Volver al Topic del Grupo", "url": return_url}])
     keyboard.append([{"text": "✨ Buscador de Viajes Personalizado", "callback_data": "reset_flow"}])
@@ -1589,7 +1602,7 @@ def publish_daily_group_posts():
                 html += f"<b>{m} {deal['origin_name']} ➔ {deal['destination_name']}</b>\n"
                 html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} {'día' if deal['duration'] == 1 else 'días'}) · ⚡ <i>{trans}</i>\n"
                 html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x 🟢 <b>{deal['price_per_person']} € por persona</b>)\n"
-                html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n"
+                html += f"✈️ <a href='{deal['skyscanner_url']}'>Ver vuelos baratos</a>\n"
                 booking_url = build_booking_url(deal['destination_name'], deal['depart_date'], deal['return_date'], deal.get('adults', 2), deal.get('children', 0))
                 html += f"🏨 <a href='{booking_url}'>Ver alojamientos en Booking.com</a>\n"
                 orig_code = deal['origin']
@@ -1611,7 +1624,7 @@ def publish_daily_group_posts():
                 html += f"<b>{m} Madrid ➔ {deal['destination_name']}</b>\n"
                 html += f"📅 <b>{dep_fmt} ➔ {ret_fmt}</b> ({deal['duration']} días) · ⚡ <i>{trans}</i>\n"
                 html += f"💰 <b>{deal['price_total']} € TOTAL</b> (2 x 🟢 <b>{deal['price_per_person']} € por persona</b>)\n"
-                html += f"👉 <a href='{deal['skyscanner_url']}'>Ver vuelo en Skyscanner</a>\n"
+                html += f"✈️ <a href='{deal['skyscanner_url']}'>Ver vuelos baratos</a>\n"
                 booking_url = build_booking_url(deal['destination_name'], deal['depart_date'], deal['return_date'], deal.get('adults', 2), deal.get('children', 0))
                 html += f"🏨 <a href='{booking_url}'>Ver alojamientos en Booking.com</a>\n"
                 html += f"✈️ <a href='https://t.me/VuelosEV_Bot?start=ver_MAD_{clean_cid}_{thread_id}'>Ver más vuelos desde Madrid</a>\n\n"
@@ -1628,13 +1641,16 @@ def publish_daily_group_posts():
 
         # Intentar EDITAR el post anterior en lugar de borrar y publicar uno nuevo
         # Esto evita notificaciones a los miembros del grupo y mantiene el topic impecable.
-        key = str(chat_id)
-        prev_msg_id = post_ids.get(key)
+        key = f"{chat_id}_{thread_id}" if thread_id else str(chat_id)
+        prev_msg_id = post_ids.get(key) or post_ids.get(str(chat_id))
         edited = False
 
         if prev_msg_id:
             edited = edit_telegram_message(chat_id, prev_msg_id, html, reply_markup=reply_markup)
             if edited:
+                # Asegurar que guardamos la clave en formato thread-safe
+                post_ids[key] = prev_msg_id
+                save_daily_post_ids(post_ids)
                 logging.info(f"[{group_name}] Post anterior (msg_id={prev_msg_id}) EDITADO con éxito sin notificar al grupo.")
 
         # Si no se pudo editar (o no existía post anterior), publicar uno nuevo

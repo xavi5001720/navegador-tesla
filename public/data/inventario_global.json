@@ -611,22 +611,6 @@
                         "recommendations": 1
                     },
                     {
-                        "product_id": "1005006520953547",
-                        "platform": "aliexpress",
-                        "title": "Para Tesla Model 3 Highland parachoques delantero parrilla malla entrada de aire cubierta de ventila",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c437KTYd",
-                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_short_c437KTYd.jpg",
-                        "timestamp": "2026-04-21T11:24:48+00:00",
-                        "status_clasificacion": "clasificado",
-                        "categorias": [
-                            "Molduras"
-                        ],
-                        "versiones": [
-                            "__todas__"
-                        ],
-                        "recommendations": 1
-                    },
-                    {
                         "product_id": "1005008124794757",
                         "platform": "aliexpress",
                         "title": "Control remoto de puerta de carga, botón de pila de carga de energía para carga Tesla, nuevo botón d",
@@ -3952,22 +3936,6 @@
                         "recommendations": 1
                     },
                     {
-                        "product_id": "B013VDWXTI",
-                        "platform": "amazon",
-                        "title": "Bosch A102S - escobilla limpiaparabrisas Aerotwin - Longitud: 650/475 mm - 1 juego para el parabrisa",
-                        "affiliate_url": "https://www.amazon.es/dp/B013VDWXTI?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
-                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B013VDWXTI.jpg",
-                        "timestamp": "2026-03-10T16:59:56+00:00",
-                        "status_clasificacion": "clasificado",
-                        "categorias": [
-                            "Limpiaparabrisas"
-                        ],
-                        "versiones": [
-                            "__todas__"
-                        ],
-                        "recommendations": 3
-                    },
-                    {
                         "product_id": "B0DLB1B656",
                         "platform": "amazon",
                         "title": "HYFZXWX Hombres/mujeres Te_SLA algodón sudadera con capucha pantalones traje ropa deportiva clásica ",
@@ -6200,11 +6168,13 @@
                         "rating": null,
                         "reviews_count": null,
                         "bot_message_id": 1692,
-                        "status_clasificacion": "pendiente",
+                        "status_clasificacion": "clasificado",
                         "categorias": [
-                            "Otros"
+                            "Varios"
                         ],
-                        "versiones": []
+                        "versiones": [
+                            "__todas__"
+                        ]
                     },
                     {
                         "product_id": "1005008650993803",
@@ -12824,54 +12794,6 @@
                         "bot_message_id": 6623
                     },
                     {
-                        "product_id": "1005007987377510",
-                        "platform": "aliexpress",
-                        "title": "Para Tesla Model 3 Y S X Highland 2025, succión eléctrica, cierre frontal de maletero, bloqueo automático de cierre suave eléctrico Frunk",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c45ILyF9",
-                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005007987377510.jpg",
-                        "recommendations": 3,
-                        "votes": {},
-                        "timestamp": "2026-09-01T07:27:04.371575+00:00",
-                        "sale_price": "52.14",
-                        "original_price": "94.80",
-                        "discount": "45%",
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "categorias": [
-                            "Frunk"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "__todas__"
-                        ],
-                        "bot_message_id": 6670
-                    },
-                    {
-                        "product_id": "B0H99MFYXW",
-                        "platform": "amazon",
-                        "title": "Mando Inalámbrico BT compatible con PC , android , P S 4, Conector USB-C",
-                        "affiliate_url": "https://www.amazon.es/dp/B0H99MFYXW?ref=cm_sw_r_cp_ud_dp_PK1AXSPDSNADWXW3FHN4&ref_=cm_sw_r_cp_ud_dp_PK1AXSPDSNADWXW3FHN4&social_share=cm_sw_r_cp_ud_dp_PK1AXSPDSNADWXW3FHN4&tag=energia0d1-21",
-                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B0H99MFYXW.jpg",
-                        "recommendations": 1,
-                        "votes": {},
-                        "timestamp": "2026-09-01T07:55:55.464374+00:00",
-                        "sale_price": "14.48",
-                        "original_price": null,
-                        "discount": null,
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "bot_message_id": 6644,
-                        "status_clasificacion": "clasificado",
-                        "categorias": [
-                            "Gaming"
-                        ],
-                        "versiones": [
-                            "__todas__"
-                        ]
-                    },
-                    {
                         "product_id": "B0CT4CRY8R",
                         "platform": "amazon",
                         "title": "TOPABYTE Spoiler para Tesla Model 3 Highland 2026-2024 Alerón Trasero Coche Original Spoiler Wing Lip Accesorios (Carbón Mate)",
@@ -13646,30 +13568,6 @@
                         ]
                     },
                     {
-                        "product_id": "B084V7JNL2",
-                        "platform": "amazon",
-                        "title": "MANN-FILTER FP 25 015 Filtro de aire de cabina - FreciousPlus Filtro de Polen Biofuncional - para Automóviles + Vehículos de transporte",
-                        "affiliate_url": "https://www.amazon.es/dp/B084V7JNL2?ref=cm_sw_r_cso_cp_apin_dp_NYQDJACZV63J6RWBWDQT&ref_=cm_sw_r_cso_cp_apin_dp_NYQDJACZV63J6RWBWDQT&social_share=cm_sw_r_cso_cp_apin_dp_NYQDJACZV63J6RWBWDQT&tag=energia0d1-21",
-                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B084V7JNL2.jpg",
-                        "recommendations": 6,
-                        "votes": {},
-                        "timestamp": "2026-09-11T05:26:32.251126+00:00",
-                        "sale_price": "14.29",
-                        "original_price": null,
-                        "discount": null,
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "categorias": [
-                            "Filtros"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "__todas__"
-                        ],
-                        "bot_message_id": 7208
-                    },
-                    {
                         "product_id": "1005007224069865",
                         "platform": "aliexpress",
                         "title": "Protector de tubo refrigerante para chasis de coche, placa protectora inferior, protección de chasis, cubierta de conducto de refrigeración para Tesla Model 3 Model Y, accesorios para automóviles",
@@ -14153,33 +14051,6 @@
                         "bot_message_id": 7544
                     },
                     {
-                        "product_id": "B0DGT8PRHH",
-                        "platform": "amazon",
-                        "title": "dé Cargador Coche Electrico App 3,7kW [7m, Monofásico, 6-16A] Cargador Vehiculo Electrico con LCD Pantalla Potencia Ajustable, Cargador Carro Electrico para Model Y/3, EV3 y vehículos BEV/PHEV",
-                        "affiliate_url": "https://www.amazon.es/dp/B0DGT8PRHH?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
-                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B0DGT8PRHH.jpg",
-                        "recommendations": 4,
-                        "votes": {
-                            "admin_5736126687_1778579219131": 1,
-                            "admin_5736126687_1778579244213": 1
-                        },
-                        "timestamp": "2026-09-17T07:27:05.041772+00:00",
-                        "sale_price": "124.95",
-                        "original_price": null,
-                        "discount": null,
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": true,
-                        "categorias": [
-                            "Cargadores"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "__todas__"
-                        ],
-                        "bot_message_id": 7553
-                    },
-                    {
                         "product_id": "B0CCN9NHTC",
                         "platform": "amazon",
                         "title": "Crucial BX500 SATA SSD 1TB Interno 2.5\", hasta 540MB/s, Compatible con Ordenador Portátil y de Sobremesa (PC), 3D NAND, Aceleración de Escritura dinámica - CT1000BX500SSD101",
@@ -14392,7 +14263,7 @@
                             "Ambientadores"
                         ],
                         "versiones": [
-                            "Juniper (2025+) - Premium"
+                            "__todas__"
                         ]
                     },
                     {
@@ -14757,30 +14628,6 @@
                         "versiones": [
                             "__todas__"
                         ]
-                    },
-                    {
-                        "product_id": "1005007723003062",
-                        "platform": "aliexpress",
-                        "title": "ABS modelo 3 Highland 2024 2025 2026 alerón Original para Tesla Model3 alas de maletero trasero modificación piezas exteriores de coche estilo de coche",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c2IAebs9",
-                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005007723003062.jpg",
-                        "recommendations": 8,
-                        "votes": {},
-                        "timestamp": "2026-09-23T17:24:31.316478+00:00",
-                        "sale_price": "50.46",
-                        "original_price": "70.09",
-                        "discount": "28%",
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "categorias": [
-                            "Alerones"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "__todas__"
-                        ],
-                        "bot_message_id": 7756
                     },
                     {
                         "product_id": "1005006261322161",
@@ -15221,30 +15068,6 @@
                         "bot_message_id": 7861
                     },
                     {
-                        "product_id": "B0GT95VTJX",
-                        "platform": "amazon",
-                        "title": "Juego de Alfombrillas 6 Piezas para Tesla Model 3 (2024-2025) - Tapetes de TPE Impermeables y Antideslizantes, Incluye Protector de Maletero y Frunk, Protección Todo Clima (Model 3)",
-                        "affiliate_url": "https://www.amazon.es/dp/B0GT95VTJX/ref=cm_sw_r_as_gl_apa_gl_i_KHW2KKS134WSC96RQMVE?linkCode=ml1&tag=energia0d1-21&linkId=185c10394ca5e3178fda493f77d49eff",
-                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B0GT95VTJX.jpg",
-                        "recommendations": 3,
-                        "votes": {},
-                        "timestamp": "2026-09-28T11:19:19.689270+00:00",
-                        "sale_price": "109.99",
-                        "original_price": null,
-                        "discount": null,
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "categorias": [
-                            "Alfombrillas"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "__todas__"
-                        ],
-                        "bot_message_id": 7866
-                    },
-                    {
                         "product_id": "B0FN43937H",
                         "platform": "amazon",
                         "title": "3W Alfombrilla para Tesla Model 3 Highland 2024-2025, Incluye Moquetas 1ª y 2ª Fila, Thorex™ para Todo Tipo de Clima, Juego Completo de Alfombrillas Impermeables y Antideslizantes",
@@ -15633,17 +15456,622 @@
                         "bot_message_id": 7981
                     },
                     {
-                        "product_id": "1005012212238998",
+                        "product_id": "1005009778046382",
                         "platform": "aliexpress",
-                        "title": "Sensores de Presión de Neumáticos para Tesla Model 3 Y S X 2020-2024, Sensor TPMS Bluetooth BLE, Reemplaza 1490701-01-B 1490701-01-C",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c4Mc7cXF",
-                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005012212238998.jpg",
-                        "recommendations": 4,
+                        "title": "4 unids/set adecuado para Tesla Model 3 Y S X insignia de tapa central de rueda, tapa de cubo de rueda modificada ABS 56mm rueda de coche original Tesla cent",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3ZhzEiD",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005009778046382.jpg",
+                        "recommendations": 1,
                         "votes": {},
-                        "timestamp": "2026-10-03T18:51:56.463048+00:00",
+                        "timestamp": "2026-10-04T00:04:37.153792+00:00",
                         "sale_price": null,
                         "original_price": null,
                         "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 7988,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0DGT8PRHH",
+                        "platform": "amazon",
+                        "title": "dé Cargador Coche Electrico App 3,7kW [7m, Monofásico, 6-16A] Cargador Vehiculo Electrico con LCD Pantalla Potencia Ajustable, Cargador Carro Electrico para Model Y/3, EV3 y vehículos BEV/PHEV",
+                        "affiliate_url": "https://www.amazon.es/dp/B0DGT8PRHH?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B0DGT8PRHH.jpg",
+                        "recommendations": 7,
+                        "votes": {
+                            "admin_5736126687_1778579219131": 1,
+                            "admin_5736126687_1778579244213": 1
+                        },
+                        "timestamp": "2026-10-04T12:48:10.373030+00:00",
+                        "sale_price": "124.95",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": true,
+                        "categorias": [
+                            "Cargadores"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 8000
+                    },
+                    {
+                        "product_id": "1005009223053333",
+                        "platform": "aliexpress",
+                        "title": "Luz de Proyección LED HD 2X para Puerta de Coche, Accesorio para Tesla Model Y RWD 2025, Model 3 S X 2020 2021 2022 2023 2024 2025 2026",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c2JTriXT",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005009223053333.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-04T16:08:23.853179+00:00",
+                        "sale_price": "7.90",
+                        "original_price": "7.90",
+                        "discount": "0%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8004,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Luces"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005008297284529",
+                        "platform": "aliexpress",
+                        "title": "Cargador Feyree Tipo 2 para Vehículos Eléctricos con Función de Parada con un Toque, Enchufe de Carga de 16A/32A para Estación de Carga de Vehículos Eléctricos",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c2uqs09R",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005008297284529.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-04T16:31:56.491183+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8011,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Cargadores"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005011869963674",
+                        "platform": "aliexpress",
+                        "title": "Protección de Cámara Frontal para Tesla Model Y y Model 3 2025-2026, Accesorios para Auto, Cubierta de Lente de Cámara Frontal Anticolisión",
+                        "affiliate_url": "https://es.aliexpress.com/item/1005011869963674.html?invitationCode=UHVIUUhTRHQ3NXJtOVBjSjNNbWxubGYxRFdXWEx6eFQxdS9OT1JQUytYQWpmdlBzNkVmWTlBPT0&srcSns=sns_Copy&spreadType=socialShare&social_params=61636089618&bizType=ProductDetail&spreadCode=UHVIUUhTRHQ3NXJtOVBjSjNNbWxubGYxRFdXWEx6eFQxdS9OT1JQUytYQWpmdlBzNkVmWTlBPT0&aff_fcid=c554c47537f14ff39b7c4a55073678fa-1791140830787-00868-_EHICzWQ&tt=MG&aff_fsk=_EHICzWQ&aff_platform=default&sk=_EHICzWQ&aff_trace_key=c554c47537f14ff39b7c4a55073678fa-1791140830787-00868-_EHICzWQ&shareId=61636089618&businessType=ProductDetail&platform=AE&terminal_id=3efad15cbddc4193b6dbc7f7cd830a51&afSmartRedirect=y&gatewayAdapt=glo2esp",
+                        "image": "https://ae-pic-a1.aliexpress-media.com/kf/Se36ec21c1bf742b98ba75eb29141e298a.jpg",
+                        "recommendations": 3,
+                        "votes": {},
+                        "timestamp": "2026-10-04T19:07:17.459725+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 8058
+                    },
+                    {
+                        "product_id": "1005007987377510",
+                        "platform": "aliexpress",
+                        "title": "Para Tesla Model 3 Y S X Highland 2025, succión eléctrica, cierre frontal de maletero, bloqueo automático de cierre suave eléctrico Frunk",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c2zDt08d",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005007987377510.jpg",
+                        "recommendations": 4,
+                        "votes": {},
+                        "timestamp": "2026-10-04T19:14:25.860489+00:00",
+                        "sale_price": "58.83",
+                        "original_price": "98.05",
+                        "discount": "40%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Frunk"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 8056
+                    },
+                    {
+                        "product_id": "1005007315325897",
+                        "platform": "aliexpress",
+                        "title": "Tapacubos Tesla Model 3 Highland 18 4 Uds. Estilo Storm",
+                        "affiliate_url": "https://es.aliexpress.com/item/1005007315325897.html?invitationCode=cFlrR2czdnFMV0YxV2RzRkxGSkpPcUVPak0xcHdsT0ZNaHlXVG9tcWJKd2pmdlBzNkVmWTlBPT0&srcSns=sns_Telegram&spreadType=socialShare&social_params=61642302328&bizType=ProductDetail&spreadCode=cFlrR2czdnFMV0YxV2RzRkxGSkpPcUVPak0xcHdsT0ZNaHlXVG9tcWJKd2pmdlBzNkVmWTlBPT0&aff_fcid=29681cf3e35b481f8054018697f39883-1791196798419-01100-_EzlFIX8&tt=MG&aff_fsk=_EzlFIX8&aff_platform=default&sk=_EzlFIX8&aff_trace_key=29681cf3e35b481f8054018697f39883-1791196798419-01100-_EzlFIX8&shareId=61642302328&businessType=ProductDetail&platform=AE&terminal_id=5e7e6b5173b34ecfbdd2e7ee7d51c70c&afSmartRedirect=y&gatewayAdapt=glo2esp",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005007315325897.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T10:40:05.727534+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8064,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005007723003062",
+                        "platform": "aliexpress",
+                        "title": "ABS modelo 3 Highland 2024 2025 2026 alerón Original para Tesla Model3 alas de maletero trasero modificación piezas exteriores de coche estilo de coche",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c2R5QqHJ",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005007723003062.jpg",
+                        "recommendations": 9,
+                        "votes": {},
+                        "timestamp": "2026-10-05T15:04:33.608300+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Alerones"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 8073
+                    },
+                    {
+                        "product_id": "B0G7X65K5X",
+                        "platform": "amazon",
+                        "title": "[8 PZS] GAFAT Tesla Model 3 Highland Standard Premium 2026 2025 2024 Alfombrillas Goma + Maletero Juego Completo, TPE Todo Tipo de Climas, Borde Alto Escaneo 3D Original OEM, Protección 360°",
+                        "affiliate_url": "https://www.amazon.es/dp/B0G7X65K5X?th=1&linkCode=sl2&tag=energia0d1-21&linkId=3f9ffaccbbccc3146ca3b66a788f66f2&ref_=as_li_ss_tl&ascsubtag=srctok-5815fc88993b8020&btn_type=ss&btn_ref=srctok-5815fc88993b8020",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B0G7X65K5X.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T17:01:54.409520+00:00",
+                        "sale_price": "208.03",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8080,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Alfombrillas"
+                        ],
+                        "versiones": [
+                            "Highland (2024+) - Standard",
+                            "Highland (2024+) - Premium"
+                        ]
+                    },
+                    {
+                        "product_id": "B0CW7DYS9W",
+                        "platform": "amazon",
+                        "title": "Spigen Tesla Model Y 2026 Juniper y Model 3 Highland 2026 Console Organizer Caja de Almacenamiento Oculta para Consola Central Highland Diseñada para Accesorio Tesla - Edición Carbono",
+                        "affiliate_url": "https://www.amazon.es/dp/B0CW7DYS9W?th=1&linkCode=sl2&tag=energia0d1-21&linkId=5849c013522158c08bd76f1f982331c7&ref_=as_li_ss_tl&ascsubtag=srctok-6f5349bdabff48c2&btn_type=ss&btn_ref=srctok-6f5349bdabff48c2",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B0CW7DYS9W.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T17:16:30.197042+00:00",
+                        "sale_price": "29.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8085,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Organizadores"
+                        ],
+                        "versiones": [
+                            "Highland (2024+) - Premium",
+                            "Highland (2024+) - Standard"
+                        ]
+                    },
+                    {
+                        "product_id": "1005013168188255",
+                        "platform": "aliexpress",
+                        "title": "Sistema Inalámbrico de Control de Presión de Neumáticos, Control por Aplicación, Bluetooth 5.0, Sensores Externos para RV, SUV, MPV, Coche, Motocicleta",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c4aLepYp",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005013168188255.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T23:01:08.162070+00:00",
+                        "sale_price": "24.97",
+                        "original_price": "55.48",
+                        "discount": "55%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8101,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B013VDWXTI",
+                        "platform": "amazon",
+                        "title": "BOSCH Wischblatt Aerowtin A102S 3397014116",
+                        "affiliate_url": "https://www.amazon.es/dp/B013VDWXTI?smid=A1AT7YVPFBWXBL&ref_=chk_typ_imgToDp&th=1&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B013VDWXTI.jpg",
+                        "recommendations": 4,
+                        "votes": {},
+                        "timestamp": "2026-10-06T05:08:47.226131+00:00",
+                        "sale_price": "18.11",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Limpiaparabrisas"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 8103
+                    },
+                    {
+                        "product_id": "B000S6AQOQ",
+                        "platform": "amazon",
+                        "title": "SONAX Champú concentrado alto brillo (1 L) para el lavado de coche",
+                        "affiliate_url": "https://www.amazon.es/dp/B000S6AQOQ?ref=cm_sw_r_cso_cp_apan_dp_253DDKK7EW86R7B81Z6S&ref_=cm_sw_r_cso_cp_apan_dp_253DDKK7EW86R7B81Z6S&social_share=cm_sw_r_cso_cp_apan_dp_253DDKK7EW86R7B81Z6S&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B000S6AQOQ.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-06T07:36:07.556535+00:00",
+                        "sale_price": "9.21",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8115,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Limpieza"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0H99MFYXW",
+                        "platform": "amazon",
+                        "title": "Mando Inalámbrico BT compatible con PC , android , P S 4, Conector USB-C",
+                        "affiliate_url": "https://www.amazon.es/Mando-Inal%C3%A1mbrico-compatible-android-Conector/dp/B0H99MFYXW/ref=sr_1_1?__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=3O1787X51BAV4&dib=eyJ2IjoiMSJ9.pQk9O00JK1Kp8ePkSl9eLw.S-py4sCMnszQQHWV2Kx-TjbwtKXGppRuaBuwecByICc&dib_tag=se&keywords=8716309132930&qid=1791286882&sprefix=8716309132930%2Caps%2C96&sr=8-1&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B0H99MFYXW.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-06T11:42:49.750570+00:00",
+                        "sale_price": "18.21",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Gaming"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 8120
+                    },
+                    {
+                        "product_id": "B0FGJ1CXXL",
+                        "platform": "amazon",
+                        "title": "Organizador de consola central trasera para modelo Y Juniper 2025, caja de almacenamiento central trasera, organizador de asiento de segunda fila, accesorios interiores",
+                        "affiliate_url": "https://www.amazon.es/JSUDQR-Organizador-Juniper-2025-almacenamiento/dp/B0FGJ1CXXL?tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B0FGJ1CXXL.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-06T14:43:58.802037+00:00",
+                        "sale_price": "39.91",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8126,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Organizadores"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0GT95VTJX",
+                        "platform": "amazon",
+                        "title": "Juego de Alfombrillas 6 Piezas para Tesla Model 3 (2024-2026) - Tapetes de TPE Impermeables y Antideslizantes, Incluye Protector de Maletero y Frunk, Protección Todo Clima (Model 3)",
+                        "affiliate_url": "https://www.amazon.es/dp/B0GT95VTJX?ref=cm_sw_r_cso_cp_apin_dp_3XBA1N3B950N5859AH4Q&ref_=cm_sw_r_cso_cp_apin_dp_3XBA1N3B950N5859AH4Q&social_share=cm_sw_r_cso_cp_apin_dp_3XBA1N3B950N5859AH4Q&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B0GT95VTJX.jpg",
+                        "recommendations": 5,
+                        "votes": {},
+                        "timestamp": "2026-10-06T18:43:58.298817+00:00",
+                        "sale_price": "104.48",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Alfombrillas"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 8141
+                    },
+                    {
+                        "product_id": "601103759143492",
+                        "platform": "temu",
+                        "title": "TESLA MODEL 3",
+                        "affiliate_url": "https://www.temu.com/kuiper/uk1.html?subj=goods-detail&goods_id=601103759143492&_x_ads_channel=kol_affiliate&_x_campaign=affiliate&_x_cid=4076000428kol_affiliate&_x_ads_csite=affiliate_goods_share&g_site=109&g_lg=es&g_ccy=EUR",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/temu_601103759143492.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-06T22:36:28.947456+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8146,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "603503200155544",
+                        "platform": "temu",
+                        "title": "TESLA MODEL 3",
+                        "affiliate_url": "https://www.temu.com/kuiper/uk1.html?subj=goods-detail&goods_id=603503200155544&_x_ads_channel=kol_affiliate&_x_campaign=affiliate&_x_cid=4076000428kol_affiliate&_x_ads_csite=affiliate_goods_share&g_site=109&g_lg=es&g_ccy=EUR",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/temu_603503200155544.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-06T22:37:56.590161+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8147,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "605844309668653",
+                        "platform": "temu",
+                        "title": "TESLA MODEL 3",
+                        "affiliate_url": "https://www.temu.com/kuiper/uk1.html?subj=goods-detail&goods_id=605844309668653&_x_ads_channel=kol_affiliate&_x_campaign=affiliate&_x_cid=4076000428kol_affiliate&_x_ads_csite=affiliate_goods_share&g_site=109&g_lg=es&g_ccy=EUR",
+                        "image": null,
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-07T06:55:02.663077+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8150,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B077SBWF3M",
+                        "platform": "amazon",
+                        "title": "CarPro Bug Out limpiar mosquitos coche - Formato 500 mL",
+                        "affiliate_url": "https://www.amazon.es/CarPro-Bug-limpiar-mosquitos-coche/dp/B077SBWF3M?tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B077SBWF3M.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-07T14:34:26.396516+00:00",
+                        "sale_price": "14.71",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8163,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Limpieza"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "606836044469920",
+                        "platform": "temu",
+                        "title": "TESLA MODEL 3",
+                        "affiliate_url": "https://www.temu.com/kuiper/uk1.html?subj=goods-detail&goods_id=606836044469920&_x_ads_channel=kol_affiliate&_x_campaign=affiliate&_x_cid=4076000428kol_affiliate&_x_ads_csite=affiliate_goods_share&g_site=109&g_lg=es&g_ccy=EUR",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/temu_606836044469920.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-07T14:50:42.979002+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8165,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005009024278767",
+                        "platform": "aliexpress",
+                        "title": "Para Tesla Model Y 3 Highland mejora almohadillas de Pedal cubierta antideslizante acelerador freno reposapiés rendimiento esteras de aluminio Accesorios",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3cubRlL",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005009024278767.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-07T19:34:22.880847+00:00",
+                        "sale_price": "8.24",
+                        "original_price": "8.24",
+                        "discount": "0%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8167,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Pedales"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B084V7JNL2",
+                        "platform": "amazon",
+                        "title": "MANN-FILTER FP 25 015 Filtro de aire de cabina - FreciousPlus Filtro de Polen Biofuncional - para Automóviles + Vehículos de transporte",
+                        "affiliate_url": "https://www.amazon.es/dp/B084V7JNL2?ref=cm_sw_r_cso_cp_apin_dp_XNRXFP549RK4BHJ98WK2&ref_=cm_sw_r_cso_cp_apin_dp_XNRXFP549RK4BHJ98WK2&social_share=cm_sw_r_cso_cp_apin_dp_XNRXFP549RK4BHJ98WK2&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B084V7JNL2.jpg",
+                        "recommendations": 8,
+                        "votes": {},
+                        "timestamp": "2026-10-08T10:42:19.767600+00:00",
+                        "sale_price": "12.84",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Filtros"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 8172
+                    },
+                    {
+                        "product_id": "B0DHGM1S8B",
+                        "platform": "amazon",
+                        "title": "Soporte giratorio de pantalla para Tesla Model Y Juniper 2026 2025 & Model 3 Highland 2025 2024 Izquierda/Derecha 30° Arriba/Abajo 15° Rotación en cuatro direcciones Aleación de aluminio Soporte",
+                        "affiliate_url": "https://www.amazon.es/dp/B0DHGM1S8B?ref=cm_sw_r_cso_cp_apan_dp_HM0MZ7Y9NCX1FCF7DRSB&ref_=cm_sw_r_cso_cp_apan_dp_HM0MZ7Y9NCX1FCF7DRSB&social_share=cm_sw_r_cso_cp_apan_dp_HM0MZ7Y9NCX1FCF7DRSB&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B0DHGM1S8B.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-08T17:00:22.443546+00:00",
+                        "sale_price": "79.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8177,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Consola"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005006520953547",
+                        "platform": "aliexpress",
+                        "title": "Para Tesla Model 3 Highland parachoques delantero parrilla malla entrada de aire cubierta de ventilación protectores de rejilla Protector antiinsectos accesorios de red",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c2QykzKZ",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005006520953547.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-08T19:10:39.319536+00:00",
+                        "sale_price": "8.75",
+                        "original_price": "8.75",
+                        "discount": "0%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Molduras"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 8187
+                    },
+                    {
+                        "product_id": "1005012212238998",
+                        "platform": "aliexpress",
+                        "title": "Sensores de Presión de Neumáticos para Tesla Model 3 Y S X 2020-2024, Sensor TPMS Bluetooth BLE, Reemplaza 1490701-01-B 1490701-01-C",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3NUQtvX",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005012212238998.jpg",
+                        "recommendations": 5,
+                        "votes": {},
+                        "timestamp": "2026-10-08T19:12:35.112566+00:00",
+                        "sale_price": "18.01",
+                        "original_price": "37.52",
+                        "discount": "52%",
                         "rating": null,
                         "reviews_count": null,
                         "price_corrected": false,
@@ -15654,7 +16082,79 @@
                         "versiones": [
                             "__todas__"
                         ],
-                        "bot_message_id": 7985
+                        "bot_message_id": 8191
+                    },
+                    {
+                        "product_id": "B0GY6GB73J",
+                        "platform": "amazon",
+                        "title": "Spigen EZ Fit Protector Pantalla [1P] para Tesla Model 3 (2026-2024) 15.4\"",
+                        "affiliate_url": "https://www.amazon.es/dp/B0GY6GB73J?ref=ppx_pop_mob_ap_share&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B0GY6GB73J.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-08T20:46:17.865594+00:00",
+                        "sale_price": "41.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8193,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Pantallas"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005012046401170",
+                        "platform": "aliexpress",
+                        "title": "Cubiertas de Caliper de Freno para Tesla Model 3 Highland 2024 2025 2026, Accesorios (4 Piezas) con Calcomanías para Ruedas de 18 y 19 Pulgadas (No Compatible con Modelos 2017-2023)",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3Y6uCLf",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005012046401170.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-09T13:05:44.489843+00:00",
+                        "sale_price": "76.48",
+                        "original_price": "164.28",
+                        "discount": "53%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8200,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Ruedas"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0FNMQCRCV",
+                        "platform": "amazon",
+                        "title": "Zacro Cámara Bebé Coche Asiento Trasero HD 1080P, Espejo Retrovisor Camara Bebe Pantalla 4.3'', USB-C Plug and Play Monitores de Bebé para Coche con Visión Nocturna, Ángulo de Visión Amplio",
+                        "affiliate_url": "https://www.amazon.es/dp/B0FNMQCRCV?ref=cm_sw_r_apan_dp_BCYFKS4Z2AT58AP6AW2W_1&ref_=cm_sw_r_apan_dp_BCYFKS4Z2AT58AP6AW2W_1&social_share=cm_sw_r_apan_dp_BCYFKS4Z2AT58AP6AW2W_1&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B0FNMQCRCV.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-09T19:37:14.251626+00:00",
+                        "sale_price": "42.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8208,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
                     }
                 ],
                 "topic_name": "Tesla Model 3"
@@ -19304,30 +19804,6 @@
                         ]
                     },
                     {
-                        "product_id": "B086B2GZ1F",
-                        "platform": "amazon",
-                        "title": "devolo Magic 2 WiFi next Starter Kit, adaptador WLAN Powerline de hasta 2400 Mbit/s, red WLAN, enchufe WLAN, 2 puertos Gigabit LAN, dLAN 2.0, color blanco",
-                        "affiliate_url": "https://www.amazon.es/dp/B086B2GZ1F?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
-                        "image": "img/Tesla_chuches/Tesla_Model_Y/amazon_B086B2GZ1F.jpg",
-                        "recommendations": 1,
-                        "votes": {},
-                        "timestamp": "2026-05-28T06:57:15.683180+00:00",
-                        "sale_price": null,
-                        "original_price": null,
-                        "discount": null,
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "bot_message_id": 2351,
-                        "status_clasificacion": "clasificado",
-                        "categorias": [
-                            "Wifi"
-                        ],
-                        "versiones": [
-                            "__todas__"
-                        ]
-                    },
-                    {
                         "product_id": "B08D8QTNKG",
                         "platform": "amazon",
                         "title": "TP-Link TL-WPA8631P Kit - Repetidor WiFi PLC, Powerline WiFi AC1200 en 2.4GHz/5GHz, 3xPuerto Gigabit + 1xPuerto Gigabit, Enchufe Integrado, 2X2 MIMO, Auto Sincronización, Plug&Play, 2piezas, Negro",
@@ -20257,32 +20733,6 @@
                         "bot_message_id": 3159
                     },
                     {
-                        "product_id": "B0FPJ6RYFN",
-                        "platform": "amazon",
-                        "title": "Spigen Glas.tR EZ Fit Protector Pantalla para Tesla Model Y Standard/Performance/Premium(2026) 16\", Model Y L(2026) 16\", 1 Unidad, Instalación Fácil, Anti Reflejo, Mat, Anti-Huellas, Dureza 10H+",
-                        "affiliate_url": "https://www.amazon.es/dp/B0FPJ6RYFN?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
-                        "image": "https://m.media-amazon.com/images/I/41yv1+TaJ8L._SL500_.jpg",
-                        "recommendations": 2,
-                        "votes": {},
-                        "timestamp": "2026-06-12T15:38:01.120147+00:00",
-                        "sale_price": null,
-                        "original_price": null,
-                        "discount": null,
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "categorias": [
-                            "Pantallas"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "Juniper (2025+) - Standard",
-                            "Juniper (2025+) - Premium"
-                        ],
-                        "bot_message_id": 3152,
-                        "link": "https://www.amazon.es/dp/B0FPJ6RYFN?tag=energia0d1-21&linkCode=ogi&th=1&psc=1"
-                    },
-                    {
                         "product_id": "B0CZ8SDSHK",
                         "platform": "amazon",
                         "title": "4 Piezas Gato Hidráulico Almohadilla de Goma Compatible Con Tesla Model 3/Y/S/X, Adaptador Jack Pad Herramienta Puntos de Elevación Para Tesla Accesorios",
@@ -20449,31 +20899,6 @@
                             "__todas__"
                         ],
                         "bot_message_id": 3564
-                    },
-                    {
-                        "product_id": "B0F4R82QLK",
-                        "platform": "amazon",
-                        "title": "3W Alfombrillas de Coche para Tesla Model Y 2025 2026 Juniper Premium/Performance, Compatible con Standard, Thorex™ para Todo Clima para 1ª y 2ª Fila, Juego Completo, Accesorios, Negro",
-                        "affiliate_url": "https://www.amazon.es/dp/B0F4R82QLK?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
-                        "image": "img/Tesla_chuches/Tesla_Model_Y/amazon_B0F4R82QLK.jpg",
-                        "recommendations": 3,
-                        "votes": {},
-                        "timestamp": "2026-06-20T13:10:23.840193+00:00",
-                        "sale_price": null,
-                        "original_price": null,
-                        "discount": null,
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "bot_message_id": 3587,
-                        "status_clasificacion": "clasificado",
-                        "categorias": [
-                            "Alfombrillas"
-                        ],
-                        "versiones": [
-                            "Juniper (2025+) - Standard",
-                            "Juniper (2025+) - Premium"
-                        ]
                     },
                     {
                         "product_id": "B0FN3Z95PN",
@@ -20952,30 +21377,6 @@
                         "reviews_count": null,
                         "price_corrected": false,
                         "bot_message_id": 4167,
-                        "status_clasificacion": "clasificado",
-                        "categorias": [
-                            "Herramientas"
-                        ],
-                        "versiones": [
-                            "__todas__"
-                        ]
-                    },
-                    {
-                        "product_id": "B08M3TXN81",
-                        "platform": "amazon",
-                        "title": "BANGTING Almohadilla Elevación para Tesla Model 3/Y/S/X (2013-2026), Juego de 4 Juego de 4 Tacos de Goma para Elevador y Gato Hidráulico | Incluye Bolsa de Almacenamiento | Universal Jack Pad",
-                        "affiliate_url": "https://www.amazon.es/dp/B08M3TXN81?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
-                        "image": "img/Tesla_chuches/Tesla_Model_Y/amazon_B08M3TXN81.jpg",
-                        "recommendations": 1,
-                        "votes": {},
-                        "timestamp": "2026-07-03T23:00:30.667942+00:00",
-                        "sale_price": null,
-                        "original_price": null,
-                        "discount": null,
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "bot_message_id": 4169,
                         "status_clasificacion": "clasificado",
                         "categorias": [
                             "Herramientas"
@@ -24120,30 +24521,6 @@
                         "bot_message_id": 7358
                     },
                     {
-                        "product_id": "1005008786883431",
-                        "platform": "aliexpress",
-                        "title": "TEKSY para Tesla Model YL Y L / Y 2026 Juniper, Rejilla de Ventilación Interior, Parachoques Inferior, Malla Antiinsectos, Entrada de Aire, Cubierta Antipolvo",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c2QJ3GaD",
-                        "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005008786883431.jpg",
-                        "recommendations": 1,
-                        "votes": {},
-                        "timestamp": "2026-09-13T15:01:45.971713+00:00",
-                        "sale_price": "12.40",
-                        "original_price": "27.75",
-                        "discount": "55%",
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "bot_message_id": 7360,
-                        "status_clasificacion": "clasificado",
-                        "categorias": [
-                            "Molduras"
-                        ],
-                        "versiones": [
-                            "__todas__"
-                        ]
-                    },
-                    {
                         "product_id": "B0BWL7M1B5",
                         "platform": "amazon",
                         "title": "Spigen Tesla CryoShade Parasol Coche Delantero para Parabrisas contra UV",
@@ -24263,30 +24640,6 @@
                             "Juniper (2025+) - Premium"
                         ],
                         "bot_message_id": 7500
-                    },
-                    {
-                        "product_id": "1005012303374293",
-                        "platform": "aliexpress",
-                        "title": "Organizador de Consola Central para Tesla Model Y Standard 2026, Caja de Almacenamiento para Apoyabrazos, Bandeja Protectora, Accesorios Interiores",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3zXPPvF",
-                        "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005012303374293.jpg",
-                        "recommendations": 2,
-                        "votes": {},
-                        "timestamp": "2026-09-15T18:50:24.134519+00:00",
-                        "sale_price": "8.11",
-                        "original_price": "19.37",
-                        "discount": "58%",
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "categorias": [
-                            "Organizadores"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "Juniper (2025+) - Standard"
-                        ],
-                        "bot_message_id": 7502
                     },
                     {
                         "product_id": "1005007066440252",
@@ -24416,7 +24769,7 @@
                         "title": "dé Cargador Coche Electrico App 3,7kW [7m, Monofásico, 6-16A] Cargador Vehiculo Electrico con LCD Pantalla Potencia Ajustable, Cargador Carro Electrico para Model Y/3, EV3 y vehículos BEV/PHEV",
                         "affiliate_url": "https://www.amazon.es/dp/B0DGT8PRHH?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
                         "image": "img/Tesla_chuches/Tesla_Model_3/amazon_B0DGT8PRHH.jpg",
-                        "recommendations": 4,
+                        "recommendations": 7,
                         "votes": {},
                         "timestamp": "2026-09-21T18:39:50.542778+00:00",
                         "sale_price": "124.95",
@@ -24817,6 +25170,416 @@
                         "versiones": [
                             "__todas__"
                         ]
+                    },
+                    {
+                        "product_id": "1005012086408013",
+                        "platform": "aliexpress",
+                        "title": "Alfombrillas para Tesla Model Y 2025 2026 RWD AWD, Alfombrillas para Maletero, Revestimiento de Carga, Alfombrillas para Respaldo, Accesorios (Solo Modelos Estándar)",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c4VHAEev",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005012086408013.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-04T12:40:11.915532+00:00",
+                        "sale_price": "19.41",
+                        "original_price": "41.30",
+                        "discount": "53%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 7998,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Alfombrillas"
+                        ],
+                        "versiones": [
+                            "Juniper (2025+) - Standard"
+                        ]
+                    },
+                    {
+                        "product_id": "B086B2GZ1F",
+                        "platform": "amazon",
+                        "title": "devolo Magic 2 WiFi next Starter Kit, adaptador WLAN Powerline de hasta 2400 Mbit/s, red WLAN, enchufe WLAN, 2 puertos Gigabit LAN, dLAN 2.0, color blanco",
+                        "affiliate_url": "https://www.amazon.es/dp/B086B2GZ1F?ref=cm_sw_r_cso_cp_apan_dp_QFM75SPHD48D52VZ93HA&ref_=cm_sw_r_cso_cp_apan_dp_QFM75SPHD48D52VZ93HA&social_share=cm_sw_r_cso_cp_apan_dp_QFM75SPHD48D52VZ93HA&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/amazon_B086B2GZ1F.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-04T16:28:56.367338+00:00",
+                        "sale_price": "214.21",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Wifi"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 8007
+                    },
+                    {
+                        "product_id": "1005011869963674",
+                        "platform": "aliexpress",
+                        "title": "Protección de Cámara Frontal para Tesla Model Y y Model 3 2025-2026, Accesorios para Auto, Cubierta de Lente de Cámara Frontal Anticolisión",
+                        "affiliate_url": "https://es.aliexpress.com/item/1005011869963674.html?invitationCode=UHVIUUhTRHQ3NXJtOVBjSjNNbWxubGYxRFdXWEx6eFQxdS9OT1JQUytYQWpmdlBzNkVmWTlBPT0&srcSns=sns_Copy&spreadType=socialShare&social_params=61636089618&bizType=ProductDetail&spreadCode=UHVIUUhTRHQ3NXJtOVBjSjNNbWxubGYxRFdXWEx6eFQxdS9OT1JQUytYQWpmdlBzNkVmWTlBPT0&aff_fcid=3f55bdf7ce3244bfbbaf60a5e0bd07b0-1791140837725-07164-_EHICzWQ&tt=MG&aff_fsk=_EHICzWQ&aff_platform=default&sk=_EHICzWQ&aff_trace_key=3f55bdf7ce3244bfbbaf60a5e0bd07b0-1791140837725-07164-_EHICzWQ&shareId=61636089618&businessType=ProductDetail&platform=AE&terminal_id=bd5000c5d362478f8cf6cc999a8a588f&afSmartRedirect=y&gatewayAdapt=glo2esp",
+                        "image": "https://ae-pic-a1.aliexpress-media.com/kf/Se36ec21c1bf742b98ba75eb29141e298a.jpg",
+                        "recommendations": 3,
+                        "votes": {},
+                        "timestamp": "2026-10-04T19:07:22.248940+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 8054
+                    },
+                    {
+                        "product_id": "B08M3TXN81",
+                        "platform": "amazon",
+                        "title": "BANGTING Almohadilla Elevación para Tesla Model 3/Y/S/X (2013-2026), Juego de 4 Juego de 4 Tacos de Goma para Elevador y Gato Hidráulico | Incluye Bolsa de Almacenamiento | Universal Jack Pad",
+                        "affiliate_url": "https://www.amazon.es/dp/B08M3TXN81?ref=cm_sw_r_cso_cp_apin_dp_GK9R8R16PX95XHFCETCZ&ref_=cm_sw_r_cso_cp_apin_dp_GK9R8R16PX95XHFCETCZ&social_share=cm_sw_r_cso_cp_apin_dp_GK9R8R16PX95XHFCETCZ&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/amazon_B08M3TXN81.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-05T13:38:10.887326+00:00",
+                        "sale_price": "20.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Herramientas"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 8066
+                    },
+                    {
+                        "product_id": "1005010563877572",
+                        "platform": "aliexpress",
+                        "title": "Almohadilla a prueba de patadas para asiento de coche de cuero PU con bolsillos, soporte multifuncional para tableta, funda protectora para respaldo de asiento de coche para niños",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3CvBu8V",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005010563877572.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T14:59:04.221906+00:00",
+                        "sale_price": "11.66",
+                        "original_price": "26.69",
+                        "discount": "56%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8071,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Fundas"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005013266478253",
+                        "platform": "aliexpress",
+                        "title": "Para Tesla Model Y Juniper 2021-2026, alerón trasero de maletero ABS, alerón de labio de cola, accesorios de coche modificados para el exterior",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c4b7pl1F",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005013266478253.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T17:08:41.591251+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8083,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Alerones"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005012303374293",
+                        "platform": "aliexpress",
+                        "title": "Organizador de Consola Central para Tesla Model Y Standard 2026, Caja de Almacenamiento para Apoyabrazos, Bandeja Protectora, Accesorios Interiores",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c2ukFA6v",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005012303374293.jpg",
+                        "recommendations": 3,
+                        "votes": {},
+                        "timestamp": "2026-10-05T17:19:32.110510+00:00",
+                        "sale_price": "9.16",
+                        "original_price": "19.91",
+                        "discount": "54%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Organizadores"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "Juniper (2025+) - Standard"
+                        ],
+                        "bot_message_id": 8087
+                    },
+                    {
+                        "product_id": "B0GSGCRY6L",
+                        "platform": "amazon",
+                        "title": "GAFAT Nuevo 16\" Tesla Model Y Standard Premium (Juniper) Protector de Pantalla de Vidrio, Tesla Model Y Performance 2026 Accesorios Protector para 16\" Navigation Touchscreen, HD Claro 9H Antiarañazos",
+                        "affiliate_url": "https://www.amazon.es/dp/B0GSGCRY6L?ref=cm_sw_r_cso_cp_apan_dp_TCS0HKD250KK1BBJ6C99_2&ref_=cm_sw_r_cso_cp_apan_dp_TCS0HKD250KK1BBJ6C99_2&social_share=cm_sw_r_cso_cp_apan_dp_TCS0HKD250KK1BBJ6C99_2&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/amazon_B0GSGCRY6L.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T18:40:37.942845+00:00",
+                        "sale_price": "27.5",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8095,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Pantallas"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0FPJ6RYFN",
+                        "platform": "amazon",
+                        "title": "Spigen EZ Fit Protector Pantalla [1 Unidad] para Tesla Model Y L(2026) 16\"",
+                        "affiliate_url": "https://www.amazon.es/dp/B0FPJ6RYFN?ref=cm_sw_r_cso_cp_apan_dp_N9X1FX7C3C7TYP7G3Q16&ref_=cm_sw_r_cso_cp_apan_dp_N9X1FX7C3C7TYP7G3Q16&social_share=cm_sw_r_cso_cp_apan_dp_N9X1FX7C3C7TYP7G3Q16&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/amazon_B0FPJ6RYFN.jpg",
+                        "recommendations": 3,
+                        "votes": {},
+                        "timestamp": "2026-10-05T22:48:13.131516+00:00",
+                        "sale_price": "34.19",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Pantallas"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "Juniper (2025+) - Standard",
+                            "Juniper (2025+) - Premium"
+                        ],
+                        "bot_message_id": 8099
+                    },
+                    {
+                        "product_id": "B0FFB1Z99V",
+                        "platform": "amazon",
+                        "title": "dé Electric Car Charger 7.4 kW App [8 m, Single Phase, 6A-32A] Type 2 EEC",
+                        "affiliate_url": "https://www.amazon.es/dp/B0FFB1Z99V?ref=cm_sw_r_ud_dp_YZ5NFVSNVT1EY2R0SZSV&ref_=cm_sw_r_ud_dp_YZ5NFVSNVT1EY2R0SZSV&social_share=cm_sw_r_ud_dp_YZ5NFVSNVT1EY2R0SZSV&language=en-GB&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/amazon_B0FFB1Z99V.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-06T06:15:37.378974+00:00",
+                        "sale_price": "184.45",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8108,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Cargadores"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0F8VJ5SKJ",
+                        "platform": "amazon",
+                        "title": "Morec Schuko Electric Car Charger Type 2 3.68KW [10M, 10A/16A] Single Phase Charging Cable Compatible for All BEV/PHEV with IEC 62196-2 Standard, with Portable Bag",
+                        "affiliate_url": "https://www.amazon.es/dp/B0F8VJ5SKJ?ref=cm_sw_r_ud_dp_YF210D7G329CBERZ1VGM&ref_=cm_sw_r_ud_dp_YF210D7G329CBERZ1VGM&social_share=cm_sw_r_ud_dp_YF210D7G329CBERZ1VGM&language=en-GB&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/amazon_B0F8VJ5SKJ.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-06T06:17:36.072593+00:00",
+                        "sale_price": "159.0",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8110,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Cargadores"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0CXPZMM5C",
+                        "platform": "amazon",
+                        "title": "4PCS Almohadilla de Elevación para el Tesla Model 3/S/X/Y,Almohadillas de Goma Gato Hidraulico,Soporte Tesla Jack Pad Protege,Almohadillas de Goma para Modelo Tesla",
+                        "affiliate_url": "https://www.amazon.es/Almohadilla-Tesla-Model-Almohadillas-Hidraulico/dp/B0CXPZMM5C?__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=ZFXE0KDNB8FA&dib=eyJ2IjoiMSJ9.sbQzlSllbqKglUjK5rR1e6UKgQQ5lPRWKigRlniGHUsuMxFIzOo8lVkfJZ8Cx6Pqek7GJ8dKZo0R_EN9M8gCg1CZRLIQf0Drn77uBItYsvNlgxLoZwuPk2lTzTaBkX3MoWxy3zBhBq96BwDkAufxSrhSmrpleyNd5kW2nzh24uyXfOWegkZN03yBd3QHb0QZFzdvb7SXS1kt5I9GcsGcvjxluBBcF0Shzwon2e6-z6OcQuQKHSqh93mkH6Xmj1zFpYhVUk9liAftkhpX5NcORyzZ4N3JopjrsKC1hdsMdro.3fZjNlRH2UFKh10iFSCafA7YcAt0w7o3ZSRdOaJulxs&dib_tag=se&keywords=tesla&qid=1791267350&sprefix=tesla%2Caps%2C125&sr=8-1&th=1&linkCode=sl2&tag=energia0d1-21&linkId=63e14d8f887dc5af3b0c52dff0a2c405&ref_=as_li_ss_tl&ascsubtag=srctok-1a9f94d720171668&btn_type=ss&btn_ref=srctok-1a9f94d720171668",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/amazon_B0CXPZMM5C.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-06T06:39:51.253463+00:00",
+                        "sale_price": "15.33",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8112,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005008786883431",
+                        "platform": "aliexpress",
+                        "title": "TEKSY para Tesla Model YL Y L / Y 2026 Juniper, Rejilla de Ventilación Interior, Parachoques Inferior, Malla Antiinsectos, Entrada de Aire, Cubierta Antipolvo",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c40a2bN3",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005008786883431.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-06T16:26:51.764747+00:00",
+                        "sale_price": "13.81",
+                        "original_price": "28.77",
+                        "discount": "52%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Molduras"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 8131
+                    },
+                    {
+                        "product_id": "B0F4R82QLK",
+                        "platform": "amazon",
+                        "title": "3W Alfombrillas de Coche para Tesla Model Y 2025 2026 Juniper Premium/Performance, Compatible con Standard, Thorex™ para Todo Clima para 1ª y 2ª Fila, Juego Completo, Accesorios, Negro",
+                        "affiliate_url": "https://www.amazon.es/Alfombrillas-Tesla-Model-2025-2026/dp/B0F4R82QLK/ref=sr_1_13_sspa?__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=2Q2HU2P2DJVXY&dib=eyJ2IjoiMSJ9.oF94Rhb2KdFG3LanJjHV_4sGnWAmSVh7VfQ1o9yuL2SKqN7TrpX1pDzPsTd4DfJL5ZLPqEz2nxCT08wzitbkOOs4eba2cHpgXd-wjayabvyhbra725qPgiN85LB6YhnmH9m5b8qfPUoYLrPifqgruUlQQxDIB5POC4Tsi7qK4luyo1Xt6CKRIi1d_7TlLaHrHUchiTbbKm6f1GUFmu3XrnnGyf13YTDevKulxLtLEZhCYdw5dwAydYT5bnWU7KbUK__dkshrapEZkmJbVIkfI66XXX5RDr5HHQzukWpKabE.be73WSvxLfOlA9A3hoQstO4K1gjTTTCiY4k3KIwUcYs&dib_tag=se&keywords=tesla&psr=PDAY&qid=1791310955&s=pbdd&sprefix=tesla%2Cpbdd%2C104&sr=1-13-spons&aref=nMib0G1G6q&sp_csd=d2lkZ2V0TmFtZT1zcF9tdGY&m=APZOKARLVB18I&SPES=1&th=1&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/amazon_B0F4R82QLK.jpg",
+                        "recommendations": 4,
+                        "votes": {},
+                        "timestamp": "2026-10-06T18:29:26.990821+00:00",
+                        "sale_price": "123.49",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Alfombrillas"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "Juniper (2025+) - Standard",
+                            "Juniper (2025+) - Premium"
+                        ],
+                        "bot_message_id": 8137
+                    },
+                    {
+                        "product_id": "1005012253568167",
+                        "platform": "aliexpress",
+                        "title": "4 tapas de válvula de aluminio para neumáticos de coche con logo del número Y, cubiertas de protección para el vástago del neumático, accesorios de repuesto para Tesla Model Y",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3N7rEKz",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005012253568167.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-08T17:24:57.385474+00:00",
+                        "sale_price": "3.95",
+                        "original_price": "7.89",
+                        "discount": "50%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8180,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Ruedas"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005012400210555",
+                        "platform": "aliexpress",
+                        "title": "Soporte de Teléfono de Silicona Suave para Tesla Model 3 Y YL 2021-2026 Highland Juniper, Soporte para Celular en el Tablero, Accesorios para Auto",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c4k04zAp",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005012400210555.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-08T19:11:08.177737+00:00",
+                        "sale_price": "5.97",
+                        "original_price": "12.43",
+                        "discount": "52%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8189,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Soportes"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B09SBDWXD8",
+                        "platform": "amazon",
+                        "title": "SAMSUNG T7 Shield SSD Portátil 1TB, USB 3.2 Gen.2, SSD Externo, Beige (MU-PE1T0K/EU)",
+                        "affiliate_url": "https://www.amazon.es/dp/B09SBDWXD8?ref=cm_sw_r_cso_cp_apin_dp_VB0NXKPHCSD4BAQB4WB6&ref_=cm_sw_r_cso_cp_apin_dp_VB0NXKPHCSD4BAQB4WB6&social_share=cm_sw_r_cso_cp_apin_dp_VB0NXKPHCSD4BAQB4WB6&tag=energia0d1-21",
+                        "image": "img/Tesla_chuches/Tesla_Model_Y/amazon_B09SBDWXD8.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-09T13:32:47.839706+00:00",
+                        "sale_price": "321.4",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8202,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Memorias"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
                     }
                 ],
                 "topic_name": "Tesla Model Y"
@@ -25209,7 +25972,7 @@
                         "title": "MANN-FILTER FP 25 015 Filtro de aire de cabina - FreciousPlus Filtro de Polen Biofuncional - para Automóviles + Vehículos de transporte",
                         "affiliate_url": "https://www.amazon.es/dp/B084V7JNL2?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
                         "image": "https://m.media-amazon.com/images/I/41d8JR1akNL._SL500_.jpg",
-                        "recommendations": 4,
+                        "recommendations": 8,
                         "votes": {},
                         "timestamp": "2026-06-01T18:44:13.449691+00:00",
                         "sale_price": null,
@@ -25570,6 +26333,24 @@
                         "price_corrected": false,
                         "bot_message_id": 7235,
                         "status_clasificacion": "pendiente"
+                    },
+                    {
+                        "product_id": "B00KWZT5OU",
+                        "platform": "amazon",
+                        "title": "Sisbrill Car, Acondicionador de Salpicaderos, Plásticos y Piel - Abrillantador Satinado - Crema pulverizada con Tacto Seco - 750 ml (750 ml)",
+                        "affiliate_url": "https://www.amazon.es/dp/B00KWZT5OU?tag=energia0d1-21&th=1",
+                        "image": "img/Tesla_chuches/Mantenimiento_y_Limpieza/amazon_B00KWZT5OU.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T22:17:20.999431+00:00",
+                        "sale_price": "13.4",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8097,
+                        "status_clasificacion": "pendiente"
                     }
                 ]
             },
@@ -25910,7 +26691,7 @@
                         "title": "dé Cargador Coche Electrico App 3,7kW [7m, Monofásico, 6-16A] Cargador Vehiculo Electrico con LCD Pantalla Potencia Ajustable, Cargador Carro Electrico para Model Y/3, EV3 y vehículos BEV/PHEV",
                         "affiliate_url": "https://www.amazon.es/dp/B0DGT8PRHH?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
                         "image": "img/Tesla_chuches/Cargar_en_CASA/amazon_B0DGT8PRHH.jpg",
-                        "recommendations": 4,
+                        "recommendations": 7,
                         "votes": {},
                         "timestamp": "2026-07-18T05:37:46.458901+00:00",
                         "sale_price": "124.95",
@@ -26017,6 +26798,24 @@
                             "__todas__"
                         ],
                         "bot_message_id": 7152
+                    },
+                    {
+                        "product_id": "B0CB5HHSTK",
+                        "platform": "amazon",
+                        "title": "VEVOR Cargador EV Portátil Tipo 2 Cargador de Coche Eléctrico 16A 3,7kW con Cable de Carga 8,6m CEE 7/7 Pantalla LCD Casa EV IEC62196 Impermeable IP66 con Bolsa de Almacenamiento Gancho Cable de Carga",
+                        "affiliate_url": "https://www.amazon.es/VEVOR-Cargador-El%C3%A9ctrico-Impermeable-Almacenamiento/dp/B0CB5HHSTK/ref=asc_df_B0CB5HNXGM?mcid=f315db22b7e23816a0df43e641d515b8&tag=energia0d1-21&linkCode=df0&hvadid=699764894113&hvpos=&hvnetw=g&hvrand=11841852981325450586&hvpone=&hvptwo=&hvqmt=&hvdev=m&hvdvcmdl=&hvlocint=&hvlocphy=1005518&hvtargid=pla-2260847901557&psc=1&hvocijid=11841852981325450586-B0CB5HNXGM-&hvexpln=0&th=1#averageCustomerReviewsAnchor",
+                        "image": "img/Tesla_chuches/Cargar_en_CASA/amazon_B0CB5HHSTK.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-06T17:52:19.026341+00:00",
+                        "sale_price": "112.9",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8133,
+                        "status_clasificacion": "pendiente"
                     }
                 ]
             },
@@ -26580,6 +27379,48 @@
                         "status_clasificacion": "clasificado",
                         "categorias": [
                             "Ruedas"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005013149638981",
+                        "platform": "aliexpress",
+                        "title": "Protector de Cámara Trasera Original 2026, Cubierta Impermeable para una Protección Mejorada del Dispositivo",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c36BrR2d",
+                        "image": "img/Tesla_chuches/Desconocido/aliexpress_1005013149638981.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-04T18:59:29.892047+00:00",
+                        "sale_price": "10.10",
+                        "original_price": "25.06",
+                        "discount": "59%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8041,
+                        "status_clasificacion": "pendiente"
+                    },
+                    {
+                        "product_id": "B0G7X65K5X",
+                        "platform": "amazon",
+                        "title": "[8 PZS] GAFAT Tesla Model 3 Highland Standard Premium 2026 2025 2024 Alfombrillas Goma + Maletero Juego Completo, TPE Todo Tipo de Climas, Borde Alto Escaneo 3D Original OEM, Protección 360°",
+                        "affiliate_url": "https://www.amazon.es/dp/B0G7X65K5X?th=1&linkCode=sl2&tag=energia0d1-21&linkId=3f9ffaccbbccc3146ca3b66a788f66f2&ref_=as_li_ss_tl&ascsubtag=srctok-3675d1f9d0764ff0&btn_type=ss&btn_ref=srctok-3675d1f9d0764ff0",
+                        "image": "img/Tesla_chuches/Desconocido/amazon_B0G7X65K5X.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T17:00:55.620790+00:00",
+                        "sale_price": "208.03",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 8077,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Alfombrillas"
                         ],
                         "versiones": [
                             "__todas__"
@@ -27196,10 +28037,10 @@
                         "timestamp": "2026-04-12T09:13:25+00:00",
                         "status_clasificacion": "clasificado",
                         "categorias": [
-                            "Consola"
+                            "Organizadores"
                         ],
                         "versiones": [
-                            "__todas__"
+                            "Juniper (2025+) - Standard"
                         ],
                         "recommendations": 1
                     },
@@ -30075,30 +30916,6 @@
                         "bot_message_id": 1811
                     },
                     {
-                        "product_id": "B0DGT8PRHH",
-                        "platform": "amazon",
-                        "title": "dé Cargador Coche Electrico App 3,7kW [7m, Monofásico, 6-16A] Cargador Vehiculo Electrico con LCD Pantalla Potencia Ajustable, Cargador Carro Electrico para Model Y/3, EV3 y vehículos BEV/PHEV",
-                        "affiliate_url": "https://www.amazon.es/dp/B0DGT8PRHH?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
-                        "image": "img/BYD_chuches/BYD_Atto_2/amazon_B0DGT8PRHH.jpg",
-                        "recommendations": 4,
-                        "votes": {},
-                        "timestamp": "2026-08-30T08:52:04.874375+00:00",
-                        "sale_price": "124.95",
-                        "original_price": null,
-                        "discount": null,
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": true,
-                        "categorias": [
-                            "Cargadores"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "__todas__"
-                        ],
-                        "bot_message_id": 1829
-                    },
-                    {
                         "product_id": "B0D476RMDQ",
                         "platform": "amazon",
                         "title": "105 Piezas Grapas Coche, 6 Tamaños 100 Piezas Remaches de Plástico y 5pcs Tornillos de Coche Herramienta Removedora para la Mayoría de los Modelos",
@@ -30409,30 +31226,6 @@
                             "__todas__"
                         ],
                         "bot_message_id": 1878
-                    },
-                    {
-                        "product_id": "1005012094525320",
-                        "platform": "aliexpress",
-                        "title": "Adaptador de Descarga EV Tipo 2 Hembra a Enchufe Universal Schuko para BYD MG Geely Jaecoo ZEEKR XPENG Deepal Omoda V2L",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c4Er3uu1",
-                        "image": "img/BYD_chuches/BYD_Atto_2/aliexpress_1005012094525320.jpg",
-                        "recommendations": 2,
-                        "votes": {},
-                        "timestamp": "2026-09-09T08:57:48.924953+00:00",
-                        "sale_price": "22.50",
-                        "original_price": "36.89",
-                        "discount": "39%",
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "categorias": [
-                            "Adaptadores"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "__todas__"
-                        ],
-                        "bot_message_id": 1883
                     },
                     {
                         "product_id": "B0BSNJ78YS",
@@ -30793,6 +31586,126 @@
                             "__todas__"
                         ],
                         "bot_message_id": 1985
+                    },
+                    {
+                        "product_id": "B0DGT8PRHH",
+                        "platform": "amazon",
+                        "title": "dé Cargador Coche Electrico App 3,7kW [7m, Monofásico, 6-16A] Cargador Vehiculo Electrico con LCD Pantalla Potencia Ajustable, Cargador Carro Electrico para Model Y/3, EV3 y vehículos BEV/PHEV",
+                        "affiliate_url": "https://www.amazon.es/dp/B0DGT8PRHH?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
+                        "image": "img/BYD_chuches/BYD_Atto_2/amazon_B0DGT8PRHH.jpg",
+                        "recommendations": 7,
+                        "votes": {},
+                        "timestamp": "2026-10-05T08:18:26.535094+00:00",
+                        "sale_price": "124.95",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": true,
+                        "categorias": [
+                            "Cargadores"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 2004
+                    },
+                    {
+                        "product_id": "1005013232254452",
+                        "platform": "aliexpress",
+                        "title": "Teschev 220V Cargador EV portátil Type2 Wallbox 3.5KW 8A a 16A 1 fase Type1 J1772 IP65 Bolsa EV de regalo gratis",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3AYjK85",
+                        "image": "img/BYD_chuches/BYD_Atto_2/aliexpress_1005013232254452.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-06T04:56:55.352918+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Cargadores"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 2010
+                    },
+                    {
+                        "product_id": "1005007175719670",
+                        "platform": "aliexpress",
+                        "title": "Para BYD ATTO 2 Yuanes UP 2024 2025 2026 estera de maletero de coche de ajuste personalizado estera de carga negra para todas las estaciones revestimientos de maletero medidos con láser en forma de 3D",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3irLhvx",
+                        "image": "img/BYD_chuches/BYD_Atto_2/aliexpress_1005007175719670.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-07T13:23:10.236434+00:00",
+                        "sale_price": "52.83",
+                        "original_price": "52.83",
+                        "discount": "0%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 2016,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Maletero"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005008690257453",
+                        "platform": "aliexpress",
+                        "title": "Escala 1:64 aleación fundida BYD Yuan Up vehículo todoterreno SUV juguetes coches modelo clásicos colección de regalos para adultos recuerdo pantalla estática",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3VXQYih",
+                        "image": "img/BYD_chuches/BYD_Atto_2/aliexpress_1005008690257453.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-08T03:25:55.357214+00:00",
+                        "sale_price": "17.37",
+                        "original_price": "20.44",
+                        "discount": "15%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Merchandising"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 2020
+                    },
+                    {
+                        "product_id": "1005012094525320",
+                        "platform": "aliexpress",
+                        "title": "Adaptador de Descarga EV Tipo 2 Hembra a Enchufe Universal Schuko para BYD MG Geely Jaecoo ZEEKR XPENG Deepal Omoda V2L",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c39Co0Nj",
+                        "image": "img/BYD_chuches/BYD_Atto_2/aliexpress_1005012094525320.jpg",
+                        "recommendations": 4,
+                        "votes": {},
+                        "timestamp": "2026-10-08T13:30:57.223449+00:00",
+                        "sale_price": "23.35",
+                        "original_price": "38.30",
+                        "discount": "39%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Adaptadores"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 2024
                     }
                 ],
                 "topic_name": "BYD Atto 2"
@@ -32199,6 +33112,30 @@
                         "status_clasificacion": "clasificado",
                         "categorias": [
                             "Fundas"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0FMD7BTKC",
+                        "platform": "amazon",
+                        "title": "Lamicall Soporte Móvil Coche para MagSafe, Ventosa de Vacío & 360° Rotación",
+                        "affiliate_url": "https://www.amazon.es/Lamicall-Soporte-M%C3%B3vil-Coche-MagSafe/dp/B0FMD7BTKC/ref=sxin_27_sbv_search_btf?__mk_es_ES=%EF%BF%BDM%EF%BF%BD%7D%EF%BF%BD%EF%BF%BD&aref=cdZVLjxjAT&content-id=amzn1.sym.41edfc65-cc3a-4ba4-afa8-85aeb81ed41b%3Aamzn1.sym.41edfc65-cc3a-4ba4-afa8-85aeb81ed41b&crid=2H9CMLREI9EE2&cv_ct_cx=tesla%2Bstandard&keywords=tesla%2Bstandard&pd_rd_i=B0FMD7BTKC&pd_rd_r=f500c94f-dcc1-4a77-b5a9-e489f980a36c&pd_rd_w=lI0TK&pd_rd_wg=1oxM7&pf_rd_p=41edfc65-cc3a-4ba4-afa8-85aeb81ed41b&pf_rd_r=PDWPZ7SJS2RD55KJ51Y9&qid=1791487077&sbo=RZvfv%2F%2FHxDF%2BO5021pAnSA%3D%3D&sprefix=tesla%2Bstandard%2Caps%2C106&sr=1-1-bc174091-0cdb-4802-a37c-8b1bf6a53413&th=1&tag=energia0d1-21",
+                        "image": "img/BYD_chuches/BYD_Atto_3/amazon_B0FMD7BTKC.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-08T19:20:56.669694+00:00",
+                        "sale_price": "24.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 2026,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Soportes"
                         ],
                         "versiones": [
                             "__todas__"
@@ -34158,6 +35095,30 @@
                         "versiones": [
                             "__todas__"
                         ]
+                    },
+                    {
+                        "product_id": "B0FZJLFVRN",
+                        "platform": "amazon",
+                        "title": "Bandeja Organizadora Inferior Consola para BYD Seal U EV / DM-i (2024-2026)",
+                        "affiliate_url": "https://www.amazon.es/dp/B0FZJLFVRN/ref=cm_sw_r_as_gl_apa_gl_i_CMH55N68AKDBC3004TQG?linkCode=ml1&tag=energia0d1-21&linkId=8ff1494e3a8f1a5e999ca4ba93b409ed&ascsubtag=srctok-506916375a2d1b72&btn_type=ss&btn_ref=srctok-506916375a2d1b72",
+                        "image": "img/BYD_chuches/BYD_seal_U/amazon_B0FZJLFVRN.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-07T11:31:01.742376+00:00",
+                        "sale_price": "18.09",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 2014,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Organizadores"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
                     }
                 ],
                 "topic_name": "BYD seal U"
@@ -34748,6 +35709,24 @@
                         "price_corrected": false,
                         "bot_message_id": 1887,
                         "status_clasificacion": "pendiente"
+                    },
+                    {
+                        "product_id": "B00KWZT5OU",
+                        "platform": "amazon",
+                        "title": "Sisbrill Car, Acondicionador de Salpicaderos, Plásticos y Piel - Abrillantador Satinado - Crema pulverizada con Tacto Seco - 750 ml (750 ml)",
+                        "affiliate_url": "https://www.amazon.es/dp/B00KWZT5OU?tag=energia0d1-21&th=1",
+                        "image": "img/BYD_chuches/MANTENIMIENTO_Y_LIMPIEZA/amazon_B00KWZT5OU.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T22:17:17.790410+00:00",
+                        "sale_price": "13.4",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 2006,
+                        "status_clasificacion": "pendiente"
                     }
                 ],
                 "topic_name": "MANTENIMIENTO Y LIMPIEZA"
@@ -35053,7 +36032,7 @@
                         "title": "dé Cargador Coche Electrico 3,7kW [7m, 6/8/10/13/16A] Cargador Vehiculo Electrico Portátil con Sopor",
                         "affiliate_url": "https://www.amazon.es/dp/B0DGT8PRHH?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
                         "image": "img/BYD_chuches/Cargar_en_CASA/amazon_B0DGT8PRHH.jpg",
-                        "recommendations": 4,
+                        "recommendations": 7,
                         "votes": {},
                         "timestamp": "2026-07-18T05:37:44.096844+00:00",
                         "sale_price": "124.95",
@@ -40668,30 +41647,6 @@
                         ]
                     },
                     {
-                        "product_id": "B07857Y17V",
-                        "platform": "amazon",
-                        "title": "SanDisk Ultra Fit Pendrive 256 GB (Memoria USB 3.2, ideal para ordenador portátil o de sobremesa, consolas de juegos y sistemas, hasta 400 MB/s, Software de recuperación de datos RescuePRO Deluxe)",
-                        "affiliate_url": "https://www.amazon.es/dp/B07857Y17V?ref=cm_sw_r_cso_cp_apin_dp_35JG76QSG72PKQGZQE77&ref_=cm_sw_r_cso_cp_apin_dp_35JG76QSG72PKQGZQE77&social_share=cm_sw_r_cso_cp_apin_dp_35JG76QSG72PKQGZQE77&tag=energia0d1-21",
-                        "image": "img/Xpeng_chuches/Xpeng_G6/amazon_B07857Y17V.jpg",
-                        "recommendations": 5,
-                        "votes": {},
-                        "timestamp": "2026-08-19T23:00:00.078980+00:00",
-                        "sale_price": "37.04",
-                        "original_price": null,
-                        "discount": null,
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "categorias": [
-                            "Memorias"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "__todas__"
-                        ],
-                        "bot_message_id": 1256
-                    },
-                    {
                         "product_id": "1005012408741784",
                         "platform": "aliexpress",
                         "title": "Rejilla Protectora para Radiador Delantero de Coche XPENG G6 P7+ P7 Plus Xiaopeng, Malla Antimosquitos, Decorativa, de Fácil Instalación",
@@ -41454,30 +42409,6 @@
                         "status_clasificacion": "clasificado",
                         "categorias": [
                             "Asientos"
-                        ],
-                        "versiones": [
-                            "__todas__"
-                        ]
-                    },
-                    {
-                        "product_id": "1005012978829820",
-                        "platform": "aliexpress",
-                        "title": "Pegatinas Decorativas de Metal para Cubiertas de Ruedas de Coche, para Xpeng MONA M03 P7+ G6 G9 X9 P5 G3",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c4OIVJjp",
-                        "image": "img/Xpeng_chuches/Xpeng_G6/aliexpress_1005012978829820.jpg",
-                        "recommendations": 1,
-                        "votes": {},
-                        "timestamp": "2026-09-02T15:37:56.375088+00:00",
-                        "sale_price": "3.81",
-                        "original_price": "3.91",
-                        "discount": "2%",
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "bot_message_id": 1365,
-                        "status_clasificacion": "clasificado",
-                        "categorias": [
-                            "Varios"
                         ],
                         "versiones": [
                             "__todas__"
@@ -42684,6 +43615,294 @@
                         "versiones": [
                             "__todas__"
                         ]
+                    },
+                    {
+                        "product_id": "B07857Y17V",
+                        "platform": "amazon",
+                        "title": "SanDisk Ultra Fit Pendrive 256 GB (Memoria USB 3.2, ideal para ordenador portátil o de sobremesa, consolas de juegos y sistemas, hasta 400 MB/s, Software de recuperación de datos RescuePRO Deluxe)",
+                        "affiliate_url": "https://www.amazon.es/dp/B07857Y17V?ref=ppx_pop_mob_ap_share&tag=energia0d1-21",
+                        "image": "img/Xpeng_chuches/Xpeng_G6/amazon_B07857Y17V.jpg",
+                        "recommendations": 6,
+                        "votes": {},
+                        "timestamp": "2026-10-04T10:25:51.329038+00:00",
+                        "sale_price": "33.9",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Memorias"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 1513
+                    },
+                    {
+                        "product_id": "1005010809967350",
+                        "platform": "aliexpress",
+                        "title": "Caja de Almacenamiento para Maletero Delantero de Coche para Xpeng G6 2023-2026, Caja de Almacenamiento de Gran Capacidad para la Cabina, Accesorios de Modificación para Automóviles",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3K7Mj9T",
+                        "image": "img/Xpeng_chuches/Xpeng_G6/aliexpress_1005010809967350.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-04T14:26:28.704582+00:00",
+                        "sale_price": "123.92",
+                        "original_price": "156.86",
+                        "discount": "21%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1515,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Maletero"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005008379334652",
+                        "platform": "aliexpress",
+                        "title": "Para Xpeng G6 lámpara ennegrecimiento de coche película faro Darth Vader película protectora suave suministros interiores accesorios modificados",
+                        "affiliate_url": "https://es.aliexpress.com/item/1005008379334652.html?invitationCode=QzI4UUVndytBZXc0Mjd4ekxzdUQvWXdTL1YxRkw2VldQcm8xWGZmODdjTWpmdlBzNkVmWTlBPT0&srcSns=sns_Copy&spreadType=socialShare&social_params=61636256021&bizType=ProductDetail&spreadCode=QzI4UUVndytBZXc0Mjd4ekxzdUQvWXdTL1YxRkw2VldQcm8xWGZmODdjTWpmdlBzNkVmWTlBPT0&aff_fcid=f3622a8da11d442db4d63bceded36433-1791149391902-04565-_EIxUZtG&tt=MG&aff_fsk=_EIxUZtG&aff_platform=default&sk=_EIxUZtG&aff_trace_key=f3622a8da11d442db4d63bceded36433-1791149391902-04565-_EIxUZtG&shareId=61636256021&businessType=ProductDetail&platform=AE&terminal_id=9224437abe414fb98decb9c24808bdff&afSmartRedirect=y&gatewayAdapt=glo2esp",
+                        "image": "img/Xpeng_chuches/Xpeng_G6/aliexpress_1005008379334652.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-04T21:29:55.378760+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1517,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005012889723765",
+                        "platform": "aliexpress",
+                        "title": "Cubierta de Calibre de Freno para Xpeng G9/G6/P7/P5/N5 P9+ Cubierta de Calibre de Freno Personalizada de Aleación de Aluminio",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3hliF5F",
+                        "image": "img/Xpeng_chuches/Xpeng_G6/aliexpress_1005012889723765.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-06T09:06:55.034896+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1523,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0973CFYT7",
+                        "platform": "amazon",
+                        "title": "Cadenas de nieve calcetines textiles PREMIUM MUSHER Made in France (el par) (Talla 10)",
+                        "affiliate_url": "https://www.amazon.es/Musher-Cadenas-textiles-nieve-homologadas/dp/B0973CFYT7?tag=energia0d1-21",
+                        "image": "img/Xpeng_chuches/Xpeng_G6/amazon_B0973CFYT7.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-06T09:19:46.750475+00:00",
+                        "sale_price": "179.0",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1525,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B074P3VW76",
+                        "platform": "amazon",
+                        "title": "Michelin Cadenas Nieve Easy Grip Evolution 16",
+                        "affiliate_url": "https://www.amazon.es/dp/B074P3VW76?tag=energia0d1-21&__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=2KI0M17YBO9VJ&dib=eyJ2IjoiMSJ9.sNI_QYhv0nzDHWhARp15wy3WVOafN2VMNEeb37ORX6ulKN2sgdsjqHqBoAbbYo6D3xIrAdoAgp6UXrM4I7FEg4uNIawLSDB137mjD3KxhDb573WxErLQrr_wlrIe8GzOGUa727FG98UbEw_vr5ANbdx35-QUveFvu3tvfYau5QpK7kZwDIEL4lG_7zQ1LSJv13QwZEdSFZ7s6f0Y4-htoWW0JNuX0sBtZf29g6g0E3RU654DA_yp_at2KbGMw1a8ApuXXc_nWyOHOu3EJKZOhNMwReHHRyps0TPjL_4xihE.d4wpQbrEXsoadarznxe0hF4QEgVkIsYGvKT_dODrZZ8&dib_tag=se&keywords=cadenas+nieve&qid=1768249639&sprefix=cadenas+nie%2Caps%2C258&sr=8-13&ufe=app_do%3Aamzn1.fos.4c3f56c3-e485-4a35-9abc-6532b61c3b62&th=1&psc=1&geniuslink=true",
+                        "image": "img/Xpeng_chuches/Xpeng_G6/amazon_B074P3VW76.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-06T09:31:56.462878+00:00",
+                        "sale_price": "138.0",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1527,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005012978829820",
+                        "platform": "aliexpress",
+                        "title": "Pegatinas Decorativas de Metal para Cubiertas de Ruedas de Coche, para Xpeng MONA M03 P7+ G6 G9 X9 P5 G3",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c2z51VQl",
+                        "image": "img/Xpeng_chuches/Xpeng_G6/aliexpress_1005012978829820.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-06T10:45:14.806141+00:00",
+                        "sale_price": "3.95",
+                        "original_price": "4.05",
+                        "discount": "2%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 1529
+                    },
+                    {
+                        "product_id": null,
+                        "platform": "aliexpress",
+                        "title": "Producto AliExpress",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c42Nq1Mt",
+                        "image": null,
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-06T13:58:32.686768+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1531,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005013182502485",
+                        "platform": "aliexpress",
+                        "title": "Alfombrillas de Piso para Auto Xpeng G6 G7 2023-2026 Lhd Tpe, Juego de 3 Piezas, Resistentes, Antideslizantes, Impermeables, Sin Olor, Cubierta Completa del Piso, Accesorios Interiores para Auto",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3PpkrWt",
+                        "image": "img/Xpeng_chuches/Xpeng_G6/aliexpress_1005013182502485.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-08T17:52:05.099100+00:00",
+                        "sale_price": "80.26",
+                        "original_price": "267.54",
+                        "discount": "70%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1537,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Alfombrillas"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0FMD7BTKC",
+                        "platform": "amazon",
+                        "title": "Lamicall Soporte Móvil Coche para MagSafe, Ventosa de Vacío & 360° Rotación",
+                        "affiliate_url": "https://www.amazon.es/Lamicall-Soporte-M%C3%B3vil-Coche-MagSafe/dp/B0FMD7BTKC/ref=sxin_27_sbv_search_btf?__mk_es_ES=%EF%BF%BDM%EF%BF%BD%7D%EF%BF%BD%EF%BF%BD&aref=cdZVLjxjAT&content-id=amzn1.sym.41edfc65-cc3a-4ba4-afa8-85aeb81ed41b%3Aamzn1.sym.41edfc65-cc3a-4ba4-afa8-85aeb81ed41b&crid=2H9CMLREI9EE2&cv_ct_cx=tesla%2Bstandard&keywords=tesla%2Bstandard&pd_rd_i=B0FMD7BTKC&pd_rd_r=f500c94f-dcc1-4a77-b5a9-e489f980a36c&pd_rd_w=lI0TK&pd_rd_wg=1oxM7&pf_rd_p=41edfc65-cc3a-4ba4-afa8-85aeb81ed41b&pf_rd_r=PDWPZ7SJS2RD55KJ51Y9&qid=1791487077&sbo=RZvfv%2F%2FHxDF%2BO5021pAnSA%3D%3D&sprefix=tesla%2Bstandard%2Caps%2C106&sr=1-1-bc174091-0cdb-4802-a37c-8b1bf6a53413&th=1&tag=energia0d1-21",
+                        "image": "img/Xpeng_chuches/Xpeng_G6/amazon_B0FMD7BTKC.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-08T19:19:53.592726+00:00",
+                        "sale_price": "24.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1539,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Soportes"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0CF56CVCY",
+                        "platform": "amazon",
+                        "title": "Adaptador V2L para MG4/MG5/BYD, 16A, Adaptador de Vehículo a Carga",
+                        "affiliate_url": "https://www.amazon.es/dp/B0CF56CVCY?ref=cm_sw_r_cso_tg_apan_dp_47DNW43RQH60EC4Q0XVW&ref_=cm_sw_r_cso_tg_apan_dp_47DNW43RQH60EC4Q0XVW&social_share=cm_sw_r_cso_tg_apan_dp_47DNW43RQH60EC4Q0XVW&tag=energia0d1-21",
+                        "image": "img/Xpeng_chuches/Xpeng_G6/amazon_B0CF56CVCY.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-08T22:08:44.726774+00:00",
+                        "sale_price": "46.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1541,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Energía"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0DNTT9JZF",
+                        "platform": "amazon",
+                        "title": "JULIK Adaptador V2L para Xpeng G6, G9, P7, Descarga Coche a Schuko, 3.5kW",
+                        "affiliate_url": "https://www.amazon.es/dp/B0DNTT9JZF?ref=cm_sw_r_cso_tg_apan_dp_8KQMC8TQ5AT0GWYM0GQB_1&ref_=cm_sw_r_cso_tg_apan_dp_8KQMC8TQ5AT0GWYM0GQB_1&social_share=cm_sw_r_cso_tg_apan_dp_8KQMC8TQ5AT0GWYM0GQB_1&tag=energia0d1-21",
+                        "image": "img/Xpeng_chuches/Xpeng_G6/amazon_B0DNTT9JZF.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-08T22:11:12.997793+00:00",
+                        "sale_price": "59.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Adaptadores"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 1545
                     }
                 ],
                 "topic_name": "Xpeng G6"
@@ -43230,7 +44449,7 @@
                         "title": "dé Cargador Coche Electrico App 3,7kW [7m, Monofásico, 6-16A] Cargador Vehiculo Electrico con LCD Pantalla Potencia Ajustable, Cargador Carro Electrico para Model Y/3, EV3 y vehículos BEV/PHEV",
                         "affiliate_url": "https://www.amazon.es/dp/B0DGT8PRHH?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
                         "image": "img/Xpeng_chuches/Mantenimiento_y_Limpieza/amazon_B0DGT8PRHH.jpg",
-                        "recommendations": 4,
+                        "recommendations": 7,
                         "votes": {},
                         "timestamp": "2026-06-23T11:15:15.320652+00:00",
                         "sale_price": "124.95",
@@ -43474,6 +44693,24 @@
                         "reviews_count": null,
                         "price_corrected": false,
                         "bot_message_id": 1386,
+                        "status_clasificacion": "pendiente"
+                    },
+                    {
+                        "product_id": "B00KWZT5OU",
+                        "platform": "amazon",
+                        "title": "Sisbrill Car, Acondicionador de Salpicaderos, Plásticos y Piel - Abrillantador Satinado - Crema pulverizada con Tacto Seco - 750 ml (750 ml)",
+                        "affiliate_url": "https://www.amazon.es/dp/B00KWZT5OU?tag=energia0d1-21&th=1",
+                        "image": "img/Xpeng_chuches/Mantenimiento_y_Limpieza/amazon_B00KWZT5OU.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T22:17:14.589883+00:00",
+                        "sale_price": "13.4",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1519,
                         "status_clasificacion": "pendiente"
                     }
                 ],
@@ -43829,7 +45066,7 @@
                         "title": "dé Cargador Coche Electrico App 3,7kW [7m, Monofásico, 6-16A] Cargador Vehiculo Electrico con LCD Pantalla Potencia Ajustable, Cargador Carro Electrico para Model Y/3, EV3 y vehículos BEV/PHEV",
                         "affiliate_url": "https://www.amazon.es/dp/B0DGT8PRHH?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
                         "image": "img/Xpeng_chuches/Cargar_en_CASA/amazon_B0DGT8PRHH.jpg",
-                        "recommendations": 4,
+                        "recommendations": 7,
                         "votes": {},
                         "timestamp": "2026-07-18T05:37:41.255595+00:00",
                         "sale_price": "124.95",
@@ -44834,6 +46071,24 @@
                         "versiones": [
                             "__todas__"
                         ]
+                    },
+                    {
+                        "product_id": "B0GKG7MR3F",
+                        "platform": "amazon",
+                        "title": "GAFAT Compatible con Nuevo Xpeng G6 2025 2026 2027 Consola Central Caja de Almacenamiento, X peng G6 Reposabrazos Organizador Estante con Alfombrillas de Goma Antideslizantes, X peng G6 Accesorios",
+                        "affiliate_url": "https://www.amazon.es/dp/B0GKG7MR3F/ref=cm_sw_r_as_gl_apa_gl_i_HQF4XS94B411ZAX46ATA?linkCode=ml1&tag=energia0d1-21&linkId=b94c05c22cfb0358f9785306ba37b102&ascsubtag=srctok-7a76e8c44dc6f148&btn_type=ss&btn_ref=srctok-7a76e8c44dc6f148",
+                        "image": "img/Xpeng_chuches/Desconocido/amazon_B0GKG7MR3F.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-07T11:28:07.679387+00:00",
+                        "sale_price": "17.95",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1534,
+                        "status_clasificacion": "pendiente"
                     }
                 ]
             },
@@ -45553,7 +46808,7 @@
                         "title": "dé Cargador Coche Electrico App 3,7kW [7m, Monofásico, 6-16A] Cargador Vehiculo Electrico con LCD Pantalla Potencia Ajustable, Cargador Carro Electrico para Model Y/3, EV3 y vehículos BEV/PHEV",
                         "affiliate_url": "https://www.amazon.es/dp/B0DGT8PRHH?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
                         "image": "img/Toyota_chuches/Toyota_C_HR/amazon_B0DGT8PRHH.jpg",
-                        "recommendations": 4,
+                        "recommendations": 7,
                         "votes": {},
                         "timestamp": "2026-06-22T12:02:20.441075+00:00",
                         "sale_price": "124.95",
@@ -46767,6 +48022,54 @@
                         "status_clasificacion": "clasificado",
                         "categorias": [
                             "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B00ZETXNAQ",
+                        "platform": "amazon",
+                        "title": "intAct Battery-Guard, Monitor de baterías para la supervisión por Bluetooth de baterías de Plomo y Litio de 12 V, con indicación de tensión y Temperatura",
+                        "affiliate_url": "https://www.amazon.es/dp/B00ZETXNAQ?ref=cm_sw_r_cso_cp_apin_dp_J5X12DR9QTN3CAAC48HP&ref_=cm_sw_r_cso_cp_apin_dp_J5X12DR9QTN3CAAC48HP&social_share=cm_sw_r_cso_cp_apin_dp_J5X12DR9QTN3CAAC48HP&tag=energia0d1-21",
+                        "image": "img/Toyota_chuches/Toyota_C_HR/amazon_B00ZETXNAQ.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T05:14:36.398362+00:00",
+                        "sale_price": "24.9",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1010,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0FMD7BTKC",
+                        "platform": "amazon",
+                        "title": "Lamicall Soporte Móvil Coche para MagSafe, Ventosa de Vacío & 360° Rotación",
+                        "affiliate_url": "https://www.amazon.es/Lamicall-Soporte-M%C3%B3vil-Coche-MagSafe/dp/B0FMD7BTKC/ref=sxin_27_sbv_search_btf?__mk_es_ES=%EF%BF%BDM%EF%BF%BD%7D%EF%BF%BD%EF%BF%BD&aref=cdZVLjxjAT&content-id=amzn1.sym.41edfc65-cc3a-4ba4-afa8-85aeb81ed41b%3Aamzn1.sym.41edfc65-cc3a-4ba4-afa8-85aeb81ed41b&crid=2H9CMLREI9EE2&cv_ct_cx=tesla%2Bstandard&keywords=tesla%2Bstandard&pd_rd_i=B0FMD7BTKC&pd_rd_r=f500c94f-dcc1-4a77-b5a9-e489f980a36c&pd_rd_w=lI0TK&pd_rd_wg=1oxM7&pf_rd_p=41edfc65-cc3a-4ba4-afa8-85aeb81ed41b&pf_rd_r=PDWPZ7SJS2RD55KJ51Y9&qid=1791487077&sbo=RZvfv%2F%2FHxDF%2BO5021pAnSA%3D%3D&sprefix=tesla%2Bstandard%2Caps%2C106&sr=1-1-bc174091-0cdb-4802-a37c-8b1bf6a53413&th=1&tag=energia0d1-21",
+                        "image": "img/Toyota_chuches/Toyota_C_HR/amazon_B0FMD7BTKC.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-08T19:21:12.780752+00:00",
+                        "sale_price": "24.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1018,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Soportes"
                         ],
                         "versiones": [
                             "__todas__"
@@ -49986,6 +51289,54 @@
                         "versiones": [
                             "__todas__"
                         ]
+                    },
+                    {
+                        "product_id": "B07RS2PD3Y",
+                        "platform": "amazon",
+                        "title": "CDEFG Compatible con Toyota Corolla E210 2019-2024 2025 Coche Gafas Caja Organizador Gafas de Sol Soporte Almacenamiento Bolsillos Interior Corolla Touring Sports Accesorios (Negro)",
+                        "affiliate_url": "https://www.amazon.es/CDEFG-Organizador-Soporte-Almacenamiento-Bolsillos/dp/B07RS2PD3Y/ref=sr_1_4?__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&sr=8-4&tag=energia0d1-21",
+                        "image": "img/Toyota_chuches/Toyota_corolla_hibrido/amazon_B07RS2PD3Y.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T07:13:58.238951+00:00",
+                        "sale_price": "24.97",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1012,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Organizadores"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B09GG3RX93",
+                        "platform": "amazon",
+                        "title": "California Scents Ambientador de coche en Lata Premium - 4 Pack (Hasta 60 Días)- Fragancia Duradera de Cereza - Control de Intensidad de Olor para un Ambiente Fresco y Personalizado en tu Coche, 42g",
+                        "affiliate_url": "https://www.amazon.es/dp/B09GG3RX93?ref=cm_sw_r_cso_cp_apin_dp_C6G0E9GXV85ZJ3WC5V7K&ref_=cm_sw_r_cso_cp_apin_dp_C6G0E9GXV85ZJ3WC5V7K&social_share=cm_sw_r_cso_cp_apin_dp_C6G0E9GXV85ZJ3WC5V7K&tag=energia0d1-21",
+                        "image": "img/Toyota_chuches/Toyota_corolla_hibrido/amazon_B09GG3RX93.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-09T19:12:24.433444+00:00",
+                        "sale_price": "18.0",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1020,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Ambientadores"
+                        ],
+                        "versiones": [
+                            "Juniper (2025+) - Premium"
+                        ]
                     }
                 ],
                 "topic_name": "Toyota corolla hibrido"
@@ -50480,6 +51831,24 @@
                         "price_corrected": false,
                         "bot_message_id": 915,
                         "status_clasificacion": "pendiente"
+                    },
+                    {
+                        "product_id": "B00KWZT5OU",
+                        "platform": "amazon",
+                        "title": "Sisbrill Car, Acondicionador de Salpicaderos, Plásticos y Piel - Abrillantador Satinado - Crema pulverizada con Tacto Seco - 750 ml (750 ml)",
+                        "affiliate_url": "https://www.amazon.es/dp/B00KWZT5OU?tag=energia0d1-21&th=1",
+                        "image": "img/Toyota_chuches/Mantenimiento_y_Limpieza/amazon_B00KWZT5OU.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T22:17:11.876612+00:00",
+                        "sale_price": "13.4",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 1014,
+                        "status_clasificacion": "pendiente"
                     }
                 ],
                 "topic_name": "Mantenimiento y Limpieza"
@@ -50688,7 +52057,7 @@
                         "title": "dé Cargador Coche Electrico 3,7kW [7m, 6/8/10/13/16A] Cargador Vehiculo Electrico Portátil con Sopor",
                         "affiliate_url": "https://www.amazon.es/dp/B0DGT8PRHH?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
                         "image": "img/Toyota_chuches/Cargar_en_CASA/amazon_B0DGT8PRHH.jpg",
-                        "recommendations": 4,
+                        "recommendations": 7,
                         "votes": {},
                         "timestamp": "2026-07-19T08:16:23.204545+00:00",
                         "sale_price": "124.95",
@@ -57256,6 +58625,30 @@
                         "versiones": [
                             "__todas__"
                         ]
+                    },
+                    {
+                        "product_id": "B0FMD7BTKC",
+                        "platform": "amazon",
+                        "title": "Lamicall Soporte Móvil Coche para MagSafe, Ventosa de Vacío & 360° Rotación",
+                        "affiliate_url": "https://www.amazon.es/Lamicall-Soporte-M%C3%B3vil-Coche-MagSafe/dp/B0FMD7BTKC/ref=sxin_27_sbv_search_btf?__mk_es_ES=%EF%BF%BDM%EF%BF%BD%7D%EF%BF%BD%EF%BF%BD&aref=cdZVLjxjAT&content-id=amzn1.sym.41edfc65-cc3a-4ba4-afa8-85aeb81ed41b%3Aamzn1.sym.41edfc65-cc3a-4ba4-afa8-85aeb81ed41b&crid=2H9CMLREI9EE2&cv_ct_cx=tesla%2Bstandard&keywords=tesla%2Bstandard&pd_rd_i=B0FMD7BTKC&pd_rd_r=f500c94f-dcc1-4a77-b5a9-e489f980a36c&pd_rd_w=lI0TK&pd_rd_wg=1oxM7&pf_rd_p=41edfc65-cc3a-4ba4-afa8-85aeb81ed41b&pf_rd_r=PDWPZ7SJS2RD55KJ51Y9&qid=1791487077&sbo=RZvfv%2F%2FHxDF%2BO5021pAnSA%3D%3D&sprefix=tesla%2Bstandard%2Caps%2C106&sr=1-1-bc174091-0cdb-4802-a37c-8b1bf6a53413&th=1&tag=energia0d1-21",
+                        "image": "img/Leapmotor_chuches/Leapmotor_B10/amazon_B0FMD7BTKC.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-08T19:20:11.104125+00:00",
+                        "sale_price": "24.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 2323,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Soportes"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
                     }
                 ],
                 "topic_name": "Leapmotor B10"
@@ -57956,30 +59349,6 @@
                         "link": "https://s.click.aliexpress.com/e/_c3fvnJfl"
                     },
                     {
-                        "product_id": "1005010102789606",
-                        "platform": "aliexpress",
-                        "title": "Parasol para ventana delantera de coche Leapmotor T03, aislamiento térmico, protección solar UV de verano, accesorios para automóvil",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c38SVSHR",
-                        "image": "img/Leapmotor_chuches/LEAPMOTOR_T03/aliexpress_1005010102789606.jpg",
-                        "recommendations": 1,
-                        "votes": {},
-                        "timestamp": "2026-06-24T07:59:12.762189+00:00",
-                        "sale_price": "10.96",
-                        "original_price": "10.96",
-                        "discount": "0%",
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "bot_message_id": 1859,
-                        "status_clasificacion": "clasificado",
-                        "categorias": [
-                            "Parasoles"
-                        ],
-                        "versiones": [
-                            "__todas__"
-                        ]
-                    },
-                    {
                         "product_id": "1005008683014923",
                         "platform": "aliexpress",
                         "title": "Paraguas para parabrisas de coche con 360 ° Manija plegable de rotación para Motor Leapmotor T03 S01 C11 C01",
@@ -58218,30 +59587,6 @@
                         "versiones": [
                             "__todas__"
                         ]
-                    },
-                    {
-                        "product_id": "1005006850167317",
-                        "platform": "aliexpress",
-                        "title": "LoadKey y Carlinkit con cable y inalámbrico CarPlay inalámbrico Android Auto Dongle para modificar la pantalla Android coche Ariplay Smart Link IOS15",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3jGUt0L",
-                        "image": "img/Leapmotor_chuches/LEAPMOTOR_T03/aliexpress_1005006850167317.jpg",
-                        "recommendations": 2,
-                        "votes": {},
-                        "timestamp": "2026-07-25T06:20:45.482844+00:00",
-                        "sale_price": "36.56",
-                        "original_price": "126.08",
-                        "discount": "71%",
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "categorias": [
-                            "Carlinkit"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "__todas__"
-                        ],
-                        "bot_message_id": 2176
                     },
                     {
                         "product_id": "1005007843880140",
@@ -58530,6 +59875,54 @@
                         "versiones": [
                             "__todas__"
                         ]
+                    },
+                    {
+                        "product_id": "1005010102789606",
+                        "platform": "aliexpress",
+                        "title": "Parasol para ventana delantera de coche Leapmotor T03, aislamiento térmico, protección solar UV de verano, accesorios para automóvil",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c4q1UspX",
+                        "image": "img/Leapmotor_chuches/LEAPMOTOR_T03/aliexpress_1005010102789606.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-05T20:54:29.229434+00:00",
+                        "sale_price": "10.90",
+                        "original_price": "11.24",
+                        "discount": "3%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Parasoles"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 2309
+                    },
+                    {
+                        "product_id": "1005006850167317",
+                        "platform": "aliexpress",
+                        "title": "LoadKey y Carlinkit con cable y inalámbrico CarPlay inalámbrico Android Auto Dongle para modificar la pantalla Android coche Ariplay Smart Link IOS15",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c4m4h31L",
+                        "image": "img/Leapmotor_chuches/LEAPMOTOR_T03/aliexpress_1005006850167317.jpg",
+                        "recommendations": 3,
+                        "votes": {},
+                        "timestamp": "2026-10-08T08:02:55.781078+00:00",
+                        "sale_price": "37.55",
+                        "original_price": "129.50",
+                        "discount": "71%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Carlinkit"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 2321
                     }
                 ],
                 "topic_name": "LEAPMOTOR T03"
@@ -63316,6 +64709,30 @@
                         "versiones": [
                             "__todas__"
                         ]
+                    },
+                    {
+                        "product_id": "B0GGGW5PCM",
+                        "platform": "amazon",
+                        "title": "LUWU Compatible con motor Leapmotor C10 / C16 2024 2025 2026 contenedor inferior TPE organizador oculto motor Leap C10 C16 organizador de asiento caja de accesorios",
+                        "affiliate_url": "https://www.amazon.es/dp/B0GGGW5PCM/ref=cm_sw_r_as_gl_apa_gl_i_0YE0E880N9WNXXKSSTMC?linkCode=ml1&tag=energia0d1-21&linkId=a75ed015dd52c02cf894b8d275b325d1&ascsubtag=srctok-15d29df3bcc55165&btn_type=ss&btn_ref=srctok-15d29df3bcc55165",
+                        "image": "img/Leapmotor_chuches/Leapmotor_C10/amazon_B0GGGW5PCM.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-07T11:33:07.428110+00:00",
+                        "sale_price": "27.18",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 2316,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Organizadores"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
                     }
                 ],
                 "topic_name": "Leapmotor C10"
@@ -63911,6 +65328,24 @@
                         "price_corrected": false,
                         "bot_message_id": 2257,
                         "status_clasificacion": "pendiente"
+                    },
+                    {
+                        "product_id": "B00KWZT5OU",
+                        "platform": "amazon",
+                        "title": "Sisbrill Car, Acondicionador de Salpicaderos, Plásticos y Piel - Abrillantador Satinado - Crema pulverizada con Tacto Seco - 750 ml (750 ml)",
+                        "affiliate_url": "https://www.amazon.es/dp/B00KWZT5OU?tag=energia0d1-21&th=1",
+                        "image": "img/Leapmotor_chuches/MANTENIMIENTO_Y_LIMPIEZA/amazon_B00KWZT5OU.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T22:17:24.676927+00:00",
+                        "sale_price": "13.4",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 2312,
+                        "status_clasificacion": "pendiente"
                     }
                 ],
                 "topic_name": "MANTENIMIENTO Y LIMPIEZA"
@@ -64216,7 +65651,7 @@
                         "title": "dé Cargador Coche Electrico App 3,7kW [7m, Monofásico, 6-16A] Cargador Vehiculo Electrico con LCD Pantalla Potencia Ajustable, Cargador Carro Electrico para Model Y/3, EV3 y vehículos BEV/PHEV",
                         "affiliate_url": "https://www.amazon.es/dp/B0DGT8PRHH?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
                         "image": "img/Leapmotor_chuches/Cargar_en_CASA/amazon_B0DGT8PRHH.jpg",
-                        "recommendations": 4,
+                        "recommendations": 7,
                         "votes": {},
                         "timestamp": "2026-07-18T05:37:49.132151+00:00",
                         "sale_price": "124.95",
@@ -66297,6 +67732,24 @@
                         "price_corrected": false,
                         "bot_message_id": 467,
                         "status_clasificacion": "pendiente"
+                    },
+                    {
+                        "product_id": "B00KWZT5OU",
+                        "platform": "amazon",
+                        "title": "Sisbrill Car, Acondicionador de Salpicaderos, Plásticos y Piel - Abrillantador Satinado - Crema pulverizada con Tacto Seco - 750 ml (750 ml)",
+                        "affiliate_url": "https://www.amazon.es/dp/B00KWZT5OU?tag=energia0d1-21&th=1",
+                        "image": "img/Hyundai_chuches/Mantenimiento_y_Limpieza/amazon_B00KWZT5OU.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T22:17:30.586970+00:00",
+                        "sale_price": "13.4",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 473,
+                        "status_clasificacion": "pendiente"
                     }
                 ]
             },
@@ -66488,7 +67941,7 @@
                         "title": "🛒 dé Cargador Coche Electrico 3,7kW [7m, 6/8/10/13/16A] Cargador Vehiculo Electrico Portátil con Sop",
                         "affiliate_url": "https://www.amazon.es/dp/B0DGT8PRHH?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
                         "image": "img/Hyundai_chuches/amazon_B0DGT8PRHH.jpg",
-                        "recommendations": 4,
+                        "recommendations": 7,
                         "votes": {},
                         "timestamp": "2026-07-18T05:37:54.463517+00:00",
                         "sale_price": "124.95",
@@ -66979,9 +68432,12 @@
                         "rating": null,
                         "reviews_count": null,
                         "bot_message_id": 3817,
-                        "status_clasificacion": "pendiente",
+                        "status_clasificacion": "clasificado",
                         "categorias": [
-                            "Otros"
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
                         ]
                     },
                     {
@@ -67670,9 +69126,12 @@
                         "rating": null,
                         "reviews_count": null,
                         "bot_message_id": 3933,
-                        "status_clasificacion": "pendiente",
+                        "status_clasificacion": "clasificado",
                         "categorias": [
-                            "Otros"
+                            "Fundas"
+                        ],
+                        "versiones": [
+                            "__todas__"
                         ]
                     },
                     {
@@ -67799,26 +69258,6 @@
                             "Luces"
                         ],
                         "versiones": []
-                    },
-                    {
-                        "product_id": "1005010193326435",
-                        "platform": "aliexpress",
-                        "title": "Alfombrillas de coche para el nuevo Tesla Model 3 Highland 2024 2025, revestimientos de suelo de TPE impermeables antideslizantes, alfombrillas, revestimiento de carga para todo tipo de clima",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c4ezxQMt",
-                        "image": "img/Chuches_EV/Desconocido/aliexpress_1005010193326435.jpg",
-                        "recommendations": 2,
-                        "votes": {},
-                        "timestamp": "2026-05-18T20:43:15.227380+00:00",
-                        "sale_price": "63.09",
-                        "original_price": "171.45",
-                        "discount": "63%",
-                        "rating": null,
-                        "reviews_count": null,
-                        "status_clasificacion": "pendiente",
-                        "bot_message_id": 3959,
-                        "categorias": [
-                            "Alfombrillas"
-                        ]
                     },
                     {
                         "product_id": "1005007587878624",
@@ -69137,7 +70576,7 @@
                         "title": "devolo Magic 2 WiFi next Starter Kit, adaptador WLAN Powerline de hasta 2400 Mbit/s, red WLAN, enchufe WLAN, 2 puertos Gigabit LAN, dLAN 2.0, color blanco",
                         "affiliate_url": "https://www.amazon.es/dp/B086B2GZ1F?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
                         "image": "img/Chuches_EV/Desconocido/amazon_B086B2GZ1F.jpg",
-                        "recommendations": 1,
+                        "recommendations": 2,
                         "votes": {},
                         "timestamp": "2026-05-28T06:57:12.248181+00:00",
                         "sale_price": null,
@@ -70245,30 +71684,6 @@
                         "bot_message_id": 4353
                     },
                     {
-                        "product_id": "B0CN1PJ6ZX",
-                        "platform": "amazon",
-                        "title": "VION 2026-2024 Tesla Model 3 Parasoles de Techo - Ajuste preciso, apagón Total",
-                        "affiliate_url": "https://www.amazon.es/dp/B0CN1PJ6ZX?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
-                        "image": "img/Chuches_EV/Desconocido/amazon_B0CN1PJ6ZX.jpg",
-                        "recommendations": 7,
-                        "votes": {},
-                        "timestamp": "2026-06-16T16:30:24.009350+00:00",
-                        "sale_price": null,
-                        "original_price": null,
-                        "discount": null,
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "categorias": [
-                            "Parasoles"
-                        ],
-                        "status_clasificacion": "clasificado",
-                        "versiones": [
-                            "__todas__"
-                        ],
-                        "bot_message_id": 4356
-                    },
-                    {
                         "product_id": "1005007294391207",
                         "platform": "aliexpress",
                         "title": "YZ para Tesla Model 3 Y Highland Juniper soporte para teléfono de coche Clip de ventilación de aire soporte para teléfono móvil en salida de aire de silicona líquida para coche",
@@ -70852,24 +72267,6 @@
                         "bot_message_id": 4507
                     },
                     {
-                        "product_id": "1005008640492198",
-                        "platform": "aliexpress",
-                        "title": "2 uds para Tesla Model 3/Y/3 Highland/Y Juniper tela de hielo hebilla sombras para techo de vidrio techo solar delantero y trasero tragaluz parasol",
-                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3KCxhob",
-                        "image": "img/Chuches_EV/Desconocido/aliexpress_1005008640492198.jpg",
-                        "recommendations": 1,
-                        "votes": {},
-                        "timestamp": "2026-08-06T14:43:06.069522+00:00",
-                        "sale_price": "29.52",
-                        "original_price": "69.96",
-                        "discount": "57%",
-                        "rating": null,
-                        "reviews_count": null,
-                        "price_corrected": false,
-                        "bot_message_id": 4511,
-                        "status_clasificacion": "pendiente"
-                    },
-                    {
                         "product_id": "B0CNBZ4YPD",
                         "platform": "amazon",
                         "title": "KHONS Mobile Wallbox 7.4kW 1Phase 32A Type 2 Charging Cable for Electric Vehicles Portable EV Charging Station Charger with Red CEE Plug, Schuko, Blue CEE Adapter Switchable Current 5M/16.4ft",
@@ -71418,7 +72815,7 @@
                         "title": "MANN-FILTER FP 25 015 Filtro de aire de cabina - FreciousPlus Filtro de Polen Biofuncional - para Automóviles + Vehículos de transporte",
                         "affiliate_url": "https://www.amazon.es/dp/B084V7JNL2?ref_=ppx_hzsearch_conn_dt_b_fed_asin_title_1&tag=energia0d1-21",
                         "image": "img/Chuches_EV/Desconocido/amazon_B084V7JNL2.jpg",
-                        "recommendations": 6,
+                        "recommendations": 8,
                         "votes": {},
                         "timestamp": "2026-10-03T09:59:36.963187+00:00",
                         "sale_price": "16.77",
@@ -71432,6 +72829,141 @@
                         ],
                         "status_clasificacion": "pendiente",
                         "bot_message_id": 4647
+                    },
+                    {
+                        "product_id": "B0FXMTMGS8",
+                        "platform": "amazon",
+                        "title": "Baliza V16 Homologada DGT con Geolocalización | Luz de Emergencia Coche LED 360° 1km | Conectada Plataforma DGT 3.0 | Resistente a la Lluvia | con Indicador de Batería y Base Imantada | Bip&Drive",
+                        "affiliate_url": "https://www.amazon.es/dp/B0FXMTMGS8/ref=cm_sw_r_as_gl_apa_gl_i_BCV80NP1CSCFBVTAZW5X?linkCode=ml1&tag=energia0d1-21&linkId=dba46caadf10fc9fe8cc8053a92a5387&ascsubtag=srctok-7ad2aee842dd0138&btn_type=ss&btn_ref=srctok-7ad2aee842dd0138",
+                        "image": "img/Chuches_EV/Desconocido/amazon_B0FXMTMGS8.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-04T20:04:31.429984+00:00",
+                        "sale_price": "12.5",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 4650,
+                        "status_clasificacion": "pendiente"
+                    },
+                    {
+                        "product_id": "B0BSNHMWM6",
+                        "platform": "amazon",
+                        "title": "Toma recarga empotradavehiculo electrico EFAPEL 2P+TT 16A 81132",
+                        "affiliate_url": "https://www.amazon.es/recarga-empotradavehiculo-electrico-EFAPEL-81132/dp/B0BSNHMWM6?source=ps-sl-shoppingads-lpcontext&ref_=fplfs&psc=1&smid=A1FAJ20CCTVKR6&utm_source=chatgpt.com&tag=energia0d1-21",
+                        "image": "img/Chuches_EV/Desconocido/amazon_B0BSNHMWM6.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T15:49:28.351500+00:00",
+                        "sale_price": "27.97",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 4653,
+                        "status_clasificacion": "pendiente"
+                    },
+                    {
+                        "product_id": "1005010193326435",
+                        "platform": "aliexpress",
+                        "title": "Alfombrillas de coche para el nuevo Tesla Model 3 Highland 2024 2025, revestimientos de suelo de TPE impermeables antideslizantes, alfombrillas, revestimiento de carga para todo tipo de clima",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c4Kt5h41",
+                        "image": "img/Chuches_EV/Desconocido/aliexpress_1005010193326435.jpg",
+                        "recommendations": 3,
+                        "votes": {},
+                        "timestamp": "2026-10-06T12:01:18.742085+00:00",
+                        "sale_price": "72.24",
+                        "original_price": "180.60",
+                        "discount": "60%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Alfombrillas"
+                        ],
+                        "status_clasificacion": "pendiente",
+                        "bot_message_id": 4656
+                    },
+                    {
+                        "product_id": "B0CN1PJ6ZX",
+                        "platform": "amazon",
+                        "title": "VION Parasol de Techo para Tesla Model 3 Highland 2024-2026, oscurecimiento Total, diseño sin hundimiento, Tejido de Doble Capa con Recubrimiento UV Reforzado con grafeno, Gris",
+                        "affiliate_url": "https://www.amazon.es/dp/B0CN1PJ6ZX?ref=cm_sw_r_cso_cp_apan_dp_LIGHTSABER188I3CXHUS&ref_=cm_sw_r_cso_cp_apan_dp_LIGHTSABER188I3CXHUS&social_share=cm_sw_r_cso_cp_apan_dp_LIGHTSABER188I3CXHUS&tag=energia0d1-21",
+                        "image": "img/Chuches_EV/Desconocido/amazon_B0CN1PJ6ZX.jpg",
+                        "recommendations": 8,
+                        "votes": {},
+                        "timestamp": "2026-10-07T15:08:08.323077+00:00",
+                        "sale_price": "59.0",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Parasoles"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 4659
+                    },
+                    {
+                        "product_id": "B0CY1WQ2SM",
+                        "platform": "amazon",
+                        "title": "Parasol de Coche Delantero para Tesla, Parasol para Parabrisas Delantero Plegable, Parabrisas Protección contra Rayos UV el Calor, Coche Sol Sombra para Tesla Model Y Model 3",
+                        "affiliate_url": "https://www.amazon.es/dp/B0CY1WQ2SM?ref=cm_sw_r_cso_cp_apan_dp_K79ZJ7N4FKNR38928DF6&ref_=cm_sw_r_cso_cp_apan_dp_K79ZJ7N4FKNR38928DF6&social_share=cm_sw_r_cso_cp_apan_dp_K79ZJ7N4FKNR38928DF6&tag=energia0d1-21",
+                        "image": "img/Chuches_EV/Desconocido/amazon_B0CY1WQ2SM.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-07T15:09:33.635793+00:00",
+                        "sale_price": "18.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 4661,
+                        "status_clasificacion": "pendiente"
+                    },
+                    {
+                        "product_id": "1005008640492198",
+                        "platform": "aliexpress",
+                        "title": "2 uds para Tesla Model 3/Y/3 Highland/Y Juniper tela de hielo hebilla sombras para techo de vidrio techo solar delantero y trasero tragaluz parasol",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3cXBADr",
+                        "image": "img/Chuches_EV/Desconocido/aliexpress_1005008640492198.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-07T18:04:17.771020+00:00",
+                        "sale_price": "33.58",
+                        "original_price": "67.16",
+                        "discount": "50%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "status_clasificacion": "pendiente",
+                        "bot_message_id": 4663
+                    },
+                    {
+                        "product_id": "B0DLLP292M",
+                        "platform": "amazon",
+                        "title": "VION Soporte de teléfono de aleación Premium Tesla Model 3/Y (2026-2025 New Model Y, 2024-2022 Model Y, 2023-2021 Model 3)",
+                        "affiliate_url": "https://www.amazon.es/dp/B0DLLP292M?tag=energia0d1-21",
+                        "image": "img/Chuches_EV/Desconocido/amazon_B0DLLP292M.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-09T12:31:23.964922+00:00",
+                        "sale_price": "39.0",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 4667,
+                        "status_clasificacion": "pendiente"
                     }
                 ]
             }
@@ -71909,7 +73441,7 @@
                         "title": "dé Cargador Coche Electrico App 3,7kW [7m, Monofásico, 6-16A] Cargador Vehiculo Electrico con LCD Pantalla Potencia Ajustable, Cargador Carro Electrico para Model Y/3, EV3 y vehículos BEV/PHEV",
                         "affiliate_url": "https://www.amazon.es/dp/B0DGT8PRHH?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
                         "image": "img/Volkswagen_chuches/cargar_en_CASA/amazon_B0DGT8PRHH.jpg",
-                        "recommendations": 4,
+                        "recommendations": 7,
                         "votes": {},
                         "timestamp": "2026-07-18T05:37:51.749178+00:00",
                         "sale_price": "124.95",
@@ -72437,6 +73969,24 @@
                         "reviews_count": null,
                         "price_corrected": false,
                         "bot_message_id": 167,
+                        "status_clasificacion": "pendiente"
+                    },
+                    {
+                        "product_id": "B00KWZT5OU",
+                        "platform": "amazon",
+                        "title": "Sisbrill Car, Acondicionador de Salpicaderos, Plásticos y Piel - Abrillantador Satinado - Crema pulverizada con Tacto Seco - 750 ml (750 ml)",
+                        "affiliate_url": "https://www.amazon.es/dp/B00KWZT5OU?tag=energia0d1-21&th=1",
+                        "image": "img/Volkswagen_chuches/Mantenimiento_y_Limpieza/amazon_B00KWZT5OU.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T22:17:27.582310+00:00",
+                        "sale_price": "13.4",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 171,
                         "status_clasificacion": "pendiente"
                     }
                 ]
@@ -73887,6 +75437,78 @@
                         "price_corrected": false,
                         "status_clasificacion": "pendiente",
                         "bot_message_id": 485
+                    },
+                    {
+                        "product_id": "1005010710583397",
+                        "platform": "aliexpress",
+                        "title": "Sistemas de alarma de seguridad automática Solar, potencia TPMS, sistema de Monitor de alarma de presión de neumáticos de coche, advertencia de temperatura de presión de neumáticos",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3IsKrbn",
+                        "image": "img/Camper_chuches/Desconocido/aliexpress_1005010710583397.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-05T13:50:14.632533+00:00",
+                        "sale_price": "13.39",
+                        "original_price": "18.34",
+                        "discount": "27%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "status_clasificacion": "pendiente",
+                        "bot_message_id": 489
+                    },
+                    {
+                        "product_id": "1005006129840804",
+                        "platform": "aliexpress",
+                        "title": "TPMS 2 sensores Bluetooth 4,0 5,0 sistema de monitoreo de presión de neumáticos Pit Bike probador de neumáticos juego de diagnóstico accesorios de motocicleta",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3Z0ExjP",
+                        "image": "img/Camper_chuches/Desconocido/aliexpress_1005006129840804.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-06T13:26:36.952182+00:00",
+                        "sale_price": "22.43",
+                        "original_price": "41.55",
+                        "discount": "46%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "status_clasificacion": "pendiente",
+                        "bot_message_id": 493
+                    },
+                    {
+                        "product_id": "1005013181764276",
+                        "platform": "aliexpress",
+                        "title": "Nuevo Router WiFi LTE 4G, Punto de Acceso a Internet Portátil, 150 Mbps, Plug and Play, Router de Compartición de Internet Rápido, Versión Europea para Hogar, Oficina y Viajes",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c4FswEQt",
+                        "image": "img/Camper_chuches/Desconocido/aliexpress_1005013181764276.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-07T09:03:49.628554+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "status_clasificacion": "pendiente",
+                        "bot_message_id": 497
+                    },
+                    {
+                        "product_id": "B09M376FRT",
+                        "platform": "amazon",
+                        "title": "Tenda MF6 Router WiFi Portátil 4G LTE con SIM, WiFi 6 AX300, Plug & Play",
+                        "affiliate_url": "https://www.amazon.es/dp/B09M376FRT?tag=energia0d1-21",
+                        "image": "img/Camper_chuches/Desconocido/amazon_B09M376FRT.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-07T09:38:46.468393+00:00",
+                        "sale_price": "34.19",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "status_clasificacion": "pendiente",
+                        "bot_message_id": 501
                     }
                 ]
             },
@@ -75044,6 +76666,78 @@
                             "__todas__"
                         ],
                         "bot_message_id": 386
+                    },
+                    {
+                        "product_id": "1005012960738066",
+                        "platform": "aliexpress",
+                        "title": "Para MG HS 2025 Roewe RX5 AS33 Accesorios 2024 2026 Tiras de sellado para consola central de puerta de coche, burletes, pegatinas de sellado",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c45DirGp",
+                        "image": "img/MG_chuches/MG_HS_EHS/aliexpress_1005012960738066.jpg",
+                        "recommendations": 2,
+                        "votes": {},
+                        "timestamp": "2026-10-05T18:04:10.595811+00:00",
+                        "sale_price": "33.38",
+                        "original_price": "45.73",
+                        "discount": "27%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "categorias": [
+                            "Sellado"
+                        ],
+                        "status_clasificacion": "clasificado",
+                        "versiones": [
+                            "__todas__"
+                        ],
+                        "bot_message_id": 430
+                    },
+                    {
+                        "product_id": "1005012251671834",
+                        "platform": "aliexpress",
+                        "title": "Película Protectora PPF Mate Transparente de TPU para MG HS 2026 2025, para Pantalla LCD, GPS, Panel de Navegación, Consola Central, Accesorios para Auto",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c3TFkeVr",
+                        "image": "img/MG_chuches/MG_HS_EHS/aliexpress_1005012251671834.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-07T21:11:27.752984+00:00",
+                        "sale_price": null,
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 442,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "1005009552569329",
+                        "platform": "aliexpress",
+                        "title": "Para MG S5 EV 2025 2026 embellecedor de botón de volante accesorios adhesivos de estilo Interior de fibra de carbono ABS automotriz",
+                        "affiliate_url": "https://s.click.aliexpress.com/e/_c4tCIXCV",
+                        "image": "img/MG_chuches/MG_HS_EHS/aliexpress_1005009552569329.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-08T20:42:05.756185+00:00",
+                        "sale_price": "7.79",
+                        "original_price": "12.98",
+                        "discount": "40%",
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 444,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Carbono"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
                     }
                 ]
             },
@@ -75570,6 +77264,102 @@
                         "reviews_count": null,
                         "price_corrected": false,
                         "bot_message_id": 364,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0D2K9J5TY",
+                        "platform": "amazon",
+                        "title": "UGREEN NASync DXP2800, NAS de Escritorio de 2 bahías Servidor NAS, 8GB DDR5",
+                        "affiliate_url": "https://www.amazon.es/gp/product/B0D2K9J5TY?smid=AXZ3JQ1GVFPIF&th=1&linkCode=sl2&tag=energia0d1-21&linkId=4bff30bfcc0a355aaaac23e6868ecb89&ref_=as_li_ss_tl&ascsubtag=srctok-43d9c298da767957&btn_type=ss&btn_ref=srctok-43d9c298da767957",
+                        "image": "img/MG_chuches/MG4/amazon_B0D2K9J5TY.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T21:56:28.732275+00:00",
+                        "sale_price": "346.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 433,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0DC8K6KQD",
+                        "platform": "amazon",
+                        "title": "Crucial P310 SSD 500GB PCIe Gen4 NVMe M.2 2280, Disco Interno, hasta 6.600 MB/s, Compatible con Ordenador Portátil y de Sobremesa & Consolas de Juegos Portátiles - CT500P310SSD801",
+                        "affiliate_url": "https://www.amazon.es/gp/product/B0DC8K6KQD?smid=A1AT7YVPFBWXBL&th=1&linkCode=sl2&tag=energia0d1-21&linkId=d6580543cef6b437d08776f24be62d06&ref_=as_li_ss_tl&ascsubtag=srctok-602cc2481fb7d560&btn_type=ss&btn_ref=srctok-602cc2481fb7d560",
+                        "image": "img/MG_chuches/MG4/amazon_B0DC8K6KQD.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T21:56:53.294040+00:00",
+                        "sale_price": "99.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 435,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Memorias"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0DR8W8ZWF",
+                        "platform": "amazon",
+                        "title": "WD Red Plus 2TB NAS Disco Duro Interno 3,5\" - 5400 RPM, SATA 6 GB/s, CMR, 64MB Caché",
+                        "affiliate_url": "https://www.amazon.es/gp/product/B0DR8W8ZWF?smid=A1AT7YVPFBWXBL&th=1&linkCode=sl2&tag=energia0d1-21&linkId=63b6fcd8997d21ef0608aa1d4ee1f79c&ref_=as_li_ss_tl&ascsubtag=srctok-69aad058162252da&btn_type=ss&btn_ref=srctok-69aad058162252da",
+                        "image": "img/MG_chuches/MG4/amazon_B0DR8W8ZWF.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T21:57:27.044600+00:00",
+                        "sale_price": "153.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 437,
+                        "status_clasificacion": "clasificado",
+                        "categorias": [
+                            "Varios"
+                        ],
+                        "versiones": [
+                            "__todas__"
+                        ]
+                    },
+                    {
+                        "product_id": "B0D6RGVKKX",
+                        "platform": "amazon",
+                        "title": "Cable de Red Cat 6, 5m, UTP 26AWG, 500MHz - Conexión estable para Gaming y Oficina con RJ45",
+                        "affiliate_url": "https://www.amazon.es/gp/product/B0D6RGVKKX?smid=A3VQDX55I6JHX3&th=1&linkCode=sl2&tag=energia0d1-21&linkId=babecb4efacc2a093a940c466fd70295&ref_=as_li_ss_tl&ascsubtag=srctok-22cc756b4c7ff108&btn_type=ss&btn_ref=srctok-22cc756b4c7ff108",
+                        "image": "img/MG_chuches/MG4/amazon_B0D6RGVKKX.jpg",
+                        "recommendations": 1,
+                        "votes": {},
+                        "timestamp": "2026-10-05T21:57:51.725505+00:00",
+                        "sale_price": "4.99",
+                        "original_price": null,
+                        "discount": null,
+                        "rating": null,
+                        "reviews_count": null,
+                        "price_corrected": false,
+                        "bot_message_id": 439,
                         "status_clasificacion": "clasificado",
                         "categorias": [
                             "Varios"

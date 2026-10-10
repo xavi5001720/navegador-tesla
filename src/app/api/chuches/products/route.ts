@@ -53,6 +53,20 @@ function readJSON(filePath: string) {
   }
 }
 
+const VALID_SECTION_VERSIONS: Record<string, string[]> = {
+  model3: [
+    'Highland (2024+) - Standard',
+    'Highland (2024+) - Premium',
+    'Pre-Highland (2021-2023)',
+    'Legacy (2017-2020)'
+  ],
+  modely: [
+    'Juniper (2025+) - Standard',
+    'Juniper (2025+) - Premium',
+    'Pre-Juniper (2020-2024)'
+  ]
+};
+
 function getVotos(votos: Record<string, Record<string, number>>, key: string): number {
   const entry = votos?.[key];
   if (!entry) return 0;
@@ -60,6 +74,7 @@ function getVotos(votos: Record<string, Record<string, number>>, key: string): n
 }
 
 function buildProductList(items: any[], comentarios: Record<string, any[]>, votos: Record<string, any>, section: string, globalMaxRecs: Record<string, number> = {}) {
+  const allowedVersions = VALID_SECTION_VERSIONS[section];
   return items.map((item: any) => {
     const key = `${item.platform}_${item.product_id}`;
     const cmts = comentarios?.[key] || [];
@@ -76,6 +91,10 @@ function buildProductList(items: any[], comentarios: Record<string, any[]>, voto
         finalImg = `/${imgPath}`;
       }
     }
+    const rawVersiones = item.versiones || [];
+    const filteredVersiones = allowedVersions
+      ? rawVersiones.filter((v: string) => v === '__todas__' || allowedVersions.includes(v))
+      : [];
     return {
       id: item.product_id,
       platform: item.platform,
@@ -86,7 +105,7 @@ function buildProductList(items: any[], comentarios: Record<string, any[]>, voto
       recommendations: baseRecs + totalVotos,
       votes: totalVotos,
       categorias: item.categorias || [],
-      versiones: item.versiones || [],
+      versiones: filteredVersiones,
       num_comentarios: cmts.length,
       comentarios: cmts.slice(0, 3).map((c: any) => ({
         username: c.username,

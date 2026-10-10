@@ -147,7 +147,7 @@ export const EscapadaCard: React.FC<EscapadaCardProps> = ({ deal }) => {
         <div className="space-y-2.5 mt-2 pt-3 border-t border-slate-800/80">
           {!deal.isByCar ? (
             <>
-              {/* Botón Skyscanner */}
+              {/* Botón Vuelos */}
               <a
                 href={deal.flightAffiliateUrl || deal.affiliateUrl}
                 target="_blank"
@@ -156,7 +156,7 @@ export const EscapadaCard: React.FC<EscapadaCardProps> = ({ deal }) => {
               >
                 <span className="flex items-center space-x-1.5">
                   <span>✈️</span>
-                  <span>Reservar Vuelo en Skyscanner.es</span>
+                  <span>Ver vuelos baratos</span>
                 </span>
                 <span className="bg-sky-700/90 group-hover/btn:bg-sky-600 px-2.5 py-1 rounded-lg text-xs font-black">
                   {deal.flightPriceTotal} €
