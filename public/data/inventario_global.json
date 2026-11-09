@@ -13356,28 +13356,28 @@
             "product_id": "1005006869156152",
             "platform": "aliexpress",
             "title": "Cubierta de llanta completa de coche, accesorio de rendimiento de tapa de cubo de 4 piezas, para Tesla Model 3, 18 pulgadas, Hubcap 2018-2023",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c3nUCTYb",
-            "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005006869156152.jpg",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c3BTo2bl",
+            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005006869156152.jpg",
             "recommendations": 4,
             "votes": {},
-            "timestamp": "2026-08-19T17:00:25.205746+00:00",
+            "timestamp": "2026-08-19T17:00:01.903634+00:00",
             "sale_price": "80.9",
             "original_price": "145.36",
             "discount": null,
             "rating": null,
             "reviews_count": null,
             "price_corrected": true,
+            "bot_message_id": 6092,
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
             "categorias": [
               "Ruedas"
             ],
-            "status_clasificacion": "clasificado",
             "versiones": [
-              "Legacy (2017-2020)",
-              "Pre-Highland (2021-2023)"
+              "Highland (2024+) - Premium"
             ],
-            "bot_message_id": 6094,
-            "link_status": "active",
-            "version_auto": true
+            "version_confirmada": true,
+            "backup_links": []
           },
           {
             "product_id": "1005012150409258",
@@ -16404,28 +16404,26 @@
             "product_id": "1005011869963674",
             "platform": "aliexpress",
             "title": "Protección de Cámara Frontal para Tesla Model Y y Model 3 2025-2026, Accesorios para Auto, Cubierta de Lente de Cámara Frontal Anticolisión",
-            "affiliate_url": "https://es.aliexpress.com/item/1005011869963674.html?invitationCode=UHVIUUhTRHQ3NXJtOVBjSjNNbWxubGYxRFdXWEx6eFQxdS9OT1JQUytYQWpmdlBzNkVmWTlBPT0&srcSns=sns_Copy&spreadType=socialShare&social_params=61636089618&bizType=ProductDetail&spreadCode=UHVIUUhTRHQ3NXJtOVBjSjNNbWxubGYxRFdXWEx6eFQxdS9OT1JQUytYQWpmdlBzNkVmWTlBPT0&aff_fcid=c554c47537f14ff39b7c4a55073678fa-1791140830787-00868-_EHICzWQ&tt=MG&aff_fsk=_EHICzWQ&aff_platform=default&sk=_EHICzWQ&aff_trace_key=c554c47537f14ff39b7c4a55073678fa-1791140830787-00868-_EHICzWQ&shareId=61636089618&businessType=ProductDetail&platform=AE&terminal_id=3efad15cbddc4193b6dbc7f7cd830a51&afSmartRedirect=y&gatewayAdapt=glo2esp",
-            "image": "https://ae-pic-a1.aliexpress-media.com/kf/Se36ec21c1bf742b98ba75eb29141e298a.jpg",
+            "affiliate_url": "https://es.aliexpress.com/item/1005011869963674.html?invitationCode=eGd1ZlR3eTRkMFdYdmxsZzdNRlFlbGYxRFdXWEx6eFQxdS9OT1JQUytYQWpmdlBzNkVmWTlBPT0&srcSns=sns_Copy&spreadType=socialShare&social_params=61656710133&bizType=ProductDetail&spreadCode=eGd1ZlR3eTRkMFdYdmxsZzdNRlFlbGYxRFdXWEx6eFQxdS9OT1JQUytYQWpmdlBzNkVmWTlBPT0&aff_fcid=66ea8dc1f94342eaa8af4a872d6afb9d-1792821231576-06422-_EuWvuvk&tt=MG&aff_fsk=_EuWvuvk&aff_platform=default&sk=_EuWvuvk&aff_trace_key=66ea8dc1f94342eaa8af4a872d6afb9d-1792821231576-06422-_EuWvuvk&shareId=61656710133&businessType=ProductDetail&platform=AE&terminal_id=607c4a090a854b529adb19765607c869&afSmartRedirect=y&gatewayAdapt=glo2esp",
+            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005011869963674.jpg",
             "recommendations": 4,
             "votes": {},
-            "timestamp": "2026-10-04T19:07:17.459725+00:00",
+            "timestamp": "2026-10-24T05:53:55.396971+00:00",
             "sale_price": "5,19",
             "original_price": null,
             "discount": null,
             "rating": null,
             "reviews_count": null,
             "price_corrected": false,
-            "categorias": [
-              "Varios"
-            ],
+            "bot_message_id": 8490,
             "status_clasificacion": "clasificado",
-            "versiones": [
-              "Highland (2024+) - Standard",
-              "Highland (2024+) - Premium"
-            ],
-            "bot_message_id": 8058,
             "link_status": "active",
-            "version_auto": true,
+            "categorias": [
+              "Pantallas"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
             "version_confirmada": true,
             "backup_links": []
           },
@@ -19002,6 +19000,78 @@
             "versiones": [
               "__todas__"
             ]
+          },
+          {
+            "product_id": "1005010705480265",
+            "platform": "aliexpress",
+            "title": "La pantalla del filtro de líquido del limpiaparabrisas del coche protege contra los restos fácil de instalar para la protección de la ventana del vehículo Tesla modelo Y/3",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c3EoTDDl",
+            "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005010705480265.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-11-09T20:00:10.579960+00:00",
+            "sale_price": "2.80",
+            "original_price": "5.84",
+            "discount": "52%",
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "bot_message_id": 8825,
+            "status_clasificacion": "pendiente"
+          },
+          {
+            "product_id": "1005013149638981",
+            "platform": "aliexpress",
+            "title": "Protector de Cámara Trasera Original 2026, Cubierta Impermeable para una Protección Mejorada del Dispositivo",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c36BrR2d",
+            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005013149638981.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-10-04T18:59:29.892047+00:00",
+            "sale_price": "10.10",
+            "original_price": "25.06",
+            "discount": "59%",
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "bot_message_id": 8041,
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
+            "categorias": [
+              "Pantallas"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": []
+          },
+          {
+            "product_id": "1005009947475093",
+            "platform": "aliexpress",
+            "title": "500/200/100 Uds 30 tipos de sujetadores universales mixtos para parachoques de coche Clips retenedor sujetador de coche remache revestimiento de Panel de puerta para todos los coches",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c3YZ3yFl",
+            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005009947475093.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-07-14T17:12:07.594986+00:00",
+            "sale_price": "4.16",
+            "original_price": "8.57",
+            "discount": "51%",
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "bot_message_id": 4864,
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
+            "categorias": [
+              "Varios"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": []
           }
         ],
         "topic_name": "Tesla Model 3"
@@ -29966,6 +30036,114 @@
             "versiones": [
               "__todas__"
             ]
+          },
+          {
+            "product_id": "B085G55ZBN",
+            "platform": "amazon",
+            "title": "VEVOR Refrigerador para Coche 55 L Mini Caja del Congelador Caja Fresca Mini Frigorífico Coche Mini Nevera -20 a 10 Grados Centígrados para Camping Caravanas Picnics Festivales",
+            "affiliate_url": "https://www.amazon.es/dp/B085G55ZBN/ref=cm_sw_r_as_gl_apa_gl_i_25DVF8E72X74YX9TK53F?linkCode=ml1&tag=energia0d1-21&linkId=9086d83e5274dba3508e03e927a68036",
+            "image": "img/Tesla_chuches/Desconocido/amazon_B085G55ZBN.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-07-21T07:52:19.828514+00:00",
+            "sale_price": "181.9",
+            "original_price": null,
+            "discount": null,
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "bot_message_id": 5140,
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
+            "categorias": [
+              "Neveras"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": []
+          },
+          {
+            "product_id": "1005012191692896",
+            "platform": "aliexpress",
+            "title": "Nevera Portátil de 35L para Viajes y Campamentos, Refrigerador para Auto Compatible con Model Y y Model 3",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c3fnTzDv",
+            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005012191692896.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-07-21T08:09:03.043708+00:00",
+            "sale_price": "441.41",
+            "original_price": "441.41",
+            "discount": "0%",
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "bot_message_id": 5145,
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
+            "categorias": [
+              "Neveras"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": []
+          },
+          {
+            "product_id": "1005012521936523",
+            "platform": "aliexpress",
+            "title": "Luz Ambiental Dinámica para Tesla Model Y Juniper, Model 3 Highland, RHD, LHD, Tesla Juniper, Luz Ambiental Mejorada para Highland",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c4SFOaal",
+            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005012521936523.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-10-10T10:32:45.251328+00:00",
+            "sale_price": "287.22",
+            "original_price": "522.22",
+            "discount": "45%",
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "bot_message_id": 8232,
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
+            "categorias": [
+              "Luces"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": []
+          },
+          {
+            "product_id": "1005012506672279",
+            "platform": "aliexpress",
+            "title": "Nuevo estilo: Caja de almacenamiento para coche Tesla, compartimento lateral del maletero y extraíble magnético.",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c3lXQi1Z",
+            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005012506672279.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-10-28T07:52:57.145521+00:00",
+            "sale_price": "68.91",
+            "original_price": "68.91",
+            "discount": "0%",
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "bot_message_id": 8570,
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
+            "categorias": [
+              "Maletero"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": []
           }
         ],
         "topic_name": "Tesla Model Y"
@@ -30068,32 +30246,28 @@
             "product_id": "1005007542907108",
             "platform": "aliexpress",
             "title": "Cargador para Vehículos Eléctricos Feyree, Cable Tipo 2, 32A, 7.6kW, Balanceo Dinámico de Carga, EVSE Wallbox, Función de Aplicación, Estación de Carga de 11kW/22kW para Autos Eléctricos",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c2vMbUtp",
-            "image": "https://ae-pic-a1.aliexpress-media.com/kf/S28b05c2b4a154688a9385df49285f74fd.jpg",
-            "timestamp": "2026-03-19T18:04:38+00:00",
-            "status_clasificacion": "clasificado",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c3ZcEust",
+            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005007542907108.jpg",
             "recommendations": 3,
             "votes": {},
+            "timestamp": "2026-08-18T18:08:13.910072+00:00",
+            "sale_price": "195.89",
+            "original_price": "445.20",
+            "discount": "56%",
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": true,
+            "bot_message_id": 6052,
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
             "categorias": [
               "Cargadores"
             ],
             "versiones": [
               "__todas__"
             ],
-            "link": "https://s.click.aliexpress.com/e/_c4XCPSyD",
-            "sale_price": "195.89",
-            "original_price": "445.20",
-            "discount": "56%",
-            "backup_links": [
-              {
-                "product_id": "1005007542907108",
-                "platform": "aliexpress",
-                "affiliate_url": "https://s.click.aliexpress.com/e/_c3ySPg8z",
-                "sale_price": "195.89",
-                "title": "Cargador para Vehículos Eléctricos Feyree, Cable Tipo 2, 32A, 7.6kW, Balanceo Dinámico de Carga, EVSE Wallbox, Función de Aplicación, Estación de Carga de 11kW/22kW para Autos Eléctricos"
-              }
-            ],
-            "link_status": "active"
+            "version_confirmada": true,
+            "backup_links": []
           },
           {
             "product_id": "B0CTH4P26C",
@@ -31554,7 +31728,43 @@
             "reviews_count": null,
             "price_corrected": false,
             "bot_message_id": 8821,
-            "status_clasificacion": "pendiente"
+            "status_clasificacion": "clasificado",
+            "categorias": [
+              "Limpieza"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": [],
+            "link_status": "active"
+          },
+          {
+            "product_id": "1005012445541313",
+            "platform": "aliexpress",
+            "title": "Funda de Asiento Negra para Niños con Organizador de 3 Bolsillos, Protector de Asiento Trasero Impermeable, Protectores para el Respaldo del Asiento del Automóvil",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c4lmPIqF",
+            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005012445541313.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-08-15T10:07:29.538425+00:00",
+            "sale_price": "6.61",
+            "original_price": "13.49",
+            "discount": "51%",
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "bot_message_id": 5963,
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
+            "categorias": [
+              "Bebés"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": []
           }
         ]
       },
@@ -31709,8 +31919,16 @@
             "reviews_count": null,
             "price_corrected": false,
             "bot_message_id": 4091,
-            "status_clasificacion": "pendiente",
-            "link_status": "broken"
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
+            "categorias": [
+              "Merchandising"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": []
           },
           {
             "product_id": "1005008906969618",
@@ -31728,8 +31946,16 @@
             "reviews_count": null,
             "price_corrected": false,
             "bot_message_id": 5475,
-            "status_clasificacion": "pendiente",
-            "link_status": "broken"
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
+            "categorias": [
+              "Merchandising"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": []
           }
         ]
       },
@@ -32014,25 +32240,6 @@
             "link_status": "active"
           },
           {
-            "product_id": "1005009947475093",
-            "platform": "aliexpress",
-            "title": "500/200/100 Uds 30 tipos de sujetadores universales mixtos para parachoques de coche Clips retenedor sujetador de coche remache revestimiento de Panel de puerta para todos los coches",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c3YZ3yFl",
-            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005009947475093.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-07-14T17:12:07.594986+00:00",
-            "sale_price": "4.16",
-            "original_price": "8.57",
-            "discount": "51%",
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 4864,
-            "status_clasificacion": "pendiente",
-            "link_status": "active"
-          },
-          {
             "product_id": "1005012218691518",
             "platform": "aliexpress",
             "title": "Para Tesla Model 3 2026: Malla Antimosquitos para Parrilla (Versión con Cámara) - Rejilla Inferior de Admisión de Aire para Parachoques",
@@ -32055,101 +32262,6 @@
               "__todas__"
             ],
             "bot_message_id": 4915,
-            "link_status": "active"
-          },
-          {
-            "product_id": "B085G55ZBN",
-            "platform": "amazon",
-            "title": "VEVOR Refrigerador para Coche 55 L Mini Caja del Congelador Caja Fresca Mini Frigorífico Coche Mini Nevera -20 a 10 Grados Centígrados para Camping Caravanas Picnics Festivales",
-            "affiliate_url": "https://www.amazon.es/dp/B085G55ZBN/ref=cm_sw_r_as_gl_apa_gl_i_25DVF8E72X74YX9TK53F?linkCode=ml1&tag=energia0d1-21&linkId=9086d83e5274dba3508e03e927a68036",
-            "image": "img/Tesla_chuches/Desconocido/amazon_B085G55ZBN.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-07-21T07:52:19.828514+00:00",
-            "sale_price": "181.9",
-            "original_price": null,
-            "discount": null,
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 5140,
-            "status_clasificacion": "pendiente",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005012191692896",
-            "platform": "aliexpress",
-            "title": "Nevera Portátil de 35L para Viajes y Campamentos, Refrigerador para Auto Compatible con Model Y y Model 3",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c3fnTzDv",
-            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005012191692896.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-07-21T08:09:03.043708+00:00",
-            "sale_price": "441.41",
-            "original_price": "441.41",
-            "discount": "0%",
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 5145,
-            "status_clasificacion": "pendiente",
-            "link_status": "broken"
-          },
-          {
-            "product_id": "1005012445541313",
-            "platform": "aliexpress",
-            "title": "Funda de Asiento Negra para Niños con Organizador de 3 Bolsillos, Protector de Asiento Trasero Impermeable, Protectores para el Respaldo del Asiento del Automóvil",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c4lmPIqF",
-            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005012445541313.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-08-15T10:07:29.538425+00:00",
-            "sale_price": "6.61",
-            "original_price": "13.49",
-            "discount": "51%",
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 5963,
-            "status_clasificacion": "pendiente",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005007542907108",
-            "platform": "aliexpress",
-            "title": "Cargador para Vehículos Eléctricos Feyree, Cable Tipo 2, 32A, 7.6kW, Balanceo Dinámico de Carga, EVSE Wallbox, Función de Aplicación, Estación de Carga de 11kW/22kW para Autos Eléctricos",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c3ZcEust",
-            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005007542907108.jpg",
-            "recommendations": 3,
-            "votes": {},
-            "timestamp": "2026-08-18T18:08:13.910072+00:00",
-            "sale_price": "195.89",
-            "original_price": "445.20",
-            "discount": "56%",
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": true,
-            "bot_message_id": 6052,
-            "status_clasificacion": "pendiente",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005006869156152",
-            "platform": "aliexpress",
-            "title": "Cubierta de llanta completa de coche, accesorio de rendimiento de tapa de cubo de 4 piezas, para Tesla Model 3, 18 pulgadas, Hubcap 2018-2023",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c3BTo2bl",
-            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005006869156152.jpg",
-            "recommendations": 4,
-            "votes": {},
-            "timestamp": "2026-08-19T17:00:01.903634+00:00",
-            "sale_price": "80.9",
-            "original_price": "145.36",
-            "discount": null,
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": true,
-            "bot_message_id": 6092,
-            "status_clasificacion": "pendiente",
             "link_status": "active"
           },
           {
@@ -32178,25 +32290,6 @@
             "link_status": "broken"
           },
           {
-            "product_id": "1005013149638981",
-            "platform": "aliexpress",
-            "title": "Protector de Cámara Trasera Original 2026, Cubierta Impermeable para una Protección Mejorada del Dispositivo",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c36BrR2d",
-            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005013149638981.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-10-04T18:59:29.892047+00:00",
-            "sale_price": "10.10",
-            "original_price": "25.06",
-            "discount": "59%",
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 8041,
-            "status_clasificacion": "pendiente",
-            "link_status": "broken"
-          },
-          {
             "product_id": "B0G7X65K5X",
             "platform": "amazon",
             "title": "[8 PZS] GAFAT Tesla Model 3 Highland Standard Premium 2026 2025 2024 Alfombrillas Goma + Maletero Juego Completo, TPE Todo Tipo de Climas, Borde Alto Escaneo 3D Original OEM, Protección 360°",
@@ -32219,25 +32312,6 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005012521936523",
-            "platform": "aliexpress",
-            "title": "Luz Ambiental Dinámica para Tesla Model Y Juniper, Model 3 Highland, RHD, LHD, Tesla Juniper, Luz Ambiental Mejorada para Highland",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c4SFOaal",
-            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005012521936523.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-10-10T10:32:45.251328+00:00",
-            "sale_price": "287.22",
-            "original_price": "522.22",
-            "discount": "45%",
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 8232,
-            "status_clasificacion": "pendiente",
             "link_status": "active"
           },
           {
@@ -32264,50 +32338,6 @@
               "__todas__"
             ],
             "link_status": "broken"
-          },
-          {
-            "product_id": "1005011869963674",
-            "platform": "aliexpress",
-            "title": "Protección de Cámara Frontal para Tesla Model Y y Model 3 2025-2026, Accesorios para Auto, Cubierta de Lente de Cámara Frontal Anticolisión",
-            "affiliate_url": "https://es.aliexpress.com/item/1005011869963674.html?invitationCode=eGd1ZlR3eTRkMFdYdmxsZzdNRlFlbGYxRFdXWEx6eFQxdS9OT1JQUytYQWpmdlBzNkVmWTlBPT0&srcSns=sns_Copy&spreadType=socialShare&social_params=61656710133&bizType=ProductDetail&spreadCode=eGd1ZlR3eTRkMFdYdmxsZzdNRlFlbGYxRFdXWEx6eFQxdS9OT1JQUytYQWpmdlBzNkVmWTlBPT0&aff_fcid=66ea8dc1f94342eaa8af4a872d6afb9d-1792821231576-06422-_EuWvuvk&tt=MG&aff_fsk=_EuWvuvk&aff_platform=default&sk=_EuWvuvk&aff_trace_key=66ea8dc1f94342eaa8af4a872d6afb9d-1792821231576-06422-_EuWvuvk&shareId=61656710133&businessType=ProductDetail&platform=AE&terminal_id=607c4a090a854b529adb19765607c869&afSmartRedirect=y&gatewayAdapt=glo2esp",
-            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005011869963674.jpg",
-            "recommendations": 4,
-            "votes": {},
-            "timestamp": "2026-10-24T05:53:55.396971+00:00",
-            "sale_price": "5,19",
-            "original_price": null,
-            "discount": null,
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 8490,
-            "status_clasificacion": "clasificado",
-            "link_status": "active",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "version_confirmada": true,
-            "backup_links": []
-          },
-          {
-            "product_id": "1005012506672279",
-            "platform": "aliexpress",
-            "title": "Nuevo estilo: Caja de almacenamiento para coche Tesla, compartimento lateral del maletero y extraíble magnético.",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c3lXQi1Z",
-            "image": "img/Tesla_chuches/Desconocido/aliexpress_1005012506672279.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-10-28T07:52:57.145521+00:00",
-            "sale_price": "68.91",
-            "original_price": "68.91",
-            "discount": "0%",
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 8570,
-            "status_clasificacion": "pendiente",
-            "link_status": "active"
           }
         ]
       }
@@ -42669,8 +42699,16 @@
             "reviews_count": null,
             "price_corrected": false,
             "bot_message_id": 1568,
-            "status_clasificacion": "pendiente",
-            "link_status": "broken"
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
+            "categorias": [
+              "Carlinkit"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": []
           },
           {
             "product_id": "1005006665401419",
@@ -42687,9 +42725,17 @@
             "rating": null,
             "reviews_count": null,
             "price_corrected": false,
-            "status_clasificacion": "pendiente",
+            "status_clasificacion": "clasificado",
             "bot_message_id": 1955,
-            "link_status": "active"
+            "link_status": "active",
+            "categorias": [
+              "Carlinkit"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": []
           }
         ]
       },
@@ -48619,26 +48665,28 @@
             "product_id": "B0GKG7MR3F",
             "platform": "amazon",
             "title": "GAFAT Compatible con Nuevo Xpeng G6 2025 2026 2027 Consola Central Caja de Almacenamiento, X peng G6 Reposabrazos Organizador Estante con Alfombrillas de Goma Antideslizantes, X peng G6 Accesorios",
-            "affiliate_url": "https://www.amazon.es/GAFAT-Almacenamiento-Reposabrazos-Alfombrillas-Antideslizantes/dp/B0GKG7MR3F/ref=sr_1_3?__mk_es_ES=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=123XBXW9XOY6V&dib=eyJ2IjoiMSJ9.zcI-fwPyoVihhSderBPPiBwCAgIkO0_Uk7w89_R0vDC-NoKlBiPqfqSdhzxrXEJOzHJE6SpoqfAQp6uVTpOK6-UZPKudWyM_HEHSKATLoreiV1SUvZCmWe6qCgOFXB19j6IsMz_1RygUoQN51MbfEz4CJJQUPnc0-jvrGoDdM8ERIk8mfQp2EYIxslFItiZd8frapyKXxFDDUu5GNwsliBo8b69u4TxNoynGRLJeGl3GmWPP0kScMQTIbFHuGrokEkruJSJnaO8GsYfHRbHXax2dK2-mNfiFe42QX1TK1_Q.XTO4PlHNy4QQmu-c5caedD0UczVACEOqGbmzL0REnb8&dib_tag=se&keywords=xpeng&qid=1789119526&refinements=p_72%253A831280031&rnid=831271031&sprefix=xpeng%252Caps%252C321&sr=8-3&tag=energia0d1-21",
-            "image": "img/Xpeng_chuches/Xpeng_G6/amazon_B0GKG7MR3F.jpg",
+            "affiliate_url": "https://www.amazon.es/dp/B0GKG7MR3F/ref=cm_sw_r_as_gl_apa_gl_i_HQF4XS94B411ZAX46ATA?linkCode=ml1&tag=energia0d1-21&linkId=b94c05c22cfb0358f9785306ba37b102&ascsubtag=srctok-7a76e8c44dc6f148&btn_type=ss&btn_ref=srctok-7a76e8c44dc6f148",
+            "image": "img/Xpeng_chuches/Desconocido/amazon_B0GKG7MR3F.jpg",
             "recommendations": 1,
             "votes": {},
-            "timestamp": "2026-09-11T09:39:58.315161+00:00",
-            "sale_price": "19.84",
+            "timestamp": "2026-10-07T11:28:07.679387+00:00",
+            "sale_price": "17.95",
             "original_price": null,
             "discount": null,
             "rating": null,
             "reviews_count": null,
             "price_corrected": false,
-            "bot_message_id": 1388,
+            "bot_message_id": 1534,
             "status_clasificacion": "clasificado",
+            "link_status": "active",
             "categorias": [
-              "Consola"
+              "Organizadores"
             ],
             "versiones": [
               "__todas__"
             ],
-            "link_status": "active"
+            "version_confirmada": true,
+            "backup_links": []
           },
           {
             "product_id": "1005008244787838",
@@ -53073,8 +53121,16 @@
             "reviews_count": null,
             "price_corrected": false,
             "bot_message_id": 1079,
-            "status_clasificacion": "pendiente",
-            "link_status": "active"
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
+            "categorias": [
+              "Carlinkit"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": []
           }
         ]
       },
@@ -53765,25 +53821,6 @@
               "__todas__"
             ],
             "link_status": "broken"
-          },
-          {
-            "product_id": "B0GKG7MR3F",
-            "platform": "amazon",
-            "title": "GAFAT Compatible con Nuevo Xpeng G6 2025 2026 2027 Consola Central Caja de Almacenamiento, X peng G6 Reposabrazos Organizador Estante con Alfombrillas de Goma Antideslizantes, X peng G6 Accesorios",
-            "affiliate_url": "https://www.amazon.es/dp/B0GKG7MR3F/ref=cm_sw_r_as_gl_apa_gl_i_HQF4XS94B411ZAX46ATA?linkCode=ml1&tag=energia0d1-21&linkId=b94c05c22cfb0358f9785306ba37b102&ascsubtag=srctok-7a76e8c44dc6f148&btn_type=ss&btn_ref=srctok-7a76e8c44dc6f148",
-            "image": "img/Xpeng_chuches/Desconocido/amazon_B0GKG7MR3F.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-10-07T11:28:07.679387+00:00",
-            "sale_price": "17.95",
-            "original_price": null,
-            "discount": null,
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 1534,
-            "status_clasificacion": "pendiente",
-            "link_status": "active"
           }
         ]
       }
@@ -60737,26 +60774,28 @@
             "product_id": "1005011612195422",
             "platform": "aliexpress",
             "title": "OTTOCAST P3 PRO AI Box Android TV Box con salida HDMI, CarPlay inalámbrico, Android Auto, accesorios para coche para Toyota, VW, Honda, Kia, Benz",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c40XZ1gT",
-            "image": "img/Toyota_chuches/Carlinkit/aliexpress_1005011612195422.jpg",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c35uf7F9",
+            "image": "img/Toyota_chuches/Desconocido/aliexpress_1005011612195422.jpg",
             "recommendations": 3,
             "votes": {},
-            "timestamp": "2026-07-16T04:49:49.557005+00:00",
-            "sale_price": "159.83",
-            "original_price": "319.66",
+            "timestamp": "2026-07-19T08:18:52.566448+00:00",
+            "sale_price": "160.23",
+            "original_price": "320.45",
             "discount": "50%",
             "rating": null,
             "reviews_count": null,
             "price_corrected": false,
-            "bot_message_id": 702,
+            "bot_message_id": 734,
             "status_clasificacion": "clasificado",
+            "link_status": "active",
             "categorias": [
               "Carlinkit"
             ],
             "versiones": [
               "__todas__"
             ],
-            "link_status": "active"
+            "version_confirmada": true,
+            "backup_links": []
           },
           {
             "product_id": "B0DSLH536M",
@@ -60787,27 +60826,7 @@
       },
       "general": {
         "topic_name": "Desconocido",
-        "items": [
-          {
-            "product_id": "1005011612195422",
-            "platform": "aliexpress",
-            "title": "OTTOCAST P3 PRO AI Box Android TV Box con salida HDMI, CarPlay inalámbrico, Android Auto, accesorios para coche para Toyota, VW, Honda, Kia, Benz",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c35uf7F9",
-            "image": "img/Toyota_chuches/Desconocido/aliexpress_1005011612195422.jpg",
-            "recommendations": 3,
-            "votes": {},
-            "timestamp": "2026-07-19T08:18:52.566448+00:00",
-            "sale_price": "160.23",
-            "original_price": "320.45",
-            "discount": "50%",
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 734,
-            "status_clasificacion": "pendiente",
-            "link_status": "active"
-          }
-        ]
+        "items": []
       }
     }
   },
@@ -75637,8 +75656,16 @@
             "reviews_count": null,
             "price_corrected": false,
             "bot_message_id": 2144,
-            "status_clasificacion": "pendiente",
-            "link_status": "active"
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
+            "categorias": [
+              "Carlinkit"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": []
           },
           {
             "product_id": "1005009738198555",
@@ -75656,8 +75683,16 @@
             "reviews_count": null,
             "price_corrected": false,
             "bot_message_id": 2170,
-            "status_clasificacion": "pendiente",
-            "link_status": "broken"
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
+            "categorias": [
+              "Carlinkit"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": []
           }
         ]
       }
@@ -78220,8 +78255,16 @@
             "reviews_count": null,
             "price_corrected": false,
             "bot_message_id": 394,
-            "status_clasificacion": "pendiente",
-            "link_status": "broken"
+            "status_clasificacion": "clasificado",
+            "link_status": "active",
+            "categorias": [
+              "Parasoles"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "version_confirmada": true,
+            "backup_links": []
           }
         ]
       },
@@ -81940,25 +81983,6 @@
             "link_status": "broken"
           },
           {
-            "product_id": "1005006955575428",
-            "platform": "aliexpress",
-            "title": "Placa de Metal magnética para soporte magnético de teléfono de coche, soporte adhesivo de hoja de hierro Universal, soporte magnético para teléfono móvil, 1/20 Uds.",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c30nvzc5",
-            "image": "img/Chuches_EV/Desconocido/aliexpress_1005006955575428.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-06-19T08:27:12.458255+00:00",
-            "sale_price": "2.70",
-            "original_price": "5.79",
-            "discount": "53%",
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 4364,
-            "status_clasificacion": "pendiente",
-            "link_status": "active"
-          },
-          {
             "product_id": "1005004782481216",
             "platform": "aliexpress",
             "title": "Placa de Metal para soporte de teléfono de coche, hoja de hierro Universal magnética, pegatina de disco, soporte magnético para teléfono móvil para IPhone",
@@ -81993,25 +82017,6 @@
             "reviews_count": null,
             "price_corrected": false,
             "bot_message_id": 4371,
-            "status_clasificacion": "pendiente",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005008691478874",
-            "platform": "aliexpress",
-            "title": "Película Opaca para Ventanas - Cubierta de Privacidad que Bloquea el Sol, Removible, Oscurecedora para el Hogar, Dormitorio, Puertas de Vidrio",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c386l2o9",
-            "image": "img/Chuches_EV/Desconocido/aliexpress_1005008691478874.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-06-22T09:53:13.332190+00:00",
-            "sale_price": "4.69",
-            "original_price": "9.39",
-            "discount": "50%",
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 4375,
             "status_clasificacion": "pendiente",
             "link_status": "active"
           },
@@ -82082,44 +82087,6 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "active"
-          },
-          {
-            "product_id": "B0DWP6PHGV",
-            "platform": "amazon",
-            "title": "azorex Ventilador de Techo con Luz LED Panel Ultrafino 40W 107 cm, Motor DC Silencioso, 6 Velocidades, Reversible, Control Remoto, 3 Tonos de Luz 3000K-6500K, Espectro Completo",
-            "affiliate_url": "https://www.amazon.es/dp/B0DWP6PHGV?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
-            "image": "img/Chuches_EV/Desconocido/amazon_B0DWP6PHGV.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-06-24T19:08:04.643905+00:00",
-            "sale_price": null,
-            "original_price": null,
-            "discount": null,
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 4389,
-            "status_clasificacion": "pendiente",
-            "link_status": "active"
-          },
-          {
-            "product_id": "B0F99DJGDJ",
-            "platform": "amazon",
-            "title": "Lámina Aislante Aluminizada Térmica, 60 x 200 cm Protector Térmico Aluminizado con Adhesivo, Aislante Termico Autoadhesivo, Barrera del Aislamiento Térmico para Vehículos Techos Tubos Barco",
-            "affiliate_url": "https://www.amazon.es/dp/B0F99DJGDJ?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
-            "image": "img/Chuches_EV/Desconocido/amazon_B0F99DJGDJ.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-06-26T09:47:05.302972+00:00",
-            "sale_price": null,
-            "original_price": null,
-            "discount": null,
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 4396,
-            "status_clasificacion": "pendiente",
             "link_status": "active"
           },
           {
@@ -82562,25 +82529,6 @@
             "reviews_count": null,
             "price_corrected": false,
             "bot_message_id": 4519,
-            "status_clasificacion": "pendiente",
-            "link_status": "active"
-          },
-          {
-            "product_id": "B072LTLZW3",
-            "platform": "amazon",
-            "title": "Sveon SCT011M - Lector DNI Electrónico y Tarjetas Inteligentes Compatible con Mac y Windows",
-            "affiliate_url": "https://www.amazon.es/dp/B072LTLZW3?ref=cm_sw_r_cso_cp_apin_dp_CF5G6K5E671C2TGJQ8CJ&ref_=cm_sw_r_cso_cp_apin_dp_CF5G6K5E671C2TGJQ8CJ&social_share=cm_sw_r_cso_cp_apin_dp_CF5G6K5E671C2TGJQ8CJ&tag=energia0d1-21",
-            "image": "img/Chuches_EV/Desconocido/amazon_B072LTLZW3.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-08-11T09:38:08.155379+00:00",
-            "sale_price": "7.99",
-            "original_price": null,
-            "discount": null,
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 4522,
             "status_clasificacion": "pendiente",
             "link_status": "active"
           },
@@ -83122,25 +83070,6 @@
             "link_status": "active"
           },
           {
-            "product_id": "B0FXMTMGS8",
-            "platform": "amazon",
-            "title": "Baliza V16 Homologada DGT con Geolocalización | Luz de Emergencia Coche LED 360° 1km | Conectada Plataforma DGT 3.0 | Resistente a la Lluvia | con Indicador de Batería y Base Imantada | Bip&Drive",
-            "affiliate_url": "https://www.amazon.es/dp/B0FXMTMGS8/ref=cm_sw_r_as_gl_apa_gl_i_BCV80NP1CSCFBVTAZW5X?linkCode=ml1&tag=energia0d1-21&linkId=dba46caadf10fc9fe8cc8053a92a5387&ascsubtag=srctok-7ad2aee842dd0138&btn_type=ss&btn_ref=srctok-7ad2aee842dd0138",
-            "image": "img/Chuches_EV/Desconocido/amazon_B0FXMTMGS8.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-10-04T20:04:31.429984+00:00",
-            "sale_price": "12.5",
-            "original_price": null,
-            "discount": null,
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 4650,
-            "status_clasificacion": "pendiente",
-            "link_status": "active"
-          },
-          {
             "product_id": "B0BSNHMWM6",
             "platform": "amazon",
             "title": "Toma recarga empotradavehiculo electrico EFAPEL 2P+TT 16A 81132",
@@ -83441,25 +83370,6 @@
             "link_status": "active"
           },
           {
-            "product_id": "B07VKPVTJX",
-            "platform": "amazon",
-            "title": "AISENS - A145-0331 cable de red latiguillo RJ45 LSZH cat.6a 500 mhz utp awg24, gris, 15m",
-            "affiliate_url": "https://www.amazon.es/dp/B07VKPVTJX/ref=cm_sw_r_as_gl_apa_gl_i_KAK7G1M7F9QJZNWNGBDT?linkCode=ml1&tag=energia0d1-21&linkId=8eabe921c8cac66d0daf6d869b64e132&gaOptInStatus=true&ascsubtag=srctok-54016000e5ab0303&btn_type=ss&btn_ref=srctok-54016000e5ab0303",
-            "image": "img/Chuches_EV/Desconocido/amazon_B07VKPVTJX.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-10-21T16:46:50.913405+00:00",
-            "sale_price": "12.13",
-            "original_price": null,
-            "discount": null,
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "bot_message_id": 4706,
-            "status_clasificacion": "pendiente",
-            "link_status": "active"
-          },
-          {
             "product_id": "1005012906508709",
             "platform": "aliexpress",
             "title": "Cubierta de Rueda Asimétrica de 18 Pulgadas en Negro Mate, 4 Piezas, para Tesla Model Y Estándar 2025 - 2026, Accesorios de Protección para Llantas",
@@ -83511,48 +83421,6 @@
             "link_status": "active"
           },
           {
-            "product_id": "1005008840129892",
-            "platform": "aliexpress",
-            "title": "100 pegatinas personalizadas de PVC, impermeables, troqueladas, de vinilo, con diseño de logotipo personalizado, brillantes o mate, para cajas de regalo empresariales.",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DIac2Tm1iaNTV9dN1VSnNvHrkFGSSL0327h244a9mD7UOAeGDnGiioJ2lKzJjbD2BcFfZ4DfWlTzIbaT9DIoj3odwsqkpfrJJI9ViGrfOAU22xvq8ztWJa41EeDNPDcqErhlvCVRjN62wsRrdexzO2IDl1p4fwgHHivCROtwkuEigVCFAphU0QnzQ5I2mxlYr8A5ldPrH3lKOgNiIjWhpWqkcqvc90UQDdveOGn3cKvFhoAgmOoz9enef57QUHoAh8y4aqgJgjicGogwmcKkXM6I1HUTFnU48qleYSkDcSl0nS2ddO8YNNMtVrXqA1y3w8AqvLJeqpThvCMuBxpCwIVZGhNePnsa6NgpwYzyu6hSEwTwW3mTn7rwFPUKWzuARVvGfOFwBr6UXLVkl9QX7jqNbpc4fDo5nOX5fdemGs94jNxdRJe9aay7Y6LC91Ybr2Cgx6TAYp6eJZmaE12iPAKV7tKmBylxeNmRrIpNySbYSB0j3QMA1DySY9snc4sMuiHf9DN0H9kccvImXk8bBmGGFifumZVlrql0jDnmaSkeY31oacPvxvV4UN73T0OjqOa8C20oclyRjgkrIGz5OJyfcWzZro4cXvRGbeTsHwobaOL73BOhoedtzHbF0X2ut4r3htnKL9Avyy1DyFmnAg0HPVnq0YNiamhQpU2ELaZex6j8l2j",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005008840129892.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/S74532fc13ddb4f03bfd29a49716d7169C.png",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "6,69 €",
-            "original_price": "7,96 €",
-            "discount": "15",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005012683834063",
-            "platform": "aliexpress",
-            "title": "Xiaomi Redmi Pad 2 Tableta, Pantalla 11\" 2.5K 90Hz, Procesador MediaTek Helio G100-Ultra, Batería 9000mAh, Carga rápida, WiFi 5 IPv6, HyperOS, Cámara 8MP, 100% Authentic & Brand New",
-            "affiliate_url": "https://s.click.aliexpress.com/s/pyFri10M6ltAv61YZY9TfrxiDaaFXRreuZWJMeLtD8jig1wPxn51K2eq59ds8iT5Wl5L3w5KJyrl7SjOO3B0oJ0Xjwnc7n8AQA7gf5qnT4sCyU05LNms9JvyWQNFHNKtzBcoBpSguMg3UBR1FOODkmGTloXosMhqhnKgzzuJPYPxewVvzupiAiKSJA5SK0iQRxmaQ7UPG0AP2HC7uLitVpvXIfjMl7RnsnN7B8FrGfP9TWP7emQeaXV90Bp9fLEiLe5mOF3ZxRkgXTxDel4NhdR1WLVYSoygR9Mm1fajL9UmwmCVRVHwLPp0N3C28tlDUDOCPoPQB38wdsovG8PGYUvedkdc0W38Ca5ylIBsLKr4lKbNMkchaosrTbkmiArNHShPz1slSITxTWGl1Ofm9b7zNqFzHD1f5bdH3etpMwNpEXwuOjG2QEreOnzhUMccCRY1FmCMGSaZUQEaeTaDMKmQXvy7dMM7JWXwQjVRLW2l2AHVc8kONdUErXoN5k1X0BpC1JAg6HcUf7QJaqaU1sSQbyw938erECTGCyvHnnloK3DYMhxeyT6K6HtGwV3z7KZrqe7qXEXRIzAFhxMPRMU7hexkhfnkvFpL4wdxsPUsI0KW14qDbq9VhL3ndR3hUVaIyl7qBdhzNTAlEbcnbcvzX0WJQaQMIfbYyv85MCU3iI9wSgm1TE1HYMwpqjHNN7nGa83luL5N9OitLeLGenfxlHXgoMSVvUpxOTqLyiAr9Cwp6jtesoqipHF92hK5koBIDoHad8bUDr7cBvwRU7CWzWNII6o1aad0DKhfcXNXdNGxVj4BrwLOoE2FwXnQLzByPPloksvnw2Xm3YPu18IuL1nF1evyFsqJJbAXiM2qTBLTRTNY09WrP9do2INjtqHvC2z7EUCegvOAahxGJdYI4OaBSCdMMhxecxjT7EKDJuJZZUpADjAQ7WbIpfJyWzeDgkJPys5vXXkmDtl2h62saNRoHTzqy11DQ9Xjlc3dIScW3XevDBgyGqHkKd4vCP77bobA",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005012683834063.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/Aa57216566b324e80960f798a748d9621L.png",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "231,52 €",
-            "original_price": "231,52 €",
-            "discount": "0",
-            "link_status": "active"
-          },
-          {
             "product_id": "1005009874163879",
             "platform": "aliexpress",
             "title": "Para Tesla Model Y 2020-2025, Model 3 2017-2024 Highland, Cubierta Antideslizante para Pedal de Freno y Acelerador, Reposapiés",
@@ -83571,27 +83439,6 @@
             "sale_price": "6,69 €",
             "original_price": "6,94 €",
             "discount": "3",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005013420470881",
-            "platform": "aliexpress",
-            "title": "Manta eléctrica de 150 x 100 cm: 8 niveles de temperatura, temporizador, control remoto con pantalla LCD: brinda una calidez reconfortante para las noches frías.",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DID212dgZcThQYyq4FkdlCfyfBuDEf4ni2zZ03MRlMjESVyXQFuf1aRLeWB6t6yXByo4eUSNekFCHuJcrBOJHn3d10GiwOqxJuY9Ew6AEgmfUs4mMj4dGeEgQqMGiqDnii5wrUse1tzQYqZU1fw2cGbOJjeb4NbpwozqxCUATEZUGlQR6kE0UVQMMUQ5mhrA6oenwHbuyPgDZ7PYqBfYcvnNc7KoOpLfH8NcC40nY1f9sttDpSW0rUG85jugwH7N5jw1ic6fjnT5OMkDdWP4fQycxfaDrhszrufyY4xFeYxMgoxkgKDOocRHVQVM7AlDC6RlpUnwjeZAwwhPkBN6ZRN6fr3uCQgoGQ2M2oDifettuZFKuNHoCqA1N4AY4aZ6OU8XVLiVbdEGwSEDjPi6j4Tcx5RDdnFeroPHhWTeeHi8OkXUQNrEcQnVIInA6WEeSvKlxhxXaQOekuuMuqsYLWsUQzQuIrLxuVhZpMO2z8igGUmGNoPT6fljB3BHE8EEVcSHBHXIA0YLnu0625QXfMcLjj5lYoEx9Kj8Xv2uUhdF7xTdsLqFeVa79VrcxkrVortgV71eArFfHOxQfy9gs34AZGeGYq3Sf0MD5cqIolxobPVyc2JsKx8Lgd9PqsA8LadynQoriL0M04WOKUPyouIiU8mRUMqM1gU38jsfe65WqbZtNgr",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005013420470881.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/A4f0e78e4487248fb89118514162894c1M.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "26,68 €",
-            "original_price": "26,68 €",
-            "discount": "0",
             "link_status": "active"
           },
           {
@@ -83616,69 +83463,6 @@
             "link_status": "active"
           },
           {
-            "product_id": "1005012260988740",
-            "platform": "aliexpress",
-            "title": "Nuevo Juego de 4 Herramientas de Acero Inoxidable para Perforar Cuero y Papel, Marcador de Puntadas, Ruleta de Costura, Herramienta para Patchwork",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0Dv4ukj3nEXPtNSJDyx142EtT6rOqaDV0cPiJbHlYnVK1UaA8QTTOtnn88HlY8ZWN4go3pNHaB0NQeNK74tu8Fym0QEOQU2gWU4NZcqSDEtmlWF7XZUmnIrllDffuTc0wrG62EzkoOElOro02HuxwuzN8sY1ZwUREPFXINu1b0yYhbawNVTJgqIY0rABWKbNO6zF8q5n9sTXbcHdP2JlhBSzGDnWAqad4fsegQiExMnJQvJ7rvLEON2JsxeiP8MQxqniW6LjrcXQeeUmOBsNrDaVnO1d6KfC6bbZWK8pb85yHmJCbekFFMZV2XAx1oVKyGpzepJ4v96i7ZsPrU2R5ZqQaXq75DAn5opCCjd78Hx4qY4B8tnL9fZdAhf83iEucKScUgISumTw2Qynb2PByFWDKKJZY6vHqUx8BUhuBXP5QIPyTifl63Wv7FPLAfZcq0MhnmckoioWcctEMhUwzOTIzTcauU90iRCYLPoQ9lydsNk4GTFMYJkeYW1JwI8zf3emnyMUrUptUvgaS9Y1jpBEyKoI6zoBmUPWS8F2aVT9GctFCxC9L38Ux6lSUGc2teib5pBQerB0Nj7mVqIfQcQpqqv6TTnP4EjePqjGF2LyWIMKAMTuZqZPNY6IPEtjO1RAaKuI1LdXyfftrv4XETyJQ6azZ6fMGZyPrHIHo911vBtYkA9H",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005012260988740.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/Sd67bc60ac1224900818a686b83da9142O.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "11,49 €",
-            "original_price": "22,98 €",
-            "discount": "0",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005006259297887",
-            "platform": "aliexpress",
-            "title": "Bloques de esponja de lijado, papel de lija pulido, ladrillo de arena, limpiador de cocina, 60-320 #, 1 unidad",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DRL751umR6wL7FLUE4AOcK5zRqgdtX9sKuckXNFdGzmaEirW0Ir1lgAIpgIYVGR5mXHAviEcRKQAFPQqqnNIHSdtFSurPi31IwcduRT6nvVQFvs9LydRF1J5h31aV2xDeuV21V6xJl08YV83HPbX2pI6OgdncRtatqOpMzd1AyMqcfKJxbY0U3szNOCuMfmMVk7hVwOdvUrkguks0EL7E4vpU7B1VNXNxc6eQf9Yj5Odiqm8dmld6za2MDZNGo5uRyjvduSAOoiMZgkS8W6LQrqZxIjC4VNSo4QD9bTMg0rp2eIuGtwEpXgIfqecs80S27PoC3uJkjbEaWaJTmEmmqHRRK0ZkEoJeiPN9vfP3LDeFrfMTOp9fkaR8gEbPKxeGvY1fbf09SsUhSGstDOq90BVjay00sGfzCGVyao9y5QdTlRJl6RP69JRzVNElO6Y9fzaLLyvrkyjWlHft0uRySZcT5Dc9JvlIoysi5Ha4hVcJFAd3DsmZKNMP8P5QChXIH95pAmv9LKAMIZaphwKAuW3hGTII6GrTORlc0KUpBu34niRKZMieUoV1kiX5Akj77KVTdrZm2eXeepvaiLQ4jKE7iCzUFD796uNhcX2bTIYIDJSYZgdN8WIjTMtx0HHHp1EfcYdvxLuQODhsgEzxKbKluBCNeXNLcMcBuPelWikpPEpHrH",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005006259297887.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/Sea61fa1ef240421f9806ec8ee3728ab03.jpeg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "1,27 €",
-            "original_price": "1,27 €",
-            "discount": "0",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005009881757110",
-            "platform": "aliexpress",
-            "title": "Ropa de bebé Pokemon Pikachu mono de bebé Kawaii Snorlax mono recién nacido disfraz de Cosplay con capucha mono con cremallera pijamas 0-3 Y",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DQy5gTBt9jsdI2Oakx9yqNduzeDRU50caojYoehdGT3khiHpbL5Xm0ThOgpOVf7vdMQYbrHwPJCoZXtPmZeifxX0WjLK9Q2ZiYuOTRLk3xyyZvYHrm9OJXxTaqfrOCgzMXoEHL842QhVS8rcqGP3Od6LiGVAMPO6mXSBw2LoSO9lKGxcn7zsF9XzaJQL927dyzJNM9rH18OuhNYBsWg02EaLbhlGieTLWoQ7h8csO6kXwf4MNLlFaq1RokLMgbqLejrQ6ki5Mk3szY9Qq5VT8NJaUq6QpRxNcK71W8SSYunbzXMNwBYRImkjtUtJ6HTgs5CkuUW8WC79mw7zEvOAxyES1vwEnKhoRgGxl1cp9ngAU0kuILfHsai2uZdl3QyWlOXjAjMYBjavpkszQeXXHHFBEviG0CEUKUDfW9i7Wt7yuXMEyhPPfKlQxvOuy3MhvSK2HtfmptB58RejFuvw6c1O14Fgreqeh4iDiTz3e8fkk0tinWZQztZooucYZI3aJsbxeLdBm7QZexSOt2IPY0aPsLsRllfxcf5gkGWwxvAE2hvbypxBFh9nLWC7V95ACgP514RKw9utOsXrZ3w5ZRdSkb4LcpAl7WzQQZy7lUkMWV1TSWSrjeWofKUWMDoDbc6KGI0dAzj1QXJu67gyGrgSy4XMgEwIA4ftuRjJPQOiKHWtFSj",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005009881757110.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/S203a1b1c89234c4d86fc6739ec4fdac8g.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "11,19 €",
-            "original_price": "12,75 €",
-            "discount": "12",
-            "link_status": "active"
-          },
-          {
             "product_id": "1005012754219443",
             "platform": "aliexpress",
             "title": "Soporte para Teléfono para Todos los Modelos Tesla, Montaje en las Ventilas de Aire, Compatible con Model 3 Highland, Model Y, Model Y Juniper, Model S y Model X, Giro 360°",
@@ -83697,27 +83481,6 @@
             "sale_price": "8,84 €",
             "original_price": "8,74 €",
             "discount": "0",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005005581332299",
-            "platform": "aliexpress",
-            "title": "Ropa de Anime para bebé, peleles Vegeta para recién nacido, traje de entrenamiento de Kuririn Roshi, mono de disfraz de Cosplay de dibujos animados de Halloween para niños",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DIKR4xLEZ25z9iZtB7xP0apscoaGjfWDSvgEKtV7aI4GUlVluqalQl6TOEGQxVg9xWjO2PLLrgqZNLc4I0jW2ZEFQV0ZvAB5lXWFbbRKLFR2RciVSOaP1gVuKV0xRSUR9hmuD13X14HvBACQht2vC4X04EyWcSUh7ccMWceLfFnwRVeaMzlGiW7ywcMyupFIifoArolIS2q8fX4kuGZO8cAJY2JedI3CkRZzE4w6F4HrGlMRW8B5ngw65ZWKpeoIVyHjLjJw6Xy3cJ1pQH8DBtpD7SUEEwqqe1M9KRhoow9pkmq28i6vcUmKmLuK4hZteMWeoFp92Xl5TfciB7XcmvIeVGb04GAZYBrkj6i6xxVSO6TEGpLf1SfIxb9WtrjHZSYNGCJLwO1sZcJVF3MagBrhZcZvv6PpEctxAIVSvtSdF0AdC9hEnh0QIWPZQu0usZPEbq31W9rikrzPWY33JqtYwH0hIbImEFOKxn8UXt4H7rb3mp9h0G1zhuAUJEHRjkE89eRWYgwIoSZubhnO7KpKi8EB570mo3Ax6a7vNZlgRkunsPVRHOduWj4QQpbzl9okpM6K7vFeyHbH0CfeCqYI6VnMZog4EFH3giUEYBbleHaj5EnB7K75jvtNfmiOVq3HyEXLtDvuBkn5jGtwd8h1EPuKBdNNpDLyAHUKgOCQkllO0Sr",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005005581332299.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/S857a1e99fb334f988ddeeb530b95cac9b.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "7,33 €",
-            "original_price": "7,80 €",
-            "discount": "6",
             "link_status": "active"
           },
           {
@@ -83826,27 +83589,6 @@
             "link_status": "active"
           },
           {
-            "product_id": "1005008453845401",
-            "platform": "aliexpress",
-            "title": "Pestillos magnéticos de empuje para armarios, amortiguadores de armario de empuje para abrir, pestillo táctil para puertas de cocina, pestillos ajustables, 5/10 Uds.",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0Dx6QQR8gptdqb96bmQxMbX6tI9gXtptW6UNJRAA0VB80NKrV18rVwS2a44wG6H548MMe6WGRFyKefoeiTabb42X1Eqsb1PGu2WS203rlcMTVtFKw2zFB7Zl05KwAgsneNwi6v4wXBW1FYddguap03gSaqiT0ZHtdfwzFSVlVXdAFFtSt20MhH64GRhtgGiLG0hO81kfAtFl1LD81Rdx0fYOeLxvRzXN8IZF7pzItn32bzxlFzlcHwj4l6tyKgDwbXU82GB1vhKRUIefopqz656oGwlYATVOydoEbpvYBk71fWqLqGUjiH6hNWPGoj5PcLaCcBWwtqlzm75Cq9ReYoBiGOgZt72OPy6SiAePV7GTnNy60aWjNaFyHjHh7MMG8Z7pswxNoxwLWmWbQL81Kl4sESjpVPS7kqbrIiL0T0IPmiqvzrigIfkdPnT21WbxgKJHnEUQB17yrKuOtADKIlI7T6cKC2Yr1lfqD6KN7lxNQlwBjjLvY5tGFX818G559NxU6TR1JaXbyUbyIBcQjrUDwFGhPVbzZx3pjEqE1LrNhHsT6F1coIJ6KAaU3FyrKfsqC3R6XALq7DsN4FcXAZpUP0Nl6yswcyZ05PppkUwCCvGX4M4G3OsZRxQnUXbsx9nbnY1515Ovt07ZrUJSwoNywdeyS9Sju1ObeVW4ljFslry80ql5",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005008453845401.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/S8cd191accd6b463892db55b451ba858ei.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "3,59 €",
-            "original_price": "3,67 €",
-            "discount": "2",
-            "link_status": "active"
-          },
-          {
             "product_id": "1005005885648502",
             "platform": "aliexpress",
             "title": "SEAMETA parasol para coche protección UV cortina de coche parasol para ventana trasera malla parasol protección de verano película para ventana",
@@ -83864,27 +83606,6 @@
             ],
             "sale_price": "2,91 €",
             "original_price": "2,91 €",
-            "discount": "0",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005013484069473",
-            "platform": "aliexpress",
-            "title": "Paquete de 3 Esponjas de Lijado de Grano 320-1500, 4.5 X 5.5 X 0.2 Pulgadas, Esponja Ultrafina para Lijado Manual en Seco y Húmedo, Flexible",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DvBFumTz9aJpV6k4fEVByfjSXwrTDOFACfHmaA834HtmsIxxB5vacGuiBACcnSrIhD0AJk3Cx4tImm47RhwhxBcSBFZSHjGxQnKscpd5WwEStHpW9spFIer5n2SpxlT4eGsbhOOhePFtIAoxl78OENC77nXVfA3f9pZTu9BHEWCJIuIPtugEE4mvS4s90FoeeWmnEEQ8sLBwiZjiyyePc6h7eZHzxrVoYGS3TtKhDQKQahAlb4n6k4Im7Qk3TaccvcxozaXzFz4Mp4WFrw7g3MkejdQGaowWPXGmBl2l59cLPSrziCkYHe3xryad1gQYhBcooJdIVye7n7PuE4Vml0SzTce3mCWJMYGMNxgQLoSeeUYZKLpKQiPS9cv1xSyHHoJ5NHULj6MrFy8ZnDJK7GBfmmagjJuE4RHsDtBdb2QOObuHlVBQl7pJaI3AnSLeOMjmuHxWLu5EE97QqRn96IoQ8N2sWgA0nQgp3PGcF525VEBNVNJdvRuW1xJqepK4IWmySGxI01hIUPMYoDjQGzqmfUy96IbdhtkKXPEL6oc1kZqLxfqRIGdVR8vbhdmZM8SrV7PsJeGjIIHFdnwgx89fynUXs4JbQNjCLfM5iSxxVJkUdfBkIdo0WNQxZLWUnH3xrDL00HtaOer0I9w6Q6rmWqkvKCxhlzBXle2kfT0IW2XUHex",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005013484069473.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/S98679c709f6a4a92bd70e6236253142dy.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "2,04 €",
-            "original_price": "1,94 €",
             "discount": "0",
             "link_status": "active"
           },
@@ -83907,27 +83628,6 @@
             "sale_price": "2,43 €",
             "original_price": "2,43 €",
             "discount": "0",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005008653951713",
-            "platform": "aliexpress",
-            "title": "Protector de Pantalla con Revestimiento Oleofóbico, Instalación sin Polvo, Privacidad para iPhone 17 Pro Max 18 16 15 13 14 Pro 11 12 16e Mini SE XR",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DvKNCKeaML4sT55p8r8w0rxNZJxVkbnNa8N6F0ClxfTZYl0AbcPDKraMML5m08ju1G4cc3IybgVbiFuue1N7ekfT5ofmcgJCjyU97T6Kbui3drfMrXMdf1OVOrFkLHGfRjS7Mair0vB1iu0k37LTx5Nht0GRHmN8E1fvKGmBgG4VQd8GVvTObhuxe69gmMA9GpBimcq4BdHnKskxoWh67ruypCt2zpMUuf903w22kR1fcpjijHDJ1ICOjkpSaK8CorrJilGMPXCMu9OsVBozVmx9WO5d0YDhFpxNhkvCBGf7co9PhazaqbrYSBD6BV93Civ5xtvBGs6NiObPijjsDBorcmXTtPn1QzoGxIyzCeearfpttpwZVyAvFvsq77Q10mBSVykINpCjVTfvJUuZyczPXcw0sfNe1DtHTzOU02KpsHn4zHv5TK5V8PPajbDId6sHiqbcEwAqhEbEsdHpWNUn5p6NQBBrgjDiwGR7U1nQ7uKqmbDMARPDlihOKh11Eo2KxLlDZatGq2Ro7RUPDAbcaxEsVc54HMYTwR7SUbPqieGxK93LoPQcao3B9xGk5Diyps4iEQCK6AbBUeYErILIc2q62XiviQekMWTFbd6sH5N7TWX77AdA7Kx33eRVlRpvocsKmL1NnQewzXLdGSTxnT6n7sRQpRCC6UMOkJy7VbHdsQX",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005008653951713.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/Se8187298f39a4fdea7377e65c1feab9fa.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "3,99 €",
-            "original_price": "4,37 €",
-            "discount": "8",
             "link_status": "active"
           },
           {
@@ -84036,48 +83736,6 @@
             "link_status": "active"
           },
           {
-            "product_id": "1005012698664035",
-            "platform": "aliexpress",
-            "title": "Peluches de Pokemon Cubone, Ditto, Charmander, Jigglypuff, Snorlax, Pikachu, Togepi, Bulbasaur, Mudkip, Muñecos de Peluche Kawaii, Regalos para Niños",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DRtT2MajRiZA5dXvHcyFf5V5roH8W5BUkSNn51HIbZKdkN6YsmWniGRFgLmOlzuuF4YtDSH0CfJKIthHvY8gNhmvZja6mVwtosEPeS3RL3Cukj5aa2CSMaE659BIPIRNfjLzRfX46U7cJ6sPj50FijOT6PTzAgba9HiGoDWD2oLxFuKhIrRqK41NwiUhttFlcOnt18mTuaggVsWI0wlw6ViOr6IQEWwa5I5S6kPhYrPlvmY0XUDdA09hMC05gkbgzY45z0XpQuZww7PSVgAAwnEfntFZ9vGNICjDIhAAF2HXedexcMTrYT7qwKcQXRbHXF4bIkwpI4P2tYNFFLalxZDO3t96BPaBQ8lxWs0FoQZL7tr3WL9irg6MHPPtNlXqiJR6nGig3RTuPZQvhi0P0YsGOgS4hKkfJLXzhBHLKtxZ4qLElkRpKUKYCL6GMG03fFe6qRisDH0TtEGg4b5AVZcymtr5wuGoqnGX4HaPj28FExmxg1EAdfkTxIGlqQdYX7ylnXqmiDz7pdSLvzSYopBiDC7jE2NoFFLn3HTcjMBAvDrFyRIwc6H4uUEXG05wixRb5OBIcd5cgpwKvMOyNTy7dDZv1Cfbrl58uzKieSuOhyTSuVwZw2ysNkktuLeAXMkcj1eR9rpRquoEIiA5KAgWuNuhJE45nuedgyF15hT2hn8BuDN",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005012698664035.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/Sfa34c252fd2347c1b7ecca5ad79180293.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "3,28 €",
-            "original_price": "3,57 €",
-            "discount": "8",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005012261793400",
-            "platform": "aliexpress",
-            "title": "Lote de 10 unidades de chips convertidores reductores de voltaje nuevos: LM5013DDAR, L5013C, LM5163DDAR, LM5163, LM5164DDAR, LM5164, LM5163QDDARQ1, L5163Q",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DHH50th1NmCJXxuKNpVyLwgwiw1RavuUWM77nVCrTvLbKfXgz2iKXp3cgQC5jt7UyGK8xH7AYGsSmpILtJYkN2norEvjCXVv3scAuz5AA2BXG5PdJtdSxOZbi92dICK1qR9N92JFU1RhRuX3gS6EaxqHvqVFUSjwJozAAByCXQUUaJJ2G1GmYQtfSR1E4ClQmA7ciTVvOm129ThWpmIgTPlucd283caSyLKhAgGnc8v9QGh7M30a1KNsViouvdNuEgKW8ctBnrLyom7iGgeHZzNqNkB9NrNl3VF3z1i2j0JrtT32rZByIX1uJ2j5UdW1WeYGJxdYxsrU4tMfjue4XDfD8ccOSR6nsMEmELEjRLEpztMNSLMnQ4xxhwoVrD1QpHDIQThf1BuRVuIfMBh45I3rqhGIVPTflPet3fr9MgcdOgGGefHRqqRF5ti5MhBaC7oSSZvOMoTINomaOoiLTYSR5hILpyjB7Dv8SNJbu7yv34lnHgHU2uoWQRgg3HGXDGXMG2vzEHYoFR9yF5XicE4ha3nyMrFoDSqc1W9i4S5PNTwCIKfxnqmdN8UndTveQaRORAhSpeie2jWUrZeJso9w2Ov2NJqp85SKphKPt5Ju1zvB9wNnuQIKnOLjDSc92SCqexEGH4FRmWKJffZSubgAFXEgp3LNRHTHi4zG2dJToHj5be7",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005012261793400.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/S59684433f19549389c893cc0c7b18dd4t.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "7,19 €",
-            "original_price": "8,00 €",
-            "discount": "10",
-            "link_status": "active"
-          },
-          {
             "product_id": "1005012763328382",
             "platform": "aliexpress",
             "title": "Alfombrilla para Maletero de Coche Xpeng G6 2023-2026, TPE, Protector de Respaldo de Asiento Trasero, Alfombrillas para la Capa Inferior del Maletero, Forro Antirrayas para Carga",
@@ -84096,27 +83754,6 @@
             "sale_price": "50,39 €",
             "original_price": "100,78 €",
             "discount": "0",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005013069060198",
-            "platform": "aliexpress",
-            "title": "SCVCN Nuevas Gafas de Sol Rosadas para Correr al Aire Libre, Gafas de Fiesta para Mujer, Gafas Fotocromáticas Ultraligeras para Hombre, Gafas UV400 para Ciclismo de Carretera y Trail Running",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DIPx12fymUY1L6MGrG0qiIj9TMVovvjj72nSk1t0JNJBI3dX2pXkIZCgKr1Cuo1o7DztWZkG0SHJ6V5Mtzx3oeGuBlBxxvvtl6uIU6pxsDZErFxa2NYVm0Kcd4Zo6NfMdndrgka0oF6ebC0t9jf3eYOYZNO9NmjUU5aqy3hiXoriJn18Ao844viilqHyUIHCZTac1Pj49sl8SeVZgrboBBI13GFYCXJdToutEZ8J62flufEoLS690b0fhXlAARqzMtcpI2v2N0sLUG7ezmeiEtDA3ztQR0fF0uoiedi55SI7THq6SS6zrWsX8wH080EskdW60jiQSnKcBJyht54oIkRIgKEehxzNZCm5ZQRJ0wc73Vunn7zO1Rs76VvgmPmVm6rjpUfTd4xLbJ00nnFSHX2u6espReprdoR5hbQz9h43k0exq5VGr3xYjm9TzuuX6FaLzpZCM4RiDfq8MFTxLbmYc83ppJfOuPwTxWR4mUzgMPs4bjU64r8FpryvZMUqZQeThRrIS1e2Peq7HNvxE1AqRYAQsb9IntfIJdkj6GaPbutQXRGCRsd9X7CtbxpLyHYryEhiMwPrpCxoeNsdsjoCBGOJGQALOifvCOEAvZWAAYaHhb9wT4nPqonk6sNWl41AEsT1CYcrn7swcyNse0YHKiLqwljOkVIn5wPkjz4BMyXadrl",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005013069060198.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/Sf74e5177709049a5b3ad78167fbac9d1N.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "14,49 €",
-            "original_price": "15,60 €",
-            "discount": "7",
             "link_status": "active"
           },
           {
@@ -84183,27 +83820,6 @@
             "link_status": "active"
           },
           {
-            "product_id": "1005007352313153",
-            "platform": "aliexpress",
-            "title": "20cm Pokemon Chikorita Totodile Pichu peluche Anime Pikachu Quilava Charmander muñeca lindo snorlax Vulpix Plushie regalos para niños",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DRbsklBwxvzJ74JCEFWfGuI7XdQkRUnwemYB1u5jV6pxrbussjx302cZO1OAjdAqgkzUxfVLqYD21Ghdud3KuN2OTnP9RzrKdtYZtV7h1EFuTSqAIKfd3nEoys90t4MemzPukHJiBaqGsTDjiQ0usGOs5jFz37ByIKZjTB7apyqF9ckxacB2DMTzdBXbvLc7A60l0xz7xC448RFuhOyZXJDGTSthLytFE3zIuduHRsB9JeF2JhClnmilUg3xTckmkpOXHKhyFDF9sWSsq11b68zkz51hS1z2jAjMwE1xrIgxKJhY6HCKtZGHJAy4jbeNfWoRviAWd0W9yhxbL4MFmYI61kyf25TT93UTQN8Qch8vrxOfhHvCjIMrefDOY5gTpaQGuGloy3euue7RLyYTZG2CVkGq9jvpBMHoOvSUyPurChFYImjcWeOP8mGiEeFU5OIy4et9uj5Oba5zclbfqZgkihsoO2RrshdRIsa3Ua9HlWRXQIfYwwKZeOmbtlqwOlAywfooSHWejDypJ8NhuyBTedeQaB6x8TD90ZjUxiQfAQeLWaKckrzvIIOmyRIBC6NkoBXoGNNp0TMhteiYFmBlO17BJ7UgUE9oy6US0tmvtU6fA2nP6uvFwPxdc7zsH0QblbEX2ihSvlK4NwGkFJNCwNhHm98EE2fpmeA0tsOTdHtlr23",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005007352313153.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/S02d978a08f2944f787dfbcd28b873142F.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "2,43 €",
-            "original_price": "2,61 €",
-            "discount": "6",
-            "link_status": "active"
-          },
-          {
             "product_id": "1005006967451549",
             "platform": "aliexpress",
             "title": "Soporte de Clip para teléfono móvil Compatible con Xbox Series S X controlador soporte de montaje soporte de mango para Xbox Series S/X Gamepad",
@@ -84222,27 +83838,6 @@
             "sale_price": "2,91 €",
             "original_price": "2,91 €",
             "discount": "0",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005012064944912",
-            "platform": "aliexpress",
-            "title": "50~1000 piezas de imanes circulares pequeños de 4x2 mm, imanes de neodimio N35 de 4 mm x 2 mm, discos de herramienta con gancho de NdFeB permanentes de 4*2 mm",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DIEWbQOQze3NfXpo4MFfIo2moLJnM2R4yKkwEfaUPuTttDqZPOBLk68gw0WASBadZLLoCNZlciPd0vGwILRkObonPf29EHYeaqk3cihTBTDpLhVLazudjsnhQ9nZmlI5q9HBwKkrNkcJUPhT3LRP2acyCQKriWEiLL3s2B8E2oHcThQ8xnLdBqN3e2rj0hOo0jpT9rSRM0wDEAH6FiiV6M7U52ij5DEGPYge2ptmPIyaxAdMLucsqpvIlFOw1toxZfNSb5OR60P5rZD0NCUUFjHnWEMOGdOiCEOwjohrX54QYJeQgeDD2kYreB87lkVDh90nhre4vpD6xhxMkB974v1USkX9SGSPzaQYdksE6ZUAFkxGbEXvvQqueUzx7aHUuqNPWoi2VNEMshdP8ERZK0UneJ8vLlGKFGyC3ucwldnyoRoRLK3mHbamzuCx8hqQYwXxMt6PHKewbskng7GEYVuwB1zo7xe7JXGI4ogsfqdl10sA2svREMCYLfTlwm3BKpCGYLViJcxdSmToFuKtaCY6vn89v2MCMSoKUfULUbVDD1N7jR2hb6SuwBcbIGzGD5xFfxLJDs4376wsUJHE5hzgtAmdGrmqTF03a5iK9IvcwDUu7Gebni9TQ4DMjzyTF3BjCXiZFf70V8qzq7SSBl0QCMEHPWqpeV3Bf39k2KAtA6kRml9",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005012064944912.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/S37a28bb10b614b0b974e58df0e2e0d75h.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "1,76 €",
-            "original_price": "2,05 €",
-            "discount": "14",
             "link_status": "active"
           },
           {
@@ -84267,69 +83862,6 @@
             "link_status": "active"
           },
           {
-            "product_id": "1005009906188933",
-            "platform": "aliexpress",
-            "title": "* 20CM Pokemon muñecos de peluche Pikachu Kawaii Anime Pokémon Pichu juguetes de peluche cortos lindos dibujos animados TOMY Pokmon niños regalo de cumpleaños",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DIFyfVA593zWHpPI4cnQUE7mRxnxZkfmGll8zooA43VqWgnI6NeEdx4SQLrgMcbRLakOX6TLhWdwMb6rzUgCkNV6mm2TrkncaVLNsNSy8tC9Nrl78ID0MbfZx9BREzWgKghM2022xgFu9Gl7MClC1bqO9ZlDATLnHdp4QjV1tX0SwmpjL60GXqbeug4W4DrAT0xpEhoper8Psmej58622o2uyN2vUqOYy9eUEkFzNU1vXbyu5UL9mKmYRNm0eZrRRZgMx2tveVlyWoyfc1GYwU7vkUakqCqTG0cUBPo9kWBWFNdf8cwjgF3vBRGLhLw2kKnFqiuVNCggJjT93xe1XuTiQn1qdLv2figKM5jJqtn6LnU39okFiPke1hUrfxassGxK0BmifEHeTc40t6hCMnv6HWNdGiJl0W5vYmr6X26KVFTXsdXOOeEdGknwhdIDtgYrk1mRGHfSGqIM4NKWzs3CAERGrUxGi5hlT0dXDB0DWPZGIBgzKvaQfdc658s3c9IVj7sIyR1NGe49MFhzDGQFuBEjJZADuaEUIv526qIKrYb0Y9rJl2J7H7upC2liH1xXnnOxtVDbGI1Jc3kOpr03SeWsDpTWCdmB6h0YnStxJM2YXV3KGC5dcar8W0tF7MdJfNJRztqXTYhWxSMFJNGaLiAlkfHaTAekwKkHTvCPXARxLsR",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005009906188933.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/Scf9945a498f34605ba5132c6ac0a0011X.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "4,29 €",
-            "original_price": "4,33 €",
-            "discount": "1",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005006831940486",
-            "platform": "aliexpress",
-            "title": "Portavasos para cochecito de bebé, portabotellas para bicicleta para niños, biberón de alimentación infantil, soporte Universal para bebidas, accesorios para cochecito",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DIFLcVjB4NT1VlxOPB6gNoH42QayLxsWSFh0hCkIC4kDzEsP5Q4c3ryn4snHqelf32We26KIq72FIpMwrVH4bTOFj2FRwgA5PeFNvyah2iavbAOfPO1pcptBg2D6DUHMR8ZYIra0qv73Mfdr0HUoiQcS5LztgOu0q7iFQY7eGJmUlE3Lw3Pj3AKg0iDPUiHSeg7MCVX69ZaYVMtCFJ7tWMspaBr94oLaoBsEL5np9PzS2R97NpVZSoFPY59fRg8lVgd6s4UoJsnVNzzykc6s3AHE5jdblPUV0an0tzgHOozcN3eON2pZSctdua8090mpeoagqSjmzD5SBRS7xzVrfSiwMc11WnHlTTdpwNf5xrbQNPOLDiRsB9V80seLLqDWM1D27640vjCahwmc1Y7fQnTUGVXDesGY5PZxlXW51P9rAhnSiO3sjlF5UYDEO3oX9aqNcI4SSi4Q1X5jizugtVEwxiksn1sxeiB2RxI6ir6u2CntlN52Kf8uG1SfiSCppTDaM63YulREjbvdkqCwkaMppCMsBBcBSmNfUmEkLfvX4IXootph5jkMI5cDWZVIYbHB5T4uWZksvozhUI10OvvHgUIyDdmCKThw7KPviCm4T2UJm0IKZ9phbc7fGhAWpfC0WxeWWHqFBloBZD3rD3Vj0g0GSO5SfBeRL3CjxD7syEFrdwx",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005006831940486.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/Sae6de1eb390f4506b161206b9f3d92de4.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "3,69 €",
-            "original_price": "4,23 €",
-            "discount": "12",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005009993345111",
-            "platform": "aliexpress",
-            "title": "33 Estilos de Peluches Originales de Pokémon, Pikachu, Charmander, Squirtle, Bulbasaur, Muñecos de Peluche de Anime, Regalo para Niños",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DvLmXkPq6LwciFGOr2sRDUUzlelVTRmEPyLSBm9DRfTS4ENwGKy8M9nRPgeGk80nY8J8NzEQKb0hdF3bEJmQjT76cxmoUDcnf4gtdYg8zE4MkwyJ40t3rEfH6ney1N8fHg9a9m2FcqzdnfWTnNUehhLzRNaofbNctUMIXEpdVjEdKIdmluf89T1kDP4eEwi2jBdXVEz3NP3RpzfpWoD7vkdoK89Vbhtb1CXEfdOAuR2pSmReZvLNoDECa3qsZgph3ZghxPbHILSid4HgioZV0Cw0YtmCq2ltSY4r48Kz7ZejyV1PK3v9jgON3BZwzGoC1RzID94vogOd1cqMeQZDZHO5sbZZCsJwm5bBrACpQ3ZqUv4uIT28woKilouLjT5w6EsOSdHLPqlrPfcFtGZPyquD409ntVd9TMql2GjmENLNnuP6CV7mGMgDh8o03CJfX2RAiKS5AU8A6C0ATZmOCAceSSqOPPmlOxVDeGx2bQ7ejPyvlTSKe5x9qeilskyVossuCeEiNfQx72sgA5eVBqkCtc8SkMw0rL2i5O8pUJZ69tv5q7DJzHGOiQVHSO2UAMQkpRKINNOicYYPStwgveI2XXMkGKXkkQYwQY53ftT6SY2FeLawETfU0n59SGVncixFa7Sq2kZw95BL0msXitIfEDSfChJnm0HknMbET13D8gIR8j1",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005009993345111.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/S26325ceecc5f452696540ed85ffb5a4fc.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-11-08T10:52:28.350592+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "4,89 €",
-            "original_price": "5,05 €",
-            "discount": "3",
-            "link_status": "active"
-          },
-          {
             "product_id": "1005009986602350",
             "platform": "aliexpress",
             "title": "EAFC-arrancador de emergencia 4 en 1 para coche, corriente máxima 1200A, bomba de aire de 150PSI, inflador de neumáticos, refuerzo de banco de energía, herramienta multiusos",
@@ -84348,27 +83880,6 @@
             "sale_price": "29,34 €",
             "original_price": "33,11 €",
             "discount": "11",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005008830668533",
-            "platform": "aliexpress",
-            "title": "Nueva mochila escolar de fieltro segura para la primera infancia, tablero interactivo de actividades, alfabeto, juguete educativo de fieltro para aprender el alfabeto, regalo de juguete ACG",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DyrE6imfi4CbbjMSmIDp5cfIOr71eFuiGJS8xecBdVk6CpGs2b5eI0QCIiyMtCT4YKjge5lXc8LlJaj31wmZ1fi0UM1e3kfGPNo93os8plizHcLU3nrObHHtdPZQohZx79qMsd6By3OXf6wPbDpcvSEh7GDqVVXbykg4HElVaZdzrDZm2HYbgaSC3xiOKlCOnWwAw05x4K3VaXuyGhtTyyPh3E0PakGFqoI543Rvlvafttxi9b0bXjLWO1oLnKHsAgL0m1Cp2C7Zk01HErBZaxCqvtQjLeCusVmyaMA0RFWIZvMAD9SBuO3MWCzGfixBqdOzNGghNKS2ilM5LBaWitGd9EyKLp0GHabs0rY8RaJrWHNPwnkFmrJ77FkIQE6wMd9D0tUxRj4Y3X0D3wB6ocquDknOck4IvPqkL8SBoDQeAkGNhHuBOpsH5TI7Bhu7Ddau1jQceh8Cx381qNgS8lAA2G8B0BVlUjPSfBeC8Oat5JWtY0ReWGjF1RL34LTmwVsn0VLYSmItCZvikjsLG8ERHLUiGVuW3P4IfMJxqBe6nsKMiYYKTGGAPn9McJUtTFS3XETZ5EAkKzE9pYLvQuUVHAZXHgfB4YCUCTnEQ93FK5xEmWuRFiiAMRI1tUgrwdWPgjjFv5E9Sgu59b6wc95XaoQO3Rv6BNqJBvnKr5MaEVTUIwR",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005008830668533.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/S5f9ee26d8d82499b96a96bf9ac7dd74bX.png",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-11-08T11:01:20.813857+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "10,89 €",
-            "original_price": "21,78 €",
-            "discount": "0",
             "link_status": "active"
           },
           {
@@ -84411,27 +83922,6 @@
             "sale_price": "1,37 €",
             "original_price": "1,36 €",
             "discount": "0",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005010525529050",
-            "platform": "aliexpress",
-            "title": "Bolsa para zapatos de lavado, Protector de zapatos de lavandería de red acolchada, fibras esponjosas, zapatos de lavado de poliéster, bolsa de lavandería, bolsas de secado, 1 Uds.",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DRrRr6LAAmZVSTZge5lV5kcX2y8DtirnmTDkOIxbq0BYF2x3DXOwwqqTFdgw4Hq3gzX2dqtEYO5jSbjnAEz1L7jfqUKAmdxgjMXodhgriBMCtOeuEbBVEfgcnBQP9uW4ophzztnFfyLaFfsEJLeL98xiJzksBKNaKx3SGrEzTM8aHL4fVeiOfPqkszhvb4FuoJcDK4cbOq0vy7BOJ4g8QXBYTsCRxAx45WFZxzm1vyKaHF7xcFNNL1SRt3pBChAir0Oe80WwblI8GukMde6XMkpkbsqsnmwhu6AC6qen7uhlSBZWNWVUVPvYTROVjy6FZ93B4SKnaDRt52CNJczKA2yBaLyuWtxA1v2j4ICMuGdoZv45z2SdkXoQ0TJvBkCJyIZzgpvTD9uu1FoBpQpD6PI7vYUmPhD4misWCp8coS8IsXUD2q4Kt2JAeNIEV7UP9B80Gqs6pvVabwdInygMlgEz3dzMsYX3FsaIAw2Cw71Vs0DsbBbzZZ35VKtQWEBm03SVzVpDz11mj9ZqA8IeFm4PjrZpczaAUJOEfH0CVoOQqY5Egs4zPcyFuUm5ewAay4AIuyNsUWElvPYQR9VkbLAu25WnIs8hYXOS3yaEldLxkWr4dAPFOMkSuVKgNRfAPxCnAsV4M8dLrMGIElqm5pPs9x61qQir2k5dUZRvs4iYRpZSB3z",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005010525529050.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/S29d3bc02cb3248c291c5047cf6b61274r.jpeg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-11-08T11:01:20.813857+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "5,29 €",
-            "original_price": "5,44 €",
-            "discount": "2",
             "link_status": "active"
           },
           {
@@ -84494,27 +83984,6 @@
             ],
             "sale_price": "5,69 €",
             "original_price": "5,70 €",
-            "discount": "1",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005012396395321",
-            "platform": "aliexpress",
-            "title": "Pack de 2 Sillas Camping Plegable con Respaldo y Reposabrazos 48x49x80 cm Negro, Portavasos y Bolsa Lateral, Ultraligera Portátil para Playa, Pesca, Jardín y Excursiones – Incluye Bolsa de Transporte",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DxQzoBdr5IknZBd3qVA6nvduMhh4oTy159OYVK4iaCRgrQCiWJNAi8DK0UzauOR3a1njEXYt4jL658oedfRtJTy6j4daAC4oI5CL8A7BgogyvrQ50vpsixMzeGCYjmH58Pu4hywfd7yMsaXpxvYX6HBDzG5Aei5YCQf54ycNBbeJDoXKutsh3vPKEeJDH2fuiYvoyNyDob7yiBoH52To9PDdDLEY8rHZ79XpTmgUe2EAXHIcka1IG6Lk23oUYlcinLOjP8BbyVPH81lkwZxOnRvdQHwC6hcykJQyvOjk3IJXGpzEUWzpaiWaikuu8CAFWbmk847AyOXS3lGpYMJaQ70eLkyMooVZOoyWX35LA8dNV2wVfovpNB7Q8oLdz9OXTGHCC64xf1jRHRbB2wRu4rpONuTarPfKJr3NOcjqt3CQiGjkHuIoVPQkARbrcGtbHyyMqkuUBkW2lDESFRmgNRMaHrhHS6W4HcOdoYwDPb2e5fJFPjSTxEERpyjrxmNpCa6fBmfBkTAeJNVMBxoTGFqH3XP7v3yiZt73kgQXoMDpDH6reivufxiN2KXLDe5E1g1IhseAudgIqn06ksy0rCEdMItVQpEXHTiEHsagaCOWHAPcKLCPjLty4ZB06oVxtpCvBIQyoDuvToMlFwsHGYlL7U2vkRvY57AYGtxyvo1NHeDHXT5",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005012396395321.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/Ab10983d397c1492795f9d262a5a5e872J.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-11-08T11:01:20.813857+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "32,14 €",
-            "original_price": "32,39 €",
             "discount": "1",
             "link_status": "active"
           },
@@ -84600,27 +84069,6 @@
             "sale_price": "25,15 €",
             "original_price": "27,80 €",
             "discount": "9",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005011906859397",
-            "platform": "aliexpress",
-            "title": "Funda con soporte magnético giratorio de 360 grados para iPhone 17 Pro Max, 18, 16 Pro, con soporte, carcasa de plástico resistente a golpes y protector de lente.",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DHJUj8o9DC7fYWTl36geQVTcKIYLVLl7Cz4EVw1ioTSYRJowvCUY51SuQzjnU4wWRdhf1ocqr4Ky0qwwgxC2pwMprt66keopaH28GFfb43sK65SDVCGZkmLcgEmGLF9RdzipmaZov4AZaJfuUQ0xddRQfcMgaWH26GGrmewyKBBmouqLYEW3tXCwVkt8NXGLbyNMP1geJzlITXXyyVVToutpdp8W22OzHYs1lkKbqyQHUr1eApPcYUwmfItW0Uc4JJT8gMpYXGgZGGYsE1SosdvOgFJ7s3GobyB4qgypsSPIlOl4Ck3vXDEATDaRxzSeo6C6znshR7RyiUHWfkX8nVwb60MBWdOaVWA5DB1kci1yNSLyYkbmHR9H71N4UhP5vE4MVwaB8m8TWsCjjgAfMxutRmHcXs1CI6dLQPfwPj91GZ2M6ILL1kIpBj3y2E5mAsaBTiK5YY1vrhtB8bwmXT6qRswShX1y3UVAYC9D7SzgCsgRfclzks5jkhWY4l4QbfDcM6uC1A5WTIHJFBgbI0H3ekQLURMjwMMtOFh33LIdzGTa8Mp6esOrhjrLPtSMypx7nvt1L9FEN82rVzdLq8ja2SFdZd1WO7QTFOhZBToZVlV3FwGQUS0WHxLQkoO7NDMBU9WELM9R1CQcxtODcC3hgovtru0tz7fPT0oawRLPDGLqTW3",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005011906859397.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/Sc77c8b2c28d2498aa97b8afe62be869fd.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-11-08T11:01:20.813857+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "12,49 €",
-            "original_price": "12,22 €",
-            "discount": "0",
             "link_status": "active"
           },
           {
@@ -84726,27 +84174,6 @@
             "sale_price": "32,79 €",
             "original_price": "65,58 €",
             "discount": "0",
-            "link_status": "active"
-          },
-          {
-            "product_id": "1005010777313408",
-            "platform": "aliexpress",
-            "title": "YITAPE - Almohadillas Autoadhesivas para Muebles, Antideslizantes, Protectoras para Pisos de Madera, para Patas de Sillas y Mesas, 9/18/36 Piezas, Color Negro",
-            "affiliate_url": "https://s.click.aliexpress.com/s/NdpwztbAIgDMmxGbP8fFks7yUFfsHjzlImSYmA68h7xlMRgzueFsRgokQ9f9hcpVKttxtQE2VzIoqkXJXrpOr6uR3zv7mP4CDO9CddoFf4t0QE5DXPy8Pgjhz4irfQSEjEGUmy5yF3A5gJ9h3NYjLMgqIMqa3zcpq5E2BC3W5EbV40Dm9buQxWpZzw1lbX8Zm2kZtNIa4KyDieNjsH7IU6Yv8StELKVvT9r4eFAaXPGhwHsgaDqdNcmY116r3GC2YvmvR57S69fGyn8Tt4pCtmLccxQz3g0L1ZKu00BPwYOT3BF4QZOqRqMDB0DIWOSVTSpW4pLSTrsPEBoEoLpNFaVgHPDIogrHW8yuTxPWODJfq1L7EDjB76NUsSBQo4AaAg9vXXZtuNExx6e8N8vOPKfusedsZdhUx59BqafMyoIyaCK3GeYTtXsvARHiWygVbI62XpWko9kGjRNsZGsWak6abCAsfbWm09raxSIRsUBANkzi00v7LJSlWlP3AHFgPkMvqgavkUl5oaYYop3CYu3QEbIu6oXF7uGabsZnBNMdyWar9lXTQ281hK8Z3xIXT9CfJwgoIT6N8bQBZWZwUW1CYDUz0SENMiPiYpVQQHGrAQYcjKeeeZBrhm9y4HtHbfHNrb8QFx37nG1aoaD5bN1KeK5u9kx6Sxr90ie6foxpIWZOOchZXHTu9ZvkLCFxxxYoFGQj4pn1VWTLn9dlyHfXSjUR4WQUK6Z6Ny6TPg5aVJuHwnhSjdYFWrfRNK234rW8LEtQWo5aXRLQkR2d0qTjUNHMpFNXLiyiPYZ3FJCb3zZdk8YYE6Ar1edEadyIC3Dbkzxtdsd9hfuva9E01GVCCTHkcbd3oFkj7vT2hu5ddWwFZKb6b1Qjls56vEVeqgq8jxHNmgMTkKWbZZnPk9JJ9AXu3ORS7sS1TNrnB8cAgAQKSzy2k2F5VNFDMXlnrbAX116sxENNBvLXB4nV8Yw5YCA5DaDGTs34qMGCzBLND",
-            "image": "img/Chuches_EV/Ventas_AliExpress/aliexpress_1005010777313408.jpg",
-            "image_remote": "https://ae-pic-a1.aliexpress-media.com/kf/S2204a1c87b6a4d5f8f6ad943ee17d26eg.jpg",
-            "recommendations": 1,
-            "votes": {},
-            "timestamp": "2026-11-09T00:30:09.604740+00:00",
-            "bot_message_id": null,
-            "status_clasificacion": "pendiente_venta_ali",
-            "categorias": [],
-            "versiones": [
-              "__todas__"
-            ],
-            "sale_price": "0,67 €",
-            "original_price": "0,70 €",
-            "discount": "4",
             "link_status": "active"
           },
           {
@@ -87985,27 +87412,7 @@
     "topics": {
       "3": {
         "topic_name": "codigos Aliexpress",
-        "items": [
-          {
-            "product_id": "1005008728798141",
-            "platform": "aliexpress",
-            "title": "Alfombrilla de coche para MG HS MGHS PHEV EHS Hybrid 2024 ~ 2026 TPE revestimiento Interior de pie impermeable almohadilla para maletero alfombra personalizada accesorios",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c3L6rYs9",
-            "image": "img/MG_chuches/codigos_Aliexpress/aliexpress_1005008728798141.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-07-03T08:55:01.790251+00:00",
-            "sale_price": "71.75",
-            "original_price": "149.47",
-            "discount": "52%",
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "status_clasificacion": "pendiente",
-            "bot_message_id": 162,
-            "link_status": "active"
-          }
-        ]
+        "items": []
       },
       "5": {
         "topic_name": "MG4",
@@ -89001,26 +88408,28 @@
             "product_id": "1005008728798141",
             "platform": "aliexpress",
             "title": "Alfombrilla de coche para MG HS MGHS PHEV EHS Hybrid 2024 ~ 2026 TPE revestimiento Interior de pie impermeable almohadilla para maletero alfombra personalizada accesorios",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c3HuxXGD",
-            "image": "img/MG_chuches/MG_HS_EHS/aliexpress_1005008728798141.jpg",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c3L6rYs9",
+            "image": "img/MG_chuches/codigos_Aliexpress/aliexpress_1005008728798141.jpg",
             "recommendations": 2,
             "votes": {},
-            "timestamp": "2026-07-03T08:51:26.691588+00:00",
+            "timestamp": "2026-07-03T08:55:01.790251+00:00",
             "sale_price": "71.75",
             "original_price": "149.47",
             "discount": "52%",
             "rating": null,
             "reviews_count": null,
             "price_corrected": false,
+            "status_clasificacion": "clasificado",
+            "bot_message_id": 162,
+            "link_status": "active",
             "categorias": [
               "Alfombrillas"
             ],
-            "status_clasificacion": "clasificado",
             "versiones": [
               "__todas__"
             ],
-            "bot_message_id": 158,
-            "link_status": "active"
+            "version_confirmada": true,
+            "backup_links": []
           },
           {
             "product_id": "1005010666000554",

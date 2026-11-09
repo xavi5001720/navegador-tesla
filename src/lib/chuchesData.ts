@@ -236,7 +236,8 @@ export interface AdminAction {
     | 'update_comment'
     | 'delete_comment'
     | 'manage_versions'
-    | 'manage_categories';
+    | 'manage_categories'
+    | 'publish_product';
   payload: any;
   appliedLocally?: boolean;
 }
@@ -324,7 +325,7 @@ export function applyActionToMemory(
       ).filter((it: any) => !matchItem(it));
       if (inventario[groupId].topics[topicId].items.length !== before) changed = true;
     }
-  } else if (action.type === 'update_product') {
+  } else if (action.type === 'update_product' || action.type === 'publish_product') {
     const {
       sourceGroupId,
       sourceTopicId,
@@ -334,7 +335,7 @@ export function applyActionToMemory(
       moveMode = 'move', // 'move' | 'copy'
       platform,
       productId,
-      updates,
+      updates = {},
     } = p;
 
     const matchItem = (it: any) =>
@@ -342,12 +343,37 @@ export function applyActionToMemory(
 
     const srcGroup = inventario[sourceGroupId];
     const srcTopic = srcGroup?.topics?.[sourceTopicId];
-    if (!srcTopic) return false;
 
-    const idx = (srcTopic.items || []).findIndex(matchItem);
-    if (idx === -1) return false;
+    let existingItem: any = null;
+    let idx = -1;
 
-    const existingItem = srcTopic.items[idx];
+    if (srcTopic && Array.isArray(srcTopic.items)) {
+      idx = srcTopic.items.findIndex(matchItem);
+      if (idx !== -1) {
+        existingItem = srcTopic.items[idx];
+      }
+    }
+
+    if (!existingItem) {
+      if (action.type === 'publish_product') {
+        existingItem = {
+          product_id: productId,
+          platform,
+          title: updates.title || '',
+          affiliate_url: updates.affiliate_url || '',
+          image: updates.image || null,
+          image_remote: updates.image_remote || null,
+          sale_price: updates.sale_price || null,
+          original_price: updates.original_price || null,
+          discount: updates.discount || null,
+          recommendations: 1,
+          timestamp: new Date().toISOString(),
+        };
+      } else {
+        return false;
+      }
+    }
+
     const updatedItem = {
       ...existingItem,
       ...(updates.title !== undefined ? { title: updates.title } : {}),
@@ -362,6 +388,7 @@ export function applyActionToMemory(
       ...(updates.versiones !== undefined ? { versiones: updates.versiones, version_confirmada: true } : {}),
       ...(updates.backup_links !== undefined ? { backup_links: updates.backup_links } : {}),
       ...(updates.link_status !== undefined ? { link_status: updates.link_status } : {}),
+      ...(updates.bot_message_id !== undefined ? { bot_message_id: updates.bot_message_id } : {}),
       status_clasificacion: 'clasificado',
     };
 
@@ -401,9 +428,13 @@ export function applyActionToMemory(
       inventario[destGid].topics[destTid].items = destItems;
 
       if (moveMode === 'move') {
-        srcTopic.items.splice(idx, 1);
+        if (srcTopic && Array.isArray(srcTopic.items) && idx >= 0) {
+          srcTopic.items.splice(idx, 1);
+        }
       } else {
-        srcTopic.items[idx] = updatedItem;
+        if (srcTopic && Array.isArray(srcTopic.items) && idx >= 0) {
+          srcTopic.items[idx] = updatedItem;
+        }
       }
       changed = true;
     }

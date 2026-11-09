@@ -127,6 +127,7 @@ export default function GestionChuchesPage() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── Modales de Edición / Borrado / Gestión ──
+  const [publishingProduct, setPublishingProduct] = useState<ProductoAdmin | null>(null);
   const [editingProduct, setEditingProduct] = useState<ProductoAdmin | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<ProductoAdmin | null>(null);
   const [showTaxonomyModal, setShowTaxonomyModal] = useState(false);
@@ -679,6 +680,7 @@ export default function GestionChuchesPage() {
                   <AdminProductCard
                     key={`${p.groupId}_${p.topicId}_${p.key}`}
                     p={p}
+                    onPublish={() => setPublishingProduct(p)}
                     onEdit={() => setEditingProduct(p)}
                     onDelete={() => setDeletingProduct(p)}
                     onExecuteAction={executeAdminAction}
@@ -730,6 +732,27 @@ export default function GestionChuchesPage() {
           )}
         </main>
       </div>
+
+      {/* ── Modal Publicar Chuche en Telegram ── */}
+      {publishingProduct && data && (
+        <PublishProductModal
+          product={publishingProduct}
+          brands={data.brands}
+          allCategories={data.allCategories}
+          auth={auth}
+          showToast={showToast}
+          onClose={() => setPublishingProduct(null)}
+          onPublish={async payload => {
+            const ok = await executeAdminAction(
+              'publish_product',
+              payload,
+              'Chuche publicada con éxito en Telegram y añadida al inventario'
+            );
+            if (ok) setPublishingProduct(null);
+            return ok;
+          }}
+        />
+      )}
 
       {/* ── Modal Editar / Reclasificar Producto ── */}
       {editingProduct && data && (
@@ -797,11 +820,13 @@ export default function GestionChuchesPage() {
 // ═══════════════════════════════════════════════════════════════════════════
 function AdminProductCard({
   p,
+  onPublish,
   onEdit,
   onDelete,
   onExecuteAction,
 }: {
   p: ProductoAdmin;
+  onPublish: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onExecuteAction: (action: string, payload: any, msg: string) => Promise<boolean>;
@@ -1061,6 +1086,14 @@ function AdminProductCard({
         {/* Botones de Acción */}
         <div className={styles.cardFooter}>
           <div className={styles.adminBtnsRow}>
+            <button
+              type="button"
+              className={styles.btnPublish}
+              onClick={onPublish}
+              title="Publicar esta chuche en Telegram y añadirla al catálogo"
+            >
+              📢 Publicar
+            </button>
             <button type="button" className={styles.btnEdit} onClick={onEdit}>
               ✏️ Editar / Mover
             </button>
@@ -1692,6 +1725,443 @@ function EditProductModal({
             </button>
             <button type="submit" className={styles.btnSave} disabled={saving}>
               {saving ? 'Guardando...' : '💾 Guardar Cambios'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  MODAL DE PUBLICACIÓN EN TELEGRAM E INVENTARIO
+// ═══════════════════════════════════════════════════════════════════════════
+function PublishProductModal({
+  product,
+  brands,
+  allCategories,
+  auth,
+  showToast,
+  onClose,
+  onPublish,
+}: {
+  product: ProductoAdmin;
+  brands: BrandSummary[];
+  allCategories: string[];
+  auth: { user: string; pass: string } | null;
+  showToast: (msg: string) => void;
+  onClose: () => void;
+  onPublish: (payload: any) => Promise<boolean>;
+}) {
+  const [title, setTitle] = useState(product.title);
+  const [affiliateUrl, setAffiliateUrl] = useState(product.affiliate_url);
+  const [rawImage, setRawImage] = useState(product.rawImage);
+  const [imageRemote, setImageRemote] = useState(product.image_remote || '');
+  const [salePrice, setSalePrice] = useState(product.sale_price || '');
+  const [originalPrice, setOriginalPrice] = useState(product.original_price || '');
+  const [discount, setDiscount] = useState(product.discount || '');
+
+  // Si el producto está en Chuches EV general, por defecto sugerir Tesla (o la primera marca disponible)
+  const isFromChuchesGeneral = product.groupId === '-1002517190518';
+  const initialGid = isFromChuchesGeneral ? '-1003731237376' : product.groupId;
+  const [targetGroupId, setTargetGroupId] = useState(initialGid);
+
+  // Topics de la marca seleccionada
+  const selectedBrandObj = brands.find(b => b.id === targetGroupId) || brands[0];
+  const availableTopics = selectedBrandObj?.topics || [];
+
+  const initialTid = availableTopics.some(t => t.id === product.topicId)
+    ? product.topicId
+    : (availableTopics[0]?.id || '0');
+  const [targetTopicId, setTargetTopicId] = useState(initialTid);
+
+  const selectedTopicObj = availableTopics.find(t => t.id === targetTopicId);
+
+  const [selectedCats, setSelectedCats] = useState<string[]>(product.categorias);
+  const [newCatInput, setNewCatInput] = useState('');
+  const [selectedVers, setSelectedVers] = useState<string[]>(
+    product.versiones.filter(v => v !== '__todas__')
+  );
+  const [removeFromSource, setRemoveFromSource] = useState(true);
+  const [publishing, setPublishing] = useState(false);
+  const [loadingApi, setLoadingApi] = useState<'all' | 'title' | 'price' | 'image' | null>(null);
+
+  const handleBrandChange = (newGid: string) => {
+    setTargetGroupId(newGid);
+    const bObj = brands.find(b => b.id === newGid);
+    if (bObj && bObj.topics.length > 0) {
+      setTargetTopicId(bObj.topics[0].id);
+      setSelectedVers([]); // Reiniciar versiones al cambiar de marca
+    }
+  };
+
+  const handleFetchApi = async (field: 'all' | 'title' | 'price' | 'image') => {
+    if (!auth) {
+      showToast('❌ Sesión expirada. Vuelve a iniciar sesión.');
+      return;
+    }
+    setLoadingApi(field);
+    try {
+      const res = await fetch('/api/chuches/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-user': auth.user,
+          'x-admin-pass': auth.pass,
+        },
+        body: JSON.stringify({
+          action: 'fetch_product_api',
+          productId: product.id,
+          platform: product.platform,
+          url: affiliateUrl || product.affiliate_url,
+          groupName: selectedBrandObj?.name || product.groupId,
+          topicName: selectedTopicObj?.name || product.topicId,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        showToast(`❌ ${json.error || 'No se pudieron recuperar datos de la API'}`);
+        return;
+      }
+      const data = json.data;
+      if (!data) {
+        showToast('⚠️ La API no devolvió información para este artículo');
+        return;
+      }
+
+      if ((field === 'all' || field === 'title') && data.title) setTitle(data.title);
+      if ((field === 'all' || field === 'price') && data.sale_price) setSalePrice(data.sale_price);
+      if (data.original_price) setOriginalPrice(data.original_price);
+      if (data.discount) setDiscount(data.discount);
+      if ((field === 'all' || field === 'image') && data.image) {
+        setRawImage(data.image);
+        if (data.remote_image) setImageRemote(data.remote_image);
+      }
+      showToast('✅ Datos recuperados de la API');
+    } catch (e: any) {
+      showToast(`❌ Error al conectar con la API: ${e.message}`);
+    } finally {
+      setLoadingApi(null);
+    }
+  };
+
+  const toggleCat = (cat: string) => {
+    setSelectedCats(prev =>
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    );
+  };
+
+  const handleAddCustomCat = () => {
+    const val = newCatInput.trim();
+    if (!val) return;
+    if (!selectedCats.includes(val)) {
+      setSelectedCats(prev => [...prev, val]);
+    }
+    setNewCatInput('');
+  };
+
+  const toggleVer = (ver: string) => {
+    setSelectedVers(prev =>
+      prev.includes(ver) ? prev.filter(v => v !== ver) : [...prev, ver]
+    );
+  };
+
+  const allCatsPool = Array.from(new Set([...allCategories, ...selectedCats])).sort((a, b) =>
+    a.localeCompare(b, 'es')
+  );
+
+  const availableTopicVers = selectedTopicObj?.versiones || [];
+
+  const previewImg = rawImage
+    ? (rawImage.startsWith('http://') || rawImage.startsWith('https://') || rawImage.startsWith('/')
+        ? rawImage
+        : `/${rawImage}`)
+    : (imageRemote || null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title.trim()) {
+      showToast('⚠️ Debes indicar un título para publicar');
+      return;
+    }
+    if (!targetGroupId || !targetTopicId) {
+      showToast('⚠️ Debes seleccionar una marca y un topic de destino');
+      return;
+    }
+
+    setPublishing(true);
+    try {
+      const payload = {
+        sourceGroupId: product.groupId,
+        sourceTopicId: product.topicId,
+        targetGroupId,
+        targetTopicId,
+        targetTopicName: selectedTopicObj?.name || targetTopicId,
+        targetGroupName: selectedBrandObj?.name || targetGroupId,
+        platform: product.platform,
+        productId: product.id,
+        removeFromSource,
+        updates: {
+          title: title.trim(),
+          affiliate_url: affiliateUrl.trim(),
+          image: rawImage,
+          image_remote: imageRemote || null,
+          sale_price: salePrice.trim() || null,
+          original_price: originalPrice.trim() || null,
+          discount: discount.trim() || null,
+          categorias: selectedCats,
+          versiones: selectedVers.length > 0 ? selectedVers : ['__todas__'],
+          recommendations: product.recommendations,
+        },
+      };
+
+      await onPublish(payload);
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  return (
+    <div className={styles.modalOverlay} onClick={onClose}>
+      <div className={styles.modalCard} onClick={e => e.stopPropagation()}>
+        <div className={styles.modalHeader}>
+          <h2 className={styles.modalTitle}>📢 Publicar Chuche en Telegram e Inventario</h2>
+          <button type="button" className={styles.closeBtn} onClick={onClose}>
+            ✕
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Tarjeta de previsualización compacta */}
+          <div className={styles.previewPublishCard}>
+            {previewImg ? (
+              <img src={previewImg} alt={title} className={styles.previewPublishImg} />
+            ) : (
+              <div className={styles.previewPublishImg} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                🖼️
+              </div>
+            )}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
+                <span className={styles.platformBadge} style={{ position: 'static' }}>
+                  {product.platform.toUpperCase()}
+                </span>
+                <span style={{ fontSize: '0.78rem', color: '#9ca3af' }}>ID: {product.id}</span>
+              </div>
+              <div style={{ fontSize: '0.86rem', fontWeight: 700, color: '#f3f4f6', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {title || 'Sin título'}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#34d399', fontWeight: 700, marginTop: '0.2rem' }}>
+                {salePrice ? `🔥 ${salePrice}` : '⚠️ Sin precio indicado'}
+              </div>
+            </div>
+            <button
+              type="button"
+              className={styles.miniBtn}
+              onClick={() => handleFetchApi('all')}
+              disabled={loadingApi !== null}
+              title="Buscar título, precio e imagen automáticamente con la API"
+            >
+              {loadingApi === 'all' ? '⏳ Buscando...' : '⚡ Rellenar con API'}
+            </button>
+          </div>
+
+          {/* Destino de la publicación */}
+          <div style={{ background: 'rgba(0, 229, 255, 0.05)', border: '1px solid rgba(0, 229, 255, 0.2)', borderRadius: '12px', padding: '0.9rem' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--accent)', marginBottom: '0.65rem' }}>
+              🎯 Destino de la Publicación (Canal y Topic de Telegram)
+            </div>
+            <div className={styles.formGrid2}>
+              <div>
+                <label className={styles.fieldLabel}>🚗 Marca / Grupo de Telegram</label>
+                <select
+                  className={styles.select}
+                  value={targetGroupId}
+                  onChange={e => handleBrandChange(e.target.value)}
+                >
+                  {brands
+                    .filter(b => b.id !== '-1002517190518') // Excluir ChuchesEV general como destino
+                    .map(b => (
+                      <option key={b.id} value={b.id}>
+                        {b.emoji} {b.name} ({b.topics.length} topics)
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div>
+                <label className={styles.fieldLabel}>📌 Topic / Modelo dentro del grupo</label>
+                <select
+                  className={styles.select}
+                  value={targetTopicId}
+                  onChange={e => setTargetTopicId(e.target.value)}
+                >
+                  {availableTopics.map(t => (
+                    <option key={t.id} value={t.id}>
+                      {t.name} ({t.count} chuches)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Título y Enlace */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+              <label className={styles.fieldLabel} style={{ margin: 0 }}>📝 Título del Producto (Caption Telegram)</label>
+              <button
+                type="button"
+                className={styles.miniBtn}
+                onClick={() => handleFetchApi('title')}
+                disabled={loadingApi !== null}
+                title="Actualizar sólo título con la API"
+              >
+                {loadingApi === 'title' ? '⏳...' : '⚡ API Título'}
+              </button>
+            </div>
+            <input
+              type="text"
+              className={styles.input}
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="Ej: Alfombrillas Todo Tiempo de Goma Premium"
+              required
+            />
+          </div>
+
+          {/* Precio y Enlace */}
+          <div className={styles.formGrid2}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                <label className={styles.fieldLabel} style={{ margin: 0 }}>💶 Precio Venta</label>
+                <button
+                  type="button"
+                  className={styles.miniBtn}
+                  onClick={() => handleFetchApi('price')}
+                  disabled={loadingApi !== null}
+                  title="Buscar precio con la API"
+                >
+                  {loadingApi === 'price' ? '⏳...' : '⚡ API Precio'}
+                </button>
+              </div>
+              <input
+                type="text"
+                className={styles.input}
+                value={salePrice}
+                onChange={e => setSalePrice(e.target.value)}
+                placeholder="Ej: 39,99 €"
+              />
+            </div>
+
+            <div>
+              <label className={styles.fieldLabel}>🔗 Enlace de Afiliado</label>
+              <input
+                type="url"
+                className={styles.input}
+                value={affiliateUrl}
+                onChange={e => setAffiliateUrl(e.target.value)}
+                placeholder="https://..."
+                required
+              />
+            </div>
+          </div>
+
+          {/* Categoría para el botón inline de Telegram */}
+          <div>
+            <label className={styles.fieldLabel}>🗂️ Categoría (se creará el botón inline oficial)</label>
+            <div className={styles.chipsWrap}>
+              {allCatsPool.map(c => {
+                const isSel = selectedCats.includes(c);
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`${styles.chip} ${isSel ? styles.chipSelected : ''}`}
+                    onClick={() => toggleCat(c)}
+                  >
+                    {isSel ? '✓ ' : ''}{c}
+                  </button>
+                );
+              })}
+            </div>
+            <div className={styles.inlineAddRow}>
+              <input
+                type="text"
+                className={styles.input}
+                placeholder="Nueva categoría..."
+                value={newCatInput}
+                onChange={e => setNewCatInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddCustomCat();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className={styles.miniBtn}
+                onClick={handleAddCustomCat}
+              >
+                ➕ Añadir
+              </button>
+            </div>
+          </div>
+
+          {/* Versiones (si el topic tiene versiones disponibles configuradas) */}
+          {availableTopicVers.length > 0 && (
+            <div>
+              <label className={styles.fieldLabel}>
+                🚗 Versión Compatible ({selectedTopicObj?.name})
+              </label>
+              <div className={styles.chipsWrap} style={{ maxHeight: '110px' }}>
+                {availableTopicVers.map(v => {
+                  const isSel = selectedVers.includes(v);
+                  return (
+                    <button
+                      key={v}
+                      type="button"
+                      className={`${styles.chip} ${isSel ? styles.chipSelected : ''}`}
+                      onClick={() => toggleVer(v)}
+                    >
+                      {isSel ? '✓ ' : ''}{v}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ fontSize: '0.74rem', color: '#9ca3af', marginTop: '0.25rem' }}>
+                💡 Si no marcas ninguna versión específica, se considerará universal para todas las versiones.
+              </div>
+            </div>
+          )}
+
+          {/* Checkbox de origen */}
+          <div style={{ background: '#11141c', padding: '0.75rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', cursor: 'pointer', fontSize: '0.85rem', color: '#e5e7eb' }}>
+              <input
+                type="checkbox"
+                checked={removeFromSource}
+                onChange={e => setRemoveFromSource(e.target.checked)}
+                style={{ width: '18px', height: '18px', accentColor: '#10b981' }}
+              />
+              <span>
+                <strong>Quitar del origen actual</strong> ({product.groupName} › {product.topicName}) al publicar
+              </span>
+            </label>
+          </div>
+
+          {/* Footer de Acciones */}
+          <div className={styles.modalFooter}>
+            <button type="button" className={styles.btnCancel} onClick={onClose} disabled={publishing}>
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className={styles.btnPublishSubmit}
+              disabled={publishing || !targetGroupId || !targetTopicId}
+            >
+              {publishing ? '⏳ Publicando en Telegram...' : '🚀 Publicar en Telegram e Inventario'}
             </button>
           </div>
         </form>

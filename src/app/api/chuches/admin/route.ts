@@ -490,6 +490,354 @@ async function saveImageLocally(
   }
 }
 
+async function copyOrSaveImageForTopic(
+  currentImagePath: string | null,
+  imageRemote: string | null,
+  platform: string,
+  productId: string,
+  targetGroupName?: string,
+  targetTopicName?: string
+): Promise<string | null> {
+  if (!isLocalServer()) {
+    return currentImagePath || imageRemote || null;
+  }
+  try {
+    const safeGroup = sanitizeName(targetGroupName || 'Desconocido');
+    const safeTopic = sanitizeName(targetTopicName || 'General');
+    const fileName = `${platform}_${productId}.jpg`;
+    const relPath = `img/${safeGroup}/${safeTopic}/${fileName}`;
+
+    const abs1 = path.join('/home/xavi/proyectos-antigravity/1-referidos/inventarios', relPath);
+    const abs2 = path.join('/home/xavi/proyectos-antigravity/2-navegador-tesla/public', relPath);
+
+    fs.mkdirSync(path.dirname(abs1), { recursive: true });
+    fs.mkdirSync(path.dirname(abs2), { recursive: true });
+
+    // 1. Si ya existe un archivo local, copiarlo a la nueva carpeta de destino
+    if (currentImagePath && !currentImagePath.startsWith('http')) {
+      const cleanRel = currentImagePath.replace(/^\//, '');
+      const src1 = path.join('/home/xavi/proyectos-antigravity/1-referidos/inventarios', cleanRel);
+      const src2 = path.join('/home/xavi/proyectos-antigravity/2-navegador-tesla/public', cleanRel);
+      const foundSrc = fs.existsSync(src1) ? src1 : fs.existsSync(src2) ? src2 : null;
+      if (foundSrc) {
+        fs.copyFileSync(foundSrc, abs1);
+        fs.copyFileSync(foundSrc, abs2);
+        return relPath;
+      }
+    }
+
+    // 2. Si no hay archivo local pero hay URL remota, descargarlo
+    const urlToFetch =
+      currentImagePath && currentImagePath.startsWith('http')
+        ? currentImagePath
+        : imageRemote;
+    if (urlToFetch) {
+      return await saveImageLocally(urlToFetch, platform, productId, targetGroupName, targetTopicName);
+    }
+
+    return currentImagePath || relPath;
+  } catch (err) {
+    console.warn('[AdminAPI] Error copiando imagen a la carpeta destino:', err);
+    return currentImagePath;
+  }
+}
+
+function buildTelegramCaption(params: {
+  title: string;
+  affiliateUrl: string;
+  targetGroupId: string;
+  targetTopicId: string;
+  salePrice?: string | null;
+  originalPrice?: string | null;
+  discount?: string | null;
+  versiones?: string[];
+}): string {
+  const { title, affiliateUrl, targetGroupId, targetTopicId, salePrice, originalPrice, discount, versiones } = params;
+
+  const escapeHtml = (str: string) =>
+    (str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+
+  let displayLink = affiliateUrl || '';
+  // Si es Amazon, asegurar tag=energia0d1-21
+  if (displayLink && (displayLink.includes('amazon.') || displayLink.includes('amzn.to') || displayLink.includes('a.co'))) {
+    if (/[?&]tag=/.test(displayLink)) {
+      displayLink = displayLink.replace(/([?&])tag=[^&]*/, '$1tag=energia0d1-21');
+    } else {
+      const sep = displayLink.includes('?') ? '&' : '?';
+      displayLink = `${displayLink}${sep}tag=energia0d1-21`;
+    }
+  }
+
+  // Si el grupo de destino es Tesla chuches (-1003731237376), envolver en viajandoentesla.es/go?url=
+  const TESLA_CHUCHES_ID = '-1003731237376';
+  if (targetGroupId === TESLA_CHUCHES_ID && displayLink && !displayLink.startsWith('https://www.viajandoentesla.es/go?url=')) {
+    displayLink = `https://www.viajandoentesla.es/go?url=${encodeURIComponent(displayLink)}`;
+  }
+
+  let enlaceTexto = `<a href="${displayLink}">Ver oferta</a>`;
+  const lowerUrl = (affiliateUrl || '').toLowerCase();
+  if (lowerUrl.includes('aliexpress') || lowerUrl.includes('ali.ski') || lowerUrl.includes('s.click')) {
+    enlaceTexto = `<a href="${displayLink}">Ver en Aliexpress</a>`;
+  } else if (lowerUrl.includes('amazon') || lowerUrl.includes('amzn.to') || lowerUrl.includes('a.co')) {
+    enlaceTexto = `<a href="${displayLink}">Ver en Amazon</a>`;
+  } else if (lowerUrl.includes('temu')) {
+    enlaceTexto = `<a href="${displayLink}">Ver en Temu</a>`;
+  }
+
+  let caption = `🛒 ${escapeHtml(title)}\n👉 ${enlaceTexto}`;
+
+  if (salePrice && String(salePrice).trim()) {
+    const cleanSale = String(salePrice).replace('€', '').trim();
+    if (originalPrice && String(originalPrice).trim()) {
+      const cleanOrig = String(originalPrice).replace('€', '').trim();
+      if (discount) {
+        caption += `\n🔥 <s>${cleanOrig} €</s> <b>${cleanSale} €</b> (${discount} descuento)`;
+      } else {
+        caption += `\n🔥 <s>${cleanOrig} €</s> <b>${cleanSale} €</b>`;
+      }
+    } else {
+      caption += `\n🔥 <b>${cleanSale} €</b>`;
+    }
+  }
+
+  if (versiones && versiones.length > 0) {
+    const filteredVers = versiones.filter(v => v && v !== '__todas__');
+    if (filteredVers.length === 1) {
+      caption += `\n🚘 Compatible con versión: <b>${escapeHtml(filteredVers[0])}</b>`;
+    } else if (filteredVers.length > 1) {
+      caption += `\n🚘 Compatible con las versiones: <b>${filteredVers.map(escapeHtml).join(', ')}</b>`;
+    }
+  }
+
+  return caption;
+}
+
+function buildTelegramKeyboard(params: {
+  productId: string;
+  platform: string;
+  categoria?: string;
+  targetGroupId: string;
+  targetTopicId: string;
+  targetTopicName?: string;
+}): any {
+  const { productId, platform, categoria, targetGroupId, targetTopicId, targetTopicName } = params;
+
+  const rows: any[][] = [];
+
+  // Fila 1: Botones de votar 👍 👎
+  rows.push([
+    { text: '👍', callback_data: `vup_${platform}_${productId}` },
+    { text: '👎', callback_data: `vdn_${platform}_${productId}` },
+  ]);
+
+  const cleanGid = targetGroupId.replace(/^-/, '');
+  const absGid = cleanGid;
+  const tid = targetTopicId || '0';
+
+  // Fila 2: Categoría (si se asignó)
+  if (categoria && categoria.trim()) {
+    const catName = categoria.trim();
+    const TESLA_CHUCHES_ID = '-1003731237376';
+    if (targetGroupId === TESLA_CHUCHES_ID && (tid === '7' || tid === '8')) {
+      const seccion = tid === '7' ? 'model3' : 'modely';
+      rows.push([
+        {
+          text: `🗂️ ${catName} (viajandoentesla.es)`,
+          url: `https://www.viajandoentesla.es/?section=${seccion}&categoria=${encodeURIComponent(catName)}`,
+        },
+      ]);
+    } else {
+      const catHex = Buffer.from(catName, 'utf-8').toString('hex');
+      rows.push([
+        {
+          text: `🗂️ ${catName}`,
+          url: `https://t.me/ChuchesEV_Bot?start=c_${absGid}_${tid}_${catHex}`,
+        },
+      ]);
+    }
+  }
+
+  // Fila 3: Menú
+  let menuLabel = '🗂️ Menú';
+  if (targetTopicName && targetTopicName.trim()) {
+    const cleanName = targetTopicName.trim().replace(/^(tesla|byd|mg|xpeng|leapmotor|toyota|hyundai|volkswagen|geely)\s*/i, '').trim();
+    menuLabel = cleanName ? `🗂️ Menú ${cleanName}` : '🗂️ Menú';
+  }
+  rows.push([
+    {
+      text: menuLabel,
+      url: `https://t.me/ChuchesEV_Bot?start=search_${absGid}_${tid}`,
+    },
+  ]);
+
+  // Fila 4: Comentarios
+  rows.push([
+    {
+      text: '💬 Comentarios (0)',
+      url: `https://t.me/ChuchesEV_Bot?start=cmt_${absGid}_${tid}_${platform}_${productId}`,
+    },
+  ]);
+
+  return { inline_keyboard: rows };
+}
+
+async function publishProductToTelegram(payload: any): Promise<{ ok: boolean; messageId?: number; error?: string }> {
+  const {
+    targetGroupId,
+    targetTopicId,
+    targetTopicName,
+    platform,
+    productId,
+    updates,
+  } = payload;
+
+  const title = updates?.title || 'Producto Chuche';
+  const affiliateUrl = updates?.affiliate_url || '';
+  const salePrice = updates?.sale_price || null;
+  const originalPrice = updates?.original_price || null;
+  const discount = updates?.discount || null;
+  const versiones = updates?.versiones || [];
+  const categoria = (updates?.categorias && updates.categorias[0]) || '';
+  const image = updates?.image || null;
+  const imageRemote = updates?.image_remote || null;
+
+  const caption = buildTelegramCaption({
+    title,
+    affiliateUrl,
+    targetGroupId,
+    targetTopicId,
+    salePrice,
+    originalPrice,
+    discount,
+    versiones,
+  });
+
+  const replyMarkup = buildTelegramKeyboard({
+    productId,
+    platform,
+    categoria,
+    targetGroupId,
+    targetTopicId,
+    targetTopicName,
+  });
+
+  const threadIdNum = parseInt(targetTopicId, 10);
+  const hasThread = !isNaN(threadIdNum) && threadIdNum > 0;
+
+  let sentMessageId: number | null = null;
+
+  // 1. Intentar enviar foto mediante archivo local en disco si estamos en local server
+  let localFilePath: string | null = null;
+  if (isLocalServer() && image && !image.startsWith('http')) {
+    const cleanRel = image.replace(/^\//, '');
+    const p1 = path.join('/home/xavi/proyectos-antigravity/1-referidos/inventarios', cleanRel);
+    const p2 = path.join('/home/xavi/proyectos-antigravity/2-navegador-tesla/public', cleanRel);
+    if (fs.existsSync(p1)) localFilePath = p1;
+    else if (fs.existsSync(p2)) localFilePath = p2;
+  }
+
+  if (localFilePath) {
+    try {
+      const formData = new FormData();
+      formData.append('chat_id', targetGroupId);
+      if (hasThread) formData.append('message_thread_id', String(threadIdNum));
+      formData.append('caption', caption);
+      formData.append('parse_mode', 'HTML');
+      formData.append('reply_markup', JSON.stringify(replyMarkup));
+      const fileBuf = fs.readFileSync(localFilePath);
+      const blob = new Blob([fileBuf], { type: 'image/jpeg' });
+      formData.append('photo', blob, path.basename(localFilePath));
+
+      const res = await fetch(`https://api.telegram.org/bot${CHUCHES_BOT_TOKEN}/sendPhoto`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.ok && data.result?.message_id) {
+        sentMessageId = data.result.message_id;
+      } else {
+        console.warn('[AdminAPI] Telegram sendPhoto multipart no aceptado:', data);
+      }
+    } catch (err) {
+      console.warn('[AdminAPI] Error enviando sendPhoto con FormData:', err);
+    }
+  }
+
+  // 2. Si no se pudo por multipart, probar sendPhoto con URL pública
+  if (!sentMessageId) {
+    let photoUrl: string | null = null;
+    if (imageRemote && imageRemote.startsWith('http')) {
+      photoUrl = imageRemote;
+    } else if (image && image.startsWith('http')) {
+      photoUrl = image;
+    } else if (image) {
+      photoUrl = `https://www.viajandoentesla.es/${image.replace(/^\//, '')}`;
+    }
+
+    if (photoUrl) {
+      try {
+        const bodyObj: any = {
+          chat_id: targetGroupId,
+          photo: photoUrl,
+          caption,
+          parse_mode: 'HTML',
+          reply_markup: replyMarkup,
+        };
+        if (hasThread) bodyObj.message_thread_id = threadIdNum;
+
+        const res = await fetch(`https://api.telegram.org/bot${CHUCHES_BOT_TOKEN}/sendPhoto`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bodyObj),
+        });
+        const data = await res.json();
+        if (data.ok && data.result?.message_id) {
+          sentMessageId = data.result.message_id;
+        } else {
+          console.warn('[AdminAPI] Telegram sendPhoto URL falló:', data);
+        }
+      } catch (err) {
+        console.warn('[AdminAPI] Error enviando sendPhoto con URL:', err);
+      }
+    }
+  }
+
+  // 3. Fallback: Si no hay foto o sendPhoto falló, enviar como mensaje de texto enriquecido con enlace
+  if (!sentMessageId) {
+    try {
+      const bodyObj: any = {
+        chat_id: targetGroupId,
+        text: caption,
+        parse_mode: 'HTML',
+        reply_markup: replyMarkup,
+      };
+      if (hasThread) bodyObj.message_thread_id = threadIdNum;
+
+      const res = await fetch(`https://api.telegram.org/bot${CHUCHES_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyObj),
+      });
+      const data = await res.json();
+      if (data.ok && data.result?.message_id) {
+        sentMessageId = data.result.message_id;
+      } else {
+        console.warn('[AdminAPI] Telegram sendMessage falló:', data);
+        return { ok: false, error: data.description || 'Error al enviar mensaje a Telegram' };
+      }
+    } catch (err: any) {
+      console.warn('[AdminAPI] Error enviando sendMessage:', err);
+      return { ok: false, error: err.message || 'Error de conexión con Telegram' };
+    }
+  }
+
+  return { ok: true, messageId: sentMessageId };
+}
+
 export async function GET(req: NextRequest) {
   if (!checkAuth(req)) {
     return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 });
@@ -1176,6 +1524,7 @@ export async function POST(req: NextRequest) {
     'delete_comment',
     'manage_versions',
     'manage_categories',
+    'publish_product',
   ];
 
   if (!validActions.includes(body.action)) {
@@ -1199,6 +1548,47 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Si es publish_product, publicar primero en el canal/topic de Telegram y asociar bot_message_id
+  if (body.action === 'publish_product') {
+    const payload = body.payload || {};
+    if (!payload.targetGroupId || !payload.targetTopicId) {
+      return NextResponse.json(
+        { error: 'Debes seleccionar el grupo y topic de destino.' },
+        { status: 400 }
+      );
+    }
+
+    // 1. Enviar a Telegram
+    const tgRes = await publishProductToTelegram(payload);
+    if (!tgRes.ok || !tgRes.messageId) {
+      return NextResponse.json(
+        { error: tgRes.error || 'No se pudo publicar el artículo en Telegram.' },
+        { status: 400 }
+      );
+    }
+
+    // 2. Si estamos en local y hay que organizar la imagen en la carpeta del nuevo topic
+    const targetBrand = BRAND_CONFIG.find(b => b.id === payload.targetGroupId);
+    const targetGroupName = targetBrand?.name ? `${targetBrand.name} chuches` : payload.targetGroupName;
+    if (payload.updates) {
+      const finalImage = await copyOrSaveImageForTopic(
+        payload.updates.image,
+        payload.updates.image_remote,
+        payload.platform,
+        payload.productId,
+        targetGroupName,
+        payload.targetTopicName
+      );
+      if (finalImage) {
+        payload.updates.image = finalImage;
+      }
+      payload.updates.bot_message_id = tgRes.messageId;
+    }
+
+    // 3. Ajustar moveMode según removeFromSource (por defecto true)
+    payload.moveMode = payload.removeFromSource !== false ? 'move' : 'copy';
+  }
+
   const local = isLocalServer();
   const newAction: AdminAction = {
     id: `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -1218,7 +1608,7 @@ export async function POST(req: NextRequest) {
 
   // Si estamos en el servidor local, escribimos directamente en /home/xavi/proyectos-antigravity/1-referidos/inventarios/
   if (local) {
-    if (['delete_product', 'update_product', 'manage_versions', 'manage_categories'].includes(newAction.type)) {
+    if (['delete_product', 'update_product', 'publish_product', 'manage_versions', 'manage_categories'].includes(newAction.type)) {
       writeJSONSafe('inventario_global.json', inventario);
     }
     if (['add_comment', 'update_comment', 'delete_comment'].includes(newAction.type)) {
