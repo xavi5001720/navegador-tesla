@@ -150,9 +150,9 @@ except Exception as e:
 let cachedAmazonSpanishCookie: string | null = null;
 let lastGlowTime = 0;
 
-async function getAmazonSpanishSessionCookie(): Promise<string> {
+async function getAmazonSpanishSessionCookie(forceRefresh = false): Promise<string> {
   const now = Date.now();
-  if (cachedAmazonSpanishCookie && (now - lastGlowTime < 30 * 60 * 1000)) {
+  if (!forceRefresh && cachedAmazonSpanishCookie && (now - lastGlowTime < 15 * 60 * 1000)) {
     return cachedAmazonSpanishCookie;
   }
 
@@ -172,7 +172,7 @@ async function getAmazonSpanishSessionCookie(): Promise<string> {
       const parts = h.split(';')[0].split('=');
       const name = parts[0].trim();
       const val = parts.slice(1).join('=').trim();
-      if (val && val !== '-') {
+      if (val && val !== '-' && val !== 'delete' && !val.toLowerCase().includes('delete')) {
         cookieJar.set(name, val);
       }
     }
@@ -250,6 +250,7 @@ async function fetchAmazonProduct(asin: string, rawUrl?: string) {
     const uaDesktop = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
     const uaMobile = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
+    let bestResult: any = null;
     for (let i = 0; i < candidateUrls.length; i++) {
       const url = candidateUrls[i];
       try {
@@ -381,29 +382,38 @@ async function fetchAmazonProduct(asin: string, rawUrl?: string) {
           }
         }
 
-        // 5. Fallback patrón directo con símbolo €
+        // 5. a-color-price (precio específico de producto)
         if (!sale_price) {
-          const mFallback = html.match(/(?:precio|total|ahora)?\s*([0-9]+[.,][0-9]{2})[\s\u00A0]*€/i);
-          if (mFallback && mFallback[1]) {
-            const rawP = mFallback[1].replace(',', '.');
-            const num = parseFloat(rawP);
-            if (!isNaN(num) && num > 0) {
-              sale_price = `${num.toFixed(2).replace('.', ',')} €`;
+          const mColorPrice = html.match(/class=\"[^\"]*a-color-price[^\"]*\"[^>]*>([\s\S]*?)<\/span>/i);
+          if (mColorPrice && mColorPrice[1] && mColorPrice[1].includes('€')) {
+            const numMatch = mColorPrice[1].match(/([0-9]+[.,][0-9]{2})/);
+            if (numMatch) {
+              const num = parseFloat(numMatch[1].replace(',', '.'));
+              if (!isNaN(num) && num > 0) {
+                sale_price = `${num.toFixed(2).replace('.', ',')} €`;
+              }
             }
           }
         }
 
         if (title) {
-          return {
+          const item = {
             title,
             image,
             sale_price,
             affiliate_url: rawUrl || `https://www.amazon.es/dp/${cleanAsin}`,
           };
+          if (sale_price) {
+            return item;
+          }
+          if (!bestResult) {
+            bestResult = item;
+          }
         }
       } catch {}
     }
 
+    if (bestResult) return bestResult;
     return null;
   } catch (err) {
     console.warn('[AdminAPI] Error scraping Amazon:', err);
