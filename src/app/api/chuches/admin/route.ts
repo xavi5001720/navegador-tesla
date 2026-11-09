@@ -102,58 +102,187 @@ async function fetchAliExpressProduct(productId: string) {
   }
 }
 
-async function fetchAmazonProduct(asin: string, rawUrl?: string) {
+function scrapeAmazonWithPython(asin: string, rawUrl?: string) {
+  if (!isLocalServer()) return null;
   try {
-    const url = rawUrl && (rawUrl.includes('dp/') || rawUrl.includes('gp/product/'))
-      ? rawUrl
-      : `https://www.amazon.es/dp/${asin}`;
-
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-      },
-      cache: 'no-store',
-    });
-    if (!res.ok) return null;
-    const html = await res.text();
-
-    let title: string | null = null;
-    const titleMatch = html.match(/id=\"productTitle\"[^>]*>([\s\S]*?)<\/span>/i);
-    if (titleMatch) {
-      title = titleMatch[1].trim();
-    } else {
-      const ogTitle = html.match(/property=\"og:title\"\s+content=\"([^\"]+)\"/i);
-      if (ogTitle) title = ogTitle[1].replace('Amazon.es:', '').trim();
-    }
-
-    let image: string | null = null;
-    const imgMatch =
-      html.match(/id=\"landingImage\"[^>]*data-old-hires=\"([^\"]+)\"/i) ||
-      html.match(/id=\"landingImage\"[^>]*src=\"([^\"]+)\"/i) ||
-      html.match(/\"large\":\"(https:\/\/[^\"]+?\.jpg)\"/i);
-    if (imgMatch) {
-      image = imgMatch[1];
-    } else {
-      const ogImg = html.match(/property=\"og:image\"\s+content=\"([^\"]+)\"/i);
-      if (ogImg) image = ogImg[1];
-    }
-
-    let sale_price: string | null = null;
-    const priceMatch =
-      html.match(/class=\"a-offscreen\">([0-9,.]+)\s*€/i) ||
-      html.match(/class=\"a-offscreen\">€\s*([0-9,.]+)/i) ||
-      html.match(/class=\"a-price-whole\">([0-9,.]+)<span class=\"a-price-decimal\">,<\/span><span class=\"a-price-fraction\">([0-9]+)<\/span>/i);
-    if (priceMatch) {
-      if (priceMatch[2]) {
-        sale_price = `${priceMatch[1]},${priceMatch[2]} €`;
-      } else {
-        sale_price = `${priceMatch[1].trim()} €`;
+    const { execSync } = require('child_process');
+    const py = `
+import sys, json
+sys.path.append('/home/xavi/proyectos-antigravity/1-referidos')
+try:
+    from importlib.machinery import SourceFileLoader
+    mod = SourceFileLoader('three', '/home/xavi/proyectos-antigravity/1-referidos/3.py').load_module()
+    u = """${(rawUrl || '').replace(/"""/g, '')}"""
+    a = """${(asin || '').replace(/"""/g, '')}"""
+    if u and any(x in u for x in ['amzn.to', 'amzn.eu', 'a.co', 'link.amazon', 'amzlinks.in']):
+        resolved = mod.resolve_amazon_redirect(u)
+        if resolved:
+            u = resolved
+    extracted_asin = mod.get_amazon_asin(u) or a
+    res = mod.scrape_amazon_html(extracted_asin, u)
+    if res:
+        print('JSON_RES:' + json.dumps(res))
+    else:
+        print('JSON_RES:null')
+except Exception as e:
+    print('JSON_RES:null')
+`;
+    const out = execSync('/home/xavi/teslabot-env/bin/python3', { input: py, encoding: 'utf-8', timeout: 15000 });
+    const match = out.match(/JSON_RES:(.*)/);
+    if (match && match[1]) {
+      const data = JSON.parse(match[1].trim());
+      if (data && data.title) {
+        return {
+          title: data.title,
+          image: data.image,
+          sale_price: data.sale_price ? `${String(data.sale_price).replace('.', ',')} €` : null,
+          affiliate_url: data.link || null,
+        };
       }
     }
+    return null;
+  } catch (err) {
+    console.warn('[AdminAPI] Error scraping Amazon with Python:', err);
+    return null;
+  }
+}
 
-    return { title, image, sale_price };
+async function fetchAmazonProduct(asin: string, rawUrl?: string) {
+  // 1. En servidor local, usar directamente el scraper web de 3.py (idéntico al bot)
+  if (isLocalServer()) {
+    const pyData = scrapeAmazonWithPython(asin, rawUrl);
+    if (pyData && pyData.title) {
+      return pyData;
+    }
+  }
+
+  // 2. Fallback HTTP para cloud / Vercel
+  try {
+    const cleanAsin = asin.replace(/[^a-zA-Z0-9]/g, '');
+    const candidateUrls = [
+      `https://www.amazon.es/gp/aw/d/${cleanAsin}`,
+      `https://www.amazon.es/gp/aw/d/${cleanAsin}?th=1&psc=1`,
+      rawUrl && (rawUrl.includes('dp/') || rawUrl.includes('gp/product/'))
+        ? rawUrl
+        : `https://www.amazon.es/dp/${cleanAsin}`,
+    ];
+
+    for (let i = 0; i < candidateUrls.length; i++) {
+      const url = candidateUrls[i];
+      try {
+        if (i > 0) {
+          // Breve pausa entre reintentos para no saturar
+          await new Promise((resolve) => setTimeout(resolve, 400));
+        }
+
+        const isMobile = url.includes('/gp/aw/d/');
+        const headers = isMobile
+          ? {
+              'User-Agent':
+                'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+              'Accept-Language': 'es-ES,es;q=0.9',
+              'Cookie': 'lc-acbes=es_ES; i18n-prefs=EUR; sp-cdn="L5Z9:ES"',
+            }
+          : {
+              'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+              'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+              'Accept-Encoding': 'gzip, deflate, br',
+              'Connection': 'keep-alive',
+              'Upgrade-Insecure-Requests': '1',
+              'Cookie': 'lc-acbes=es_ES; i18n-prefs=EUR; sp-cdn="L5Z9:ES"',
+            };
+
+        const res = await fetch(url, { headers, cache: 'no-store' });
+        if (!res.ok) continue;
+        const html = await res.text();
+        if (html.includes('Robot Check') || html.includes('api-services-support@amazon.com')) continue;
+
+        // Título
+        let title: string | null = null;
+        const titleMatch = html.match(/id=\"productTitle\"[^>]*>([\s\S]*?)<\/span>/i);
+        if (titleMatch) {
+          title = titleMatch[1].trim();
+        } else {
+          const tTag = html.match(/<title>([^<]+)<\/title>/i);
+          if (tTag) {
+            title = tTag[1].replace(/\s*:\s*Amazon\.es[\s\S]*/i, '').trim();
+          }
+        }
+
+        // Imagen (alta resolución)
+        let image: string | null = null;
+        const mainMobileImg =
+          html.match(/id=\"main-image\"[^>]*data-a-hires=\"([^\"]+)\"/i) ||
+          html.match(/id=\"main-image\"[^>]*src=\"([^\"]+)\"/i);
+        if (mainMobileImg) {
+          image = mainMobileImg[1];
+        }
+        if (!image) {
+          const dynImgMatch = html.match(/data-a-dynamic-image=\"([^\"]+)\"/i);
+          if (dynImgMatch) {
+            try {
+              const decoded = dynImgMatch[1].replace(/&quot;/g, '"');
+              const obj = JSON.parse(decoded);
+              const keys = Object.keys(obj);
+              if (keys.length > 0) image = keys[keys.length - 1];
+            } catch {}
+          }
+        }
+        if (!image) {
+          const m =
+            html.match(/id=\"landingImage\"[^>]*data-old-hires=\"([^\"]+)\"/i) ||
+            html.match(/id=\"landingImage\"[^>]*src=\"([^\"]+)\"/i) ||
+            html.match(/\"large\":\"(https:\/\/[^\"]+?\.jpg)\"/i);
+          if (m) image = m[1];
+        }
+
+        // Precio (múltiples capas: Buybox JSON con &quot;, apex-pricetopay, Accessibility spans, regex general)
+        let sale_price: string | null = null;
+        const buyboxMatch =
+          html.match(/(?:\"|&quot;)displayPrice(?:\"|&quot;)\s*:\s*(?:\"|&quot;)([^\"&]+)/i);
+        if (buyboxMatch && buyboxMatch[1]) {
+          sale_price = buyboxMatch[1].replace(/[\s\u00A0]+/g, ' ').trim();
+        }
+
+        if (!sale_price) {
+          const apexMatch = html.match(/apex-pricetopay[^>]*>[\s\S]*?([0-9]+[.,][0-9]{2})/i);
+          if (apexMatch && apexMatch[1]) {
+            sale_price = `${apexMatch[1].replace('.', ',')} €`;
+          }
+        }
+
+        if (!sale_price) {
+          const payPriceMatch =
+            html.match(/class=\"(?:a-offscreen|aok-offscreen)\"[^>]*>[\s\S]*?([0-9]+[.,][0-9]{2})[\s\u00A0]*(?:€|EUR|&euro;)/i) ||
+            html.match(/<span class=\"a-price-whole\">([0-9]+)[^0-9<]*<span class=\"a-price-fraction\">([0-9]+)<\/span>/i) ||
+            html.match(/([0-9]+[.,][0-9]{2})[\s\u00A0]*(?:€|EUR|&euro;)/i);
+          if (payPriceMatch) {
+            if (payPriceMatch[2]) {
+              sale_price = `${payPriceMatch[1]},${payPriceMatch[2]} €`;
+            } else {
+              sale_price = `${payPriceMatch[1].replace('.', ',')} €`;
+            }
+          }
+        }
+
+        if (!sale_price) {
+          const amtMatch = html.match(/(?:\"|&quot;)priceAmount(?:\"|&quot;)\s*:\s*([0-9.]+)/i);
+          if (amtMatch) {
+            sale_price = `${amtMatch[1].replace('.', ',')} €`;
+          }
+        }
+
+
+        if (title) {
+          return { title, image, sale_price };
+        }
+      } catch {}
+    }
+
+    return null;
   } catch (err) {
     console.warn('[AdminAPI] Error scraping Amazon:', err);
     return null;
@@ -847,7 +976,7 @@ export async function POST(req: NextRequest) {
         platform = 'aliexpress';
         const m = rawUrl.match(/item\/(\d+)\.html/);
         if (m) productId = m[1];
-      } else if (rawUrl.includes('amazon.')) {
+      } else if (rawUrl.includes('amazon.') || rawUrl.includes('amzn.to') || rawUrl.includes('amzn.eu') || rawUrl.includes('a.co') || rawUrl.includes('link.amazon')) {
         platform = 'amazon';
         const m = rawUrl.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})/i) || rawUrl.match(/\/([A-Z0-9]{10})(?:[/?]|$)/i);
         if (m) productId = m[1];
@@ -858,7 +987,7 @@ export async function POST(req: NextRequest) {
 
     if (platform === 'aliexpress' && /^\d+$/.test(productId)) {
       apiData = await fetchAliExpressProduct(productId);
-    } else if (platform === 'amazon' && productId) {
+    } else if (platform === 'amazon' && (productId || rawUrl)) {
       apiData = await fetchAmazonProduct(productId, rawUrl);
     }
 
