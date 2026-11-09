@@ -67,7 +67,7 @@ function parseCodigos(txt: string) {
       if (match) enlace = match[1];
     } else if (line.includes('Publicado:')) publicado = line.replace(/.*Publicado:\s*/, '').trim();
     else if (line.startsWith('👉')) {
-      const clean = line.replace('👉', '').replace(/`/g, '').trim();
+      const clean = line.replace('👉', '').replace(/[`*]/g, '').trim();
       const parts = clean.split('->');
       if (parts.length === 2) {
         codigos.push({ codigo: parts[0].trim(), descuento: parts[1].trim() });

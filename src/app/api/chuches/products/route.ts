@@ -1,31 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { loadAllChuchesData } from '@/lib/chuchesData';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
-
-function getLivePath(primaryPath: string, fallbackPath: string) {
-  if (fs.existsSync(primaryPath)) return primaryPath;
-  return fallbackPath;
-}
-
-const INVENTARIO_PATH = getLivePath(
-  '/home/xavi/proyectos-antigravity/1-referidos/inventarios/inventario_global.json',
-  path.join(process.cwd(), 'public', 'data', 'inventario_global.json')
-);
-const COMENTARIOS_PATH = getLivePath(
-  '/home/xavi/proyectos-antigravity/1-referidos/inventarios/comentarios.json',
-  path.join(process.cwd(), 'public', 'data', 'comentarios.json')
-);
-const VOTOS_PATH = getLivePath(
-  '/home/xavi/proyectos-antigravity/1-referidos/inventarios/votos_globales.json',
-  path.join(process.cwd(), 'public', 'data', 'votos_globales.json')
-);
-const REFERIDOS_PATH = getLivePath(
-  '/home/xavi/proyectos-antigravity/1-referidos/inventarios/referidos_tesla.json',
-  path.join(process.cwd(), 'public', 'data', 'referidos_tesla.json')
-);
 
 const TESLA_GROUP_ID = '-1003731237376';
 const TOPIC_MODEL3 = '7';
@@ -35,23 +12,6 @@ const TOPIC_MANTENIMIENTO = '12';
 const TOPIC_MERCHANDISING = '625';
 
 const CAT_CARGADORES = 'Cargadores';
-
-const jsonCache: Record<string, { data: any; mtime: number }> = {};
-
-function readJSON(filePath: string) {
-  try {
-    const stat = fs.statSync(filePath);
-    const cached = jsonCache[filePath];
-    if (cached && cached.mtime === stat.mtimeMs) {
-      return cached.data;
-    }
-    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-    jsonCache[filePath] = { data, mtime: stat.mtimeMs };
-    return data;
-  } catch {
-    return null;
-  }
-}
 
 const VALID_SECTION_VERSIONS: Record<string, string[]> = {
   model3: [
@@ -130,9 +90,7 @@ export async function GET(req: NextRequest) {
   const page = parseInt(searchParams.get('page') || '1');
   const limit = parseInt(searchParams.get('limit') || '48');
 
-  const inventario = readJSON(INVENTARIO_PATH);
-  const comentarios = readJSON(COMENTARIOS_PATH) || {};
-  const votos = readJSON(VOTOS_PATH) || {};
+  const { inventario, comentarios, votos, referidos: refData } = await loadAllChuchesData();
 
   if (!inventario) {
     return NextResponse.json({ error: 'Inventario no disponible' }, { status: 503 });
@@ -201,10 +159,12 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Filtro por versión
+  // Filtro por versión (los Cargadores con __todas__ son compatibles con todas las versiones)
   if (version) {
     productos = productos.filter((p: any) =>
-      p.versiones.some((v: string) => v.toLowerCase() === version.toLowerCase())
+      p.versiones.some((v: string) => v.toLowerCase() === version.toLowerCase()) ||
+      (p.categorias.some((c: string) => c.toLowerCase() === CAT_CARGADORES.toLowerCase()) &&
+        (p.versiones.length === 0 || p.versiones.includes('__todas__')))
     );
   }
 
@@ -261,7 +221,6 @@ export async function GET(req: NextRequest) {
 
   let totalReferidos = 76;
   let totalMiembros = 488;
-  const refData = readJSON(REFERIDOS_PATH);
   if (refData && refData.referidos && typeof refData.referidos === 'object') {
     totalReferidos = Object.keys(refData.referidos).length;
   }

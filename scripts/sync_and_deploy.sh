@@ -18,12 +18,26 @@ echo "" >> "$LOG_FILE"
 echo "══════════════════════════════════" >> "$LOG_FILE"
 echo "$(date '+%Y-%m-%d %H:%M:%S') — Iniciando sync" >> "$LOG_FILE"
 
+# 0. Aplicar posibles ediciones hechas en la nube (/gestion-chuches) al inventario local
+curl -s -H "x-admin-user: xavi" -H "x-admin-pass: 5001720" "http://localhost:3001/api/chuches/admin?limit=1" > /dev/null 2>&1 || true
+
+# 0.5. Importar nuevos productos vendidos en AliExpress que no estén en el catálogo
+echo "🛍️ Sincronizando ventas recientes de AliExpress..." >> "$LOG_FILE"
+/home/xavi/milena/bin/python3 /home/xavi/proyectos-antigravity/1-referidos/sync_ventas_aliexpress.py >> "$LOG_FILE" 2>&1 || true
+
+# 0.6. Verificar enlaces caídos y auto-promover enlaces de reserva (backup_links)
+echo "🔗 Verificando estado de enlaces y backup_links..." >> "$LOG_FILE"
+/home/xavi/milena/bin/python3 /home/xavi/proyectos-antigravity/1-referidos/verificar_y_unificar_links.py >> "$LOG_FILE" 2>&1 || true
+
 # 1. Copiar ficheros del inventario (JSON)
 echo "📂 Copiando inventario JSON..." >> "$LOG_FILE"
 cp "$SRC/inventario_global.json" "$DST/inventario_global.json"
 cp "$SRC/comentarios.json"       "$DST/comentarios.json"
 cp "$SRC/votos_globales.json"    "$DST/votos_globales.json"
 cp "$SRC/referidos_tesla.json"   "$DST/referidos_tesla.json"
+if [ -f "$SRC/topics.json" ]; then
+  cp "$SRC/topics.json"          "$DST/topics.json"
+fi
 echo "✅ Inventario JSON copiado" >> "$LOG_FILE"
 
 # 2. Sincronizar imágenes nuevas (solo copia las que faltan, no borra nada)

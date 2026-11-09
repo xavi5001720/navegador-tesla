@@ -5,6 +5,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
+      disallow: ['/gestion-chuches', '/api/chuches/admin'],
     },
     sitemap: 'https://www.viajandoentesla.es/sitemap.xml',
   };
