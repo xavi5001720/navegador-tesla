@@ -147,6 +147,85 @@ except Exception as e:
   }
 }
 
+let cachedAmazonSpanishCookie: string | null = null;
+let lastGlowTime = 0;
+
+async function getAmazonSpanishSessionCookie(): Promise<string> {
+  const now = Date.now();
+  if (cachedAmazonSpanishCookie && (now - lastGlowTime < 30 * 60 * 1000)) {
+    return cachedAmazonSpanishCookie;
+  }
+
+  const ua = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
+  const cookieJar = new Map<string, string>();
+
+  function parseCookies(res: Response) {
+    let rawHeaders: string[] = [];
+    if (typeof (res.headers as any).getSetCookie === 'function') {
+      rawHeaders = (res.headers as any).getSetCookie();
+    } else {
+      const h = res.headers.get('set-cookie');
+      if (h) rawHeaders = [h];
+    }
+    for (const h of rawHeaders) {
+      if (!h) continue;
+      const parts = h.split(';')[0].split('=');
+      const name = parts[0].trim();
+      const val = parts.slice(1).join('=').trim();
+      if (val && val !== '-') {
+        cookieJar.set(name, val);
+      }
+    }
+  }
+
+  try {
+    // 1. Visitar /gp/aw para inicializar session-id oficial de Amazon
+    const r1 = await fetch('https://www.amazon.es/gp/aw', {
+      headers: {
+        'User-Agent': ua,
+        'Accept-Language': 'es-ES,es;q=0.9',
+      },
+      cache: 'no-store',
+    });
+    parseCookies(r1);
+    cookieJar.set('lc-acbes', 'es_ES');
+    cookieJar.set('i18n-prefs', 'EUR');
+
+    // 2. Establecer código postal de España (Madrid 28001) para desbloquear precios y buybox
+    const params = new URLSearchParams({
+      locationType: 'LOCATION_INPUT',
+      zipCode: '28001',
+      storeContext: 'generic',
+      deviceType: 'mobile',
+      pageType: 'Gateway',
+      actionSource: 'glow',
+    });
+
+    const cookieHeaderBeforeGlow = Array.from(cookieJar.entries()).map(([k, v]) => `${k}=${v}`).join('; ');
+
+    const r2 = await fetch('https://www.amazon.es/gp/delivery/ajax/address-change.html', {
+      method: 'POST',
+      headers: {
+        'User-Agent': ua,
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept-Language': 'es-ES,es;q=0.9',
+        'Cookie': cookieHeaderBeforeGlow,
+      },
+      body: params.toString(),
+      cache: 'no-store',
+    });
+    parseCookies(r2);
+
+    cachedAmazonSpanishCookie = Array.from(cookieJar.entries()).map(([k, v]) => `${k}=${v}`).join('; ');
+    lastGlowTime = now;
+    return cachedAmazonSpanishCookie;
+  } catch (err) {
+    console.warn('[AdminAPI] Error creando sesión española de Amazon:', err);
+    return 'lc-acbes=es_ES; i18n-prefs=EUR';
+  }
+}
+
 async function fetchAmazonProduct(asin: string, rawUrl?: string) {
   // 1. En servidor local, usar directamente el scraper web de 3.py (idéntico al bot)
   if (isLocalServer()) {
@@ -156,49 +235,49 @@ async function fetchAmazonProduct(asin: string, rawUrl?: string) {
     }
   }
 
-  // 2. Fallback HTTP para cloud / Vercel
+  // 2. Fallback HTTP para cloud / Vercel con sesión fijada en España (Madrid 28001)
   try {
     const cleanAsin = asin.replace(/[^a-zA-Z0-9]/g, '');
+    const sessionCookie = await getAmazonSpanishSessionCookie();
     const candidateUrls = [
       `https://www.amazon.es/gp/aw/d/${cleanAsin}`,
-      `https://www.amazon.es/gp/aw/d/${cleanAsin}?th=1&psc=1`,
       rawUrl && (rawUrl.includes('dp/') || rawUrl.includes('gp/product/'))
         ? rawUrl
         : `https://www.amazon.es/dp/${cleanAsin}`,
+      `https://www.amazon.es/dp/${cleanAsin}`,
     ];
+
+    const uaDesktop = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+    const uaMobile = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
 
     for (let i = 0; i < candidateUrls.length; i++) {
       const url = candidateUrls[i];
       try {
         if (i > 0) {
-          // Breve pausa entre reintentos para no saturar
-          await new Promise((resolve) => setTimeout(resolve, 400));
+          await new Promise((resolve) => setTimeout(resolve, 300));
         }
 
         const isMobile = url.includes('/gp/aw/d/');
-        const headers = isMobile
-          ? {
-              'User-Agent':
-                'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-              'Accept-Language': 'es-ES,es;q=0.9',
-              'Cookie': 'lc-acbes=es_ES; i18n-prefs=EUR; sp-cdn="L5Z9:ES"',
-            }
-          : {
-              'User-Agent':
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
-              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-              'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
-              'Accept-Encoding': 'gzip, deflate, br',
-              'Connection': 'keep-alive',
-              'Upgrade-Insecure-Requests': '1',
-              'Cookie': 'lc-acbes=es_ES; i18n-prefs=EUR; sp-cdn="L5Z9:ES"',
-            };
+        const headers: Record<string, string> = {
+          'User-Agent': isMobile ? uaMobile : uaDesktop,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'es-ES,es;q=0.9',
+          'Cookie': sessionCookie,
+        };
 
         const res = await fetch(url, { headers, cache: 'no-store' });
         if (!res.ok) continue;
-        const html = await res.text();
-        if (html.includes('Robot Check') || html.includes('api-services-support@amazon.com')) continue;
+        let html = await res.text();
+        if (html.includes('Robot Check')) continue;
+
+        // Desescapar entidades HTML clave para que los regexes de precios, títulos e imágenes coincidan
+        html = html
+          .replace(/&nbsp;/g, ' ')
+          .replace(/&euro;/g, '€')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&#34;/g, '"')
+          .replace(/&amp;/g, '&');
 
         // Título
         let title: string | null = null;
@@ -211,26 +290,36 @@ async function fetchAmazonProduct(asin: string, rawUrl?: string) {
             title = tTag[1].replace(/\s*:\s*Amazon\.es[\s\S]*/i, '').trim();
           }
         }
-
-        // Imagen (alta resolución)
-        let image: string | null = null;
-        const mainMobileImg =
-          html.match(/id=\"main-image\"[^>]*data-a-hires=\"([^\"]+)\"/i) ||
-          html.match(/id=\"main-image\"[^>]*src=\"([^\"]+)\"/i);
-        if (mainMobileImg) {
-          image = mainMobileImg[1];
+        if (title) {
+          title = title.replace(/\s+/g, ' ').trim();
         }
+
+        // Imagen (alta resolución: hiRes, landingImage, main-image o dynamic)
+        let image: string | null = null;
+        const hiResMatch = html.match(/\"hiRes\":\"(https:\/\/[^\"]+?\.jpg)\"/i);
+        if (hiResMatch) {
+          image = hiResMatch[1];
+        }
+
+        if (!image) {
+          const mainMobileImg =
+            html.match(/id=\"main-image\"[^>]*data-a-hires=\"([^\"]+)\"/i) ||
+            html.match(/id=\"main-image\"[^>]*src=\"([^\"]+)\"/i);
+          if (mainMobileImg) image = mainMobileImg[1];
+        }
+
         if (!image) {
           const dynImgMatch = html.match(/data-a-dynamic-image=\"([^\"]+)\"/i);
           if (dynImgMatch) {
             try {
-              const decoded = dynImgMatch[1].replace(/&quot;/g, '"');
+              const decoded = dynImgMatch[1];
               const obj = JSON.parse(decoded);
               const keys = Object.keys(obj);
               if (keys.length > 0) image = keys[keys.length - 1];
             } catch {}
           }
         }
+
         if (!image) {
           const m =
             html.match(/id=\"landingImage\"[^>]*data-old-hires=\"([^\"]+)\"/i) ||
@@ -239,45 +328,78 @@ async function fetchAmazonProduct(asin: string, rawUrl?: string) {
           if (m) image = m[1];
         }
 
-        // Precio (múltiples capas: Buybox JSON con &quot;, apex-pricetopay, Accessibility spans, regex general)
+        // Precio (lógica robusta idéntica al bot con fallback JSON y accesibilidad)
         let sale_price: string | null = null;
-        const buyboxMatch =
-          html.match(/(?:\"|&quot;)displayPrice(?:\"|&quot;)\s*:\s*(?:\"|&quot;)([^\"&]+)/i);
-        if (buyboxMatch && buyboxMatch[1]) {
-          sale_price = buyboxMatch[1].replace(/[\s\u00A0]+/g, ' ').trim();
-        }
 
-        if (!sale_price) {
-          const apexMatch = html.match(/apex-pricetopay[^>]*>[\s\S]*?([0-9]+[.,][0-9]{2})/i);
-          if (apexMatch && apexMatch[1]) {
-            sale_price = `${apexMatch[1].replace('.', ',')} €`;
+        // 1. apex-pricetopay (precio final en oferta de la buybox)
+        const mApex = html.match(/id=\"apex-pricetopay-accessibility-label\"[^>]*>([^<]+)<\/span>/i);
+        if (mApex && mApex[1]) {
+          const rawP = mApex[1].replace(/€/g, '').replace(/[\s\u00A0]+/g, '').replace(',', '.').trim();
+          const num = parseFloat(rawP);
+          if (!isNaN(num) && num > 0) {
+            sale_price = `${num.toFixed(2).replace('.', ',')} €`;
           }
         }
 
+        // 2. Buybox JSON displayPrice
         if (!sale_price) {
-          const payPriceMatch =
-            html.match(/class=\"(?:a-offscreen|aok-offscreen)\"[^>]*>[\s\S]*?([0-9]+[.,][0-9]{2})[\s\u00A0]*(?:€|EUR|&euro;)/i) ||
-            html.match(/<span class=\"a-price-whole\">([0-9]+)[^0-9<]*<span class=\"a-price-fraction\">([0-9]+)<\/span>/i) ||
-            html.match(/([0-9]+[.,][0-9]{2})[\s\u00A0]*(?:€|EUR|&euro;)/i);
-          if (payPriceMatch) {
-            if (payPriceMatch[2]) {
-              sale_price = `${payPriceMatch[1]},${payPriceMatch[2]} €`;
-            } else {
-              sale_price = `${payPriceMatch[1].replace('.', ',')} €`;
+          const mDisplayPrice = html.match(/\"displayPrice\":\s*\"([^\"]+)\"/i);
+          if (mDisplayPrice && mDisplayPrice[1]) {
+            const rawP = mDisplayPrice[1].replace(/€/g, '').replace(/[\s\u00A0]+/g, '').replace(',', '.').trim();
+            const num = parseFloat(rawP);
+            if (!isNaN(num) && num > 0) {
+              sale_price = `${num.toFixed(2).replace('.', ',')} €`;
             }
           }
         }
 
+        // 3. a-price seguido de a-offscreen (idéntico a 3.py)
         if (!sale_price) {
-          const amtMatch = html.match(/(?:\"|&quot;)priceAmount(?:\"|&quot;)\s*:\s*([0-9.]+)/i);
-          if (amtMatch) {
-            sale_price = `${amtMatch[1].replace('.', ',')} €`;
+          const mPriceSpan =
+            html.match(/class=\"[^\"]*a-price[^\"]*\"[^>]*>[\s\S]*?class=\"[^\"]*a-offscreen[^\"]*\">([^<]+)<\/span>/i) ||
+            html.match(/class=\"(?:a-offscreen|aok-offscreen)\">([^<]+)<\/span>/i);
+          if (mPriceSpan && mPriceSpan[1]) {
+            const rawP = mPriceSpan[1].replace(/€/g, '').replace(/[\s\u00A0]+/g, '').replace(',', '.').trim();
+            const num = parseFloat(rawP);
+            if (!isNaN(num) && num > 0) {
+              sale_price = `${num.toFixed(2).replace('.', ',')} €`;
+            }
           }
         }
 
+        // 4. customerVisiblePrice o twister-plus value
+        if (!sale_price) {
+          const mInputVal =
+            html.match(/customerVisiblePrice\]\[amount\]\"\s*value=\"([0-9.]+)\"/i) ||
+            html.match(/twister-plus-price-data-price\"\s*value=\"([0-9.]+)\"/i) ||
+            html.match(/\"priceAmount\":\s*([0-9.]+)/i);
+          if (mInputVal && mInputVal[1]) {
+            const num = parseFloat(mInputVal[1]);
+            if (!isNaN(num) && num > 0) {
+              sale_price = `${num.toFixed(2).replace('.', ',')} €`;
+            }
+          }
+        }
+
+        // 5. Fallback patrón directo con símbolo €
+        if (!sale_price) {
+          const mFallback = html.match(/(?:precio|total|ahora)?\s*([0-9]+[.,][0-9]{2})[\s\u00A0]*€/i);
+          if (mFallback && mFallback[1]) {
+            const rawP = mFallback[1].replace(',', '.');
+            const num = parseFloat(rawP);
+            if (!isNaN(num) && num > 0) {
+              sale_price = `${num.toFixed(2).replace('.', ',')} €`;
+            }
+          }
+        }
 
         if (title) {
-          return { title, image, sale_price };
+          return {
+            title,
+            image,
+            sale_price,
+            affiliate_url: rawUrl || `https://www.amazon.es/dp/${cleanAsin}`,
+          };
         }
       } catch {}
     }
@@ -305,10 +427,17 @@ async function fetchGenericOgProduct(url: string) {
                     html.match(/content=\"([^\"]+)\"\s+property=\"(?:og:title|twitter:title)\"/i);
     const ogImg = html.match(/property=\"(?:og:image|twitter:image)\"\s+content=\"([^\"]+)\"/i) ||
                   html.match(/content=\"([^\"]+)\"\s+property=\"(?:og:image|twitter:image)\"/i);
+    
+    // Si podemos rascar el precio de la página genérica
+    const priceMatch =
+      html.match(/class=\"(?:a-offscreen|aok-offscreen)\"[^>]*>[\s\S]*?([0-9]+[.,][0-9]{2})[\s\u00A0]*(?:€|EUR|&euro;)/i) ||
+      html.match(/([0-9]+[.,][0-9]{2})[\s\u00A0]*(?:€|EUR|&euro;)/i);
+    const sale_price = priceMatch ? `${priceMatch[1].replace('.', ',')} €` : null;
+
     return {
-      title: ogTitle ? ogTitle[1].trim() : null,
+      title: ogTitle ? ogTitle[1].replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim() : null,
       image: ogImg ? ogImg[1].trim() : null,
-      sale_price: null,
+      sale_price,
     };
   } catch {
     return null;
