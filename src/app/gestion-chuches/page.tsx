@@ -1777,7 +1777,10 @@ function PublishProductModal({
 
   const selectedTopicObj = availableTopics.find(t => t.id === targetTopicId);
 
-  const [selectedCats, setSelectedCats] = useState<string[]>(product.categorias);
+  const initialCats = product.categorias && product.categorias.length > 0
+    ? product.categorias
+    : ['Varios'];
+  const [selectedCats, setSelectedCats] = useState<string[]>(initialCats);
   const [newCatInput, setNewCatInput] = useState('');
   const [selectedVers, setSelectedVers] = useState<string[]>(
     product.versiones.filter(v => v !== '__todas__')
@@ -1866,7 +1869,7 @@ function PublishProductModal({
     );
   };
 
-  const allCatsPool = Array.from(new Set([...allCategories, ...selectedCats])).sort((a, b) =>
+  const allCatsPool = Array.from(new Set(['Varios', ...allCategories, ...selectedCats])).sort((a, b) =>
     a.localeCompare(b, 'es')
   );
 
@@ -1891,6 +1894,7 @@ function PublishProductModal({
 
     setPublishing(true);
     try {
+      const finalCats = selectedCats.length > 0 ? selectedCats : ['Varios'];
       const payload = {
         sourceGroupId: product.groupId,
         sourceTopicId: product.topicId,
@@ -1909,7 +1913,7 @@ function PublishProductModal({
           sale_price: salePrice.trim() || null,
           original_price: originalPrice.trim() || null,
           discount: discount.trim() || null,
-          categorias: selectedCats,
+          categorias: finalCats,
           versiones: selectedVers.length > 0 ? selectedVers : ['__todas__'],
           recommendations: product.recommendations,
         },

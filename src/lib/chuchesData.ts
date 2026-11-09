@@ -610,7 +610,7 @@ export async function loadAllChuchesData(forceRefreshActions = false) {
       }
       const changed = applyActionToMemory(act, inventario, comentarios, topicsData);
       if (changed) {
-        if (['delete_product', 'update_product', 'manage_versions', 'manage_categories'].includes(act.type)) {
+        if (['delete_product', 'update_product', 'publish_product', 'manage_versions', 'manage_categories'].includes(act.type)) {
           mutatedInv = true;
         }
         if (['add_comment', 'update_comment', 'delete_comment'].includes(act.type)) {

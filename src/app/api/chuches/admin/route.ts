@@ -701,7 +701,13 @@ async function publishProductToTelegram(payload: any): Promise<{ ok: boolean; me
   const originalPrice = updates?.original_price || null;
   const discount = updates?.discount || null;
   const versiones = updates?.versiones || [];
-  const categoria = (updates?.categorias && updates.categorias[0]) || '';
+  let categoria = (updates?.categorias && updates.categorias[0]) || '';
+  if (!categoria || !categoria.trim()) {
+    categoria = 'Varios';
+    if (updates) {
+      updates.categorias = ['Varios'];
+    }
+  }
   const image = updates?.image || null;
   const imageRemote = updates?.image_remote || null;
 
@@ -836,6 +842,94 @@ async function publishProductToTelegram(payload: any): Promise<{ ok: boolean; me
   }
 
   return { ok: true, messageId: sentMessageId };
+}
+
+async function updateTelegramPostAfterEdit(params: {
+  groupId: string;
+  botMessageId: number;
+  platform: string;
+  productId: string;
+  topicId: string;
+  topicName?: string;
+  updates: any;
+}): Promise<void> {
+  const { groupId, botMessageId, platform, productId, topicId, topicName, updates } = params;
+  if (!groupId || !botMessageId) return;
+
+  try {
+    const title = updates.title || 'Producto';
+    const affiliateUrl = updates.affiliate_url || '';
+    const salePrice = updates.sale_price || null;
+    const originalPrice = updates.original_price || null;
+    const discount = updates.discount || null;
+    const versiones = updates.versiones || [];
+    let categoria = (updates.categorias && updates.categorias[0]) || '';
+    if (!categoria || !categoria.trim()) {
+      categoria = 'Varios';
+    }
+
+    const caption = buildTelegramCaption({
+      title,
+      affiliateUrl,
+      targetGroupId: groupId,
+      targetTopicId: topicId,
+      salePrice,
+      originalPrice,
+      discount,
+      versiones,
+    });
+
+    const replyMarkup = buildTelegramKeyboard({
+      productId,
+      platform,
+      categoria,
+      targetGroupId: groupId,
+      targetTopicId: topicId,
+      targetTopicName: topicName,
+    });
+
+    // 1. Intentar editar caption + botones
+    const resCaption = await fetch(`https://api.telegram.org/bot${CHUCHES_BOT_TOKEN}/editMessageCaption`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: groupId,
+        message_id: botMessageId,
+        caption,
+        parse_mode: 'HTML',
+        reply_markup: replyMarkup,
+      }),
+    });
+    const dataCaption = await resCaption.json();
+
+    // 2. Si falló porque el mensaje original no tenía caption (era texto plano)
+    if (!dataCaption.ok && dataCaption.description?.toLowerCase().includes('there is no caption')) {
+      await fetch(`https://api.telegram.org/bot${CHUCHES_BOT_TOKEN}/editMessageText`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: groupId,
+          message_id: botMessageId,
+          text: caption,
+          parse_mode: 'HTML',
+          reply_markup: replyMarkup,
+        }),
+      });
+    } else if (!dataCaption.ok) {
+      // Intentar al menos actualizar los botones inline (reply_markup)
+      await fetch(`https://api.telegram.org/bot${CHUCHES_BOT_TOKEN}/editMessageReplyMarkup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: groupId,
+          message_id: botMessageId,
+          reply_markup: replyMarkup,
+        }),
+      });
+    }
+  } catch (err) {
+    console.warn('[AdminAPI] No se pudo sincronizar edición en Telegram:', err);
+  }
 }
 
 export async function GET(req: NextRequest) {
@@ -1587,6 +1681,47 @@ export async function POST(req: NextRequest) {
 
     // 3. Ajustar moveMode según removeFromSource (por defecto true)
     payload.moveMode = payload.removeFromSource !== false ? 'move' : 'copy';
+  }
+
+  // Si es update_product y el producto ya tenía mensaje en Telegram, sincronizar cambios en Telegram
+  if (body.action === 'update_product') {
+    const payload = body.payload || {};
+    const srcGid = payload.sourceGroupId;
+    const srcTid = payload.sourceTopicId;
+    const destGid = payload.targetGroupId || srcGid;
+    const destTid = payload.targetTopicId || srcTid;
+    const existing = inventario[srcGid]?.topics?.[srcTid]?.items?.find(
+      (x: any) => String(x.product_id) === String(payload.productId) && String(x.platform) === String(payload.platform)
+    );
+    const botMsgId = payload.updates?.bot_message_id || existing?.bot_message_id;
+
+    if (botMsgId && destGid && destGid !== '-1002517190518') {
+      const mergedUpdates = {
+        title: payload.updates?.title !== undefined ? payload.updates.title : existing?.title,
+        affiliate_url: payload.updates?.affiliate_url !== undefined ? payload.updates.affiliate_url : existing?.affiliate_url,
+        sale_price: payload.updates?.sale_price !== undefined ? payload.updates.sale_price : existing?.sale_price,
+        original_price: payload.updates?.original_price !== undefined ? payload.updates.original_price : existing?.original_price,
+        discount: payload.updates?.discount !== undefined ? payload.updates.discount : existing?.discount,
+        categorias: payload.updates?.categorias !== undefined ? payload.updates.categorias : existing?.categorias,
+        versiones: payload.updates?.versiones !== undefined ? payload.updates.versiones : existing?.versiones,
+      };
+
+      // Si no tiene categoría, por defecto asignar Varios
+      if (!mergedUpdates.categorias || mergedUpdates.categorias.length === 0) {
+        mergedUpdates.categorias = ['Varios'];
+        if (payload.updates) payload.updates.categorias = ['Varios'];
+      }
+
+      updateTelegramPostAfterEdit({
+        groupId: destGid,
+        botMessageId: botMsgId,
+        platform: payload.platform,
+        productId: payload.productId,
+        topicId: destTid,
+        topicName: payload.TargetTopicName || inventario[destGid]?.topics?.[destTid]?.topic_name,
+        updates: mergedUpdates,
+      }).catch(err => console.warn('[AdminAPI] Error actualizando post Telegram:', err));
+    }
   }
 
   const local = isLocalServer();
