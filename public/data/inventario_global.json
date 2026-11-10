@@ -29291,9 +29291,9 @@
               "admin_5736126687_1778711002684": 1
             },
             "timestamp": "2026-10-13T21:38:32.343378+00:00",
-            "sale_price": null,
-            "original_price": null,
-            "discount": null,
+            "sale_price": "116,67 €",
+            "original_price": "122,92 €",
+            "discount": "-5%",
             "rating": null,
             "reviews_count": null,
             "price_corrected": false,
@@ -29305,7 +29305,7 @@
               "Juniper (2025+) - Standard"
             ],
             "bot_message_id": 8284,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005005340439032",
@@ -77275,9 +77275,9 @@
               "admin_5736126687_1778710854525": 1
             },
             "timestamp": "2026-05-13T22:20:18.735532+00:00",
-            "sale_price": null,
-            "original_price": null,
-            "discount": null,
+            "sale_price": "116,67 €",
+            "original_price": "122,92 €",
+            "discount": "-5%",
             "rating": null,
             "reviews_count": null,
             "categorias": [
@@ -77288,7 +77288,7 @@
               "__todas__"
             ],
             "bot_message_id": 347,
-            "link_status": "broken"
+            "link_status": "active"
           }
         ]
       },
