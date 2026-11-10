@@ -157,7 +157,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B0C88XDQ4Z",
@@ -323,7 +323,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "36,99 €"
           },
           {
             "product_id": "B0CBN2GLJS",
@@ -402,7 +403,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "189,95 €"
           },
           {
             "product_id": "1005010177507793",
@@ -557,7 +559,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005007715318342",
@@ -583,7 +585,7 @@
             "original_price": "863.39",
             "discount": "43%",
             "bot_message_id": 1674,
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -696,7 +698,7 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -2577,7 +2579,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "39,98 €"
           },
           {
             "product_id": "B09WVZGD9L",
@@ -2647,7 +2650,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "59,99 €"
           },
           {
             "product_id": "B0BJFFZLKC",
@@ -2664,7 +2668,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "49,99 €"
           },
           {
             "product_id": "1005008048952566",
@@ -18336,9 +18341,9 @@
               "70420011": 1
             },
             "timestamp": "2026-10-28T21:06:13.014919+00:00",
-            "sale_price": "24.39",
-            "original_price": "52.48",
-            "discount": null,
+            "sale_price": "20,54 €",
+            "original_price": "54,29 €",
+            "discount": "-62%",
             "rating": null,
             "reviews_count": null,
             "price_corrected": true,
@@ -18351,7 +18356,7 @@
               "Highland (2024+) - Premium"
             ],
             "bot_message_id": 8580,
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -19189,6 +19194,30 @@
             ],
             "version_confirmada": true,
             "backup_links": []
+          },
+          {
+            "product_id": "1005007650577602",
+            "platform": "aliexpress",
+            "title": "Panel de instrumentos inteligente para coche, 4,6 pulgadas, 2,5 mini LCD Digital, para Modelo 3 /Y, velocímetro automático",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c3AIve2j",
+            "image": "img/Tesla_chuches/Tesla_Model_3/aliexpress_1005007650577602.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-11-10T08:59:19.500257+00:00",
+            "sale_price": "153.13",
+            "original_price": "191.41",
+            "discount": "20%",
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "bot_message_id": 8828,
+            "status_clasificacion": "clasificado",
+            "categorias": [
+              "Pantallas"
+            ],
+            "versiones": [
+              "__todas__"
+            ]
           }
         ],
         "topic_name": "Tesla Model 3"
@@ -20449,7 +20478,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "189,95 €"
           },
           {
             "product_id": "B0BZ89SZP7",
@@ -23575,33 +23605,6 @@
               "Juniper (2025+) - Standard"
             ],
             "link_status": "active"
-          },
-          {
-            "product_id": "1005006518612953",
-            "platform": "aliexpress",
-            "title": "Nuevo Maletero Eléctrico Automático Y Juniper para Tesla Model YL 3 X S 3 Highland, Puerta Delantera Impermeable con Cierre Automático",
-            "affiliate_url": "https://s.click.aliexpress.com/e/_c4EBFdLJ",
-            "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005006518612953.jpg",
-            "recommendations": 2,
-            "votes": {},
-            "timestamp": "2026-06-01T18:05:02.905998+00:00",
-            "sale_price": "250.09",
-            "original_price": "490.38",
-            "discount": "49%",
-            "rating": null,
-            "reviews_count": null,
-            "price_corrected": false,
-            "categorias": [
-              "Automatismos"
-            ],
-            "status_clasificacion": "clasificado",
-            "versiones": [
-              "Juniper (2025+) - Standard",
-              "Juniper (2025+) - Premium"
-            ],
-            "bot_message_id": 2554,
-            "link_status": "active",
-            "version_auto": true
           },
           {
             "product_id": "1005009234323974",
@@ -30288,6 +30291,31 @@
             ],
             "version_confirmada": true,
             "backup_links": []
+          },
+          {
+            "product_id": "1005006518612953",
+            "platform": "aliexpress",
+            "title": "Nuevo Maletero Eléctrico Automático Y Juniper para Tesla Model YL 3 X S 3 Highland, Puerta Delantera Impermeable con Cierre Automático",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c4CVYWB9",
+            "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005006518612953.jpg",
+            "recommendations": 3,
+            "votes": {},
+            "timestamp": "2026-11-10T14:07:12.857405+00:00",
+            "sale_price": "252.42",
+            "original_price": "508.84",
+            "discount": "50%",
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "categorias": [
+              "Automatismos"
+            ],
+            "status_clasificacion": "clasificado",
+            "versiones": [
+              "Juniper (2025+) - Standard",
+              "Juniper (2025+) - Premium"
+            ],
+            "bot_message_id": 8831
           }
         ],
         "topic_name": "Tesla Model Y"
@@ -33681,6 +33709,30 @@
               "__todas__"
             ],
             "link_status": "broken"
+          },
+          {
+            "product_id": "1005012579928005",
+            "platform": "aliexpress",
+            "title": "1 unidad Exclusiva Transfronteriza: Alfombrilla para Maletero de Coche y Funda para Asiento de Mascotas, de Tela Oxford, para Carga Trasera, para Vehículos",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c44mhSEL",
+            "image": "img/BYD_chuches/BYD_Atto_3/aliexpress_1005012579928005.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-11-10T07:35:54.577992+00:00",
+            "sale_price": "22.09",
+            "original_price": "49.09",
+            "discount": "54%",
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "bot_message_id": 2114,
+            "status_clasificacion": "clasificado",
+            "categorias": [
+              "Alfombrillas"
+            ],
+            "versiones": [
+              "__todas__"
+            ]
           }
         ],
         "topic_name": "BYD Atto 3"
@@ -51373,6 +51425,30 @@
             "discount": "15",
             "link_status": "active",
             "backup_links": []
+          },
+          {
+            "product_id": "B00IKEUWI8",
+            "platform": "amazon",
+            "title": "Sakura SS5259 - Barrera Protectora de Coche para Perros, para Reposacabezas, Colocación Sencilla en la Mayoría de Vehículos, Altura y Anchura Ajustable, sin Necesidad de Herramientas",
+            "affiliate_url": "https://www.amazon.es/dp/B00IKEUWI8?tag=energia0d1-21",
+            "image": "img/Xpeng_chuches/Xpeng_G6/amazon_B00IKEUWI8.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-11-10T11:53:19.021955+00:00",
+            "sale_price": "29.23",
+            "original_price": null,
+            "discount": null,
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "bot_message_id": 1653,
+            "status_clasificacion": "clasificado",
+            "categorias": [
+              "Varios"
+            ],
+            "versiones": [
+              "__todas__"
+            ]
           }
         ],
         "topic_name": "Xpeng G6"
@@ -56177,6 +56253,30 @@
               "__todas__"
             ],
             "link_status": "active"
+          },
+          {
+            "product_id": "B0FRLWSGPW",
+            "platform": "amazon",
+            "title": "UGREEN FineTrack Duo Soporte iOS Find My o Android Find Hub 4 Piezas",
+            "affiliate_url": "https://www.amazon.es/dp/B0FRLWSGPW?tag=energia0d1-21",
+            "image": "img/Toyota_chuches/Toyota_C_HR/amazon_B0FRLWSGPW.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-11-10T09:05:26.485743+00:00",
+            "sale_price": "29.99",
+            "original_price": null,
+            "discount": null,
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "bot_message_id": 1078,
+            "status_clasificacion": "clasificado",
+            "categorias": [
+              "Soportes"
+            ],
+            "versiones": [
+              "__todas__"
+            ]
           }
         ],
         "topic_name": "Toyota C-HR"
@@ -62856,6 +62956,78 @@
             "status_clasificacion": "clasificado",
             "categorias": [
               "Luces"
+            ],
+            "versiones": [
+              "__todas__"
+            ]
+          },
+          {
+            "product_id": "1005013412682212",
+            "platform": "aliexpress",
+            "title": "4 piezas de viseras para ventanas de coche para Leapmotor T03 2020 2021 2022 2023 2024 2025 2026, parasoles para ventanas, protectores de lluvia para ventanas",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c3w6drOR",
+            "image": "img/Leapmotor_chuches/Leapmotor_T03/aliexpress_1005013412682212.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-11-10T13:09:38.116373+00:00",
+            "sale_price": "28.96",
+            "original_price": "84.69",
+            "discount": "65%",
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "bot_message_id": 2392,
+            "status_clasificacion": "clasificado",
+            "categorias": [
+              "Parasoles"
+            ],
+            "versiones": [
+              "__todas__"
+            ]
+          },
+          {
+            "product_id": "1005011829179924",
+            "platform": "aliexpress",
+            "title": "Luz para Maletero de Coche para Leapmotor T03 B01 B10 Lafa 5 C01 C10 C16 C11, Modificación de Iluminación de Maletero, Luces Decorativas para Coche",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c3OcnBbt",
+            "image": "img/Leapmotor_chuches/Leapmotor_T03/aliexpress_1005011829179924.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-11-10T13:14:10.817748+00:00",
+            "sale_price": "7.50",
+            "original_price": "9.08",
+            "discount": "17%",
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "bot_message_id": 2393,
+            "status_clasificacion": "clasificado",
+            "categorias": [
+              "Luces"
+            ],
+            "versiones": [
+              "__todas__"
+            ]
+          },
+          {
+            "product_id": "1005010051513705",
+            "platform": "aliexpress",
+            "title": "Pegatina decorativa para parrilla delantera de coche, embellecedor de Color de rejilla para accesorios exteriores Leapmotor T03 2024 2025",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c4NjWm3V",
+            "image": "img/Leapmotor_chuches/Leapmotor_T03/aliexpress_1005010051513705.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-11-10T13:15:16.781453+00:00",
+            "sale_price": "13.00",
+            "original_price": "24.08",
+            "discount": "46%",
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": false,
+            "bot_message_id": 2394,
+            "status_clasificacion": "clasificado",
+            "categorias": [
+              "Varios"
             ],
             "versiones": [
               "__todas__"
@@ -79157,9 +79329,9 @@
             "recommendations": 9,
             "votes": {},
             "timestamp": "2026-05-14T08:04:52.044838+00:00",
-            "sale_price": "24.39",
-            "original_price": "52.02",
-            "discount": null,
+            "sale_price": "20,54 €",
+            "original_price": "54,29 €",
+            "discount": "-62%",
             "rating": null,
             "reviews_count": null,
             "bot_message_id": 3871,
@@ -79168,7 +79340,7 @@
             "categorias": [
               "Consola"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B0DVH35LVY",
