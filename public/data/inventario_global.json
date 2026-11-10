@@ -849,7 +849,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "154,43 €"
           },
           {
             "product_id": "1005010455485788",
@@ -866,7 +867,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005008170609263",
@@ -921,7 +922,7 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -1053,7 +1054,7 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -1129,7 +1130,8 @@
             },
             "link": "https://www.amazon.es/dp/B0G6FVXLX6?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
             "bot_message_id": 1673,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "505,07 €"
           },
           {
             "product_id": "1005011528382352",
@@ -1167,7 +1169,7 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -1285,7 +1287,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005009570448106",
@@ -1384,7 +1386,7 @@
                 "title": "Sistema de luz ambiental de ventilación de aire inteligente, sistema BSD de monitoreo de punto ciego"
               }
             ],
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -1441,7 +1443,7 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -1612,7 +1614,7 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "sale_price": "17.49 EUR",
             "version_auto": true
           },
@@ -1752,7 +1754,7 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -1894,7 +1896,7 @@
                 "title": "Proyector de logotipo LED para Tesla Model 3, luces de pozo, luz de bienvenida ultrabrillante, luz d"
               }
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B07HK9S8GN",
@@ -1966,7 +1968,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005008611026944",
@@ -2174,7 +2176,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005007779373131",
@@ -2229,7 +2231,7 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "sale_price": "157.39 EUR",
             "version_auto": true
           },
@@ -2269,7 +2271,7 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -2328,7 +2330,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005006407798778",
@@ -2411,7 +2413,7 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -2467,7 +2469,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "sale_price": "880.99 EUR"
           },
           {
@@ -2524,7 +2526,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005009001840864",
@@ -2615,7 +2617,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "33,68 €"
           },
           {
             "product_id": "B00Y74H1BQ",
@@ -2704,7 +2707,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "45,28 €"
           },
           {
             "product_id": "B07J67D437",
@@ -2721,7 +2725,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "27,97 €"
           },
           {
             "product_id": "B009E281B0",
@@ -2776,7 +2781,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "sale_price": "115.39 EUR"
           },
           {
@@ -2794,7 +2799,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B0FJ835YV6",
@@ -2812,8 +2817,9 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
-            "version_auto": true
+            "link_status": "active",
+            "version_auto": true,
+            "sale_price": "199,99 €"
           },
           {
             "product_id": "1005010770713788",
@@ -2870,7 +2876,7 @@
                 "title": "Para Tesla Model 3 Highland 2024 ABS alféizar de puerta delantera y trasera cubierta protectora prot"
               }
             ],
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -2939,7 +2945,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005009560098174",
@@ -2956,7 +2962,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005010036864379",
@@ -3012,7 +3018,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "199,99 €"
           },
           {
             "product_id": "1005006888324858",
@@ -3103,7 +3110,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005009651534898",
@@ -3163,7 +3170,7 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "sale_price": "15.29 EUR",
             "version_auto": true
           },
@@ -3223,7 +3230,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "sale_price": "30.97 EUR"
           },
           {
@@ -3277,7 +3284,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "35,69 €"
           },
           {
             "product_id": "1005007333151465",
@@ -3314,7 +3322,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005009681211373",
@@ -3331,7 +3339,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "sale_price": "4.79 EUR"
           },
           {
@@ -3580,7 +3588,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "64,49 €"
           },
           {
             "product_id": "1005004378080132",
@@ -3976,7 +3985,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005006435709910",
@@ -4142,7 +4151,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "25,00 €"
           },
           {
             "product_id": "B0C7L87NV9",
@@ -4159,7 +4169,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "19,99 €"
           },
           {
             "product_id": "B083SVTBNW",
@@ -4267,8 +4278,9 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
-            "version_auto": true
+            "link_status": "active",
+            "version_auto": true,
+            "sale_price": "23,99 €"
           },
           {
             "product_id": "1005006901504067",
@@ -4440,7 +4452,8 @@
               "__todas__"
             ],
             "recommendations": 2,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "184,95 €"
           },
           {
             "product_id": "B08C4Y9WW2",
@@ -4890,7 +4903,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "69,99 €"
           },
           {
             "product_id": "1005007856758829",
@@ -5407,7 +5421,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005008688573152",
@@ -5614,7 +5628,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B00JQDMUJQ",
@@ -5631,7 +5645,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "8,95 €"
           },
           {
             "product_id": "1005009446747255",
@@ -5906,7 +5921,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "28,09 €"
           },
           {
             "product_id": "B08M3TXN81",
@@ -5943,7 +5959,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "19,90 €"
           },
           {
             "product_id": "B0FGJHTRFM",
@@ -6021,8 +6038,9 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
-            "version_auto": true
+            "link_status": "active",
+            "version_auto": true,
+            "sale_price": "76,96 €"
           },
           {
             "product_id": "B0FPM7K4TF",
@@ -6094,7 +6112,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "249,98 €"
           },
           {
             "product_id": "1005009851404940",
@@ -6149,7 +6168,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "17,99 €"
           },
           {
             "product_id": "1005009650871552",
@@ -6253,7 +6273,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "57,59 €"
           },
           {
             "product_id": "1005007341296579",
@@ -6565,8 +6586,9 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
-            "version_auto": true
+            "link_status": "active",
+            "version_auto": true,
+            "sale_price": "169,99 €"
           },
           {
             "product_id": "1005008657143668",
@@ -6688,8 +6710,9 @@
             "recommendations": 1,
             "link": "https://www.amazon.es/dp/B0CT56TZ8Q?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
             "bot_message_id": 4222,
-            "link_status": "broken",
-            "version_auto": true
+            "link_status": "active",
+            "version_auto": true,
+            "sale_price": "89,99 €"
           },
           {
             "product_id": "1005006314739368",
@@ -6763,7 +6786,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "35,90 €"
           },
           {
             "product_id": "1005008609229005",
@@ -6913,8 +6937,9 @@
               "Highland (2024+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
-            "version_auto": true
+            "link_status": "active",
+            "version_auto": true,
+            "sale_price": "140,99 €"
           },
           {
             "product_id": "B0C13T75SW",
@@ -6932,8 +6957,9 @@
               "Pre-Highland (2021-2023)"
             ],
             "recommendations": 1,
-            "link_status": "broken",
-            "version_auto": true
+            "link_status": "active",
+            "version_auto": true,
+            "sale_price": "261,38 €"
           },
           {
             "product_id": "1005006931450737",
@@ -6990,7 +7016,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005007257718047",
@@ -7283,7 +7309,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005007928353447",
@@ -7523,7 +7549,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-05-18T15:20:09.105677+00:00",
-            "sale_price": null,
+            "sale_price": "64,98 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -7536,7 +7562,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005007587878624",
@@ -7719,7 +7745,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-05-20T07:38:58.734199+00:00",
-            "sale_price": null,
+            "sale_price": "11,99 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -7732,7 +7758,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B0C8SFXJHM",
@@ -7865,7 +7891,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-05-23T17:08:57.899070+00:00",
-            "sale_price": null,
+            "sale_price": "8,07 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -7879,7 +7905,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005006993631609",
@@ -8008,7 +8034,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005004121476894",
@@ -8390,7 +8416,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-05-31T09:11:48.389804+00:00",
-            "sale_price": null,
+            "sale_price": "132,90 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -8404,7 +8430,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005008994517377",
@@ -8491,7 +8517,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-05-31T20:57:56.815840+00:00",
-            "sale_price": null,
+            "sale_price": "13,27 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -8505,7 +8531,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005007042960500",
@@ -8864,7 +8890,7 @@
             "recommendations": 2,
             "votes": {},
             "timestamp": "2026-06-05T07:07:18.560234+00:00",
-            "sale_price": null,
+            "sale_price": "199,95 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -8878,7 +8904,7 @@
               "__todas__"
             ],
             "bot_message_id": 2668,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005011946983059",
@@ -9100,7 +9126,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-06-06T21:14:34.953583+00:00",
-            "sale_price": null,
+            "sale_price": "21,16 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -9115,7 +9141,7 @@
               "Legacy (2017-2020)",
               "Pre-Highland (2021-2023)"
             ],
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -9551,7 +9577,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-06-12T11:00:10.785631+00:00",
-            "sale_price": null,
+            "sale_price": "265,76 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -9565,7 +9591,7 @@
             "versiones": [
               "Pre-Highland (2021-2023)"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005008676793247",
@@ -10293,7 +10319,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-06-19T11:20:27.224011+00:00",
-            "sale_price": null,
+            "sale_price": "55,37 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -10307,7 +10333,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B0C8M72BCJ",
@@ -10394,7 +10420,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-06-20T10:59:40.099086+00:00",
-            "sale_price": null,
+            "sale_price": "38,67 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -10409,7 +10435,7 @@
               "__todas__"
             ],
             "link": "https://www.amazon.es/dp/B00MWVGFWW?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B01N56KYXE",
@@ -10523,7 +10549,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-06-24T15:00:25.490800+00:00",
-            "sale_price": null,
+            "sale_price": "154,99 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -10538,7 +10564,7 @@
               "__todas__"
             ],
             "link": "https://www.amazon.es/dp/B0C5SBT6WV?tag=energia0d1-21&linkCode=ogi&th=1&psc=1",
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B09M6RNMC3",
@@ -10832,7 +10858,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-06-27T08:13:58.380558+00:00",
-            "sale_price": null,
+            "sale_price": "5,99 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -10846,7 +10872,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005012421210292",
@@ -11019,7 +11045,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-07-01T07:13:07.000095+00:00",
-            "sale_price": null,
+            "sale_price": "8,92 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -11033,7 +11059,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005008667639126",
@@ -11270,7 +11296,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005005861582674",
@@ -12733,7 +12759,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005007212661031",
@@ -13000,7 +13026,7 @@
               "Highland (2024+) - Standard",
               "Highland (2024+) - Premium"
             ],
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -13821,7 +13847,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-08-27T03:23:06.187608+00:00",
-            "sale_price": "143.18",
+            "sale_price": "143,19 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -13835,7 +13861,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B07KQHVQB2",
@@ -13885,7 +13911,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005012171015317",
@@ -15585,7 +15611,7 @@
             "recommendations": 2,
             "votes": {},
             "timestamp": "2026-09-22T11:52:55.387604+00:00",
-            "sale_price": "139.99",
+            "sale_price": "169,99 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -15600,7 +15626,7 @@
               "Highland (2024+) - Premium"
             ],
             "bot_message_id": 7710,
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -16226,7 +16252,7 @@
               "__todas__"
             ],
             "bot_message_id": 7897,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B0CN1PJ6ZX",
@@ -16802,7 +16828,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "603503200155544",
@@ -16827,7 +16853,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B077SBWF3M",
@@ -16877,7 +16903,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005009078063288",
@@ -16949,7 +16975,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-10-08T17:00:22.443546+00:00",
-            "sale_price": "79.99",
+            "sale_price": "79,99 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -16964,7 +16990,7 @@
               "Highland (2024+) - Standard",
               "Highland (2024+) - Premium"
             ],
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -18096,7 +18122,7 @@
               "Highland (2024+) - Standard"
             ],
             "bot_message_id": 8506,
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -19595,7 +19621,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "18,99 €"
           },
           {
             "product_id": "1005012091008586",
@@ -19631,7 +19658,7 @@
               "Juniper (2025+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -19978,7 +20005,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "29,49 €"
           },
           {
             "product_id": "1005010348575010",
@@ -20033,7 +20061,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "9,99 €"
           },
           {
             "product_id": "1005010118240482",
@@ -20145,7 +20174,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "47,49 €"
           },
           {
             "product_id": "1005006175365939",
@@ -20219,7 +20249,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "491,00 €"
           },
           {
             "product_id": "B0FC7Y6GXQ",
@@ -20272,7 +20303,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "61,99 €"
           },
           {
             "product_id": "B0FPBF5DRL",
@@ -20290,8 +20322,9 @@
               "Juniper (2025+) - Premium"
             ],
             "recommendations": 1,
-            "link_status": "broken",
-            "version_auto": true
+            "link_status": "active",
+            "version_auto": true,
+            "sale_price": "99,00 €"
           },
           {
             "product_id": "1005010640406849",
@@ -20496,7 +20529,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "226,29 €"
           },
           {
             "product_id": "1005010231701679",
@@ -20586,7 +20620,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "13,75 €"
           },
           {
             "product_id": "1005006014611610",
@@ -20721,7 +20756,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "199,99 €"
           },
           {
             "product_id": "1005008945375476",
@@ -20871,7 +20907,7 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005009045274487",
@@ -21153,7 +21189,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "16,99 €"
           },
           {
             "product_id": "1005010806603160",
@@ -21190,7 +21227,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "295,41 €"
           },
           {
             "product_id": "1005004681034805",
@@ -21436,8 +21474,9 @@
               "Pre-Juniper (2020-2024)"
             ],
             "recommendations": 1,
-            "link_status": "broken",
-            "version_auto": true
+            "link_status": "active",
+            "version_auto": true,
+            "sale_price": "11,29 €"
           },
           {
             "product_id": "B0DHGM1S8B",
@@ -21456,8 +21495,9 @@
             ],
             "recommendations": 1,
             "bot_message_id": 6214,
-            "link_status": "broken",
-            "version_auto": true
+            "link_status": "active",
+            "version_auto": true,
+            "sale_price": "79,99 €"
           },
           {
             "product_id": "B0B7P1H739",
@@ -21897,7 +21937,7 @@
             ],
             "recommendations": 1,
             "old_short_id": "c4B9DS7Z",
-            "link_status": "broken",
+            "link_status": "active",
             "sale_price": "157.39 EUR",
             "version_auto": true
           },
@@ -21934,7 +21974,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "59,99 €"
           },
           {
             "product_id": "B0F2HLHSY8",
@@ -21987,7 +22028,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "39,99 €"
           },
           {
             "product_id": "1005008084722640",
@@ -22022,7 +22064,8 @@
               "__todas__"
             ],
             "recommendations": 1,
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "27,16 €"
           },
           {
             "product_id": "1005005985672393",
@@ -22445,7 +22488,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-05-14T14:10:18.280785+00:00",
-            "sale_price": null,
+            "sale_price": "59,99 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -22459,7 +22502,7 @@
               "Juniper (2025+) - Standard",
               "Juniper (2025+) - Premium"
             ],
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -23131,7 +23174,7 @@
             "versiones": [
               "Pre-Juniper (2020-2024)"
             ],
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -23377,7 +23420,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-05-28T06:57:53.740912+00:00",
-            "sale_price": null,
+            "sale_price": "110,37 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -23391,7 +23434,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B00ADW9R22",
@@ -23563,7 +23606,7 @@
             "recommendations": 3,
             "votes": {},
             "timestamp": "2026-05-31T13:50:37.083111+00:00",
-            "sale_price": null,
+            "sale_price": "59,00 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -23578,7 +23621,7 @@
               "Juniper (2025+) - Standard",
               "Juniper (2025+) - Premium"
             ],
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -24063,7 +24106,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-06-10T08:33:10.682308+00:00",
-            "sale_price": null,
+            "sale_price": "16,99 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -24077,7 +24120,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005009599842794",
@@ -24258,7 +24301,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-06-12T10:36:30.101826+00:00",
-            "sale_price": null,
+            "sale_price": "143,19 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -24273,7 +24316,7 @@
               "Juniper (2025+) - Standard",
               "Juniper (2025+) - Premium"
             ],
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -24310,7 +24353,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-06-13T15:55:47.473387+00:00",
-            "sale_price": null,
+            "sale_price": "13,99 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -24324,7 +24367,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005010036542616",
@@ -24464,7 +24507,7 @@
             "recommendations": 2,
             "votes": {},
             "timestamp": "2026-06-20T13:12:48.207135+00:00",
-            "sale_price": null,
+            "sale_price": "169,99 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -24478,7 +24521,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B0GHMZ8DL5",
@@ -24870,7 +24913,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005010275684529",
@@ -24933,7 +24976,7 @@
             "recommendations": 2,
             "votes": {},
             "timestamp": "2026-07-03T23:06:56.188028+00:00",
-            "sale_price": null,
+            "sale_price": "112,51 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -24947,7 +24990,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B08XB311S7",
@@ -26527,7 +26570,7 @@
               "Juniper (2025+) - Standard",
               "Juniper (2025+) - Premium"
             ],
-            "link_status": "broken",
+            "link_status": "active",
             "version_auto": true
           },
           {
@@ -28908,7 +28951,7 @@
             "recommendations": 2,
             "votes": {},
             "timestamp": "2026-10-06T06:15:37.378974+00:00",
-            "sale_price": "184.45",
+            "sale_price": "199,95 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -28922,7 +28965,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B0F8VJ5SKJ",
@@ -29256,7 +29299,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005008763176726",
@@ -29493,7 +29536,7 @@
             "versiones": [
               "Juniper (2025+) - Standard"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005012536858144",
@@ -31055,7 +31098,7 @@
             "original_price": "70.55",
             "discount": "50%",
             "bot_message_id": 3172,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005008100175972",
@@ -31130,7 +31173,8 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active",
+            "sale_price": "58,46 €"
           },
           {
             "product_id": "1005009226700216",
@@ -31195,7 +31239,7 @@
             "discount": null,
             "bot_message_id": 2088,
             "price_corrected": true,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005009680474803",
@@ -39993,7 +40037,7 @@
             ],
             "recommendations": 1,
             "old_short_id": "c3FKS6sB",
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B00C3Z8DAY",
@@ -52158,7 +52202,7 @@
             ],
             "recommendations": 1,
             "old_short_id": "c4pNs5RD",
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B00C3Z8DAY",
@@ -53850,7 +53894,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-05-16T21:25:11.865330+00:00",
-            "sale_price": null,
+            "sale_price": "8,07 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -53863,7 +53907,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B07NY23WBG",
@@ -56460,7 +56504,7 @@
                 "title": "HGKJ S6 revestimiento cerámico para coche Spray espejo brillo líquido impermeable coche Nano cristal cera hidrofóbica pintura en aerosol accesorios para el cuidado"
               }
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B00C3Z8DAY",
@@ -60412,7 +60456,7 @@
             "recommendations": 2,
             "votes": {},
             "timestamp": "2026-09-20T16:40:47.210943+00:00",
-            "sale_price": "100.62",
+            "sale_price": "112,51 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -60426,7 +60470,7 @@
               "__todas__"
             ],
             "bot_message_id": 949,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B0G5XYDFST",
@@ -67498,7 +67542,7 @@
             "recommendations": 2,
             "votes": {},
             "timestamp": "2026-07-05T18:14:51.952269+00:00",
-            "sale_price": null,
+            "sale_price": "184,95 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -67512,7 +67556,7 @@
               "__todas__"
             ],
             "bot_message_id": 1985,
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B0DQP6JY3R",
@@ -72891,7 +72935,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-06-07T07:23:22.596128+00:00",
-            "sale_price": null,
+            "sale_price": "132,90 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -72905,7 +72949,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005012207309164",
@@ -73041,7 +73085,7 @@
             "recommendations": 2,
             "votes": {},
             "timestamp": "2026-06-09T08:23:26.418593+00:00",
-            "sale_price": null,
+            "sale_price": "184,95 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -73055,7 +73099,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005009667310591",
@@ -75079,7 +75123,7 @@
             ],
             "recommendations": 1,
             "old_short_id": "c3tbcI4f",
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B00C3Z8DAY",
@@ -79062,7 +79106,7 @@
                 "title": "Sistema de Luz Ambiental Inteligente para Ventilación de Aire, Sistema de Monitoreo de Punto Ciego (BSD) para Tesla Model 3, Model Y, Juniper, Model 3 Highland, Y 2021+"
               }
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005010107405124",
@@ -79170,7 +79214,7 @@
             "categorias": [
               "Cargadores"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005007928353447",
@@ -79396,7 +79440,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-05-14T14:10:17.593711+00:00",
-            "sale_price": null,
+            "sale_price": "59,99 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -79406,7 +79450,7 @@
             "categorias": [
               "Parasoles"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005008300093638",
@@ -79803,7 +79847,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-05-18T15:20:05.834957+00:00",
-            "sale_price": null,
+            "sale_price": "64,98 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -79813,7 +79857,7 @@
             "categorias": [
               "Energía"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005009659419961",
@@ -80064,7 +80108,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-05-20T07:38:55.626277+00:00",
-            "sale_price": null,
+            "sale_price": "11,99 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -80074,7 +80118,7 @@
             "categorias": [
               "Soportes"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B0C8SFXJHM",
@@ -80645,7 +80689,7 @@
             "categorias": [
               "Ruedas"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005009047655389",
@@ -81244,7 +81288,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-05-28T06:57:50.485221+00:00",
-            "sale_price": null,
+            "sale_price": "110,37 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -81255,7 +81299,7 @@
             "categorias": [
               "Wifi"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "B00ADW9R22",
@@ -81671,7 +81715,7 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-05-31T09:11:45.121245+00:00",
-            "sale_price": null,
+            "sale_price": "132,90 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -81685,7 +81729,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005007185030833",
@@ -81746,7 +81790,7 @@
             "recommendations": 3,
             "votes": {},
             "timestamp": "2026-05-31T13:50:33.800136+00:00",
-            "sale_price": null,
+            "sale_price": "59,00 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -81757,7 +81801,7 @@
             "categorias": [
               "Parasoles"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005010753840496",
@@ -83794,7 +83838,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           }
         ]
       },
@@ -86124,7 +86168,7 @@
             "recommendations": 2,
             "votes": {},
             "timestamp": "2026-05-31T06:23:37.926573+00:00",
-            "sale_price": null,
+            "sale_price": "112,51 €",
             "original_price": null,
             "discount": null,
             "rating": null,
@@ -86138,7 +86182,7 @@
             "versiones": [
               "__todas__"
             ],
-            "link_status": "broken"
+            "link_status": "active"
           },
           {
             "product_id": "1005009973725458",
