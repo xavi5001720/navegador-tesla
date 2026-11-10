@@ -11384,12 +11384,12 @@
             "recommendations": 1,
             "votes": {},
             "timestamp": "2026-07-04T09:36:08.725414+00:00",
-            "sale_price": "32.94",
-            "original_price": "71.60",
-            "discount": "54%",
+            "sale_price": "72.78",
+            "original_price": null,
+            "discount": null,
             "rating": null,
             "reviews_count": null,
-            "price_corrected": false,
+            "price_corrected": true,
             "bot_message_id": 4181,
             "status_clasificacion": "clasificado",
             "categorias": [
@@ -30359,6 +30359,31 @@
               "Juniper (2025+) - Premium"
             ],
             "bot_message_id": 8831
+          },
+          {
+            "product_id": "1005010462727340",
+            "platform": "aliexpress",
+            "title": "Alfombrillas de coche YZ para Tesla Model Y Juniper 2025-2026 de TPE con pedales metálicos, juego de alfombrillas para maletero, impermeables y antideslizantes para las cuatro estaciones",
+            "affiliate_url": "https://s.click.aliexpress.com/e/_c3idyxZ9",
+            "image": "img/Tesla_chuches/Tesla_Model_Y/aliexpress_1005010462727340.jpg",
+            "recommendations": 1,
+            "votes": {},
+            "timestamp": "2026-11-10T19:16:51.000000+00:00",
+            "sale_price": "72.78",
+            "original_price": null,
+            "discount": null,
+            "rating": null,
+            "reviews_count": null,
+            "price_corrected": true,
+            "bot_message_id": 8833,
+            "status_clasificacion": "clasificado",
+            "categorias": [
+              "Alfombrillas"
+            ],
+            "versiones": [
+              "__todas__"
+            ],
+            "link_status": "active"
           }
         ],
         "topic_name": "Tesla Model Y"
